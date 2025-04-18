@@ -1,0 +1,33 @@
+{
+  "totalFloors": 2,
+  "totalRooms": 12,
+  "perPage": 10,
+  "currentPage": 1,
+  "floors": [
+    {
+      "floor": 1,
+      "floorImage": "/denah_parkir.svg",
+      "rooms": [
+        { "id": 1, "name": "Ruang Meeting 1", "x": 215, "y": 135, "width": 90, "height": 140 },
+        { "id": 2, "name": "Ruang Meeting 2", "x": 30, "y": 212, "width": 92, "height": 60 },
+        { "id": 3, "name": "Ruang Meeting 3", "x": 310, "y": 135, "width": 90, "height": 140 },
+        { "id": 4, "name": "Ruang Meeting 4", "x": 402, "y": 135, "width": 90, "height": 140 },
+        { "id": 5, "name": "Ruang Meeting 5", "x": 495, "y": 135, "width": 90, "height": 140 },
+        { "id": 6, "name": "Ruang Meeting 6", "x": 590, "y": 135, "width": 90, "height": 140 }
+      ]
+    },
+    {
+      "floor": 2,
+      "floorImage": "/denah_parkir.svg",
+      "rooms": [
+        { "id": 7, "name": "Ruang Direktur", "x": 200, "y": 120, "width": 100, "height": 150 },
+        { "id": 8, "name": "Ruang HRD", "x": 320, "y": 140, "width": 100, "height": 120 },
+        { "id": 9, "name": "Ruang IT", "x": 450, "y": 160, "width": 110, "height": 140 },
+        { "id": 10, "name": "Ruang Admin", "x": 600, "y": 180, "width": 120, "height": 150 },
+        { "id": 11, "name": "Ruang CEO", "x": 750, "y": 190, "width": 130, "height": 160 },
+        { "id": 12, "name": "Ruang Staff", "x": 900, "y": 200, "width": 140, "height": 170 }
+      ]
+    }
+  ]
+}
+ 
