@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Dashboard",
+    "url": "/",
+    "icon": "AiFillHome"
+  },
+  {
+    "name": "Survei",
+    "url": "/survei",
+    "icon": "AiFillCamera"
+  }
+]

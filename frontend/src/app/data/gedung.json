@@ -1,0 +1,31 @@
+{
+  "buildings": [
+    {
+      "id": 1,
+      "name": "Gedung A",
+      "totalFloors": 2,
+      "location": {
+        "latitude": -6.9175,
+        "longitude": 107.6191
+      }
+    },
+    {
+      "id": 2,
+      "name": "Gedung B",
+      "totalFloors": 3,
+      "location": {
+        "latitude": -6.9175,
+        "longitude": 107.6200
+      }
+    },
+    {
+      "id": 3,
+      "name": "Parkir A",
+      "totalFloors": 1,
+      "location": {
+        "latitude": -6.9179,
+        "longitude": 107.6200
+      }
+    }
+  ]
+}
