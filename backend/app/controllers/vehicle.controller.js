@@ -67,3 +67,20 @@ exports.getGroupTipeKendaraan = (req, res) => {
   });
 };
 
+exports.getMasukKeluarByArah = (req, res) => {
+  Vehicle.getMasukKeluarByArah((err, data) => {
+    if (err) {
+      res.status(500).send({
+        status: "error",
+        message: err.message || "Some error occurred while retrieving data.",
+      });
+    } else {
+      res.send({
+        status: "ok",
+        data: data,
+      });
+    }
+  });
+};
+
+
