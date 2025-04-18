@@ -55,7 +55,8 @@ Vehicle.getChartMasukKeluar = async (result) => {
           END
         ) AS total_OUT
       FROM arus
-      WHERE DATE(waktu) = CURDATE();
+      WHERE DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'));
+
     `);
     result(null, rows);
   } catch (err) {
@@ -92,9 +93,10 @@ Vehicle.getGroupTipeKendaraan = async (result) => {
         ) AS total_OUT
 
       FROM arus
-      WHERE DATE(waktu) = CURDATE()
+      WHERE DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
       GROUP BY SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB
       ORDER BY total_IN DESC;
+
     `);
     result(null, rows);
   } catch (err) {
@@ -120,7 +122,7 @@ Vehicle.getMasukKeluarByArah = async (result) => {
             1 AS total_IN,
             0 AS total_OUT
           FROM arus
-          WHERE DATE(waktu) = CURDATE()
+          WHERE DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
             AND (
               (ID_Simpang = 5 AND dari_arah = 'north') OR
               (ID_Simpang = 2 AND dari_arah = 'east') OR
@@ -141,7 +143,7 @@ Vehicle.getMasukKeluarByArah = async (result) => {
             0 AS total_IN,
             1 AS total_OUT
           FROM arus
-          WHERE DATE(waktu) = CURDATE()
+          WHERE DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
             AND (
               (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) OR
               (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) OR
@@ -149,7 +151,9 @@ Vehicle.getMasukKeluarByArah = async (result) => {
               (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north'))
             )
         ) AS arah_rekap
-        GROUP BY arah;
+        GROUP BY arah
+        ORDER BY arah;
+
 
     `);
     result(null, rows);
