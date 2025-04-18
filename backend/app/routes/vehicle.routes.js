@@ -8,6 +8,8 @@ module.exports = app => {
   router.get("/getChartMasukKeluar", Vehicles.getChartMasukKeluar);
   router.get("/getGroupTipeKendaraan", Vehicles.getGroupTipeKendaraan);
   router.get("/getMasukKeluarByArah", Vehicles.getMasukKeluarByArah);
+  router.get("/getRataPerJam", Vehicles.getRataPerJam);
+  router.get("/getRataPer15Menit", Vehicles.getRataPer15Menit);
 
   app.use('/api/vehicles', router);
 };

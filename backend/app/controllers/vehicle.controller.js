@@ -83,4 +83,36 @@ exports.getMasukKeluarByArah = (req, res) => {
   });
 };
 
+exports.getRataPerJam = (req, res) => {
+  Vehicle.getRataPerJam((err, data) => {
+    if (err) {
+      res.status(500).send({
+        status: "error",
+        message: err.message || "Some error occurred while retrieving data.",
+      });
+    } else {
+      res.send({
+        status: "ok",
+        data: data,
+      });
+    }
+  });
+};
+
+exports.getRataPer15Menit = (req, res) => {
+  Vehicle.getRataPer15Menit((err, data) => {
+    if (err) {
+      res.status(500).send({
+        status: "error",
+        message: err.message || "Some error occurred while retrieving data.",
+      });
+    } else {
+      res.send({
+        status: "ok",
+        data: data,
+      });
+    }
+  });
+};
+
 
