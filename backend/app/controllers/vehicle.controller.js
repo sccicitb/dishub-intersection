@@ -1,4 +1,4 @@
-const Vehicle = require("../models/Vehicle.model.js");
+const Vehicle = require("../models/vehicle.model.js");
 
 const { getArusStatus, countArus } = require("../helpers/arus");
 
