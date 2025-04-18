@@ -6,6 +6,7 @@ module.exports = app => {
   // Retrieve all Vehicles
   router.get("/", Vehicles.findAll);
   router.get("/getChartMasukKeluar", Vehicles.getChartMasukKeluar);
+  router.get("/getGroupTipeKendaraan", Vehicles.getGroupTipeKendaraan);
 
   app.use('/api/vehicles', router);
 };
