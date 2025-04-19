@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import TrafficFlowChart from './traficFlowChart';
-
+import { vehicles } from '@/lib/apiAccess';
 export default function GrafikRoad() {
   const [trafficData, setTrafficData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,16 +14,16 @@ export default function GrafikRoad() {
         setLoading(true);
         
         // Fetch hourly data
-        const hourlyResponse = await fetch('http://103.30.195.159:8080/api/vehicles/getRataPerJam');
-        const hourlyData = await hourlyResponse.json();
+        const hourlyResponse = await vehicles.getByJam();
+        const hourlyData = hourlyResponse;
         
         // Fetch 15-minute data
-        const minuteResponse = await fetch('http://103.30.195.159:8080/api/vehicles/getRataPer15Menit');
-        const minuteData = await minuteResponse.json();
+        const minuteResponse = await vehicles.getByMinute();
+        const minuteData = minuteResponse;
         
-        if (hourlyData.status === "ok" && minuteData.status === "ok") {
+        if (hourlyData.status === 200 && minuteData.status === 200) {
           // Format data for the chart
-          const formattedData = formatTrafficData(hourlyData.data, minuteData.data);
+          const formattedData = formatTrafficData(hourlyData.data.data, minuteData.data.data);
           setTrafficData(formattedData);
         } else {
           throw new Error("Failed to fetch traffic data");

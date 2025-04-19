@@ -11,4 +11,5 @@ export const vehicles = {
   getByArah: () => getRequest("/vehicles/getMasukKeluarByArah"),
   getByJam: () => getRequest("/vehicles/getRataPerJam"),
   getByMinute: () => getRequest("/vehicles/getRataPer15Menit"),
+  getByTipe: () => getRequest("/vehicles/getGroupTipeKendaraan"),
 }

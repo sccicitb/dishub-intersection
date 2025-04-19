@@ -5,7 +5,7 @@ import { useAuth } from "@/app/context/authContext";
 
 
 import LintasChart from "@/app/components/lintasChart";
-import { FaCar, FaTruck, FaBus, FaMotorcycle, FaBicycle } from "react-icons/fa";
+import { FaCar, FaTruck, FaBus, FaMotorcycle, FaBicycle, FaShuttleVan, FaTractor, FaTruckMoving, FaCaravan } from "react-icons/fa";
 import { FaArrowRightToBracket, FaArrowRightFromBracket } from "react-icons/fa6";
 import TotalChart from "@/app/components/totalChart";
 import MapComponent from "@/app/components/map";
@@ -20,6 +20,7 @@ const calculatePercentage = (value, total) => {
 
 export default function Home() {
   // State variables
+  const [vehicleData, setVehicleData] = useState(null);
   // Inisialisasi state dengan nilai default
   const [chartData, setChartData] = useState([{
     name: 'Today',
@@ -158,25 +159,101 @@ export default function Home() {
 
   // Fetch data on component mount and when activeFilter changes
   useEffect(() => {
-    // const fetchByArah = async () => {
-    //   try {
-    //     const response = await vehicles.getByArah();
-    //     if (response.status === 200 && response.data.data.length > 0) {
-    //       const data = response.data.data;
-    //       const dataFormatted = data.map(item => ({
-    //         name: item.arah,
-    //         masuk: item.total_IN,
-    //         keluar: item.total_OUT,
-    //       }));
-    //       setIOByArahData(dataFormatted);
-    //     } else {
-    //       setIOByArahData([]);
-    //     }
-    //   } catch (error) {
-    //     console.error('Error fetching data:', error);
-    //   }
-    // }
    
+    const fetchVehicleTypeData = async () => {
+      try {
+        const response = await vehicles.getByTipe();
+        
+        if (response.status === 200 && response.data.data.length > 0) {
+          // Process the data for incoming and outgoing vehicles
+          const processedData = processVehicleData(response.data.data);
+          setVehicleData(processedData);
+          console.log(processedData)
+        
+        }else {
+          throw new Error('Invalid data format received');
+        }
+        
+      } catch (error) {
+        setVehicleData([]);
+        console.error("Error fetching vehicle type data:", error);
+      }
+    };
+
+    const processVehicleData = (data) => {
+      // Define vehicle type mappings and icons
+      const vehicleTypes = {
+        'SM': { name: 'Sepeda Motor', icon: FaMotorcycle },
+        'MP': { name: 'Mobil Penumpang', icon: FaCar },
+        'AUP': { name: 'Angkutan Umum', icon: FaShuttleVan },
+        'TR': { name: 'Truk', icon: FaTruck },
+        'BS': { name: 'Bus', icon: FaBus },
+        'TS': { name: 'Truk Sedang', icon: FaTruckMoving },
+        'TB': { name: 'Truk Besar', icon: FaTruck },
+        'BB': { name: 'Bus Besar', icon: FaBus },
+        'GANDENG': { name: 'Truk Gandeng', icon: FaTruckMoving },
+        'KTB': { name: 'Kendaraan Tidak Bermotor', icon: FaCaravan }
+      };
+    
+      // Extract and sort vehicle data
+      const vehicleData = [];
+      
+      data.forEach(item => {
+        // Find which vehicle type has value 1
+        for (const [key, value] of Object.entries(item)) {
+          if (value === 1 && vehicleTypes[key]) {
+            vehicleData.push({
+              type: key,
+              name: vehicleTypes[key].name,
+              icon: vehicleTypes[key].icon,
+              totalIn: parseInt(item.total_IN, 10),
+              totalOut: parseInt(item.total_OUT, 10)
+            });
+            break;
+          }
+        }
+      });
+    
+      // Sort by total incoming vehicles (descending)
+      vehicleData.sort((a, b) => b.totalIn - a.totalIn);
+    
+      // Calculate total incoming and outgoing
+      const totalIn = vehicleData.reduce((sum, item) => sum + item.totalIn, 0);
+      const totalOut = vehicleData.reduce((sum, item) => sum + item.totalOut, 0);
+    
+      // Prepare data for charts
+      const incomingVehicles = {
+        labels: vehicleData.map(item => item.name),
+        values: vehicleData.map(item => item.totalIn),
+        percentages: vehicleData.map(item => `${((item.totalIn / totalIn) * 100).toFixed(1)}%`),
+        vehicleTypes: vehicleData.map(item => item.name),
+        iconComponents: vehicleData.map(item => item.icon),
+        tooltipLabels: vehicleData.map(item => `${item.name} masuk`),
+        // directionRoad: vehicleData.map(item => `Masuk`),
+        color: '#4ade80',
+        thickness: 25,
+        format: 'unit'
+      };
+    
+      const outgoingVehicles = {
+        labels: vehicleData.map(item => item.name),
+        values: vehicleData.map(item => item.totalOut),
+        percentages: vehicleData.map(item => `${((item.totalOut / totalOut) * 100).toFixed(1)}%`),
+        vehicleTypes: vehicleData.map(item => item.name),
+        iconComponents: vehicleData.map(item => item.icon),
+        tooltipLabels: vehicleData.map(item => `${item.name} keluar`),
+        // directionRoad: vehicleData.map(item => `Keluar`),
+        color: '#BF3D3D',
+        thickness: 25,
+        format: 'unit'
+      };
+    
+      return {
+        incomingVehicles,
+        outgoingVehicles,
+        rawData: vehicleData
+      };
+    };
     const fetchByArah = async () => {
       try {
         const response = await vehicles.getByArah();
@@ -334,7 +411,7 @@ export default function Home() {
     };
   
     const fetchAllData = async () => {
-      await Promise.all([fetchData(), fetchByArah()]);
+      await Promise.all([fetchData(), fetchByArah(), fetchVehicleTypeData()]);
     };
 
     fetchAllData();
@@ -404,11 +481,11 @@ export default function Home() {
       <div className="flex flex-col md:flex-row items-center justify-center gap-2 w-[90%] bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
         <div className="w-full md:w-1/2">
           <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Masuk</h2>
-          <LintasChart positionText={true} chartData={incomingVehicles}/>
+          <LintasChart positionText={true} chartData={vehicleData?.incomingVehicles}/>
         </div>
         <div className="w-full md:w-1/2">
           <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Keluar</h2>
-          <LintasChart positionText={false} chartData={outgoingVehicles}/>
+          <LintasChart positionText={false} chartData={vehicleData?.outgoingVehicles}/>
         </div>
       </div>
       <div className="flex flex-col md:flex-row items-center justify-center not-xl:gap-2 gap-15 w-[90%] bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
