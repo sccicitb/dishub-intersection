@@ -5,30 +5,101 @@ import TrafficFlowChart from './traficFlowChart';
 
 export default function GrafikRoad() {
   const [trafficData, setTrafficData] = useState(null);
-  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    // Sample traffic data - replace with actual data or API call
-    const sampleData = {
-      hours: ["8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "24:00"],
-      north: [420, 530, 580, 490, 510, 550, 620, 680, 720, 650, 600, 550, 480, 420, 390, 410, 380],
-      south: [380, 450, 510, 470, 490, 520, 580, 640, 680, 610, 560, 510, 440, 380, 350, 370, 340],
-      east: [320, 380, 420, 400, 410, 430, 480, 520, 550, 500, 470, 440, 380, 340, 310, 330, 300],
-      west: [350, 410, 460, 430, 450, 470, 530, 570, 610, 550, 510, 480, 410, 370, 340, 360, 330]
+    const fetchTrafficData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch hourly data
+        const hourlyResponse = await fetch('http://103.30.195.159:8080/api/vehicles/getRataPerJam');
+        const hourlyData = await hourlyResponse.json();
+        
+        // Fetch 15-minute data
+        const minuteResponse = await fetch('http://103.30.195.159:8080/api/vehicles/getRataPer15Menit');
+        const minuteData = await minuteResponse.json();
+        
+        if (hourlyData.status === "ok" && minuteData.status === "ok") {
+          // Format data for the chart
+          const formattedData = formatTrafficData(hourlyData.data, minuteData.data);
+          setTrafficData(formattedData);
+        } else {
+          throw new Error("Failed to fetch traffic data");
+        }
+      } catch (err) {
+        console.error("Error fetching traffic data:", err);
+        setError("Failed to load traffic data. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
     };
-    
-    setTrafficData(sampleData);
+
+    fetchTrafficData();
   }, []);
+
+  // Format API data for the chart component
+  const formatTrafficData = (hourlyData, minuteData) => {
+    // Create hours array (0-23)
+    const hours = hourlyData.map(item => `${item.jam}:00`);
+    
+    // Extract IN and OUT data
+    const inData = hourlyData.map(item => parseInt(item.total_IN));
+    const outData = hourlyData.map(item => parseInt(item.total_OUT));
+    
+    const north = inData.map(val => Math.round(val * 0.3));  // 30% of IN traffic
+    const south = outData.map(val => Math.round(val * 0.3)); // 30% of OUT traffic
+    const east = inData.map(val => Math.round(val * 0.2));   // 20% of IN traffic
+    const west = outData.map(val => Math.round(val * 0.2));  // 20% of OUT traffic
+    
+    // Find the peak 15-minute values for each hour
+    const peakData = findPeak15MinData(minuteData);
+    
+    return {
+      hours,
+      north,
+      south,
+      east,
+      west,
+      inData,
+      outData,
+      peakData
+    };
+  };
+
+  // Calculate peak 15-minute values for each hour
+  const findPeak15MinData = (minuteData) => {
+    const peakValues = {};
+    
+    // Group data by hour
+    minuteData.forEach(item => {
+      const hour = item.jam;
+      const inValue = parseInt(item.total_IN);
+      
+      if (!peakValues[hour] || inValue > peakValues[hour]) {
+        peakValues[hour] = inValue;
+      }
+    });
+    
+    // Convert to array matching the hours order
+    return Array.from({ length: 24 }, (_, i) => peakValues[i] ? peakValues[i] * 4 : 0);
+  };
 
   return (
     <div className="w-full">
       <h2 className="text-xl font-medium mb-4 text-center">Lalu Lintas Jam-Jaman Rata-Rata</h2>
       
-      {trafficData ? (
-        <TrafficFlowChart trafficData={trafficData} />
-      ) : (
-        <div className="w-full h-96 flex items-center justify-center bg-gray-900 rounded-lg">
+      {loading ? (
+        <div className="w-full h-96 flex items-center justify-center bg-base-100 rounded-lg">
           <p className="text-white">Loading data...</p>
         </div>
+      ) : error ? (
+        <div className="w-full h-96 flex items-center justify-center bg-base-100 rounded-lg">
+          <p className="text-red-500">{error}</p>
+        </div>
+      ) : (
+        <TrafficFlowChart trafficData={trafficData} />
       )}
     </div>
   );

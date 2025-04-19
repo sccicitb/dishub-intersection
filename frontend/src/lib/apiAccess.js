@@ -9,4 +9,6 @@ export const authAPI = {
 export const vehicles = {
   getAll: () => getRequest("/vehicles/getChartMasukKeluar"),
   getByArah: () => getRequest("/vehicles/getMasukKeluarByArah"),
+  getByJam: () => getRequest("/vehicles/getRataPerJam"),
+  getByMinute: () => getRequest("/vehicles/getRataPer15Menit"),
 }

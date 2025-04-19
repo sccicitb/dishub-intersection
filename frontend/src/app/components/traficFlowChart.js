@@ -13,15 +13,12 @@ export default function TrafficFlowChart({ trafficData }) {
     if (!trafficData || !chartRef.current) return;
 
     // Extract data from props
-    const { hours, north, south, east, west } = trafficData;
+    const { hours, inData, outData, north, south, east, west, peakData } = trafficData;
     
-    // Calculate average of all directions
+    // Calculate average of IN and OUT for LJR (Lalu Lintas Jam-Jaman Rata-Rata)
     const averageData = hours.map((_, idx) => {
-      return (north[idx] + south[idx] + east[idx] + west[idx]) / 4;
+      return (inData[idx] + outData[idx]) / 2;
     });
-    
-    // Calculate highest 15 minutes values (simulated as 20% higher than hourly average)
-    const peakData = averageData.map(val => val * 1.2);
 
     if (chartInstance.current) {
       chartInstance.current.destroy();
@@ -90,6 +87,24 @@ export default function TrafficFlowChart({ trafficData }) {
             hidden: true,
             tension: 0.4,
             pointRadius: 2,
+          },
+          {
+            label: 'Total IN',
+            data: inData,
+            borderColor: 'rgba(0, 200, 0, 1)',
+            borderWidth: 1,
+            hidden: true,
+            tension: 0.4,
+            pointRadius: 2,
+          },
+          {
+            label: 'Total OUT',
+            data: outData,
+            borderColor: 'rgba(200, 0, 0, 1)',
+            borderWidth: 1,
+            hidden: true,
+            tension: 0.4,
+            pointRadius: 2,
           }
         ]
       },
@@ -98,8 +113,13 @@ export default function TrafficFlowChart({ trafficData }) {
         maintainAspectRatio: false,
         plugins: {
           title: {
-            display: false,
+            display: true,
             text: 'Lalu Lintas Jam-Jaman Rata-Rata',
+            color: '#D3D3D3',
+            font: {
+              size: 16,
+              weight: 'bold'
+            }
           },
           legend: {
             position: 'bottom',
@@ -112,6 +132,18 @@ export default function TrafficFlowChart({ trafficData }) {
           tooltip: {
             mode: 'index',
             intersect: false,
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                if (context.parsed.y !== null) {
+                  label += context.parsed.y.toFixed(0);
+                }
+                return label;
+              }
+            }
           }
         },
         scales: {
@@ -137,7 +169,7 @@ export default function TrafficFlowChart({ trafficData }) {
           y: {
             title: {
               display: true,
-              text: 'Kendal/Jam',
+              text: 'Kendaraan/Jam',
               font: {
                 weight: 'bold'
               },

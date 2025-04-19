@@ -176,6 +176,7 @@ export default function Home() {
     //     console.error('Error fetching data:', error);
     //   }
     // }
+   
     const fetchByArah = async () => {
       try {
         const response = await vehicles.getByArah();
@@ -422,14 +423,14 @@ export default function Home() {
       </div>
       <div className="w-[90%] h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100">
         <GrafikRoad />
-        <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-2 py-10">
+        {/* <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-2 py-10">
           <div>
             <GrafikRoad />
           </div>
           <div>
           <GrafikRoad />
           </div>
-        </div>
+        </div> */}
       </div>
       <div className="w-[90%]">
       <div className="w-full bg-blue-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
@@ -486,14 +487,14 @@ export default function Home() {
           </div>
         </div>
         <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100">
-          <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-2 py-10">
+          {/* <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-2 py-10">
             <div>
               <GrafikRoad />
             </div>
             <div>
               <GrafikRoad />
             </div>
-          </div>
+          </div> */}
         </div>
         <MapComponent />
       </div>
