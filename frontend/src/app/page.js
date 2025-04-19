@@ -1,12 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-// import ruangan from "@/app/data/ruangan.json";
-// import gedungData from "@/app/data/gedung.json";
-// import typeCamera from "@/app/data/typeCamera.json";
-// import map from "@/app/data/floor.json";
-// import { redirect } from "next/navigation";
 import { useAuth } from "@/app/context/authContext";
+
 
 import LintasChart from "@/app/components/lintasChart";
 import { FaCar, FaTruck, FaBus, FaMotorcycle, FaBicycle } from "react-icons/fa";
@@ -15,111 +11,339 @@ import TotalChart from "@/app/components/totalChart";
 import MapComponent from "@/app/components/map";
 import GrafikRoad from "@/app/components/roadChart";
 import CameraStatusTimeline from "@/app/components/cameraStatusTime";
+import { vehicles } from "@/lib/apiAccess";
+
+const calculatePercentage = (value, total) => {
+  const sum = parseFloat(value) + parseFloat(total);
+  return sum > 0 ? (parseFloat(value) / sum * 100).toFixed(1) : 0;
+};
 
 export default function Home() {
-  // const { setLoading } = useAuth();
+  // State variables
+  // Inisialisasi state dengan nilai default
+  const [chartData, setChartData] = useState([{
+    name: 'Today',
+    masuk: 0,
+    keluar: 0,
+    masukPercentage: 0,
+    keluarPercentage: 0
+  }]);
 
-  const [activeFilter, setActiveFilter] = useState('day'); // Default to 'day' (Hari Ini)
+  const [ioByArahData, setIOByArahData] = useState([{
+    
+  }]);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('day');
   const [activeFilterSection2, setActiveFilterSection2] = useState('day');
-  // const [chartData, setChartData] = useState(null);
-  // const [isLoading, setIsLoading] = useState(true);
 
+  // Vehicle data objects
   const incomingVehicles = {
-      labels: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
-      values: [342, 127, 89, 523, 64],
-      percentages: ['30%', '11%', '8%', '46%', '5%'],
-      vehicleTypes: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
-      iconComponents: [FaCar, FaTruck, FaBus, FaMotorcycle, FaBicycle],
-      centerIconComponent: <FaArrowRightToBracket size={28} className="text-green-500" />,
-      centerTitle: "Masuk",
-      tooltipLabels: ['Mobil masuk', 'Truk masuk', 'Bus masuk', 'Motor masuk', 'Sepeda masuk'],
-      color: '#4ade80',
-      thickness: 25,
-      format: 'unit'
-    };
+    labels: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
+    values: [342, 127, 89, 523, 64],
+    percentages: ['30%', '11%', '8%', '46%', '5%'],
+    vehicleTypes: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
+    iconComponents: [FaCar, FaTruck, FaBus, FaMotorcycle, FaBicycle],
+    centerIconComponent: <FaArrowRightToBracket size={28} className="text-green-500" />,
+    centerTitle: "Masuk",
+    tooltipLabels: ['Mobil masuk', 'Truk masuk', 'Bus masuk', 'Motor masuk', 'Sepeda masuk'],
+    color: '#4ade80',
+    thickness: 25,
+    format: 'unit'
+  };
+
+  const outgoingVehicles = {
+    labels: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
+    values: [315, 118, 76, 498, 59],
+    percentages: ['30%', '11%', '7%', '47%', '5%'],
+    vehicleTypes: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
+    iconComponents: [FaCar, FaTruck, FaBus, FaMotorcycle, FaBicycle],
+    centerIconComponent: <FaArrowRightFromBracket size={28} className="text-red-500" />,
+    centerTitle: "Keluar",
+    tooltipLabels: ['Mobil keluar', 'Truk keluar', 'Bus keluar', 'Motor keluar', 'Sepeda keluar'],
+    color: '#BF3D3D',
+    thickness: 25,
+    format: 'unit'
+  };
+
+  const [incomingVehiclesBar2, setIncomingVehiclesBar2] = useState({
+    labels: [],
+    values: [],
+    percentages: [],
+    vehicleTypes: [],
+    // iconComponents: [],
+    directionRoad: [],
+    color: '#4ade80',
+    thickness: 25,
+    format: 'unit'
+  });
   
-    // Data untuk kendaraan keluar
-    const outgoingVehicles = {
-      labels: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
-      values: [315, 118, 76, 498, 59],
-      percentages: ['30%', '11%', '7%', '47%', '5%'],
-      vehicleTypes: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
-      iconComponents: [FaCar, FaTruck, FaBus, FaMotorcycle, FaBicycle],
-      centerIconComponent: <FaArrowRightFromBracket size={28} className="text-red-500" />,
-      centerTitle: "Keluar",
-      tooltipLabels: ['Mobil keluar', 'Truk keluar', 'Bus keluar', 'Motor keluar', 'Sepeda keluar'],
-      color: '#BF3D3D',
-      thickness: 25,
-      format: 'unit'
-    };
+  const [outgoingVehiclesBar2, setOutgoingVehiclesBar2] = useState({
+    labels: [],
+    values: [],
+    percentages: [],
+    vehicleTypes: [],
+    // iconComponents: [],
+    directionRoad: [],
+    color: '#BF3D3D',
+    thickness: 25,
+    format: 'unit'
+  });
   
-    const incomingVehiclesBar2 = {
-      labels: ['Utara', 'Selatan', 'Timur', 'Barat'],
-      values: [342, 127, 89, 523, 64],
-      percentages: ['30%', '11%', '8%', '46%', '5%'],
-      directionRoad: ['Utara', 'Selatan', 'Timur', 'Barat'],
-      centerIconComponent: <FaArrowRightToBracket size={28} className="text-green-500" />,
-      centerTitle: "Masuk",
-      tooltipLabels: ['Utara masuk', 'Selatan masuk', 'Timur masuk', 'Barat masuk'],
-      color: '#4ade80',
-      thickness: 25,
-      format: 'unit'
-    };
   
-    // Data untuk kendaraan keluar
-    const outgoingVehiclesBar2 = {
-      labels: ['Utara', 'Selatan', 'Timur', 'Barat'],
-      values: [315, 118, 76, 498, 59],
-      percentages: ['30%', '11%', '7%', '47%', '5%'],
-      directionRoad: ['Utara', 'Selatan', 'Timur', 'Barat'],
-      centerIconComponent: <FaArrowRightFromBracket size={28} className="text-red-500" />,
-      centerTitle: "Keluar",
-      tooltipLabels: ['Mobil keluar', 'Selatan keluar', 'Timur keluar', 'Barat keluar', 'Sepeda keluar'],
-      color: '#BF3D3D',
-      thickness: 25,
-      format: 'unit'
-    };
+  // const incomingVehiclesBar2 = {
+  //   labels: ['Utara', 'Selatan', 'Timur', 'Barat'],
+  //   values: [342, 127, 89, 523, 64],
+  //   percentages: ['30%', '11%', '8%', '46%', '5%'],
+  //   directionRoad: ['Utara', 'Selatan', 'Timur', 'Barat'],
+  //   centerTitle: "Masuk",
+  //   tooltipLabels: ['Utara masuk', 'Selatan masuk', 'Timur masuk', 'Barat masuk'],
+  //   color: '#4ade80',
+  //   thickness: 25,
+  //   format: 'unit'
+  // };
+
+  // const outgoingVehiclesBar2 = {
+  //   labels: ['Utara', 'Selatan', 'Timur', 'Barat'],
+  //   values: [315, 118, 76, 498, 59],
+  //   percentages: ['30%', '11%', '7%', '47%', '5%'],
+  //   directionRoad: ['Utara', 'Selatan', 'Timur', 'Barat'],
+  //   centerTitle: "Keluar",
+  //   tooltipLabels: ['Mobil keluar', 'Selatan keluar', 'Timur keluar', 'Barat keluar', 'Sepeda keluar'],
+  //   color: '#BF3D3D',
+  //   thickness: 25,
+  //   format: 'unit'
+  // };
+
+  const cameraStatusData = [
+    { 
+      start: new Date('2023-01-01T00:00:00').getTime(), 
+      end: new Date('2023-01-01T06:00:00').getTime(), 
+      status: true  // Menyala - Hijau
+    },
+    { 
+      start: new Date('2023-01-01T06:00:00').getTime(), 
+      end: new Date('2023-01-01T08:00:00').getTime(), 
+      status: false  // Mati - Merah
+    },
+    { 
+      start: new Date('2023-01-01T08:00:00').getTime(), 
+      end: new Date('2023-01-01T12:00:00').getTime(), 
+      status: true  // Menyala - Hijau
+    },
+    { 
+      start: new Date('2023-01-01T12:00:00').getTime(), 
+      end: new Date('2023-01-01T14:00:00').getTime(), 
+      status: false  // Mati - Merah
+    },
+    { 
+      start: new Date('2023-01-01T14:00:00').getTime(), 
+      end: new Date('2023-01-01T18:00:00').getTime(), 
+      status: true  // Menyala - Hijau
+    },
+    { 
+      start: new Date('2023-01-01T18:00:00').getTime(), 
+      end: new Date('2023-01-01T24:00:00').getTime(), 
+      status: null  // Tidak aktif - Abu-abu
+    }
+  ];
   
-      const cameraStatusData = [
-        // Interval 00:00 - 06:00 (Kamera menyala)
-        { 
-          start: new Date('2023-01-01T00:00:00').getTime(), 
-          end: new Date('2023-01-01T06:00:00').getTime(), 
-          status: true  // Menyala - Hijau
-        },
-        { 
-          start: new Date('2023-01-01T06:00:00').getTime(), 
-          end: new Date('2023-01-01T08:00:00').getTime(), 
-          status: false  // Mati - Merah
-        },
-        { 
-          start: new Date('2023-01-01T08:00:00').getTime(), 
-          end: new Date('2023-01-01T12:00:00').getTime(), 
-          status: true  // Menyala - Hijau
-        },
-        { 
-          start: new Date('2023-01-01T12:00:00').getTime(), 
-          end: new Date('2023-01-01T14:00:00').getTime(), 
-          status: false  // Mati - Merah
-        },
-        { 
-          start: new Date('2023-01-01T14:00:00').getTime(), 
-          end: new Date('2023-01-01T18:00:00').getTime(), 
-          status: true  // Menyala - Hijau
-        },
-        { 
-          start: new Date('2023-01-01T18:00:00').getTime(), 
-          end: new Date('2023-01-01T24:00:00').getTime(), 
-          status: null  // Tidak aktif - Abu-abu
+  const handleFilterChange = (filter) => {
+    setActiveFilter(filter);
+  };
+
+  const handleFilterSection2 = (filter) => {
+    setActiveFilterSection2(filter);
+  };
+
+  // Fetch data on component mount and when activeFilter changes
+  useEffect(() => {
+    // const fetchByArah = async () => {
+    //   try {
+    //     const response = await vehicles.getByArah();
+    //     if (response.status === 200 && response.data.data.length > 0) {
+    //       const data = response.data.data;
+    //       const dataFormatted = data.map(item => ({
+    //         name: item.arah,
+    //         masuk: item.total_IN,
+    //         keluar: item.total_OUT,
+    //       }));
+    //       setIOByArahData(dataFormatted);
+    //     } else {
+    //       setIOByArahData([]);
+    //     }
+    //   } catch (error) {
+    //     console.error('Error fetching data:', error);
+    //   }
+    // }
+    const fetchByArah = async () => {
+      try {
+        const response = await vehicles.getByArah();
+        
+        if (response.status === 200 && response.data.data.length > 0) {
+          const apiData = response.data.data;
+          
+          // Definisi icon untuk masing-masing arah
+          // const directionIcons = {
+          //   east: FaArrowRight,
+          //   north: FaArrowUp,
+          //   west: FaArrowLeft,
+          //   south: FaArrowDown
+          // };
+          
+          // Warna untuk masing-masing arah
+          // const directionColors = {
+          //   east: '#4ade80',
+          //   north: '#60a5fa',
+          //   west: '#f59e0b',
+          //   south: '#8b5cf6'
+          // };
+          
+          // Data untuk kendaraan masuk
+          const incomingValues = apiData.map(item => parseInt(item.total_IN));
+          const incomingTotal = incomingValues.reduce((a, b) => a + b, 0);
+          const incomingPercentages = apiData.map(item => 
+            ((parseInt(item.total_IN) / incomingTotal) * 100).toFixed(0) + '%'
+          );
+          
+          // Data untuk kendaraan keluar
+          const outgoingValues = apiData.map(item => parseInt(item.total_OUT));
+          const outgoingTotal = outgoingValues.reduce((a, b) => a + b, 0);
+          const outgoingPercentages = apiData.map(item => 
+            ((parseInt(item.total_OUT) / outgoingTotal) * 100).toFixed(0) + '%'
+          );
+          
+          // Format data untuk chart masuk
+          const incomingVehiclesBar2 = {
+            labels: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
+            values: incomingValues,
+            percentages: incomingPercentages,
+            vehicleTypes: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
+            // iconComponents: apiData.map(item => directionIcons[item.arah] || null),
+            directionRoad: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
+            // centerIconComponent: <FaArrowRightToBracket size={28} className="text-green-500" />,
+            centerTitle: "Masuk",
+            tooltipLabels: apiData.map(item => `${item.arah.charAt(0).toUpperCase() + item.arah.slice(1)} masuk`),
+            color: '#4ade80',
+            thickness: 25,
+            format: 'unit'
+          };
+          
+          // Format data untuk chart keluar
+          const outgoingVehiclesBar2 = {
+            labels: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
+            values: outgoingValues,
+            percentages: outgoingPercentages,
+            vehicleTypes: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
+            // iconComponents: apiData.map(item => directionIcons[item.arah] || null),
+            directionRoad: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
+            // centerIconComponent: <FaArrowRightFromBracket size={28} className="text-red-500" />,
+            centerTitle: "Keluar",
+            tooltipLabels: apiData.map(item => `${item.arah.charAt(0).toUpperCase() + item.arah.slice(1)} keluar`),
+            color: '#BF3D3D',
+            thickness: 25,
+            format: 'unit'
+          };
+          
+          // Simpan data ke state
+          setIncomingVehiclesBar2(incomingVehiclesBar2);
+          setOutgoingVehiclesBar2(outgoingVehiclesBar2);
+          setIOByArahData(apiData.map(item => ({
+            name: item.arah,
+            masuk: parseInt(item.total_IN),
+            keluar: parseInt(item.total_OUT),
+          })));
+        } else {
+          setIOByArahData([]);
+          // Set default data jika API tidak mengembalikan data yang valid
+          setIncomingVehiclesBar2({
+            labels: [],
+            values: [],
+            percentages: [],
+            vehicleTypes: [],
+            iconComponents: [],
+            directionRoad: [],
+            color: '#4ade80',
+            thickness: 25,
+            format: 'unit'
+          });
+          setOutgoingVehiclesBar2({
+            labels: [],
+            values: [],
+            percentages: [],
+            vehicleTypes: [],
+            iconComponents: [],
+            directionRoad: [],
+            color: '#BF3D3D',
+            thickness: 25,
+            format: 'unit'
+          });
         }
-      ];
-      
-      const handleFilterChange = (filter) => {
-        setActiveFilter(filter);
-      };
-      const handleFilterSection2 = (filter) => {
-        setActiveFilterSection2(filter);
-      };
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setIOByArahData([]);
+      }
+    };
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await vehicles.getAll();
+        
+        console.log(response.data)
+        if (response.status === 200 && response.data.data.length > 0) {
+          // Periksa apakah total_IN dan total_OUT bukan null
+          const totalIn = response.data.data[0]?.total_IN !== null ? parseFloat(response.data.data[0].total_IN) : 0;
+          const totalOut = response.data.data[0]?.total_OUT !== null ? parseFloat(response.data.data[0].total_OUT) : 0;
+          const totalTraffic = totalIn + totalOut;
+          const inPercentage = totalTraffic > 0 ? (totalIn / totalTraffic * 100).toFixed(1) : 0;
+          const outPercentage = totalTraffic > 0 ? (totalOut / totalTraffic * 100).toFixed(1) : 0;
+          
+          const transformedData = [{
+            name: 'Today',
+            masuk: totalIn,
+            keluar: totalOut,
+            masukPercentage: parseFloat(inPercentage),
+            keluarPercentage: parseFloat(outPercentage)
+          }];
+          console.log(transformedData)
+          setChartData(transformedData);
+        } else {
+          // Set default data jika respons tidak sesuai yang diharapkan
+          setChartData([{
+            name: 'Today',
+            masuk: 0,
+            keluar: 0,
+            masukPercentage: 0,
+            keluarPercentage: 0
+          }]);
+        }
+      } catch (error) {
+        console.error("Error fetching vehicle data:", error);
+        // Set default data jika terjadi error
+        setChartData([{
+          name: 'Today',
+          masuk: 0,
+          keluar: 0,
+          masukPercentage: 0,
+          keluarPercentage: 0
+        }]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    const fetchAllData = async () => {
+      await Promise.all([fetchData(), fetchByArah()]);
+    };
+
+    fetchAllData();
+    // Set up interval for data refresh
+    const intervalId = setInterval(fetchAllData, 60000); // Refresh every minute
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [activeFilter]);
+
   return (
     <div className="p-4 text-base-700 flex flex-col items-center gap-8 overflow-y-hidden">
       <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
@@ -166,8 +390,16 @@ export default function Home() {
             Periode Ini
           </button>
         </div>
-        <TotalChart />
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="text-blue-950">Loading chart data...</div>
+          </div>
+        ) : (
+          <TotalChart data={chartData} />
+        )}
       </div>
+      
+      {/* Rest of your component remains unchanged */}
       <div className="flex flex-col md:flex-row items-center justify-center gap-2 w-[90%] bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
         <div className="w-full md:w-1/2">
           <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Masuk</h2>

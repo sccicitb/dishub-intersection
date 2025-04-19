@@ -4,11 +4,14 @@ export function middleware(req) {
   const token = req.cookies.get("token")?.value;
   const pathname = req.nextUrl.pathname;
 
+  const isApiRoute = pathname.startsWith("/api/");
+  if (isApiRoute) {
+    return NextResponse.next(); // <--- langsung loloskan API, jangan diapa-apain
+  }
+
   const protectedRoutes = ["/"];
   const validRoutes = ["/", "/auth", "/not-found"];
-  const isApiRoute = pathname.startsWith("/api/");
-  const isRouteValid = (path) => validRoutes.includes(path) || isApiRoute || path.startsWith("/camera/");
-
+  const isRouteValid = (path) => validRoutes.includes(path) || path.startsWith("/camera/");
   // Jika halaman bukan valid route, redirect ke not-found
   if (!isRouteValid(pathname)) {
     return NextResponse.redirect(new URL("/not-found", req.url));
