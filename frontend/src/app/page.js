@@ -478,7 +478,7 @@ export default function Home() {
       </div>
       
       {/* Rest of your component remains unchanged */}
-      <div className="flex flex-col md:flex-row items-center justify-center gap-2 w-[90%] bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
+      <div className="flex flex-col md:flex-row items-center justify-between w-[90%] bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
         <div className="w-full md:w-1/2">
           <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Masuk</h2>
           <LintasChart positionText={true} chartData={vehicleData?.incomingVehicles}/>

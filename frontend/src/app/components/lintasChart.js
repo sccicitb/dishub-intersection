@@ -208,13 +208,13 @@ export default function HorizontalBarChart({ positionText, chartData }) {
   }, [positionText, chartData]);
 
   return (
-    <div className="w-[90%] max-w-lg mx-auto">
-      <div className="h-64 p-4 rounded-lg relative">
+    <div className="w-[90%]  mx-auto">
+      <div className="h-64 p-1 rounded-lg relative">
         <canvas ref={chartRef}></canvas>
         
         {/* Render ikon-ikon di sepanjang sumbu Y di sebelah label */}
         {chartData?.iconComponents && (
-          <div className={`absolute inset-y-0 ${positionText ? ' -right-5 ' : ' -left-5 text-right '} flex flex-col justify-evenly pt-6 pb-3 pointer-events-none`}>
+          <div className={`absolute inset-y-0 ${positionText ? ' -right-6 ' : ' -left-6 text-right '} flex flex-col justify-evenly pt-6 pb-3 pointer-events-none`}>
             {chartData.iconComponents.map((IconComponent, index) => (
               <div key={index} className="text-gray-600">
                 {IconComponent && <IconComponent size={22} />}
@@ -223,7 +223,7 @@ export default function HorizontalBarChart({ positionText, chartData }) {
           </div>
         )}
         {chartData?.directionRoad && (
-          <div className={`absolute font-semibold -inset-y-2 ${positionText ? ' 2xl:-right-12  xl:text-center right-8 not-xl:shadow-accent-content text-gray-800' : 'left-8 text-left not-xs:shadow-accent-content text-gray-800 2xl:-left-12 not-xl:text-right '} flex flex-col justify-evenly pt-6 pb-3 pointer-events-none`}>
+          <div className={`absolute font-semibold -inset-y-6 ${positionText ? ' 2xl:-right-12  xl:text-left text-right right-8 not-xl:shadow-accent-content text-gray-800' : 'left-8 text-right not-xs:shadow-accent-content text-gray-800 2xl:-left-12 not-xl:text-left '} flex flex-col justify-evenly pt-6 pb-3 pointer-events-none`}>
             {chartData.directionRoad.map((dataDirect, index) => (
               <div key={index}>
                 {dataDirect}

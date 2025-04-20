@@ -27,7 +27,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className="h-screen flex flex-col">
-      <ClockBar />
+      {/* <ClockBar /> */}
       <div className="drawer 2xl:drawer-open">
         <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content flex flex-col">
@@ -37,7 +37,9 @@ const Layout = ({ children }) => {
                 <Icons.AiOutlineMenu className="inline-block text-lg" />
               </label>
             </div>
-            <div className="mx-2 flex-1 px-2 font-semibold"></div>
+            <div className="mx-2 flex-1 px-2 font-semibold text-center w-full">
+            <Breadcrumbs/>
+            </div>
             <div className="hidden flex-none 2xl:block">
               <div className="flex menu-horizontal items-center gap-2">
                 <ThemeToggle />
@@ -46,7 +48,6 @@ const Layout = ({ children }) => {
             </div>
           </div>
           <div className="flex-1 overflow-auto">
-          <Breadcrumbs/>
             {children}
           </div>
         </div>
@@ -56,7 +57,7 @@ const Layout = ({ children }) => {
           <div className="menu bg-base-200 text-base-content font-semibold min-h-full w-64 p-4 gap-4">
           <div className="flex justify-center">
             <Image
-              src="/logo-viana.png"
+              src="/image/IC_SMART MOBILITY.png"
               alt="Logo"
               width={150}
               height={150}

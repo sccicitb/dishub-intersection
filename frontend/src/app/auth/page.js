@@ -81,7 +81,7 @@ export default function Auth() {
             <div className="flex items-center w-full justify-between">
               <h3 className="text-sm font-semibold">WELCOME BACK</h3>
               <Image 
-                src="/logo-viana.png"
+                src="/image/IC_SMART MOBILITY.png"
                 alt="Logo Viana"
                 width={80}
                 height={80}

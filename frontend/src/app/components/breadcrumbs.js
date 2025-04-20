@@ -37,9 +37,9 @@ export default function Breadcrumbs() {
   });
   
   return (
-    <nav className={`flex items-center text-sm font-semibold p-5 ${pathname === "/" && "hidden"}` }>
+    <nav className={`flex items-center text-sm font-semibold p-5` }>
       <Link href="/" className="flex items-center">
-        <AiIcons.AiFillHome className="mr-1" />
+        {/* <AiIcons.AiFillHome className="mr-1" /> */}
         <span>Dashboard</span>
       </Link>
       
@@ -56,7 +56,7 @@ export default function Breadcrumbs() {
           <div key={index} className="flex items-center ">
             <span className="mx-2">/ </span>
             <Link href={item.path} className="flex items-center">
-              {IconComponent && <IconComponent className="mr-1" />}
+              {/* {IconComponent && <IconComponent className="mr-1" />} */}
               <span>{item.name}</span>
             </Link>
           </div>
