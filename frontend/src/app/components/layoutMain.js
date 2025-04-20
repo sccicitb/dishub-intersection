@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import * as Icons from "react-icons/ai";
+import * as FaIcons from "react-icons/fa";
 import listMenu from "@/app/data/menu.json";
 import ThemeToggle from "@/app/components/customTheme";
 import { Logout } from "@/app/auth/logout";
@@ -8,6 +9,7 @@ import ClockBar from "@/app/components/clockBar";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/app/context/authContext";
 import Breadcrumbs from "./breadcrumbs";
+import ProfileDropdown from "@/app/components/profileDropdown"
 // import { redirect } from "next/navigation";
 const Layout = ({ children }) => {
   const { token, pathname, idUser } = useAuth();
@@ -37,13 +39,12 @@ const Layout = ({ children }) => {
                 <Icons.AiOutlineMenu className="inline-block text-lg" />
               </label>
             </div>
-            <div className="mx-2 flex-1 px-2 font-semibold text-center w-full">
+            <div className="mx-2 flex-1 px-2 font-semibold text-center w-full justify-center flex">
             <Breadcrumbs/>
             </div>
             <div className="hidden flex-none 2xl:block">
               <div className="flex menu-horizontal items-center gap-2">
-                <ThemeToggle />
-                <Logout />
+                <ProfileDropdown />
               </div>
             </div>
           </div>
@@ -68,10 +69,11 @@ const Layout = ({ children }) => {
           <ul className="flex flex-col gap-2 py-2">
             {listMenu?.map((item, index) => {
               const IconComponents = item.icon ? Icons[item.icon] : null;
+              const IconComponentsOther = IconComponents ? IconComponents : FaIcons[item.icon] ? FaIcons[item.icon] : null;
               return (
                 <li key={index} >
                   <a href={item.url} className={pathname === item.url ? `items-center bg-red-900 box-shadow rounded-xl text-white py-2` : `rounded-xl py-2 ` + `my-0.5`}>
-                    {IconComponents && <IconComponents className="inline-block mr-2 text-xl" />}
+                    {IconComponents && <IconComponentsOther className="inline-block mr-2 text-xl" />}
                     {item.name}
                   </a>
                 </li>
@@ -80,6 +82,7 @@ const Layout = ({ children }) => {
             <div className="lg:hidden absolute bottom-5">
               <div className="flex flex-col items-start gap-2">
               <div className="flex">
+                <ProfileDropdown />
                 <ThemeToggle />
                 <Logout />
               </div>

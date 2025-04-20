@@ -208,13 +208,13 @@ export default function HorizontalBarChart({ positionText, chartData }) {
   }, [positionText, chartData]);
 
   return (
-    <div className="w-[90%]  mx-auto">
+    <div className="w-[90%] mx-auto">
       <div className="h-64 p-1 rounded-lg relative">
         <canvas ref={chartRef}></canvas>
         
         {/* Render ikon-ikon di sepanjang sumbu Y di sebelah label */}
         {chartData?.iconComponents && (
-          <div className={`absolute inset-y-0 ${positionText ? ' -right-6 ' : ' -left-6 text-right '} flex flex-col justify-evenly pt-6 pb-3 pointer-events-none`}>
+          <div className={`absolute inset-y-0 ${positionText ? ' lg:-right-6 right-5 ' : ' lg:-left-6 left-5 '} flex flex-col justify-evenly pt-6 pb-3 pointer-events-none`}>
             {chartData.iconComponents.map((IconComponent, index) => (
               <div key={index} className="text-gray-600">
                 {IconComponent && <IconComponent size={22} />}

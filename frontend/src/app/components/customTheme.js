@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from 'react';
 
-function ThemeToggle() {
+function ThemeToggle({ classCustom }) {
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
     useEffect(() => {
@@ -26,7 +26,7 @@ function ThemeToggle() {
     };
 
     return (
-        <button className="btn btn-sm" onClick={toggleTheme}>
+        <button className={`btn btn-sm  ${classCustom || ""}`} onClick={toggleTheme}>
             {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
         </button>
     );

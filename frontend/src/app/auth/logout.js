@@ -7,8 +7,8 @@ export const logout = () => {
   window.location.href = "/auth";
 }
 
-export const Logout = () => {
+export const Logout = ({classCustom}) => {
   return (
-    <button className="btn btn-square w-fit px-2 btn-sm place-items-center " onClick={logout}>Logout</button>
+    <button className={`btn px-2 btn-sm ${classCustom || ""}`} onClick={logout}>Logout</button>
   )
 }
