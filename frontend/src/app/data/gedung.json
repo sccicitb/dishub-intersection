@@ -1,30 +1,35 @@
 {
   "buildings": [
     {
-      "id": 1,
-      "name": "Gedung A",
-      "totalFloors": 2,
+      "id": 2,
+      "name": "Simpang Prambanan",
       "location": {
-        "latitude": -6.9175,
-        "longitude": 107.6191
+        "latitude": -7.755390,
+        "longitude": 110.489030
       }
     },
     {
-      "id": 2,
-      "name": "Gedung B",
-      "totalFloors": 3,
+      "id": 4,
+      "name": "Simpang Piyungan",
       "location": {
-        "latitude": -6.9175,
-        "longitude": 107.6200
+        "latitude": -7.838162,
+        "longitude": 110.476066
       }
     },
     {
       "id": 3,
-      "name": "Parkir A",
-      "totalFloors": 1,
+      "name": "Simpang ID 3",
       "location": {
-        "latitude": -6.9179,
-        "longitude": 107.6200
+        "latitude": -7.888059,
+        "longitude": 110.092591
+      }
+    },
+    {
+      "id": 5,
+      "name": "Simpang ID 5",
+      "location": {
+        "latitude": -7.653937,
+        "longitude": 110.325663
       }
     }
   ]

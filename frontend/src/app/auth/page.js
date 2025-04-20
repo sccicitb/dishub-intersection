@@ -9,7 +9,7 @@ import { useAuth } from "../context/authContext";
 export default function Auth() {
   const router = useRouter();
   const {loading, setLoading, setUserId} = useAuth()
-  const [username, setUsername] = useState("thomhaye@gmail.com");
+  const [username, setUsername] = useState("viana@dishub.jogjaprov.go.id");
   const [password, setPassword] = useState("password");
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
