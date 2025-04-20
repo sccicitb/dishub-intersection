@@ -55,7 +55,7 @@ export default function NavbarUserDropdown() {
           <div className="py-1" role="menu" aria-orientation="vertical">
             <div className="px-4 py-2 text-sm border-b border-gray-200 ">
               <p className="font-medium">Admin User</p>
-              <p className="text-xs text-gray-500 00">admin@example.com</p>
+              <p className="text-xs text-gray-500">admin@example.com</p>
             </div>
             
             <div className="flex flex-col">

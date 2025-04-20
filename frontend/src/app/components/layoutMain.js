@@ -5,11 +5,12 @@ import * as FaIcons from "react-icons/fa";
 import listMenu from "@/app/data/menu.json";
 import ThemeToggle from "@/app/components/customTheme";
 import { Logout } from "@/app/auth/logout";
-import ClockBar from "@/app/components/clockBar";
+// import ClockBar from "@/app/components/clockBar";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/app/context/authContext";
 import Breadcrumbs from "./breadcrumbs";
 import ProfileDropdown from "@/app/components/profileDropdown"
+import PageWrapper from "./wrapper";
 // import { redirect } from "next/navigation";
 const Layout = ({ children }) => {
   const { token, pathname, idUser } = useAuth();
@@ -49,7 +50,9 @@ const Layout = ({ children }) => {
             </div>
           </div>
           <div className="flex-1 overflow-auto">
-            {children}
+            <PageWrapper>
+              {children}
+            </PageWrapper>
           </div>
         </div>
         {/* Sidebar */}
@@ -68,12 +71,17 @@ const Layout = ({ children }) => {
           </div>
           <ul className="flex flex-col gap-2 py-2">
             {listMenu?.map((item, index) => {
-              const IconComponents = item.icon ? Icons[item.icon] : null;
-              const IconComponentsOther = IconComponents ? IconComponents : FaIcons[item.icon] ? FaIcons[item.icon] : null;
-              return (
+              // Try to find the icon in the primary Icons library
+                let IconComponent = item.icon && Icons[item.icon];
+                
+                // If not found in the primary library, try the FaIcons library
+                if (!IconComponent && item.icon && FaIcons[item.icon]) {
+                  IconComponent = FaIcons[item.icon];
+                }              
+                return (
                 <li key={index} >
                   <a href={item.url} className={pathname === item.url ? `items-center bg-red-900 box-shadow rounded-xl text-white py-2` : `rounded-xl py-2 ` + `my-0.5`}>
-                    {IconComponents && <IconComponentsOther className="inline-block mr-2 text-xl" />}
+                    {IconComponent && <IconComponent className="inline-block mr-2 text-xl" />}
                     {item.name}
                   </a>
                 </li>
