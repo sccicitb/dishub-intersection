@@ -1,6 +1,6 @@
 # 🚦 Mobility Dishub Jogja
 
-Sistem monitoring dan analitik arus kendaraan untuk Dinas Perhubungan Kota Yogyakarta.
+Sistem monitoring dan analitik arus kendaraan untuk Dinas Perhubungan Provinsi Daerah Istimewa Yogyakarta.
 
 ## 📁 Struktur Proyek
 
