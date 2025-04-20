@@ -126,7 +126,7 @@ const MapComponent = () => {
 
   return (
     <div>
-      <div className="p-5 text-xl font-semibold">Maps Location Camera</div>
+      <div className="p-5 text-xl font-semibold">Titik Lokasi Kamera</div>
       <div className="block w-full">
         <div style={{ width: "100%", height: "80vh" }} className="relative ">
           <Map
