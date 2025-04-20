@@ -34,16 +34,16 @@ const Layout = ({ children }) => {
       <div className="drawer 2xl:drawer-open">
         <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content flex flex-col">
-          <div className="navbar bg-base-200 w-full sticky top-0 z-50">
+          <div className="navbar bg-[#7585C1]/90 w-full sticky top-0 z-[50] 2xl:z-[60] h-20">
             <div className="flex-none 2xl:hidden">
               <label htmlFor="my-drawer-2" aria-label="open sidebar" className="btn btn-square btn-ghost">
-                <Icons.AiOutlineMenu className="inline-block text-lg" />
+                <Icons.AiOutlineMenu className="inline-block text-xl" />
               </label>
             </div>
-            <div className="mx-2 flex-1 px-2 font-semibold text-center w-full justify-center flex">
+            <div className="mx-2 flex-1 px-2 font-semibold w-full xl:justify-center flex">
             <Breadcrumbs/>
             </div>
-            <div className="hidden flex-none 2xl:block">
+            <div className="flex-none">
               <div className="flex menu-horizontal items-center gap-2">
                 <ProfileDropdown />
               </div>
@@ -56,10 +56,11 @@ const Layout = ({ children }) => {
           </div>
         </div>
         {/* Sidebar */}
-        <div className="drawer-side z-50">
+        <div className="drawer-side z-[50]">
           <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay"></label>
-          <div className="menu bg-base-200 text-base-content font-semibold min-h-full w-64 p-4 gap-4">
+          <div className="menu bg-[#7585C1]/90 not-2xl:rounded-tr-4xl text-base-content font-semibold min-h-full p-0 w-64 gap-4">
           <div className="flex justify-center">
+          <div className="rounded-tr-4xl bg-neutral-800/90 w-full h-20 p-5">
             <Image
               src="/image/IC_SMART MOBILITY.png"
               alt="Logo"
@@ -69,7 +70,8 @@ const Layout = ({ children }) => {
               onLoadingComplete={() => setLoaded(true)}
             />
           </div>
-          <ul className="flex flex-col gap-2 py-2">
+          </div>
+          <ul className="flex flex-col gap-2 p-2">
             {listMenu?.map((item, index) => {
               // Try to find the icon in the primary Icons library
                 let IconComponent = item.icon && Icons[item.icon];
@@ -80,14 +82,14 @@ const Layout = ({ children }) => {
                 }              
                 return (
                 <li key={index} >
-                  <a href={item.url} className={pathname === item.url ? `items-center bg-red-900 box-shadow rounded-xl text-white py-2` : `rounded-xl py-2 ` + `my-0.5`}>
+                  <a href={item.url} className={pathname === item.url ? `items-center bg-neutral-800/90 box-shadow rounded-xl text-white py-2` : `rounded-xl py-2 ` + `my-0.5 text-white`}>
                     {IconComponent && <IconComponent className="inline-block mr-2 text-xl" />}
                     {item.name}
                   </a>
                 </li>
               );
             })}
-            <div className="lg:hidden absolute bottom-5">
+            {/* <div className="lg:hidden absolute bottom-5">
               <div className="flex flex-col items-start gap-2">
               <div className="flex">
                 <ProfileDropdown />
@@ -95,7 +97,7 @@ const Layout = ({ children }) => {
                 <Logout />
               </div>
               </div>
-            </div>
+            </div> */}
           </ul>
           </div>
         </div>

@@ -31,7 +31,7 @@ export default function NavbarUserDropdown() {
     <div className="relative" ref={dropdownRef}>
       {/* User avatar and dropdown toggle */}
       <div className="flex items-center gap-2 cursor-pointer" onClick={toggleDropdown}>
-        <div className="flex items-center bg-indigo-400 text-white p-1.5 rounded-md">
+        <div className="flex items-center bg-indigo-300/95 text-white p-1.5 rounded-md">
           <span className="text-sm font-medium px-2">Hi, Admin User!</span>
           <div className="avatar bg-red-600 rounded-full w-7 h-7 flex items-center justify-center text-xs text-white font-medium">
             AU
@@ -51,11 +51,11 @@ export default function NavbarUserDropdown() {
 
       {/* Dropdown menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-base-100 ring-1 ring-black ring-opacity-5 z-50">
+        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-base-100 z-50">
           <div className="py-1" role="menu" aria-orientation="vertical">
             <div className="px-4 py-2 text-sm border-b border-gray-200 ">
               <p className="font-medium">Admin User</p>
-              <p className="text-xs text-gray-500">admin@example.com</p>
+              <p className="text-xs text-gray-500">viana@dishub.jogjaprov.go.id</p>
             </div>
             
             <div className="flex flex-col">

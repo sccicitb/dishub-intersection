@@ -37,7 +37,7 @@ export default function Breadcrumbs() {
   });
   
   return (
-    <nav className={`flex items-center text-sm font-semibold p-5` }>
+    <nav className={`flex items-center text-sm font-semibold p-5 text-white` }>
       <Link href="/" className="flex items-center">
         {/* <AiIcons.AiFillHome className="mr-1" /> */}
         <span>Dashboard</span>

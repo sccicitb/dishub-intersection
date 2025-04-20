@@ -30,7 +30,7 @@ export default function Auth() {
 
     try {
       // Simulasi validasi user
-      if (username === "thomhaye@gmail.com" && password === "password") {
+      if (username === "viana@dishub.jogjaprov.go.id" && password === "password") {
         const fakeToken = "mocked.jwt.token";
         Cookies.set("token", fakeToken, { expires: 0.5, path: "/" });
 
