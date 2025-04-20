@@ -1,7 +1,7 @@
 // app/components/grafikRoad.jsx
 "use client";
 import { useEffect, useState } from 'react';
-import TrafficFlowChart from './traficFlowChart';
+import TrafficFlowChart from './trafficFlowChart';
 import { vehicles } from '@/lib/apiAccess';
 export default function GrafikRoad() {
   const [trafficData, setTrafficData] = useState(null);
@@ -37,6 +37,9 @@ export default function GrafikRoad() {
     };
 
     fetchTrafficData();
+    const intervalId = setInterval(fetchTrafficData, 60000);
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   // Format API data for the chart component
@@ -91,12 +94,14 @@ export default function GrafikRoad() {
       <h2 className="text-xl font-medium mb-4 text-center">Lalu Lintas Jam-Jaman Rata-Rata</h2>
       
       {loading ? (
-        <div className="w-full h-96 flex items-center justify-center bg-base-100 rounded-lg">
-          <p className="text-white">Loading data...</p>
-        </div>
+        <div className="...">Loading data...</div>
       ) : error ? (
-        <div className="w-full h-96 flex items-center justify-center bg-base-100 rounded-lg">
+        <div className="...">
           <p className="text-red-500">{error}</p>
+        </div>
+      ) : !trafficData ? (
+        <div className="...">
+          <p className="text-yellow-500">No data available</p>
         </div>
       ) : (
         <TrafficFlowChart trafficData={trafficData} />

@@ -367,7 +367,6 @@ export default function Home() {
       try {
         const response = await vehicles.getAll();
         
-        console.log(response.data)
         if (response.status === 200 && response.data.data.length > 0) {
           // Periksa apakah total_IN dan total_OUT bukan null
           const totalIn = response.data.data[0]?.total_IN !== null ? parseFloat(response.data.data[0].total_IN) : 0;
