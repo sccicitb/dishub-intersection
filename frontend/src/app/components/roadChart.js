@@ -37,9 +37,9 @@ export default function GrafikRoad() {
     };
 
     fetchTrafficData();
-    const intervalId = setInterval(fetchTrafficData, 60000);
+    // const intervalId = setInterval(fetchTrafficData, 100000);
     
-    return () => clearInterval(intervalId);
+    // return () => clearInterval(intervalId);
   }, []);
 
   // Format API data for the chart component

@@ -416,10 +416,10 @@ export default function Home() {
 
     fetchAllData();
     // Set up interval for data refresh
-    const intervalId = setInterval(fetchAllData, 60000); // Refresh every minute
+    // const intervalId = setInterval(fetchAllData, 100000); // Refresh every minute
     
     // Clean up interval on component unmount
-    return () => clearInterval(intervalId);
+    // return () => clearInterval(intervalId);
   }, [activeFilter]);
 
   return (

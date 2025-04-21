@@ -72,7 +72,7 @@ export default function Auth() {
     <div className="relative w-full min-h-screen">
       {/* Background image using next/image */}
       <Image
-        src="/image/bg-login-viana.png"
+        src="/image/bg-Login-viana.png"
         alt="Background"
         fill
         className="object-cover -z-10"
