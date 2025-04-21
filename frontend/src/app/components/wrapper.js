@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import NotComplete from "/notComplete";
+import NotComplete from "@/app/components/notComplete";
 import comingSoonList from "@/app/data/comingSoon.json"; // Pastikan path ini sesuai
 
 
