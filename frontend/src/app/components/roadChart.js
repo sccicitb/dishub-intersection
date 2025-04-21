@@ -1,7 +1,7 @@
 // app/components/grafikRoad.jsx
 "use client";
 import { useEffect, useState } from 'react';
-import TrafficFlowChart from './trafficFlowChart';
+import TrafficFlowChart from '@/app/components/TrafficFlowChart';
 import { vehicles } from '@/lib/apiAccess';
 
 export default function GrafikRoad() {
@@ -21,8 +21,7 @@ export default function GrafikRoad() {
         // Fetch 15-minute data
         const minuteResponse = await vehicles.getByMinute();
         const minuteData = minuteResponse;
-        
-        if (hourlyData.status === 200 && minuteData.status === 200) {
+        if (hourlyData.data.data.length > 0 && minuteData.data.data.length > 0) {
           // Format data for the chart
           const formattedData = formatTrafficData(hourlyData.data.data, minuteData.data.data);
           setTrafficData(formattedData);
