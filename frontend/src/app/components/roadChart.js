@@ -1,7 +1,7 @@
 // app/components/grafikRoad.jsx
 "use client";
 import { useEffect, useState } from 'react';
-import TrafficFlowChart from '@/app/components/TrafficFlowChart';
+import TrafficFlowChart from '@/app/components/trafficChart';
 import { vehicles } from '@/lib/apiAccess';
 
 export default function GrafikRoad() {

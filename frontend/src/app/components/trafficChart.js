@@ -1,11 +1,11 @@
-// app/components/TrafficFlowChart.jsx
+// app/components/TrafficChart.jsx
 "use client";
 import { useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-export default function TrafficFlowChart({ trafficData }) {
+export default function TrafficChart({ trafficData }) {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
 
