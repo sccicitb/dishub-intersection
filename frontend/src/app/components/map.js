@@ -6,10 +6,10 @@ import * as turf from "@turf/turf";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import gedung from "@/app/data/gedung.json";
 import ruangan from "@/app/data/ruangan.json";
-import { AiFillCaretRight } from "react-icons/ai";
+import { FaAngleDown } from "react-icons/fa6";
 import { useAuth } from "../context/authContext";
 
-const MapComponent = () => {
+const MapComponent = ({title}) => {
   const { setLoading } = useAuth();
   const [lokasiGedung, setLokasiGedung] = useState([]);
   const [bounds, setBounds] = useState(null);
@@ -17,13 +17,16 @@ const MapComponent = () => {
   const [selectedGedung, setSelectedGedung] = useState(null);
   const [detail, setDetailLocation] = useState(false);
   const center = { longitude: 107.6191, latitude: -6.9175 };
-
+  
+  const [isOpen, setIsOpen] = useState(false);
+  const [isOpenItem2, setIsOpenItem2] = useState(false);
   const [dataRoom, setDataRoom] = useState([]);
   const [gedungSelect, setGedungSelect] = useState(null);
   const [currentFloor, setCurrentFloor] = useState(1);
   const [buildingData, setBuildingData] = useState(
     ruangan.find((b) => b.building === gedungSelect) || { floors: [] }
   );
+  const [categorizedBuildings, setCategorizedBuildings] = useState({});
 
   useEffect(() => {
     const newBuilding = ruangan.find((b) => b.building === gedungSelect) || {
@@ -61,6 +64,17 @@ const MapComponent = () => {
       );
       const bbox = turf.bbox(featureCollection); // [minLng, minLat, maxLng, maxLat]
       setBounds(bbox);
+
+      // Group buildings by category
+      const groupedBuildings = gedung.buildings.reduce((acc, building) => {
+        const category = building.category || "lainnya";
+        if (!acc[category]) {
+          acc[category] = [];
+        }
+        acc[category].push(building);
+        return acc;
+      }, {});
+      setCategorizedBuildings(groupedBuildings);
     }
 
     setKeymap(mapStyles[theme]);
@@ -96,6 +110,44 @@ const MapComponent = () => {
     }
   };
 
+  const flyToCategory = (categoryBuildings) => {
+    if (mapRef.current && categoryBuildings && categoryBuildings.length > 0) {
+      // If there's only one location in the category
+      if (categoryBuildings.length === 1) {
+        const building = categoryBuildings[0];
+        mapRef.current.flyTo({
+          center: [building.location.longitude, building.location.latitude],
+          zoom: 16,
+          essential: true,
+        });
+        detailLocation(building);
+      } else {
+        // If there are multiple locations, calculate bounds
+        const coordinates = categoryBuildings.map((building) => [
+          building.location.longitude,
+          building.location.latitude,
+        ]);
+        
+        const featureCollection = turf.featureCollection(
+          coordinates.map((coord) => turf.point(coord))
+        );
+        
+        const bbox = turf.bbox(featureCollection);
+        
+        mapRef.current.fitBounds(
+          [
+            [bbox[0], bbox[1]],
+            [bbox[2], bbox[3]],
+          ],
+          { padding: 100, essential: true }
+        );
+        
+        setSelectedGedung(null);
+        setGedungSelect("");
+      }
+    }
+  };
+
   const detailLocation = (gedung) => {
     setSelectedGedung(gedung);
   };
@@ -120,15 +172,17 @@ const MapComponent = () => {
         { padding: 50, maxZoom: 20 }
       );
     }
+    setSelectedGedung(null);
+    setGedungSelect("");
   };
 
   const resetView = fitBoundsToGedung;
 
   return (
     <div>
-      <div className="p-5 text-xl font-semibold">Titik Lokasi Kamera</div>
+      <div className="p-5 text-xl font-semibold">{!title ? "Titik Lokasi Kamera" : title}</div>
       <div className="block w-full">
-        <div style={{ width: "100%", height: "80vh" }} className="relative ">
+        <div style={{ width: "100%", height: "50vh" }} className="relative ">
           <Map
             ref={mapRef}
             mapLib={import("maplibre-gl")}
@@ -164,42 +218,106 @@ const MapComponent = () => {
             ))}
           </Map>
 
-          <div className="w-fit absolute top-5 left-0 bg-base-300/90 shadow-md text-sm text-base-800 rounded-tr-box rounded-br-box pr-2">
-            <div
-              className="rounded-xl text-md w-full flex justify-end p-1"
-              onClick={() => setDetailLocation(!detail)}
-            >
-              <button className="btn btn-ghost bg-transparent border-none hover:shadow-none">
-                <AiFillCaretRight
-                  className={`${detail ? "rotate-180" : ""} text-neutral-600 `}
-                />
-              </button>
-            </div>
-            {detail && (
-              <div>
-                {gedung.buildings?.map((gedung) => (
-                  <div
-                    key={gedung.id}
-                    className="w-fit py-2 px-5 m-2 rounded-xl text-md cursor-pointer hover:bg-base-200"
-                    onClick={() =>
-                      flyToLocation(
-                        gedung.location.latitude,
-                        gedung.location.longitude,
-                        gedung
-                      )
-                    }
-                  >
-                    <div className="flex items-center gap-3 font-semibold text-md">
-                      <FaMapMarkerAlt /> {gedung.name}
+          <div className="w-[90%] absolute top-5 left-10 text-sm text-base-800">
+            <div className="relative flex gap-5 w-full">
+            <div className="relative">
+              <div
+                className="rounded-xl text-md w-fit shadow-xs bg-base-100/90 flex justify-end p-1"
+                onClick={() => setIsOpen(!isOpen)}
+              >
+                <button className="btn btn-sm btn-ghost text-sm bg-transparent border-none hover:shadow-none">
+                  <div className="w-fit  px-2 flex items-center gap-3">
+                    <div className="font-semibold">Pilih Kamera</div>
+                    <FaAngleDown
+                      className={`${isOpen ? "rotate-180" : ""} text-neutral-600 `}
+                    />
+                  </div>
+                </button>
+              </div>
+              {isOpen && (
+                <div className="absolute left-0 top-12 mt-2 w-48 rounded-xl shadow-xs bg-base-100/90 z-50">
+                  <div className="py-1" role="menu" aria-orientation="vertical">                  
+                    <div className="flex flex-col">
+                      {gedung.buildings?.map((gedung) => (
+                        <div
+                          key={gedung.id}
+                          className="w-fit py-2 px-5 m-2 rounded-xl text-md cursor-pointer hover:bg-base-200"
+                          onClick={() =>
+                            flyToLocation(
+                              gedung.location.latitude,
+                              gedung.location.longitude,
+                              gedung
+                            )
+                          }
+                        >
+                          <div className="flex items-center gap-3 font-semibold text-md">
+                            <FaMapMarkerAlt /> {gedung.name}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                </div>
+              )}
               </div>
-            )}
+            <div className="relative">
+              <div
+                className="rounded-xl text-md w-fit shadow-xs bg-base-100/90 flex justify-end p-1"
+                onClick={() => setIsOpenItem2(!isOpenItem2)}
+              >
+                <button className="btn btn-sm btn-ghost text-sm bg-transparent border-none hover:shadow-none">
+                  <div className="w-fit  px-2 flex items-center gap-3">
+                    <div className="font-semibold">Pilih Lokasi</div>
+                    <FaAngleDown
+                      className={`${isOpenItem2 ? "rotate-180" : ""} text-neutral-600 `}
+                    />
+                  </div>
+                </button>
+              </div>
+              {isOpenItem2 && (
+                <div className="absolute left-0 top-12 mt-2 w-64 rounded-xl shadow-xs bg-base-100/90 z-50">
+                  <div className="py-1" role="menu" aria-orientation="vertical">                  
+                    <div className="flex flex-col">
+                      {Object.keys(categorizedBuildings).map((category) => (
+                        <div key={category} className="mb-2">
+                          <div 
+                            className="w-full py-2 px-5 font-bold text-md bg-base-200 cursor-pointer"
+                            onClick={() => flyToCategory(categorizedBuildings[category])}
+                          >
+                            {category.charAt(0).toUpperCase() + category.slice(1)} ({categorizedBuildings[category].length})
+                          </div>
+                          
+                          <div className="ml-3">
+                            {categorizedBuildings[category].map((building) => (
+                              <div
+                                key={building.id}
+                                className="w-fit py-2 px-4 m-1 rounded-xl text-md cursor-pointer hover:bg-base-200"
+                                onClick={() =>
+                                  flyToLocation(
+                                    building.location.latitude,
+                                    building.location.longitude,
+                                    building
+                                  )
+                                }
+                              >
+                                <div className="flex items-center gap-2 font-semibold text-sm">
+                                  <FaMapMarkerAlt /> {building.name}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+          </div>
+          </div>
           </div>
 
           <button
-            className="absolute top-3 right-15 bg-base-300 p-2 rounded-md shadow-md text-sm cursor-pointer font-semibold"
+            className="absolute top-3 right-15 bg-base-100/90 btn btn-sm rounded-md shadow-md text-sm cursor-pointer font-semibold"
             onClick={resetView}
           >
             Reset View

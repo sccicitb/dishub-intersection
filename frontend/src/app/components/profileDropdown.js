@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Logout } from '../auth/logout';
 import ThemeToggle from './customTheme';
+import { FaAngleDown } from "react-icons/fa6";
 
 export default function NavbarUserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,23 +31,14 @@ export default function NavbarUserDropdown() {
   return (
     <div className="relative" ref={dropdownRef}>
       {/* User avatar and dropdown toggle */}
-      <div className="flex items-center gap-2 cursor-pointer" onClick={toggleDropdown}>
+      <div className="flex items-center gap-3 px-2 cursor-pointer" onClick={toggleDropdown}>
         <div className="flex items-center bg-indigo-300/95 text-white p-1.5 rounded-md">
           <span className="text-sm font-medium px-2">Hi, Admin User!</span>
           <div className="avatar bg-red-600 rounded-full w-7 h-7 flex items-center justify-center text-xs text-white font-medium">
             AU
           </div>
         </div>
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          fill="none" 
-          viewBox="0 0 24 24" 
-          strokeWidth={2}
-          stroke="currentColor" 
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
+        <FaAngleDown className={`text-lg text-base-100 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </div>
 
       {/* Dropdown menu */}

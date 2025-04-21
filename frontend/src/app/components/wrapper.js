@@ -14,9 +14,9 @@ export default function PageWrapper({ children }) {
     setIsComingSoon(comingSoonList.includes(pathname));
   }, [pathname]);
 
-  if (isComingSoon) {
-    return <NotComplete />;
-  }
+  // if (isComingSoon) {
+  //   return <NotComplete />;
+  // }
 
   return <>{children}</>;
 }

@@ -40,7 +40,7 @@ const Layout = ({ children }) => {
                 <Icons.AiOutlineMenu className="inline-block text-xl" />
               </label>
             </div>
-            <div className="mx-2 flex-1 px-2 font-semibold w-full xl:justify-center flex">
+            <div className="lg:mx-2 flex-1 lg:px-2 font-semibold w-fit xl:w-full xl:justify-center flex not-xl:overflow-hidden not-xl:text-ellipsis">
             <Breadcrumbs/>
             </div>
             <div className="flex-none">
