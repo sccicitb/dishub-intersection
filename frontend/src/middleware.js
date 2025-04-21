@@ -9,8 +9,8 @@ export function middleware(req) {
     return NextResponse.next(); // <--- langsung loloskan API, jangan diapa-apain
   }
 
-  const protectedRoutes = ["/", "/survei"];
-  const validRoutes = ["/", "/auth", "/not-found", "/survei"];
+  const protectedRoutes = ["/", "/survei", "/cctvTest"];
+  const validRoutes = ["/", "/auth", "/not-found", "/survei", "/cctvTest"];
   const isRouteValid = (path) => validRoutes.includes(path);
   //  || path.startsWith("/camera/");
   // Jika halaman bukan valid route, redirect ke not-found

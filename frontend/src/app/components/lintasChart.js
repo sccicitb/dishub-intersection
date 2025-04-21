@@ -169,7 +169,7 @@ export default function HorizontalBarChart({ positionText, chartData }) {
               display: false,
             },
             ticks: {
-              color: '#1f2937',
+              // color: '#1f2937',
               font: {
                 size: 14,
               },
@@ -216,14 +216,14 @@ export default function HorizontalBarChart({ positionText, chartData }) {
         {chartData?.iconComponents && (
           <div className={`absolute inset-y-0 ${positionText ? ' lg:-right-6 right-5 ' : ' lg:-left-6 left-5 '} flex flex-col justify-evenly pt-6 pb-3 pointer-events-none`}>
             {chartData.iconComponents.map((IconComponent, index) => (
-              <div key={index} className="text-gray-600">
+              <div key={index} className="">
                 {IconComponent && <IconComponent size={22} />}
               </div>
             ))}
           </div>
         )}
         {chartData?.directionRoad && (
-          <div className={`absolute font-semibold -inset-y-6 ${positionText ? ' 2xl:-right-12  xl:text-left text-right right-8 not-xl:shadow-accent-content text-gray-800' : 'left-8 text-right not-xs:shadow-accent-content text-gray-800 2xl:-left-12 not-xl:text-left '} flex flex-col justify-evenly pt-6 pb-3 pointer-events-none`}>
+          <div className={`absolute font-semibold -inset-y-6 ${positionText ? ' 2xl:-right-12  xl:text-left text-right right-8 not-xl:shadow-accent-content ' : 'left-8 text-right not-xs:shadow-accent-content 2xl:-left-12 not-xl:text-left '} flex flex-col justify-evenly pt-6 pb-3 pointer-events-none`}>
             {chartData.directionRoad.map((dataDirect, index) => (
               <div key={index}>
                 {dataDirect}

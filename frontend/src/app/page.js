@@ -12,6 +12,7 @@ import MapComponent from "@/app/components/map";
 import GrafikRoad from "@/app/components/roadChart";
 import CameraStatusTimeline from "@/app/components/cameraStatusTime";
 import { vehicles } from "@/lib/apiAccess";
+import CameraStream from "./components/cameraStream";
 
 const calculatePercentage = (value, total) => {
   const sum = parseFloat(value) + parseFloat(total);
@@ -552,7 +553,7 @@ export default function Home() {
             Periode Ini
           </button>
         </div>
-        <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-5 py-5">
+        {/* <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-5 py-5">
           <div className="cols-1 bg-base-200/90 min-h-80 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200 gap-5 flex flex-col">
             <div className="w-full h-80 bg-gray-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl"></div>
             <CameraStatusTimeline cameraStatusData={cameraStatusData}/>
@@ -561,7 +562,8 @@ export default function Home() {
             <div className="w-full h-80 bg-gray-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl"></div>
             <CameraStatusTimeline cameraStatusData={cameraStatusData}/>
           </div>
-        </div>
+        </div> */}
+        <CameraStream />
         <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100">
           {/* <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-2 py-10">
             <div>
