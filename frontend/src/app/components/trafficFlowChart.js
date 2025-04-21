@@ -20,6 +20,9 @@ export default function TrafficFlowChart({ trafficData }) {
       return (inData[idx] + outData[idx]) / 2;
     });
 
+    // Check if data contains null or undefined values
+    const hasInvalidData = averageData.some(value => value === null || value === undefined) || peakData.some(value => value === null || value === undefined);
+
     if (chartInstance.current) {
       chartInstance.current.destroy();
     }
@@ -38,8 +41,10 @@ export default function TrafficFlowChart({ trafficData }) {
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 2,
             fill: true,
-            tension: 0.4,
+            // If data has null/undefined values, set tension to 0 to disable curves
+            tension: hasInvalidData ? 0 : 0.4,
             pointRadius: 3,
+            spanGaps: true // Handle any gaps in data
           },
           {
             label: '4 x V 15 menit tertinggi',
@@ -49,63 +54,11 @@ export default function TrafficFlowChart({ trafficData }) {
             borderWidth: 2,
             borderDash: [5, 5],
             fill: false,
-            tension: 0.4,
+            // If data has null/undefined values, set tension to 0 to disable curves
+            tension: hasInvalidData ? 0 : 0.4,
             pointRadius: 0,
+            spanGaps: true // Handle any gaps in data
           },
-          // {
-          //   label: 'Utara',
-          //   data: north,
-          //   borderColor: 'rgba(54, 162, 235, 1)',
-          //   borderWidth: 1,
-          //   hidden: true,
-          //   tension: 0.4,
-          //   pointRadius: 2,
-          // },
-          // {
-          //   label: 'Selatan',
-          //   data: south,
-          //   borderColor: 'rgba(255, 206, 86, 1)',
-          //   borderWidth: 1,
-          //   hidden: true,
-          //   tension: 0.4,
-          //   pointRadius: 2,
-          // },
-          // {
-          //   label: 'Timur',
-          //   data: east,
-          //   borderColor: 'rgba(153, 102, 255, 1)',
-          //   borderWidth: 1,
-          //   hidden: true,
-          //   tension: 0.4,
-          //   pointRadius: 2,
-          // },
-          // {
-          //   label: 'Barat',
-          //   data: west,
-          //   borderColor: 'rgba(255, 159, 64, 1)',
-          //   borderWidth: 1,
-          //   hidden: true,
-          //   tension: 0.4,
-          //   pointRadius: 2,
-          // },
-          // {
-          //   label: 'Total IN',
-          //   data: inData,
-          //   borderColor: 'rgba(0, 200, 0, 1)',
-          //   borderWidth: 1,
-          //   hidden: true,
-          //   tension: 0.4,
-          //   pointRadius: 2,
-          // },
-          // {
-          //   label: 'Total OUT',
-          //   data: outData,
-          //   borderColor: 'rgba(200, 0, 0, 1)',
-          //   borderWidth: 1,
-          //   hidden: true,
-          //   tension: 0.4,
-          //   pointRadius: 2,
-          // }
         ]
       },
       options: {
