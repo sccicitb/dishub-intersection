@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import NotComplete from "./notComplete";
+import NotComplete from "/notComplete";
 import comingSoonList from "@/app/data/comingSoon.json"; // Pastikan path ini sesuai
 
 
@@ -14,9 +14,9 @@ export default function PageWrapper({ children }) {
     setIsComingSoon(comingSoonList.includes(pathname));
   }, [pathname]);
 
-  // if (isComingSoon) {
-  //   return <NotComplete />;
-  // }
+  if (isComingSoon) {
+    return <NotComplete />;
+  }
 
   return <>{children}</>;
 }
