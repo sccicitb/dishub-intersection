@@ -47,6 +47,7 @@ export default function GrafikRoad() {
   }, []);
 
   // Format API data for the chart component
+
   const formatTrafficData = (hourlyData, minuteData) => {
     try {
       if (!hourlyData || hourlyData.length === 0 || !minuteData || minuteData.length === 0) {
@@ -81,12 +82,15 @@ export default function GrafikRoad() {
       // Hitung peak 15-minute values untuk setiap jam
       const peakData = findPeak15MinData(minuteData);
       
+      // Pastikan semua data valid dan tidak null/undefined
+      const validatedPeakData = peakData.map(val => isNaN(val) ? 0 : val);
+      
       // Log the final formatted data to debug
       console.log("Formatted data:", {
         hours,
         inData,
         outData,
-        peakData
+        peakData: validatedPeakData
       });
       
       return {
@@ -97,7 +101,7 @@ export default function GrafikRoad() {
         west,
         inData,
         outData,
-        peakData
+        peakData: validatedPeakData
       };
     } catch (err) {
       console.error("Error formatting traffic data:", err);

@@ -9,21 +9,22 @@ export default function TrafficChart({ trafficData }) {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
 
+// Perbarui implementasi TrafficChart.jsx
   useEffect(() => {
     if (!trafficData || !chartRef.current) return;
 
     // Extract data from props
     const { hours, inData, outData, peakData } = trafficData;
     
-    // Calculate average of IN and OUT for LJR (Lalu Lintas Jam-Jaman Rata-Rata)
-    const averageData = hours.map((_, idx) => {
+    // Pastikan semua data terdefinisi dan valid
+    const validAverageData = hours.map((_, idx) => {
       const inValue = inData[idx] || 0;
       const outValue = outData[idx] || 0;
-      return (inValue + outValue) / 2;
+      return ((inValue + outValue) / 2) || 0; // Pastikan tidak NaN
     });
 
-    // Ensure all data arrays have valid values
-    const validatedPeakData = peakData.map(value => 
+    // Memastikan semua data peak valid
+    const validatedPeakData = (peakData || []).map(value => 
       value === null || value === undefined || isNaN(value) ? 0 : value
     );
 
@@ -41,12 +42,12 @@ export default function TrafficChart({ trafficData }) {
         datasets: [
           {
             label: 'LJR (Rata-Rata)',
-            data: averageData,
+            data: validAverageData,
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 2,
             fill: true,
-            tension: 0.4,
+            tension: 0.1, // Kurangi tension untuk mencegah masalah kurva
             pointRadius: 3,
             spanGaps: true // Handle any gaps in data
           },
@@ -58,8 +59,8 @@ export default function TrafficChart({ trafficData }) {
             borderWidth: 2,
             borderDash: [5, 5],
             fill: false,
-            tension: 0.4,
-            pointRadius: 0,
+            tension: 0.1, // Kurangi tension untuk mencegah masalah kurva
+            pointRadius: 2, // Tambahkan point untuk visibility
             spanGaps: true // Handle any gaps in data
           },
         ]
