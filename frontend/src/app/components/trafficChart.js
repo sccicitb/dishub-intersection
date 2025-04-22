@@ -17,12 +17,17 @@ export default function TrafficChart({ trafficData }) {
     
     // Calculate average of IN and OUT for LJR (Lalu Lintas Jam-Jaman Rata-Rata)
     const averageData = hours.map((_, idx) => {
-      return (inData[idx] + outData[idx]) / 2;
+      const inValue = inData[idx] || 0;
+      const outValue = outData[idx] || 0;
+      return (inValue + outValue) / 2;
     });
 
-    // Check if data contains null or undefined values
-    const hasInvalidData = averageData.some(value => value === null || value === undefined) || peakData.some(value => value === null || value === undefined);
+    // Ensure all data arrays have valid values
+    const validatedPeakData = peakData.map(value => 
+      value === null || value === undefined || isNaN(value) ? 0 : value
+    );
 
+    // Clean up previous chart if it exists
     if (chartInstance.current) {
       chartInstance.current.destroy();
     }
@@ -41,21 +46,19 @@ export default function TrafficChart({ trafficData }) {
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 2,
             fill: true,
-            // If data has null/undefined values, set tension to 0 to disable curves
-            tension: hasInvalidData ? 0 : 0.4,
+            tension: 0.4,
             pointRadius: 3,
             spanGaps: true // Handle any gaps in data
           },
           {
             label: '4 x V 15 menit tertinggi',
-            data: peakData,
+            data: validatedPeakData,
             backgroundColor: 'rgba(255, 99, 132, 0.0)',
             borderColor: 'rgba(255, 99, 132, 1)',
             borderWidth: 2,
             borderDash: [5, 5],
             fill: false,
-            // If data has null/undefined values, set tension to 0 to disable curves
-            tension: hasInvalidData ? 0 : 0.4,
+            tension: 0.4,
             pointRadius: 0,
             spanGaps: true // Handle any gaps in data
           },

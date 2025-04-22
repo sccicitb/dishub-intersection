@@ -16,14 +16,18 @@ export default function GrafikRoad() {
         
         // Fetch hourly data
         const hourlyResponse = await vehicles.getByJam();
-        const hourlyData = hourlyResponse;
-        
+
         // Fetch 15-minute data
         const minuteResponse = await vehicles.getByMinute();
-        const minuteData = minuteResponse;
-        if (hourlyData.data.data.length > 0 && minuteData.data.data.length > 0) {
+        
+        // Debug logging to see what data we're getting
+        console.log("Hourly data:", hourlyResponse.data);
+        console.log("Minute data:", minuteResponse.data);
+        
+        if (hourlyResponse.data.data && hourlyResponse.data.data.length > 0 && 
+            minuteResponse.data.data && minuteResponse.data.data.length > 0) {
           // Format data for the chart
-          const formattedData = formatTrafficData(hourlyData.data.data, minuteData.data.data);
+          const formattedData = formatTrafficData(hourlyResponse.data.data, minuteResponse.data.data);
           setTrafficData(formattedData);
         } else {
           throw new Error("Failed to fetch traffic data");
@@ -45,7 +49,6 @@ export default function GrafikRoad() {
   // Format API data for the chart component
   const formatTrafficData = (hourlyData, minuteData) => {
     try {
-      // Pastikan data tidak kosong
       if (!hourlyData || hourlyData.length === 0 || !minuteData || minuteData.length === 0) {
         console.warn("Empty data received from API");
         return null;
@@ -77,6 +80,14 @@ export default function GrafikRoad() {
       
       // Hitung peak 15-minute values untuk setiap jam
       const peakData = findPeak15MinData(minuteData);
+      
+      // Log the final formatted data to debug
+      console.log("Formatted data:", {
+        hours,
+        inData,
+        outData,
+        peakData
+      });
       
       return {
         hours,
