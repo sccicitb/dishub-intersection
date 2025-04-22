@@ -10,7 +10,7 @@ export default function CCTVStream({ data, title, large = false, onClick }) {
         className={`flex flex-col ${large ? 'h-96' : 'h-48'} ${onClick ? 'cursor-pointer' : ''}`}
         onClick={onClick}
       >
-        <div className="bg-base-200 text-white p-2">
+        <div className="bg-black text-white p-2">
           <h3 className="font-medium">{title}</h3>
         </div>
         <div className="flex-grow bg-black flex items-center justify-center text-white">
