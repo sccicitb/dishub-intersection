@@ -1,108 +1,4 @@
-// import { useEffect, useRef } from 'react';
-// import Chart from 'chart.js/auto';
-
-// export default function HorizontalBarChart({ positionText, chartData }) {
-//   const chartRef = useRef(null);
-//   const chartInstance = useRef(null);
-
-//   useEffect(() => {
-//     // Bersihkan chart instance sebelumnya jika ada
-//     if (chartInstance.current) {
-//       chartInstance.current.destroy();
-//     }
-
-//     // Data untuk chart
-//     const data = {
-//       labels: chartData?.labels || ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'],
-//       datasets: [
-//         {
-//           data: chartData?.values || [22.333, 22.333, 22.333, 22.333, 22.333],
-//           backgroundColor: chartData?.color || '#4ade80', // Warna untuk bar
-//           barThickness: chartData?.thickness || 30,
-//         },
-//       ],
-//     };
-
-
-//     // Konfigurasi chart
-//     const config = {
-//       type: 'bar',
-//       data: data,
-//       options: {
-//         indexAxis: 'y', // Membuat bar menjadi horizontal
-//         plugins: {
-//           legend: {
-//             display: false, // Sembunyikan legend
-//           },
-//           tooltip: {
-//             enabled: true,
-//           },
-//           datalabels: {
-//             display: false, // Sembunyikan label data internal
-//           },
-//         },
-//         scales: {
-//           x: {
-//             grid: {
-//               display: false,
-//             },
-//             ticks: {
-//               display: false, // Sembunyikan ticks di sumbu X
-//             },
-//             border: {
-//               display: false,
-//             },
-//             // Mengatur posisi bar dimulai dari kiri
-//             reverse: positionText, // Membalik arah sumbu X sehingga nilai dimulai dari kanan ke kiri
-//           },
-//           y: {
-//             grid: {
-//               display: false,
-//             },
-//             ticks: {
-//               color: '#1f2937',
-//               font: {
-//                 size: 14,
-//               },
-//               callback: function(value, index) {
-//                 // Format untuk label di sumbu Y
-//                 return `(22.5%) 22.333`;
-//               },
-//               align: 'end', // Menyelaraskan teks ke kanan
-//               mirror: false, // Membalikkan posisi label
-//             },
-//             border: {
-//               display: false,
-//             },
-//             position: positionText ? 'left' : 'right', // Memindahkan sumbu Y sesuai dengan prop positionText
-//           },
-//         },
-//         responsive: true,
-//         maintainAspectRatio: false,
-//       },
-//     };
-
-//     // Buat chart baru
-//     const ctx = chartRef.current.getContext('2d');
-//     chartInstance.current = new Chart(ctx, config);
-
-//     // Cleanup function
-//     return () => {
-//       if (chartInstance.current) {
-//         chartInstance.current.destroy();
-//       }
-//     };
-//   }, [positionText]); // Dependency array termasuk positionText agar chart di-update ketika prop berubah
-
-//   return (
-//     <div className="w-full max-w-lg">
-//       <div className="h-64 bg-gray-50 p-4 rounded-lg">
-//         <canvas ref={chartRef}></canvas>
-//       </div>
-//     </div>
-//   );
-// }
-
+"use client";
 import { useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
 
@@ -118,10 +14,10 @@ export default function HorizontalBarChart({ positionText, chartData }) {
 
     // Gunakan data dari props atau fallback ke default jika tidak ada
     const data = {
-      labels: chartData?.labels || ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'],
+      labels: chartData?.labels || [],
       datasets: [
         {
-          data: chartData?.values || [22.333, 22.333, 22.333, 22.333, 22.333],
+          data: chartData?.values || [],
           backgroundColor: chartData?.color || '#4ade80',
           barThickness: chartData?.thickness || 30,
         },
@@ -214,7 +110,7 @@ export default function HorizontalBarChart({ positionText, chartData }) {
         
         {/* Render ikon-ikon di sepanjang sumbu Y di sebelah label */}
         {chartData?.iconComponents && (
-          <div className={`absolute inset-y-0 ${positionText ? ' lg:-right-6 right-5 ' : ' lg:-left-6 left-5 '} flex flex-col justify-evenly pt-6 pb-3 pointer-events-none`}>
+          <div className={`absolute inset-y-0 text-neutral-600 ${positionText ? ' lg:-right-6 right-5 ' : ' lg:-left-6 left-5 '} flex flex-col justify-evenly pt-6 pb-3 pointer-events-none`}>
             {chartData.iconComponents.map((IconComponent, index) => (
               <div key={index} className="">
                 {IconComponent && <IconComponent size={22} />}

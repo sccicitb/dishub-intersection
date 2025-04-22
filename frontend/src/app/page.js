@@ -431,7 +431,7 @@ export default function Home() {
             className={`px-3 py-1.5 rounded-md ${
               activeFilter === 'day'
                 ? 'bg-blue-950 text-white'
-                : 'bg-blue-100 text-gray-800 hover:bg-blue-200'
+                : 'bg-base-300 hover:bg-blue-200'
             }`}
           >
             Hari Ini
@@ -441,7 +441,7 @@ export default function Home() {
             className={`px-3 py-1.5 rounded-md ${
               activeFilter === 'month'
                 ? 'bg-blue-950 text-white'
-                : 'bg-blue-100 text-gray-800 hover:bg-blue-200'
+                : 'bg-base-300 hover:bg-blue-200'
             }`}
           >
             Bulan Ini
@@ -451,7 +451,7 @@ export default function Home() {
             className={`px-3 py-1.5 rounded-md ${
               activeFilter === 'year'
                 ? 'bg-blue-950 text-white'
-                : 'bg-blue-100 text-gray-800 hover:bg-blue-200'
+                : 'bg-base-300 hover:bg-blue-200'
             }`}
           >
             Tahun Ini
@@ -461,7 +461,7 @@ export default function Home() {
             className={`px-3 py-1.5 rounded-md ${
               activeFilter === 'period'
                 ? 'bg-blue-950 text-white'
-                : 'bg-blue-100 text-gray-800 hover:bg-blue-200'
+                : 'bg-base-300 hover:bg-blue-200'
             }`}
           >
             Periode Ini
@@ -516,7 +516,7 @@ export default function Home() {
             className={`px-3 py-1.5 rounded-md ${
               activeFilterSection2 === 'day'
                 ? 'bg-blue-950 text-white'
-                : 'bg-blue-100 text-gray-800 hover:bg-blue-200'
+                : 'bg-base-300 hover:bg-blue-200'
             }`}
           >
             Hari Ini
@@ -526,7 +526,7 @@ export default function Home() {
             className={`px-3 py-1.5 rounded-md ${
               activeFilterSection2 === 'month'
                 ? 'bg-blue-950 text-white'
-                : 'bg-blue-100 text-gray-800 hover:bg-blue-200'
+                : 'bg-base-300 hover:bg-blue-200'
             }`}
           >
             Bulan Ini
@@ -536,7 +536,7 @@ export default function Home() {
             className={`px-3 py-1.5 rounded-md ${
               activeFilterSection2 === 'year'
                 ? 'bg-blue-950 text-white'
-                : 'bg-blue-100 text-gray-800 hover:bg-blue-200'
+                : 'bg-base-300 hover:bg-blue-200'
             }`}
           >
             Tahun Ini
@@ -546,7 +546,7 @@ export default function Home() {
             className={`px-3 py-1.5 rounded-md ${
               activeFilterSection2 === 'period'
                 ? 'bg-blue-950 text-white'
-                : 'bg-blue-100 text-gray-800 hover:bg-blue-200'
+                : 'bg-base-300 hover:bg-blue-200'
             }`}
           >
             Periode Ini

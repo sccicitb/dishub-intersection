@@ -9,6 +9,6 @@ export const logout = () => {
 
 export const Logout = ({classCustom}) => {
   return (
-    <button className={`btn px-2 btn-sm ${classCustom || ""}`} onClick={logout}>Logout</button>
+    <button className={`btn px-2 btn-md btn-ghost ${classCustom || ""}`} onClick={logout}>Logout</button>
   )
 }

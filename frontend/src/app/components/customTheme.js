@@ -26,7 +26,7 @@ function ThemeToggle({ classCustom }) {
     };
 
     return (
-        <button className={`btn btn-sm  ${classCustom || ""}`} onClick={toggleTheme}>
+        <button className={`btn btn-md btn-ghost  ${classCustom || ""}`} onClick={toggleTheme}>
             {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
         </button>
     );
