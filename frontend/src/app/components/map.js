@@ -16,8 +16,7 @@ const MapComponent = ({title}) => {
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   const [selectedGedung, setSelectedGedung] = useState(null);
   const [detail, setDetailLocation] = useState(false);
-  const center = { longitude: 110.4262, latitude: -7.8754 };
-  
+  const center = { longitude: 110.36394885709416, latitude: -7.806961958513005 };
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenItem2, setIsOpenItem2] = useState(false);
   const [dataRoom, setDataRoom] = useState([]);

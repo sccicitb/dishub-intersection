@@ -87,7 +87,7 @@ const CameraStream = () => {
 
   return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-5">
-          <div className="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+          <div className="bg-base-200 rounded-lg shadow-md overflow-hidden">
             <CCTVStream 
               data={streamData.detection3} 
               large
@@ -96,7 +96,7 @@ const CameraStream = () => {
             />
             <CameraStatusTimeline cameraStatusData={cameraStatusData}/>
           </div>
-          <div className="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+          <div className="bg-base-200 rounded-lg shadow-md overflow-hidden">
             <CCTVStream 
               data={streamData.detection4} 
               title="CCTV Camera 4" 
@@ -105,7 +105,7 @@ const CameraStream = () => {
             />
             <CameraStatusTimeline cameraStatusData={cameraStatusData}/>
           </div>
-          <div className="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+          <div className="bg-base-200 rounded-lg shadow-md overflow-hidden">
             <CCTVStream 
               data={streamData.detection5} 
               title="CCTV Camera 5" 
@@ -114,7 +114,7 @@ const CameraStream = () => {
             />
             <CameraStatusTimeline cameraStatusData={cameraStatusData}/>
           </div>
-          <div className="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+          <div className="bg-base-200 rounded-lg shadow-md overflow-hidden">
             <CCTVStream 
               data={streamData.detection} 
               title="CCTV Camera 1" 

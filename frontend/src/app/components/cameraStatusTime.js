@@ -34,10 +34,10 @@ export default function CameraStatusTimeline({ cameraStatusData }) {
   };
 
   return (
-    <div className="w-full p-4 rounded-2xl shadow-xs">
+    <div className="w-full py-4 px-2 rounded-2xl shadow-xs">
       {/* <h2 className="text-xl font-medium mb-4">Status Kamera 24 Jam</h2> */}
       
-      <div className="relative w-full h-5 bg-gray-200 rounded-lg overflow-hidden flex">
+      <div className="relative w-full h-3 bg-base-100 rounded-lg overflow-hidden flex">
         {cameraStatusData.map((segment, index) => {
           // Hitung persentase lebar berdasarkan durasi
           const startHour = new Date(segment.start).getHours();
