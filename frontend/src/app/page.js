@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/authContext";
 
-
 import LintasChart from "@/app/components/lintasChart";
 import { FaCar, FaTruck, FaBus, FaMotorcycle, FaBicycle, FaShuttleVan, FaTractor, FaTruckMoving, FaCaravan } from "react-icons/fa";
 import { FaArrowRightToBracket, FaArrowRightFromBracket } from "react-icons/fa6";

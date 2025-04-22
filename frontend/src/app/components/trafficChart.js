@@ -13,7 +13,7 @@ export default function TrafficChart({ trafficData }) {
     if (!trafficData || !chartRef.current) return;
 
     // Extract data from props
-    const { hours, inData, outData, north, south, east, west, peakData } = trafficData;
+    const { hours, inData, outData, peakData } = trafficData;
     
     // Calculate average of IN and OUT for LJR (Lalu Lintas Jam-Jaman Rata-Rata)
     const averageData = hours.map((_, idx) => {

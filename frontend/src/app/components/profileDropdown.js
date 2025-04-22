@@ -50,7 +50,7 @@ export default function NavbarUserDropdown() {
               <p className="text-xs text-gray-500">viana@dishub.jogjaprov.go.id</p>
             </div>
             
-            <div className="flex flex-col">
+            <div className="flex flex-col pb-5">
               <ThemeToggle classCustom=" rounded-none "/>
             
             {/*             
