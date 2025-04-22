@@ -68,7 +68,7 @@ export default function TrafficChart({ trafficData }) {
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 2,
                 fill: true,
-                tension: 0.4, // Disable bezier curves to avoid control point issues
+                tension: 0, // Disable bezier curves to avoid control point issues
                 pointRadius: 3,
                 spanGaps: true
               },
@@ -80,7 +80,7 @@ export default function TrafficChart({ trafficData }) {
                 borderWidth: 2,
                 borderDash: [5, 5],
                 fill: false,
-                tension: 0.4, // Disable bezier curves
+                tension: 0, // Disable bezier curves
                 pointRadius: 3,
                 spanGaps: true
               },
