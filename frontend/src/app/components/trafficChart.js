@@ -1,148 +1,156 @@
 // app/components/TrafficChart.jsx
 "use client";
 import { useEffect, useRef } from 'react';
-import { Chart, registerables } from 'chart.js';
-
-Chart.register(...registerables);
 
 export default function TrafficChart({ trafficData }) {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
 
-// Perbarui implementasi TrafficChart.jsx
   useEffect(() => {
     if (!trafficData || !chartRef.current) return;
 
-    // Extract data from props
-    const { hours, inData, outData, peakData } = trafficData;
-    
-    // Pastikan semua data terdefinisi dan valid
-    const validAverageData = hours.map((_, idx) => {
-      const inValue = inData[idx] || 0;
-      const outValue = outData[idx] || 0;
-      return ((inValue + outValue) / 2) || 0; // Pastikan tidak NaN
-    });
+    // Dynamically import Chart.js and explicitly register all controllers and scales
+    const loadChart = async () => {
+      try {
+        const { Chart } = await import('chart.js');
+        const { 
+          LineController, 
+          LineElement, 
+          PointElement, 
+          LinearScale, 
+          CategoryScale,
+          Title,
+          Tooltip,
+          Legend,
+          Filler
+        } = await import('chart.js');
 
-    // Memastikan semua data peak valid
-    const validatedPeakData = (peakData || []).map(value => 
-      value === null || value === undefined || isNaN(value) ? 0 : value
-    );
+        // Register the required components
+        Chart.register(
+          LineController, 
+          LineElement, 
+          PointElement, 
+          LinearScale, 
+          CategoryScale,
+          Title,
+          Tooltip,
+          Legend,
+          Filler
+        );
 
-    // Clean up previous chart if it exists
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
+        // Clean up any existing chart
+        if (chartInstance.current) {
+          chartInstance.current.destroy();
+        }
 
-    const ctx = chartRef.current.getContext('2d');
-    
-    chartInstance.current = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: hours,
-        datasets: [
-          {
-            label: 'LJR (Rata-Rata)',
-            data: validAverageData,
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.1, // Kurangi tension untuk mencegah masalah kurva
-            pointRadius: 3,
-            spanGaps: true // Handle any gaps in data
+        // Extract data from props
+        const { hours, inData, outData, peakData } = trafficData;
+        
+        // Calculate average of IN and OUT
+        const averageData = hours.map((_, idx) => {
+          return ((inData[idx] || 0) + (outData[idx] || 0)) / 2;
+        });
+
+        // Validate peak data
+        const validPeakData = (peakData || []).map(value => value || 0);
+
+        const ctx = chartRef.current.getContext('2d');
+        
+        chartInstance.current = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: hours,
+            datasets: [
+              {
+                label: 'LJR (Rata-Rata)',
+                data: averageData,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4, // Disable bezier curves to avoid control point issues
+                pointRadius: 3,
+                spanGaps: true
+              },
+              {
+                label: '4 x V 15 menit tertinggi',
+                data: validPeakData,
+                backgroundColor: 'rgba(255, 99, 132, 0.0)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                fill: false,
+                tension: 0.4, // Disable bezier curves
+                pointRadius: 3,
+                spanGaps: true
+              },
+            ]
           },
-          {
-            label: '4 x V 15 menit tertinggi',
-            data: validatedPeakData,
-            backgroundColor: 'rgba(255, 99, 132, 0.0)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 2,
-            borderDash: [5, 5],
-            fill: false,
-            tension: 0.1, // Kurangi tension untuk mencegah masalah kurva
-            pointRadius: 2, // Tambahkan point untuk visibility
-            spanGaps: true // Handle any gaps in data
-          },
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          title: {
-            display: true,
-            text: 'Lalu Lintas Jam-Jaman Rata-Rata',
-            color: '#D3D3D3',
-            font: {
-              size: 16,
-              weight: 'bold'
-            }
-          },
-          legend: {
-            position: 'bottom',
-            labels: {
-              padding: 20,
-              boxWidth: 15,
-              color: '#D3D3D3'
-            }
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false,
-            callbacks: {
-              label: function(context) {
-                let label = context.dataset.label || '';
-                if (label) {
-                  label += ': ';
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Lalu Lintas Jam-Jaman Rata-Rata',
+                color: '#D3D3D3',
+                font: {
+                  size: 16,
+                  weight: 'bold'
                 }
-                if (context.parsed.y !== null) {
-                  label += context.parsed.y.toFixed(0);
+              },
+              legend: {
+                position: 'bottom',
+                labels: {
+                  padding: 20,
+                  boxWidth: 15,
+                  color: '#D3D3D3'
                 }
-                return label;
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false
+              }
+            },
+            scales: {
+              x: {
+                type: 'category', // Explicitly set scale type
+                title: {
+                  display: true,
+                  text: 'Waktu',
+                  color: '#D3D3D3'
+                },
+                ticks: {
+                  color: '#D3D3D3'
+                },
+                grid: {
+                  display: false
+                }
+              },
+              y: {
+                type: 'linear', // Explicitly set scale type
+                title: {
+                  display: true,
+                  text: 'Kendaraan/Jam',
+                  color: '#D3D3D3'
+                },
+                ticks: {
+                  color: '#D3D3D3'
+                },
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(200, 200, 200, 0.2)'
+                }
               }
             }
           }
-        },
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Waktu',
-              font: {
-                weight: 'bold'
-              },
-              padding: {
-                top: 10
-              },
-              color: '#D3D3D3'
-            },
-            ticks: {
-              color: '#D3D3D3'
-            },
-            grid: {
-              display: false
-            }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Kendaraan/Jam',
-              font: {
-                weight: 'bold'
-              },
-              color: '#D3D3D3'
-            },
-            ticks: {
-              color: '#D3D3D3'
-            },
-            beginAtZero: true,
-            grid: {
-              color: 'rgba(200, 200, 200, 0.2)'
-            }
-          }
-        }
+        });
+      } catch (error) {
+        console.error("Error creating chart:", error);
       }
-    });
+    };
+
+    loadChart();
 
     return () => {
       if (chartInstance.current) {

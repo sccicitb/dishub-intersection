@@ -86,7 +86,7 @@ const CameraStream = () => {
   ];
 
   return (
-      <div className="grid grid-cols-2 lg:grid-cols-2 gap-6 py-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-5">
           <div className="bg-gray-800 rounded-lg shadow-md overflow-hidden">
             <CCTVStream 
               data={streamData.detection3} 

@@ -85,13 +85,13 @@ export default function GrafikRoad() {
       // Pastikan semua data valid dan tidak null/undefined
       const validatedPeakData = peakData.map(val => isNaN(val) ? 0 : val);
       
-      // Log the final formatted data to debug
-      console.log("Formatted data:", {
-        hours,
-        inData,
-        outData,
-        peakData: validatedPeakData
-      });
+      // // Log the final formatted data to debug
+      // console.log("Formatted data:", {
+      //   hours,
+      //   inData,
+      //   outData,
+      //   peakData: validatedPeakData
+      // });
       
       return {
         hours,
