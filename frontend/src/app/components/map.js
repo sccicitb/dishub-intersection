@@ -217,8 +217,8 @@ const MapComponent = ({title}) => {
             ))}
           </Map>
 
-          <div className="w-[90%] absolute top-5 left-10 text-sm text-base-800">
-            <div className="relative flex gap-5 w-full">
+          <div className="w-[80%] absolute top-3 left-3 text-sm text-base-800">
+            <div className="relative flex flex-wrap gap-2 w-full">
             <div className="relative">
               <div
                 className="rounded-xl text-md w-fit shadow-xs bg-base-100/90 flex justify-end p-1"

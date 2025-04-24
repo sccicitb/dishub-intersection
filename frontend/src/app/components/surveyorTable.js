@@ -17,15 +17,16 @@ const SurveyInfoTable = () => {
   ];
 
   return (
-    <div className="overflow-x-auto w-full max-w-4xl mx-auto p-4">
-      <div className="card bg-base-100 shadow-xs">
-        <div className="card-body p-2 outline-3 outline-[#7585C1]/30">
-          <table className="table table-sm w-full">
+    <div className="w-full max-w-4xl mx-auto px-4 py-2">
+    <div className="card bg-base-100 shadow-xs">
+      <div className="card-body p-0 sm:p-2 outline-2 outline-[#7585C1]/30">
+        <div className="overflow-x-auto w-full">
+          <table className="table table-sm w-full min-w-[500px]">
             <tbody>
               {surveyData.map((item, index) => (
                 <tr key={index}>
-                  <td className="bg-[#7585C1]/90 w-1/3 font-semibold  text-white">{item.label}</td>
-                  <td className='font-semibold'>{item.value}</td>
+                  <td className="bg-[#7585C1]/90 w-1/3 font-semibold text-white whitespace-normal">{item.label}</td>
+                  <td className='font-semibold whitespace-normal'>{item.value}</td>
                 </tr>
               ))}
             </tbody>
@@ -33,6 +34,7 @@ const SurveyInfoTable = () => {
         </div>
       </div>
     </div>
+  </div>
   );
 };
 

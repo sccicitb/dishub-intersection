@@ -23,11 +23,11 @@ export default function SelectionButtons() {
     <div className="p-4 max-w-3xl mx-auto space-y-6 w-full">
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Pilih Surveyor</h3>
-        <div className="join w-full gap-5 flex">
+        <div className="join w-full gap-5 flex overflow-x-auto">
           {surveyorOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 btn-sm truncate  ${activeSurveyor.toLowerCase() === option.toLowerCase() ? 'bg-[#7585C1] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeSurveyor.toLowerCase() === option.toLowerCase() ? 'bg-[#7585C1] text-white' : 'outline-none'}`}
               onClick={() => setActiveSurveyor(option)}
             >
               {option}
@@ -38,11 +38,11 @@ export default function SelectionButtons() {
 
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Pilih Pendekatan Simpang</h3>
-        <div className="join w-full gap-5 flex">
+        <div className="join w-full gap-5 flex overflow-x-auto">
           {pendekatanOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 btn-sm truncate  ${activePendekatan.toLowerCase() === option.toLowerCase() ? 'bg-[#7585C1] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePendekatan.toLowerCase() === option.toLowerCase() ? 'bg-[#7585C1] text-white' : 'outline-none'}`}
               onClick={() => setActivePendekatan(option)}
             >
               {option}
@@ -53,11 +53,11 @@ export default function SelectionButtons() {
       
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Pilih Arah Pergerakan</h3>
-        <div className="join w-full gap-5 flex">
+        <div className="join w-full gap-5 flex overflow-x-auto">
           {pergerakanOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 btn-sm truncate  ${activePergerakan.toLowerCase() === option.toLowerCase() ? 'bg-[#7585C1] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePergerakan.toLowerCase() === option.toLowerCase() ? 'bg-[#7585C1] text-white' : 'outline-none'}`}
               onClick={() => serActivePergerakan(option)}
             >
               {option}
@@ -68,11 +68,11 @@ export default function SelectionButtons() {
 
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Pilih Jenis Klasifikasi</h3>
-        <div className="join w-full gap-5 flex">
+        <div className="join w-full gap-5 flex overflow-x-auto">
           {classificationOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 btn-sm truncate ${activeClassification.toLowerCase() === option.toLowerCase() ? 'bg-[#7585C1] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 btn-sm text-nowrap w-fit px-2 ${activeClassification.toLowerCase() === option.toLowerCase() ? 'bg-[#7585C1] text-white' : 'outline-none'}`}
               onClick={() => setActiveClassification(option)}
             >
               {option}

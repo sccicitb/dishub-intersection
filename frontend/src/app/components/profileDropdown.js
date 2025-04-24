@@ -33,7 +33,7 @@ export default function NavbarUserDropdown() {
       {/* User avatar and dropdown toggle */}
       <div className="flex items-center gap-3 px-2 cursor-pointer" onClick={toggleDropdown}>
         <div className="flex items-center bg-indigo-300/60 text-white p-1.5 rounded-md">
-          <span className="text-sm font-medium px-2">Hi, Admin User!</span>
+          <span className="text-sm font-medium px-2 sm:w-fit w-20 truncate">Hi, Admin User!</span>
           <div className="avatar bg-red-600 rounded-full w-7 h-7 flex items-center justify-center text-xs text-white font-medium">
             AU
           </div>

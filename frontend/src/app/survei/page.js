@@ -15,7 +15,7 @@ function SurveiPage() {
             <SelectionButtons/>
           </div>
         </div>
-      <VehicleMonitoringTable />
+        <VehicleMonitoringTable />
       </div>
     </div>
   );
