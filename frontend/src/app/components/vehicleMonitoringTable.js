@@ -82,7 +82,7 @@ const VehicleMonitoringTable = () => {
       if (periodIndex === 2) {
         rows.push(
           <tr key={`divider-${periodIndex}`}>
-            <td colSpan={14} className="border border-base-200 font-semibold px-2 py-1 text-xs text-center bg-base-200">
+            <td colSpan={14} className="border border-base-200 font-semibold px-2 py-1 text-sm text-center bg-base-200">
               Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
             </td>
           </tr>
