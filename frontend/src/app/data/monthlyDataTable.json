@@ -1,0 +1,426 @@
+{
+  "monthlyData": [
+    {
+      "month": "Januari",
+      "workDays": 22,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "month": "Februari",
+      "workDays": 20,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "month": "Maret",
+      "workDays": 22,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "month": "April",
+      "workDays": 22,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "month": "Mei",
+      "workDays": 21,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "month": "Juni",
+      "workDays": 22,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "month": "Juli",
+      "workDays": 23,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "month": "Agustus",
+      "workDays": 21,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "month": "September",
+      "workDays": 22,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "month": "Oktober",
+      "workDays": 22,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "month": "November",
+      "workDays": 21,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "month": "Desember",
+      "workDays": 22,
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    }
+  ],
+  "lhrkData": [
+    {
+      "period": "LHRK Jan",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "period": "LHRK Feb",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "period": "LHRK Mar",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "period": "LHRK Apr",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "period": "LHRK Mei",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "period": "LHRK Jun",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "period": "LHRK Jul",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "period": "LHRK Agust",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "period": "LHRK Sep",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "period": "LHRK Okt",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "period": "LHRK Nov",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    },
+    {
+      "period": "LHRK Des",
+      "data": {
+        "sm": 0,
+        "mp": 0,
+        "aup": 0,
+        "trMp": 0,
+        "tr": 0,
+        "bs": 0,
+        "ts": 0,
+        "bb": 0,
+        "tb": 0,
+        "gandengSemitrailer": 0,
+        "ktb": 0,
+        "total": 0
+      }
+    }
+  ]
+}

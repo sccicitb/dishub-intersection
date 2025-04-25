@@ -53,25 +53,25 @@ const VehicleMonitoringTable = () => {
             ) : null}
             
             {/* Time slot */}
-            <td className="border border-base-200 px-2 py-1 text-sm text-center whitespace-nowrap">
+            <td className="border border-base-300 px-2 py-1 text-sm text-center whitespace-nowrap">
               {slot.time}
             </td>
 
             {/* Vehicle data columns */}
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">{slot.data.sm || ''}</td>
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">{slot.data.mp || ''}</td>
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">{slot.data.aup || ''}</td>
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">{slot.data.trMp || ''}</td>
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">{slot.data.tr || ''}</td>
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">{slot.data.bs || ''}</td>
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">{slot.data.ts || ''}</td>
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">{slot.data.bb || ''}</td>
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">{slot.data.tb || ''}</td>
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">{slot.data.sm || ''}</td>
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">{slot.data.mp || ''}</td>
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">{slot.data.aup || ''}</td>
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">{slot.data.trMp || ''}</td>
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">{slot.data.tr || ''}</td>
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">{slot.data.bs || ''}</td>
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">{slot.data.ts || ''}</td>
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">{slot.data.bb || ''}</td>
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">{slot.data.tb || ''}</td>
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">
               {slot.data.gandengSemitrailer || ''}
             </td>
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">{slot.data.ktb || ''}</td>
-            <td className="border border-base-200 px-2 py-1 text-sm text-center">{slot.data.total || ''}</td>
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">{slot.data.ktb || ''}</td>
+            <td className="border border-base-300 px-2 py-1 text-sm text-center">{slot.data.total || ''}</td>
           </tr>
         );
         
@@ -82,7 +82,7 @@ const VehicleMonitoringTable = () => {
       if (periodIndex === 2) {
         rows.push(
           <tr key={`divider-${periodIndex}`}>
-            <td colSpan={14} className="border border-base-200 font-semibold px-2 py-1 text-sm text-center bg-base-200">
+            <td colSpan={14} className="border border-base-300 font-semibold px-2 py-1 text-sm text-center bg-base-200">
               Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
             </td>
           </tr>
@@ -98,58 +98,58 @@ const VehicleMonitoringTable = () => {
       <table className="table-auto border-collapse border border-base-300 w-full">
         <thead>
           <tr className="bg-base-300">
-            <th rowSpan={3} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th rowSpan={3} className="border border-base-100 px-2 py-1 text-sm font-medium">
               Periode
             </th>
-            <th colSpan={2} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th colSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               Waktu
             </th>
-            <th colSpan={8} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th colSpan={8} className="border border-base-100 px-2 py-1 text-sm font-medium">
               Kendaraan Bermotor (Lih. kend/jam)
             </th>
-            <th colSpan={2} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th colSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               Kend. Tak Bermotor
             </th>
-            <th rowSpan={3} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th rowSpan={3} className="border border-base-100 px-2 py-1 text-sm font-medium">
               Total<br />(Lih. kend/jam)
             </th>
           </tr>
           <tr className="bg-base-300">
-            <th rowSpan={2} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               Interval<br />15 menit
             </th>
-            <th rowSpan={2} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               SM
             </th>
-            <th colSpan={3} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th colSpan={3} className="border border-base-100 px-2 py-1 text-sm font-medium">
               MP
             </th>
-            <th rowSpan={2} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               TR
             </th>
-            <th rowSpan={2} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               BS
             </th>
-            <th rowSpan={2} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               TS
             </th>
-            <th rowSpan={2} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               BB
             </th>
-            <th rowSpan={2} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               TB
             </th>
-            <th rowSpan={2} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               Gandeng /<br />Semitrailer
             </th>
-            <th rowSpan={2} className="border border-base-200 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               KTB
             </th>
           </tr>
           <tr className="bg-base-300">
-            <th className="border border-base-200 px-2 py-1 text-sm font-medium">MP</th>
-            <th className="border border-base-200 px-2 py-1 text-sm font-medium">AUP</th>
-            <th className="border border-base-200 px-2 py-1 text-sm font-medium">TR</th>
+            <th className="border border-base-100 px-2 py-1 text-sm font-medium">MP</th>
+            <th className="border border-base-100 px-2 py-1 text-sm font-medium">AUP</th>
+            <th className="border border-base-100 px-2 py-1 text-sm font-medium">TR</th>
           </tr>
         </thead>
         <tbody>
