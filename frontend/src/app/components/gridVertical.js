@@ -80,19 +80,19 @@ export default function GridVertical({ position, jsonData = sampleData }) {
   }, [jsonData]);
 
   return (
-    <div className={`flex bg-gray-100 mx-auto w-56 ${!position ? 'flex-col-reverse' : 'flex-col'}`}>   
+    <div className={`flex bg-base-100 mx-auto w-56 ${!position ? 'flex-col-reverse' : 'flex-col'}`}>   
       {/* Grid dengan data dinamis */}
       <div className="grid grid-cols-3">
         {currentData.map((item) => (
-          <div key={item.id} className="bg-gray-100 py-5 px-2 text-center overflow-hidden text-sm truncate">
+          <div key={item.id} className="py-5 px-2 text-center overflow-hidden text-xs truncate">
             {item.content}
           </div>
         ))}
       </div>
       
       {/* Navigation arrows (tidak berfungsi, hanya tampilan) */}
-      <div className="flex justify-evenly">
-        {/* Left arrow */}
+      <div className={`justify-evenly items-center flex ${!position ? ' transform rotate-180 ' : '  '}`}>
+      {/* Left arrow */}
         <button className="p-2">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

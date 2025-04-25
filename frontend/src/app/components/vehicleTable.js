@@ -9,19 +9,19 @@ const VehicleTable = () => {
     <div className="container mx-auto p-4">
       <h2 className="text-xl font-bold mb-4">Data Pemantauan Kendaraan</h2>
       
-      <div className="tabs tabs-boxed mb-4">
-        <a 
-          className={`tab ${activeTab === 'daily' ? 'tab-active' : ''}`}
+      <div className="tabs tabs-boxed mb-4 gap-4 flex">
+        <button 
+          className={`btn tab ${activeTab === 'daily' ? 'tab-active bg-[#7585C1]/80 border-none text-white ' : ''}`}
           onClick={() => setActiveTab('daily')}
         >
           Data Harian
-        </a>
-        <a 
-          className={`tab ${activeTab === 'monthly' ? 'tab-active' : ''}`}
+        </button>
+        <button 
+          className={`btn tab ${activeTab === 'monthly' ? 'tab-active bg-[#7585C1]/80 border-none text-white ' : ''}`}
           onClick={() => setActiveTab('monthly')}
         >
           Data Bulanan
-        </a>
+        </button>
       </div>
       
       {activeTab === 'daily' && (

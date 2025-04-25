@@ -115,12 +115,12 @@ export default function GridHorizontal({ position, jsonData = sampleData }) {
   }, [jsonData]);
 
   return (
-    <div className="h-48 justify-evenly flex flex-col bg-gray-100">
+    <div className="h-48 justify-evenly flex flex-col bg-base-100">
       {/* Row 1 - Up Arrow */}
       <div className={`flex items-center ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className="grid grid-cols-4 flex-grow">
           {displayData.row1.map((item) => (
-            <div key={item.id} className="p-3 text-center text-sm overflow-hidden">
+            <div key={item.id} className="p-3 text-center text-xs overflow-hidden">
               {item.content}
             </div>
           ))}
@@ -135,15 +135,15 @@ export default function GridHorizontal({ position, jsonData = sampleData }) {
       </div>
       
       {/* Row 2 - Right Arrow */}
-      <div className={`flex items-center ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className={`items-center flex ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className="grid grid-cols-4 flex-grow">
           {displayData.row2.map((item) => (
-            <div key={item.id} className="px-4 py-2 text-center text-sm overflow-hidden">
+            <div key={item.id} className="px-4 py-2 text-center text-xs overflow-hidden">
               {item.content}
             </div>
           ))}
         </div>
-        <div className="px-4">
+        <div className={`px-4 items-center flex ${!position ? ' transform rotate-180 ' : '  '}`}>
           <button>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -153,10 +153,10 @@ export default function GridHorizontal({ position, jsonData = sampleData }) {
       </div>
       
       {/* Row 3 - Down Arrow */}
-      <div className={`flex items-center ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className={`items-center flex ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className="grid grid-cols-4 flex-grow">
           {displayData.row3.map((item) => (
-            <div key={item.id} className="px-4 py-2 text-center text-sm overflow-hidden">
+            <div key={item.id} className="px-4 py-2 text-center text-xs overflow-hidden">
               {item.content}
             </div>
           ))}

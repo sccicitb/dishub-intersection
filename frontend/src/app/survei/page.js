@@ -17,7 +17,7 @@ function SurveiPage() {
             <SelectionButtons/>
           </div>
         </div>
-        <div className="flex flex-col w-fit bg-[#7585C1]/20 rounded-xl mx-auto">
+        <div className="flex flex-col w-fit bg-[#7585C1]/20 rounded-xl mx-auto font-semibold">
             <div className="flex justify-between">
               <div></div>
               <GridVertical position={true} />
@@ -27,7 +27,7 @@ function SurveiPage() {
               <div className="">
                 <GridHorizontal position={true}/>
               </div>
-              <div className="w-56 text-center items-center flex font-semibold text-xl bg-neutral-400"><div className="m-auto">Jumlah<br/> Kendaraan</div></div>
+              <div className="w-56 text-center items-center flex font-semibold text-xl bg-base-300"><div className="m-auto">Jumlah<br/> Kendaraan</div></div>
               <div className="">
                 <GridHorizontal />
               </div>
