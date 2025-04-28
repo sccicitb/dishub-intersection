@@ -1,9 +1,8 @@
-// components/VehicleMonitoringTable.jsx
+// components HourVehicleTable.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import dataTable from '@/app/data/dataTable.json';
+import dataTable from '@/app/data/DataTableHour.json';
 
-const VehicleMonitoringTable = () => {
+const HourVehicleTable = () => {
   const [vehicleData, setVehicleData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -160,4 +159,4 @@ const VehicleMonitoringTable = () => {
   );
 };
 
-export default VehicleMonitoringTable;
+export default HourVehicleTable;

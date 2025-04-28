@@ -4,42 +4,42 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useState, useRef } from "react";
 import * as turf from "@turf/turf";
 import { FaMapMarkerAlt } from "react-icons/fa";
-import gedung from "@/app/data/gedung.json";
+import simpang from "@/app/data/DataSimpang.json";
 import ruangan from "@/app/data/ruangan.json";
 import { FaAngleDown } from "react-icons/fa6";
 import { useAuth } from "../context/authContext";
 
 const MapComponent = ({title}) => {
   const { setLoading } = useAuth();
-  const [lokasiGedung, setLokasiGedung] = useState([]);
+  const [lokasiSimpang, setLokasiSimpang] = useState([]);
   const [bounds, setBounds] = useState(null);
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
-  const [selectedGedung, setSelectedGedung] = useState(null);
+  const [selectedSimpang, setSelectedSimpang] = useState(null);
   const [detail, setDetailLocation] = useState(false);
   const center = { longitude: 110.36394885709416, latitude: -7.806961958513005 };
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenItem2, setIsOpenItem2] = useState(false);
   const [dataRoom, setDataRoom] = useState([]);
-  const [gedungSelect, setGedungSelect] = useState(null);
+  const [simpangSelect, setSimpangSelect] = useState(null);
   const [currentFloor, setCurrentFloor] = useState(1);
   const [buildingData, setBuildingData] = useState(
-    ruangan.find((b) => b.building === gedungSelect) || { floors: [] }
+    ruangan.find((b) => b.building === simpangSelect) || { floors: [] }
   );
   const [categorizedBuildings, setCategorizedBuildings] = useState({});
 
   useEffect(() => {
-    const newBuilding = ruangan.find((b) => b.building === gedungSelect) || {
+    const newBuilding = ruangan.find((b) => b.building === simpangSelect) || {
       floors: [],
     };
     setBuildingData(newBuilding);
     const firstFloor = newBuilding.floors?.[0] || { rooms: [] };
     setDataRoom(firstFloor.rooms || []);
     setCurrentFloor(1);
-  }, [gedungSelect]);
+  }, [simpangSelect]);
 
   useEffect(() => {
-    setGedungSelect("");
-  }, [selectedGedung]);
+    setSimpangSelect("");
+  }, [selectedSimpang]);
 
   const totalFloors = buildingData.floors.length || 1;
   const [keymap, setKeymap] = useState("");
@@ -51,10 +51,10 @@ const MapComponent = ({title}) => {
   };
 
   useEffect(() => {
-    setLokasiGedung(gedung);
+    setLokasiSimpang(simpang);
 
-    if (gedung?.buildings?.length > 0) {
-      const coordinates = gedung.buildings.map((g) => [
+    if (simpang?.buildings?.length > 0) {
+      const coordinates = simpang.buildings.map((g) => [
         g.location.longitude,
         g.location.latitude,
       ]);
@@ -65,7 +65,7 @@ const MapComponent = ({title}) => {
       setBounds(bbox);
 
       // Group buildings by category
-      const groupedBuildings = gedung.buildings.reduce((acc, building) => {
+      const groupedBuildings = simpang.buildings.reduce((acc, building) => {
         const category = building.category || "lainnya";
         if (!acc[category]) {
           acc[category] = [];
@@ -92,20 +92,20 @@ const MapComponent = ({title}) => {
     return () => observer.disconnect();
   }, []);
 
-  const flyToLocation = (latitude, longitude, gedung) => {
+  const flyToLocation = (latitude, longitude, simpang) => {
     if (mapRef.current) {
       mapRef.current.flyTo({
         center: [longitude, latitude],
-        zoom: gedung !== null ? 16 : 15,
+        zoom: simpang !== null ? 16 : 15,
         essential: true,
       });
     }
 
-    if (gedung !== null) {
-      detailLocation(gedung);
+    if (simpang !== null) {
+      detailLocation(simpang);
     } else {
-      setSelectedGedung(null);
-      setGedungSelect("");
+      setSelectedSimpang(null);
+      setSimpangSelect("");
     }
   };
 
@@ -141,18 +141,18 @@ const MapComponent = ({title}) => {
           { padding: 100, essential: true }
         );
         
-        setSelectedGedung(null);
-        setGedungSelect("");
+        setSelectedSimpang(null);
+        setSimpangSelect("");
       }
     }
   };
 
-  const detailLocation = (gedung) => {
-    setSelectedGedung(gedung);
+  const detailLocation = (simpang) => {
+    setSelectedSimpang(simpang);
   };
 
-  const MonitorGedung = (gedung) => {
-    setGedungSelect(gedung.name);
+  const Monitorsimpang = (simpang) => {
+    setSimpangSelect(simpang.name);
   };
 
   const handleClickMonitor = (roomName) => {
@@ -161,7 +161,7 @@ const MapComponent = ({title}) => {
     // Redirect logic if needed
   };
 
-  const fitBoundsToGedung = () => {
+  const fitBoundsTosimpang = () => {
     if (mapRef.current && bounds) {
       mapRef.current.fitBounds(
         [
@@ -171,11 +171,11 @@ const MapComponent = ({title}) => {
         { padding: 50, maxZoom: 20 }
       );
     }
-    setSelectedGedung(null);
-    setGedungSelect("");
+    setSelectedSimpang(null);
+    setSimpangSelect("");
   };
 
-  const resetView = fitBoundsToGedung;
+  const resetView = fitBoundsTosimpang;
 
   return (
     <div>
@@ -191,22 +191,22 @@ const MapComponent = ({title}) => {
               latitude: center.latitude,
               zoom: 15,
             }}
-            onLoad={fitBoundsToGedung}
+            onLoad={fitBoundsTosimpang}
           >
             <NavigationControl position="top-right" />
 
-            {lokasiGedung?.buildings?.map((gedung) => (
+            {lokasiSimpang?.buildings?.map((simpang) => (
               <Marker
-                key={gedung.id}
-                longitude={gedung.location.longitude}
-                latitude={gedung.location.latitude}
+                key={simpang.id}
+                longitude={simpang.location.longitude}
+                latitude={simpang.location.latitude}
               >
                 <div
                   onClick={() =>
                     flyToLocation(
-                      gedung.location.latitude,
-                      gedung.location.longitude,
-                      gedung
+                      simpang.location.latitude,
+                      simpang.location.longitude,
+                      simpang
                     )
                   }
                   style={{ cursor: "pointer" }}
@@ -237,20 +237,20 @@ const MapComponent = ({title}) => {
                 <div className="absolute left-0 top-12 mt-2 w-48 rounded-xl shadow-xs bg-base-100/90 z-50">
                   <div className="py-1" role="menu" aria-orientation="vertical">                  
                     <div className="flex flex-col">
-                      {gedung.buildings?.map((gedung) => (
+                      {simpang.buildings?.map((simpang) => (
                         <div
-                          key={gedung.id}
+                          key={simpang.id}
                           className="w-fit py-2 px-5 m-2 rounded-xl text-md cursor-pointer hover:bg-base-200"
                           onClick={() =>
                             flyToLocation(
-                              gedung.location.latitude,
-                              gedung.location.longitude,
-                              gedung
+                              simpang.location.latitude,
+                              simpang.location.longitude,
+                              simpang
                             )
                           }
                         >
                           <div className="flex items-center gap-3 font-semibold text-md">
-                            <FaMapMarkerAlt /> {gedung.name}
+                            <FaMapMarkerAlt /> {simpang.name}
                           </div>
                         </div>
                       ))}
@@ -322,14 +322,14 @@ const MapComponent = ({title}) => {
             Reset View
           </button>
 
-          {selectedGedung && (
+          {selectedSimpang && (
             <div className="w-full absolute bottom-5 bg-transparent p-5 ">
               <div
                 className="bg-base-300/90 shadow-xs w-full p-5 m-2 rounded-xl text-md cursor-pointer hover:shadow-lg hover:shadow-red-400/10 hover:bg-base-200/70 transition-all duration-100 ease-in-out"
-                onClick={() => MonitorGedung(selectedGedung)}
+                onClick={() => Monitorsimpang(selectedSimpang)}
               >
                 <div className="flex items-center gap-3 font-semibold text-lg">
-                  <FaMapMarkerAlt /> {selectedGedung.name}
+                  <FaMapMarkerAlt /> {selectedSimpang.name}
                 </div>
                 <div className="font-normal pl-7 capitalize">description</div>
               </div>
@@ -338,7 +338,7 @@ const MapComponent = ({title}) => {
         </div>
 
         <div>
-          {gedungSelect && (
+          {simpangSelect && (
             <div className="w-full bg-transparent p-5">
               {dataRoom.map((room) => (
                 <div
