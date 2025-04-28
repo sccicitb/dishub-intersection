@@ -20,7 +20,7 @@ const MapComponent = ({title}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenItem2, setIsOpenItem2] = useState(false);
   const [dataRoom, setDataRoom] = useState([]);
-  const [simpangSelect, setSimpangSelect] = useState(null);
+  const [simpangSelect, setSimpang] = useState(null);
   const [currentFloor, setCurrentFloor] = useState(1);
   const [buildingData, setBuildingData] = useState(
     ruangan.find((b) => b.building === simpangSelect) || { floors: [] }
@@ -38,7 +38,7 @@ const MapComponent = ({title}) => {
   }, [simpangSelect]);
 
   useEffect(() => {
-    setSimpangSelect("");
+    setSimpang("");
   }, [selectedSimpang]);
 
   const totalFloors = buildingData.floors.length || 1;
@@ -105,7 +105,7 @@ const MapComponent = ({title}) => {
       detailLocation(simpang);
     } else {
       setSelectedSimpang(null);
-      setSimpangSelect("");
+      setSimpang("");
     }
   };
 
@@ -142,7 +142,7 @@ const MapComponent = ({title}) => {
         );
         
         setSelectedSimpang(null);
-        setSimpangSelect("");
+        setSimpang("");
       }
     }
   };
@@ -152,7 +152,7 @@ const MapComponent = ({title}) => {
   };
 
   const Monitorsimpang = (simpang) => {
-    setSimpangSelect(simpang.name);
+    setSimpang(simpang.name);
   };
 
   const handleClickMonitor = (roomName) => {
@@ -168,11 +168,11 @@ const MapComponent = ({title}) => {
           [bounds[0], bounds[1]],
           [bounds[2], bounds[3]],
         ],
-        { padding: 50, maxZoom: 20 }
+        { padding: 30, maxZoom: 20 }
       );
     }
     setSelectedSimpang(null);
-    setSimpangSelect("");
+    setSimpang("");
   };
 
   const resetView = fitBoundsTosimpang;
