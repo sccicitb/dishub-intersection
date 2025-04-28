@@ -123,9 +123,24 @@ const DaysVehicleTable = () => {
     return day === 0 || day === 6; // 0 is Sunday, 6 is Saturday
   };
 
-  // Get workday indicator (K for workday, P for weekend/holiday)
   const getWorkdayIndicator = (dateString) => {
     return isWeekend(dateString) ? 'Akhir Pekan' : 'Hari Kerja';
+  };
+  
+  const getWeekOfMonth = (dateString) => {
+    const date = new Date(dateString);
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    
+    const daysSinceFirstDayOfMonth = Math.floor((date - firstDay) / (24 * 60 * 60 * 1000));
+    
+    return Math.floor(daysSinceFirstDayOfMonth / 7) + 1;
+  };
+  
+  const getWeekAndDayInfo = (dateString) => {
+    const weekNumber = getWeekOfMonth(dateString);
+    const workdayType = getWorkdayIndicator(dateString);
+    
+    return `P(${weekNumber}) - ${workdayType}`;
   };
   
   // Generate rows for daily data
@@ -147,7 +162,7 @@ const DaysVehicleTable = () => {
     daysData.map((day, index) => {
       rows.push(
       <tr key={`day-${index}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
-        <td className="border border-base-300 text-sm text-center">{getWorkdayIndicator(day.date)}</td>
+        <td className="border border-base-300 text-sm text-center">{getWeekAndDayInfo(day.date)}</td>
         <td className="border border-base-300 text-sm text-center">{formatDateNoDays(day.date)}</td>
         <td className="border border-base-300 text-sm text-center">{day.data?.sm || 0}</td>
         <td className="border border-base-300 text-sm text-center">{day.data?.mp || 0}</td>

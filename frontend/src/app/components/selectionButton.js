@@ -20,7 +20,7 @@ export default function SelectionButtons() {
   const classificationOptions = ['PKJI 2023 Luar Kota', 'PKJI 2023 Dalam Kota', 'Tipikal'];
   
   return (
-    <div className="p-4 max-w-3xl mx-auto space-y-6 w-full">
+    <div className="p-4 mx-auto space-y-6 w-full">
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Pilih Surveyor</h3>
         <div className="join w-full gap-5 flex overflow-x-auto">
