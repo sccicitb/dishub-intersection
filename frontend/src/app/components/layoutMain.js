@@ -2,6 +2,7 @@
 import Image from "next/image";
 import * as Icons from "react-icons/ai";
 import * as FaIcons from "react-icons/fa";
+import * as MdIcons from "react-icons/md";
 import listMenu from "@/app/data/menu.json";
 import ThemeToggle from "@/app/components/customTheme";
 import { Logout } from "@/app/auth/logout";
@@ -79,7 +80,9 @@ const Layout = ({ children }) => {
                 // If not found in the primary library, try the FaIcons library
                 if (!IconComponent && item.icon && FaIcons[item.icon]) {
                   IconComponent = FaIcons[item.icon];
-                }              
+                } else if (!IconComponent && item.icon && MdIcons[item.icon]) {
+                  IconComponent = MdIcons[item.icon];
+                }
                 return (
                 <li key={index} >
                   <a href={item.url} className={pathname === item.url ? `items-center bg-neutral-800/90 box-shadow rounded-xl text-white py-2` : `rounded-xl py-2 ` + `my-0.5 text-white`}>

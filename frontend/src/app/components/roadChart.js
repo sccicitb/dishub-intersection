@@ -136,7 +136,7 @@ export default function GrafikRoad() {
 
   return (
     <div className="w-full">
-      <h2 className="text-xl font-medium mb-4 text-center">Lalu Lintas Jam-Jaman Rata-Rata</h2>
+      <h2 className="text-xl font-medium mt-4 text-center">Lalu Lintas Jam-Jaman Rata-Rata</h2>
       
       {loading ? (
         <div className="flex justify-center items-center h-96">

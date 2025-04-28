@@ -90,15 +90,15 @@ export default function TrafficChart({ trafficData }) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              title: {
-                display: true,
-                text: 'Lalu Lintas Jam-Jaman Rata-Rata',
-                color: '#D3D3D3',
-                font: {
-                  size: 16,
-                  weight: 'bold'
-                }
-              },
+              // title: {
+              //   display: true,
+              //   text: 'Lalu Lintas Jam-Jaman Rata-Rata',
+              //   color: '#D3D3D3',
+              //   font: {
+              //     size: 16,
+              //     weight: 'bold'
+              //   }
+              // },
               legend: {
                 position: 'bottom',
                 labels: {

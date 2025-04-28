@@ -8,5 +8,10 @@
     "name": "Survei",
     "url": "/survei",
     "icon": "FaStickyNote"
+  },
+  {
+    "name": "Simpang",
+    "url": "/simpang",
+    "icon": "MdEditRoad"
   }
 ]
