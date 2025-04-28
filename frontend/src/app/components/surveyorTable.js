@@ -17,7 +17,7 @@ const SurveyInfoTable = () => {
   ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-2">
+    <div className="w-full max-w-5xl mx-auto py-2">
     <div className="card bg-base-100 shadow-xs">
       <div className="card-body p-0 sm:p-2 outline-2 outline-[#7585C1]/30">
         <div className="overflow-x-auto w-full">
