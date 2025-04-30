@@ -33,7 +33,7 @@ export default function CCTVStream({ data, title, large = false, onClick }) {
         <span className="text-xs bg-green-500 px-2 py-1 rounded-full">{fps.toFixed(1)} FPS</span>
       </div>
       
-      <div className="flex-grow bg-gray-900 relative overflow-hidden">
+      <div className="flex-grow bg-black relative overflow-hidden">
         {imageError ? (
           <div className="absolute inset-0 flex items-center justify-center text-gray-400">
             Failed to load image
