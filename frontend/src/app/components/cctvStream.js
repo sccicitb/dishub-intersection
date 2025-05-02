@@ -1,13 +1,13 @@
 "use client";
 import { useState } from 'react';
 
-export default function CCTVStream({ data, title, large = false, onClick }) {
+export default function CCTVStream({ data, title, customLarge, large = false, onClick }) {
   const [imageError, setImageError] = useState(false);
 
   if (!data) {
     return (
       <div 
-        className={`flex flex-col ${large ? 'h-96' : 'h-48'} ${onClick ? 'cursor-pointer' : ''}`}
+        className={`flex flex-col ${customLarge} ${large ? 'h-96' : 'h-48'} ${onClick ? 'cursor-pointer' : ''}`}
         onClick={onClick}
       >
         <div className="bg-black text-white p-2">
