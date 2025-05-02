@@ -32,6 +32,7 @@ const CameraStream = () => {
     
     // Subscribe to the three detection topics
     socket.on('result_detection_3', (data) => {
+      console.log("result_detection_3: " + data);
       setStreamData(prev => ({ ...prev, detection3: data }));
     });
     
@@ -40,10 +41,12 @@ const CameraStream = () => {
     });
 
     socket.on('result_detection_4', (data) => {
+      console.log("result_detection_4: " + data);
       setStreamData(prev => ({ ...prev, detection4: data }));
     });
 
     socket.on('result_detection_5', (data) => {
+      console.log("result_detection_5: " + data);
       setStreamData(prev => ({ ...prev, detection5: data }));
     });
 

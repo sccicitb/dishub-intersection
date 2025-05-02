@@ -7,6 +7,13 @@ export default function TrafficChart({ trafficData }) {
   const chartInstance = useRef(null);
 
   useEffect(() => {
+    if (
+      !trafficData ||
+      !Array.isArray(trafficData.hours) ||
+      !Array.isArray(trafficData.inData) ||
+      !Array.isArray(trafficData.outData)
+    ) return;
+
     if (!trafficData || !chartRef.current) return;
 
     // Dynamically import Chart.js and explicitly register all controllers and scales

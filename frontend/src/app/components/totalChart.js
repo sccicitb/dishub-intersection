@@ -19,7 +19,6 @@ const TotalChart = ({ data }) => {
 
   // Use provided data or fallback to default data
   const chartData = data.length > 0 ? data : defaultData;
-  console.log(chartData);
   
   useEffect(() => {
     // Destroy existing chart if it exists

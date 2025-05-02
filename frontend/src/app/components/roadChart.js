@@ -13,37 +13,31 @@ export default function GrafikRoad() {
     const fetchTrafficData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch hourly data
+  
         const hourlyResponse = await vehicles.getByJam();
-
-        // Fetch 15-minute data
         const minuteResponse = await vehicles.getByMinute();
-        
-        // Debug logging to see what data we're getting
-        console.log("Hourly data:", hourlyResponse.data);
-        console.log("Minute data:", minuteResponse.data);
-        
-        if (hourlyResponse.data.data && hourlyResponse.data.data.length > 0 && 
-            minuteResponse.data.data && minuteResponse.data.data.length > 0) {
-          // Format data for the chart
-          const formattedData = formatTrafficData(hourlyResponse.data.data, minuteResponse.data.data);
-          setTrafficData(formattedData);
+  
+        // console.log("Hourly data:", hourlyResponse.data);
+        // console.log("Minute data:", minuteResponse.data);
+  
+        const hourlyData = hourlyResponse.data?.data;
+        const minuteData = minuteResponse.data?.data;
+  
+        if (Array.isArray(hourlyData) && Array.isArray(minuteData)) {
+          const formattedData = formatTrafficData(hourlyData, minuteData);
+          setTrafficData(formattedData || []);
         } else {
-          throw new Error("Failed to fetch traffic data");
+          throw new Error("Invalid data format received");
         }
       } catch (err) {
         console.error("Error fetching traffic data:", err);
         setError("Failed to load traffic data. Please try again later.");
+        setTrafficData([]); // pastikan set kosong agar UI tetap bisa render
       } finally {
         setLoading(false);
       }
     };
-
     fetchTrafficData();
-    // Uncomment jika ingin refresh data setiap 100 detik
-    // const intervalId = setInterval(fetchTrafficData, 100000);
-    // return () => clearInterval(intervalId);
   }, []);
 
   // Format API data for the chart component

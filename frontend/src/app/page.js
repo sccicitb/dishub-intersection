@@ -164,11 +164,9 @@ export default function Home() {
       try {
         const response = await vehicles.getByTipe();
         
-        if (response.status === 200 && response.data.data.length > 0) {
-          // Process the data for incoming and outgoing vehicles
+        if (response.status === 200 && Array.isArray(response.data.data)) {
           const processedData = processVehicleData(response.data.data);
-          setVehicleData(processedData);
-          console.log(processedData)
+          setVehicleData(processedData || []);
         
         }else {
           throw new Error('Invalid data format received');
@@ -382,7 +380,6 @@ export default function Home() {
             masukPercentage: parseFloat(inPercentage),
             keluarPercentage: parseFloat(outPercentage)
           }];
-          console.log(transformedData)
           setChartData(transformedData);
         } else {
           // Set default data jika respons tidak sesuai yang diharapkan

@@ -20,7 +20,7 @@ const Layout = ({ children }) => {
 
   useEffect(() => {
     setMounted(true);
-    console.log(idUser)
+    // console.log(idUser)
   }, []);
 
   if (!mounted) return null;
