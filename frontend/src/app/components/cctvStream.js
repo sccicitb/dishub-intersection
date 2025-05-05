@@ -51,7 +51,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
           </div>
         </div>
 
-        <div className="flex-grow bg-black relative overflow-hidden max-h-[420px]">
+        <div className="flex-grow bg-black relative overflow-hidden min-h-[420px] max-h-[420px]">
           {imageError ? (
             <div className="absolute inset-0 flex items-center justify-center text-gray-400">
               Failed to load image
@@ -60,7 +60,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
             <img
               src={image_url}
               alt={`CCTV Stream ${id_simpang}`}
-              className="w-full min-h-[420px] h-full object-contain"
+              className="w-full  h-full object-contain"
               onError={() => setImageError(true)}
             />
           )}
