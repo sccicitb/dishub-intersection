@@ -91,9 +91,9 @@ export default function RecentVehicle () {
     
     <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
       {/* <button className="btn bg-[#7585C1]/90 text-white">Snapshot</button> */}
-      <div className="bg-[#7585C1]/90 text-white p-3 font-semibold rounded-xl inline-block text-center content-center">Snapshot</div>
-      <div className="bg-[#7585C1]/90 text-white p-3 font-semibold rounded-xl inline-block text-center content-center">Channel Time Trigger Name</div>
-      <div className="bg-[#7585C1]/90 text-white p-3 font-semibold rounded-xl inline-block text-center content-center">Type Origin Object ID</div>
+      <div title="snapshot" className="bg-[#7585C1]/90 text-white p-3 font-semibold rounded-xl inline-block text-center content-center">Snapshot</div>
+      <div title="Channel Time Trigger Name" className="bg-[#7585C1]/90 text-white p-3 font-semibold rounded-xl inline-block text-center content-center truncate">Channel Time Trigger Name</div>
+      <div title="Type Origin Object ID" className="bg-[#7585C1]/90 text-white p-3 font-semibold rounded-xl inline-block text-center content-center truncate">Type Origin Object ID</div>
     </div>
     <div className="flex gap-2 my-2 items-center">
       <div className="relative flex-1">

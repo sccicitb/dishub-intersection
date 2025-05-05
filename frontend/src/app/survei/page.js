@@ -59,9 +59,9 @@ function SurveiPage() {
     <div>
       <MapComponent title={"Survei Lalu Lintas"}/>
       <div className="w-[95%] m-auto">
-        <div className="xl:grid xl:grid-cols-3 flex flex-col xl:items-center xl:place-items-center gap-5 py-10">
+        <div className="lg:grid lg:grid-cols-3 flex flex-col lg:items-center lg:place-items-center gap-5 py-10">
           <RecentVehicle />
-          <div className="xl:col-span-2 w-full h-full items-center flex bg-black">
+          <div className="lg:col-span-2 w-full h-full items-center flex bg-black">
               <CCTVStream 
                 data={streamData.detection3} 
                 customLarge="h-[470px]"
