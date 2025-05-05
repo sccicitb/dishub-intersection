@@ -36,7 +36,6 @@ function SurveiPage() {
     
     // Subscribe to the three detection topics
     socket.on('result_detection_3', (data) => {
-      console.log("result_detection_3: " + data);
       setStreamData(prev => ({ ...prev, detection3: data }));
     });
     
@@ -45,12 +44,10 @@ function SurveiPage() {
     });
 
     socket.on('result_detection_4', (data) => {
-      console.log("result_detection_4: " + data);
       setStreamData(prev => ({ ...prev, detection4: data }));
     });
 
     socket.on('result_detection_5', (data) => {
-      console.log("result_detection_5: " + data);
       setStreamData(prev => ({ ...prev, detection5: data }));
     });
 
@@ -62,17 +59,15 @@ function SurveiPage() {
     <div>
       <MapComponent title={"Survei Lalu Lintas"}/>
       <div className="w-[95%] m-auto">
-        <div className="xl:grid xl:grid-cols-3 xl:max-h-[600px] flex flex-col xl:items-center xl:place-items-center gap-5 py-10">
+        <div className="xl:grid xl:grid-cols-3 flex flex-col xl:items-center xl:place-items-center gap-5 py-10">
           <RecentVehicle />
-          <div className="xl:col-span-2 w-full h-full">
-            <div className="bg-base-200 rounded-lg shadow-md overflow-hidden">
+          <div className="xl:col-span-2 w-full h-full items-center flex bg-black">
               <CCTVStream 
                 data={streamData.detection3} 
                 customLarge="h-[470px]"
                 title="CCTV Camera 3" 
                 onClick={() => setActiveCamera('detection3')}
               />
-            </div>
           </div>
         </div>
         <div className="xl:grid xl:grid-cols-2 items-center place-items-center lg:gap-5 py-10">

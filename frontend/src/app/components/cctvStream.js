@@ -7,7 +7,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
   if (!data) {
     return (
       <div 
-        className={`flex flex-col ${customLarge} ${large ? 'h-96' : 'h-48'} ${onClick ? 'cursor-pointer' : ''}`}
+        className={`flex flex-col ${customLarge} ' h-full ' ${onClick ? 'cursor-pointer' : ''}`}
         onClick={onClick}
       >
         <div className="bg-black text-white p-2">
@@ -25,7 +25,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
 
   return (
     <div 
-      className={`flex flex-col ${large ? 'h-96' : 'h-48'} ${onClick ? 'cursor-pointer' : ''}`} 
+      className={`flex flex-col ${large ? 'h-fit' : 'h-fit'} ${onClick ? 'cursor-pointer' : ''}`} 
       onClick={onClick}
     >
       <div className="bg-black text-white p-3 flex justify-between items-center">
@@ -33,7 +33,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
         <span className="text-xs bg-green-500 px-2 py-1 rounded-full">{fps.toFixed(1)} FPS</span>
       </div>
       
-      <div className="flex-grow bg-black relative overflow-hidden">
+      <div className="flex-grow bg-black relative overflow-hidden max-h-[420px]">
         {imageError ? (
           <div className="absolute inset-0 flex items-center justify-center text-gray-400">
             Failed to load image
@@ -42,7 +42,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
           <img 
             src={image_url} 
             alt={`CCTV Stream ${id_simpang}`} 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             onError={() => setImageError(true)}
           />
         )}

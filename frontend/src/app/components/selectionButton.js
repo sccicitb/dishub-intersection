@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { ExportButton } from './exportExcel';
 
 export default function SelectionButtons() {
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');
@@ -78,6 +79,11 @@ export default function SelectionButtons() {
               {option}
             </button>
           ))}
+        </div>
+      </div>
+      <div className='space-y-2'>
+        <div className="w-full gap-5 flex overflow-x-auto join">
+          <ExportButton />
         </div>
       </div>
     </div>
