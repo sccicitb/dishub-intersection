@@ -8,7 +8,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
   if (!data) {
     return (
       <div 
-        className={`flex flex-col ${customLarge} ' h-full ' ${onClick ? 'cursor-pointer' : ''}`}
+        className={`flex flex-col ${customLarge} ' h-full min-h-[420px] ' ${onClick ? 'cursor-pointer' : ''}`}
         onClick={onClick}
       >
         <div className="bg-black text-white p-2">
@@ -60,7 +60,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
             <img
               src={image_url}
               alt={`CCTV Stream ${id_simpang}`}
-              className="w-full h-full object-contain"
+              className="w-full min-h-[420px] h-full object-contain"
               onError={() => setImageError(true)}
             />
           )}
