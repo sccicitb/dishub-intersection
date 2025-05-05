@@ -9,7 +9,7 @@ import ruangan from "@/app/data/ruangan.json";
 import { FaAngleDown } from "react-icons/fa6";
 import { useAuth } from "../context/authContext";
 
-const MapComponent = ({title}) => {
+const MapComponent = ({title, onClick}) => {
   const { setLoading } = useAuth();
   const [lokasiSimpang, setLokasiSimpang] = useState([]);
   const [bounds, setBounds] = useState(null);
@@ -99,6 +99,7 @@ const MapComponent = ({title}) => {
         zoom: simpang !== null ? 16 : 15,
         essential: true,
       });
+      onClick?.(simpang);
     }
 
     if (simpang !== null) {
@@ -234,7 +235,7 @@ const MapComponent = ({title}) => {
                 </button>
               </div>
               {isOpen && (
-                <div className="absolute left-0 top-12 mt-2 w-48 rounded-xl shadow-xs bg-base-100/90 z-50">
+                <div className="absolute left-0 top-12 mt-2 w-48 rounded-xl shadow-xs bg-base-100/90 z-30">
                   <div className="py-1" role="menu" aria-orientation="vertical">                  
                     <div className="flex flex-col">
                       {simpang.buildings?.map((simpang) => (
@@ -274,7 +275,7 @@ const MapComponent = ({title}) => {
                 </button>
               </div>
               {isOpenItem2 && (
-                <div className="absolute left-0 top-12 mt-2 w-64 rounded-xl shadow-xs bg-base-100/90 z-50">
+                <div className="absolute left-0 top-12 mt-2 w-64 rounded-xl shadow-xs bg-base-100/90 z-30">
                   <div className="py-1" role="menu" aria-orientation="vertical">                  
                     <div className="flex flex-col">
                       {Object.keys(categorizedBuildings).map((category) => (

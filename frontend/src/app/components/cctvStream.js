@@ -1,14 +1,26 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function CCTVStream({ data, title, customLarge, large = false, onClick }) {
   const [imageError, setImageError] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const { message } = data || {};
+  const {
+    image_url = "",
+    timestamp = "",
+    fps = 0,
+    id_simpang = "",
+    count = 0,
+  } = message || {};  
+
+  useEffect(() => {
+    setImageError(false);
+  }, [image_url]);
 
   if (!data) {
     return (
       <div 
-        className={`flex flex-col ${customLarge} ' h-full min-h-[420px] ' ${onClick ? 'cursor-pointer' : ''}`}
+        className={`flex flex-col w-full ${customLarge} ' h-full min-h-[420px] ' ${onClick ? 'cursor-pointer' : ''}`}
         onClick={onClick}
       >
         <div className="bg-black text-white p-2">
@@ -21,8 +33,6 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
     );
   }
 
-  const { message } = data;
-  const { image_url, timestamp, fps, id_simpang, count } = message;
 
   return (
     <>
