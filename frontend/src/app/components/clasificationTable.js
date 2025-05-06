@@ -1,6 +1,8 @@
-import { useState } from 'react';
+"use client"
+import { useState, useEffect } from 'react';
 
 export default function VehicleClassificationTable() {
+  
   const vehicleData = [
     // SM group
     {
@@ -87,6 +89,8 @@ export default function VehicleClassificationTable() {
       description: "Sepeda, Becak, Gerobak Dorong/Tarik, Kendaraan ditarik Hewan (Pedati, Delman, Andong)"
     }
   ];
+  
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
 
   // Group data by main code
   const groupedData = vehicleData.reduce((acc, vehicle) => {
@@ -96,29 +100,42 @@ export default function VehicleClassificationTable() {
     acc[vehicle.mainCode].push(vehicle);
     return acc;
   }, {});
+  
 
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setTheme(document.documentElement.getAttribute("data-theme") || "light");
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
   return (
-    <div className="w-full p-4">
-      <h2 className="text-xl font-bold mb-4 text-center">Klasifikasi Kendaraan</h2>
+    <div className="w-full p-4 my-2">
+      <h2 className="text-xl font-semibold mb-4">Klasifikasi Kendaraan</h2>
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-base-100 border border-base-300">
+        <table className="min-w-full bg-green-50 text-black border border-base-300">
           <tbody>
             {Object.keys(groupedData).map((mainCode) => {
               const items = groupedData[mainCode];
               const rowCount = items.length;
               
               return items.map((vehicle, index) => (
-                <tr key={`${mainCode}-${index}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
+                <tr key={`${mainCode}-${index}`} className={theme === 'light' ? 'bg-green-50 text-black' : 'bg-base-200 text-white'}>
                   {index === 0 && (
                     <>
                       <td 
-                        className="border border-base-300 px-4 py-2 text-center align-middle bg-green-50 text-black" 
+                        className="border border-base-300 px-4 py-2 text-center align-middle" 
                         rowSpan={rowCount}
                       >
                         {vehicle.mainCode}
                       </td>
                       <td 
-                        className="border border-base-300 px-4 py-2 align-middle bg-green-50 text-black" 
+                        className="border border-base-300 px-4 py-2 align-middle" 
                         rowSpan={rowCount}
                       >
                         {vehicle.mainCategory}

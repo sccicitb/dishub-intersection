@@ -50,7 +50,7 @@ const HourVehicleTable = () => {
                 {periodData.period}
               </td>
             ) : null}
-            
+            <td className={`border border-base-300 px-2 py-1 text-sm text-center ${slot.status === 1 ? 'bg-green-400' : 'bg-red-400'}`}>{''}</td>
             {/* Time slot */}
             <td className="border border-base-300 px-2 py-1 text-sm text-center whitespace-nowrap">
               {slot.time}
@@ -99,6 +99,9 @@ const HourVehicleTable = () => {
           <tr className="bg-base-300">
             <th rowSpan={3} className="border border-base-100 px-2 py-1 text-sm font-medium">
               Periode
+            </th>
+            <th rowSpan={3} className="border border-base-100 px-2 py-1 text-sm font-medium">
+              Status Camera
             </th>
             <th colSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               Waktu
