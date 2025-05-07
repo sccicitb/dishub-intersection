@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { ExportButton } from './exportExcel';
+import dataTable from '@/app/data/DataTableHour.json';
 
 export default function SelectionButtons() {
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');
@@ -81,11 +82,11 @@ export default function SelectionButtons() {
           ))}
         </div>
       </div>
-      <div className='space-y-2'>
+      {/* <div className='space-y-2'>
         <div className="w-full gap-5 flex overflow-x-auto join">
-          <ExportButton />
+          <ExportButton vehicleData={dataTable} fileName='Data_Kendaraan_perjam'/>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

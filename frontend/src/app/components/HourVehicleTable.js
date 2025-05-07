@@ -1,6 +1,7 @@
 // components HourVehicleTable.jsx
 import React, { useState, useEffect } from 'react';
 import dataTable from '@/app/data/DataTableHour.json';
+import { ExportButton } from './exportExcel';
 
 const HourVehicleTable = () => {
   const [vehicleData, setVehicleData] = useState([]);
@@ -93,7 +94,10 @@ const HourVehicleTable = () => {
   };
 
   return (
-    <div className="mx-auto p-4 overflow-x-auto">
+    <div className="mx-auto p-4 overflow-x-auto gap-5 flex flex-col">
+      <div className="w-full gap-5 flex overflow-x-auto join">
+        <ExportButton vehicleData={vehicleData} fileName='Data_Kendaraan_perjam'/>
+      </div>
       <table className="table-auto border-collapse border border-base-300 w-full">
         <thead>
           <tr className="bg-base-300">

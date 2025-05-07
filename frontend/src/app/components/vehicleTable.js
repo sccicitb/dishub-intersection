@@ -73,28 +73,24 @@ const VehicleTable = () => {
       
       {activeTab === 'hour' && (
         <div className="rounded-lg">
-          <h3 className="text-lg font-semibold mb-2">Data Harian Kendaraan</h3>
           <HourVehicleTable />
         </div>
       )}
       
       {activeTab === 'monthly' && (
         <div className="rounded-lg">
-          <h3 className="text-lg font-semibold mb-2">Data Bulanan Kendaraan</h3>
           <MonthlyVehicleTable />
         </div>
       )}
 
       {activeTab === 'days' && (
         <div className="rounded-lg">
-          <h3 className="text-lg font-semibold mb-2">Data Bulanan Kendaraan</h3>
           <DaysVehicleTable />
         </div>
       )}
 
       {activeTab === 'years' && (
         <div className="rounded-lg">
-          <h3 className="text-lg font-semibold mb-2">Data Tahunan Kendaraan</h3>
           <YearVehicleTable />
         </div>
       )}
