@@ -13,5 +13,10 @@
     "name": "Simpang",
     "url": "/simpang",
     "icon": "MdEditRoad"
+  },
+  {
+    "name": "Manajemen Kamera",
+    "url": "/manajemen-kamera",
+    "icon": "FaCamera"
   }
 ]

@@ -6,11 +6,11 @@ export function middleware(req) {
 
   const isApiRoute = pathname.startsWith("/api/");
   if (isApiRoute) {
-    return NextResponse.next(); // <--- langsung loloskan API, jangan diapa-apain
+    return NextResponse.next();
   }
 
-  const protectedRoutes = ["/", "/survei", "/cctvTest", "/simpang"];
-  const validRoutes = ["/", "/auth", "/not-found", "/survei", "/cctvTest", "/simpang"];
+  const protectedRoutes = ["/", "/survei", "/cctvTest", "/simpang", "/manajemen-kamera"];
+  const validRoutes = ["/", "/auth", "/not-found", "/survei", "/cctvTest", "/simpang", "/manajemen-kamera"];
   const isRouteValid = (path) => validRoutes.includes(path);
   //  || path.startsWith("/camera/");
   // Jika halaman bukan valid route, redirect ke not-found
