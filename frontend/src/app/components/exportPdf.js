@@ -152,7 +152,7 @@ const ExportSurveyTable = ({ vehicleData }) => {
     <div className="relative w-[100%] m-auto">
       <button
         onClick={exportToPdf}
-        className="btn btn-md w-full bg-green-500 rounded-lg text-white rounded flex items-center gap-2"
+        className="btn btn-md w-full bg-green-500 rounded-lg text-white flex items-center gap-2"
       >
         <FaFilePdf />
         Export PDF

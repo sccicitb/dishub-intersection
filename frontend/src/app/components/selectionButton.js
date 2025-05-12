@@ -29,7 +29,7 @@ export default function SelectionButtons({vehicleData}) {
           {surveyorOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeSurveyor.toLowerCase() === option.toLowerCase() ? 'bg-[#384d9c] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeSurveyor.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
               onClick={() => setActiveSurveyor(option)}
             >
               {option}
@@ -44,7 +44,7 @@ export default function SelectionButtons({vehicleData}) {
           {pendekatanOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePendekatan.toLowerCase() === option.toLowerCase() ? 'bg-[#384d9c] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePendekatan.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
               onClick={() => setActivePendekatan(option)}
             >
               {option}
@@ -59,7 +59,7 @@ export default function SelectionButtons({vehicleData}) {
           {pergerakanOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePergerakan.toLowerCase() === option.toLowerCase() ? 'bg-[#384d9c] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePergerakan.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
               onClick={() => serActivePergerakan(option)}
             >
               {option}
@@ -74,7 +74,7 @@ export default function SelectionButtons({vehicleData}) {
           {classificationOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 btn-sm text-nowrap w-fit px-2 ${activeClassification.toLowerCase() === option.toLowerCase() ? 'bg-[#384d9c] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 btn-sm text-nowrap w-fit px-2 ${activeClassification.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
               onClick={() => setActiveClassification(option)}
             >
               {option}

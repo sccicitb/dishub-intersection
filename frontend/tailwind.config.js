@@ -19,7 +19,6 @@ export default {
     },
   },
   plugins: [
-    require("daisyui"),
-    require('postcss-oklab-colors')
+    require("daisyui")
   ],
 }
