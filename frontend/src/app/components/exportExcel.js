@@ -166,7 +166,7 @@ export const exportVehicleDataToExcel = (vehicleData, fileName) => {
 export const ExportButton = ({ 
   vehicleData, 
   fileName = 'VehicleData',
-  className = "btn btn-sm btn-success text-white rounded flex items-center gap-2"
+  className = "btn btn-md bg-green-500 text-white rounded-lg flex items-center gap-2"
 }) => {
   const handleExport = () => {
     exportVehicleDataToExcel(vehicleData, fileName);

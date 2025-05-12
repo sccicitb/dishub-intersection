@@ -1,7 +1,6 @@
 "use client";
 import MapComponent from "@/app/components/map";
-// import VehicleMonitoringTable from '@/app/components/vehicleMonitoringTable';
-import VehicleTable from "@/app/components/vehicleTable";
+import HourVehicleTable from '@/app/components/HourVehicleTable';
 import ClasificationTable from "@/app/components/clasificationTable";
 import SurveyInfoTable from "@/app/components/surveyorTable";
 import SelectionButtons from "@/app/components/selectionButton";
@@ -10,7 +9,7 @@ import CCTVStream from '@/app/components/cctvStream';
 import {io} from 'socket.io-client';
 import { useState, useEffect } from 'react';
 
-function SurveiPage() {
+function SurveiSimpangPage() {
   const [socketConnected, setSocketConnected] = useState(false);
   const [selectOption, setSelectOption] = useState('detection3');
   const [streamData, setStreamData] = useState({
@@ -82,7 +81,14 @@ function SurveiPage() {
         break;
     }
   }
-
+const [vehicleData, setVehicleData] = useState(null);
+  
+  useEffect(() => {
+    // Simulasi data dummy
+    import('@/app/data/sampleVehicleData.json').then((data) => {
+      setVehicleData(data.default);
+    });
+  }, []);
   return (
     <div>
       <MapComponent title={activeTitle} onClick={handleClick}/>
@@ -97,16 +103,16 @@ function SurveiPage() {
               />
           </div>
         </div>
-        <div className="xl:grid xl:grid-cols-2 items-center place-items-center lg:gap-5 py-10">
+        <div className="xl:grid xl:grid-cols-2 items-center place-items-center lg:gap-10 py-10">
           <SurveyInfoTable />
           <div className="w-full justify-end flex flex-col">
-            <SelectionButtons/>
+            <SelectionButtons vehicleData={vehicleData}/>
           </div>
         </div>
-        <VehicleTable />
+          <HourVehicleTable statusHour={true}/>
         <ClasificationTable />
       </div>
     </div>
   );
 }
-export default SurveiPage 
+export default SurveiSimpangPage 

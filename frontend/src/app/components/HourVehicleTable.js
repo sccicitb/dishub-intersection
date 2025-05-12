@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import dataTable from '@/app/data/DataTableHour.json';
 import { ExportButton } from './exportExcel';
 
-const HourVehicleTable = () => {
+const HourVehicleTable = ({statusHour}) => {
   const [vehicleData, setVehicleData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,7 +51,9 @@ const HourVehicleTable = () => {
                 {periodData.period}
               </td>
             ) : null}
-            <td className={`border border-base-300 px-2 py-1 text-sm text-center ${slot.status === 1 ? 'bg-green-400' : 'bg-red-400'}`}>{''}</td>
+            {statusHour === true ? (
+              <td className={`border border-base-300 px-2 py-1 text-sm text-center ${slot.status === 1 ? 'bg-green-500' : 'bg-red-500'}`}>{''}</td>
+            ): null}
             {/* Time slot */}
             <td className="border border-base-300 px-2 py-1 text-sm text-center whitespace-nowrap">
               {slot.time}
@@ -104,9 +106,11 @@ const HourVehicleTable = () => {
             <th rowSpan={3} className="border border-base-100 px-2 py-1 text-sm font-medium">
               Periode
             </th>
-            <th rowSpan={3} className="border border-base-100 px-2 py-1 text-sm font-medium">
-              Status Camera
-            </th>
+            {statusHour === true ? (
+              <th rowSpan={3} className="border border-base-100 px-2 py-1 text-sm font-medium">
+                Status Camera
+              </th>
+            ) : null}
             <th colSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               Waktu
             </th>

@@ -8,10 +8,10 @@ import GridVertical from '@/app/components/gridVertical';
 import GridHorizontal from '@/app/components/gridHorizontal';
 import GrafikRoad from "@/app/components/roadChart";
 
-function SimpangPage() {
+function SurveiProporsi() {
   return (
     <div>
-      <MapComponent title={"Survei Lalu Lintas"}/>
+      <MapComponent title={"Survei Proporsi"}/>
       <div className="w-[95%] m-auto">
         <div className="xl:grid xl:grid-cols-2 items-center place-items-center py-10">
           <SurveyInfoTable />
@@ -45,4 +45,4 @@ function SimpangPage() {
     </div>
   );
 }
-export default SimpangPage 
+export default SurveiProporsi 

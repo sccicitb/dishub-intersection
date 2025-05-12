@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { ExportButton } from './exportExcel';
 import dataTable from '@/app/data/DataTableHour.json';
-
-export default function SelectionButtons() {
+import SurveyLalulintasExport from './exportPdf';
+export default function SelectionButtons({vehicleData}) {
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
@@ -22,14 +22,14 @@ export default function SelectionButtons() {
   const classificationOptions = ['PKJI 2023 Luar Kota', 'PKJI 2023 Dalam Kota', 'Tipikal'];
   
   return (
-    <div className="p-4 mx-auto space-y-6 w-full">
+    <div className="p-4 mx-auto space-y-6 w-full lg:w-[90%]">
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Pilih Surveyor</h3>
         <div className="join w-full gap-5 flex overflow-x-auto">
           {surveyorOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeSurveyor.toLowerCase() === option.toLowerCase() ? 'bg-[#314385] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeSurveyor.toLowerCase() === option.toLowerCase() ? 'bg-[#384d9c] text-white' : 'outline-none'}`}
               onClick={() => setActiveSurveyor(option)}
             >
               {option}
@@ -44,7 +44,7 @@ export default function SelectionButtons() {
           {pendekatanOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePendekatan.toLowerCase() === option.toLowerCase() ? 'bg-[#314385] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePendekatan.toLowerCase() === option.toLowerCase() ? 'bg-[#384d9c] text-white' : 'outline-none'}`}
               onClick={() => setActivePendekatan(option)}
             >
               {option}
@@ -59,7 +59,7 @@ export default function SelectionButtons() {
           {pergerakanOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePergerakan.toLowerCase() === option.toLowerCase() ? 'bg-[#314385] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePergerakan.toLowerCase() === option.toLowerCase() ? 'bg-[#384d9c] text-white' : 'outline-none'}`}
               onClick={() => serActivePergerakan(option)}
             >
               {option}
@@ -74,7 +74,7 @@ export default function SelectionButtons() {
           {classificationOptions.map((option) => (
             <button
               key={option}
-              className={`btn join-item rounded-md flex-1 btn-sm text-nowrap w-fit px-2 ${activeClassification.toLowerCase() === option.toLowerCase() ? 'bg-[#314385] text-white' : 'outline-none'}`}
+              className={`btn join-item rounded-md flex-1 btn-sm text-nowrap w-fit px-2 ${activeClassification.toLowerCase() === option.toLowerCase() ? 'bg-[#384d9c] text-white' : 'outline-none'}`}
               onClick={() => setActiveClassification(option)}
             >
               {option}
@@ -82,11 +82,12 @@ export default function SelectionButtons() {
           ))}
         </div>
       </div>
-      {/* <div className='space-y-2'>
+      <div className='space-y-2'>
         <div className="w-full gap-5 flex overflow-x-auto join">
-          <ExportButton vehicleData={dataTable} fileName='Data_Kendaraan_perjam'/>
+          {/* <ExportButton vehicleData={dataTable} fileName='Data_Kendaraan_perjam'/> */}
+          <SurveyLalulintasExport  vehicleData={vehicleData}/>
         </div>
-      </div> */}
+      </div>
     </div>
   );
 }

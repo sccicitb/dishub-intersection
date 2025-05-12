@@ -30,3 +30,8 @@
   --warning: #FBBD23;
   --error: #F87272;
 }
+
+* {
+  -webkit-print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}

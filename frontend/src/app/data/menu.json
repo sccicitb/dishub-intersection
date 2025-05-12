@@ -5,18 +5,28 @@
     "icon": "AiFillHome"
   },
   {
-    "name": "Survei",
-    "url": "/survei",
-    "icon": "FaStickyNote"
+    "name": "Survei Simpang",
+    "url": "/survei-simpang",
+    "icon": "RiRoadMapLine"
   },
   {
-    "name": "Simpang",
-    "url": "/simpang",
+    "name": "Survei Pergerakan",
+    "url": "/survei-pergerakan",
+    "icon": "FaCar"
+  },
+  {
+    "name": "Survei Proporsi",
+    "url": "/survei-proporsi",
     "icon": "MdEditRoad"
+  },
+  {
+    "name": "Survei LHRK",
+    "url": "/survei-lhrk",
+    "icon": "RiDatabaseLine"
   },
   {
     "name": "Manajemen Kamera",
     "url": "/manajemen-kamera",
-    "icon": "FaCamera"
+    "icon": "RiCamera3Line"
   }
 ]
