@@ -13,10 +13,10 @@ import CameraStatusTimeline from "@/app/components/cameraStatusTime";
 import { vehicles } from "@/lib/apiAccess";
 import CameraStream from "./components/cameraStream";
 
-const calculatePercentage = (value, total) => {
-  const sum = parseFloat(value) + parseFloat(total);
-  return sum > 0 ? (parseFloat(value) / sum * 100).toFixed(1) : 0;
-};
+// const calculatePercentage = (value, total) => {
+//   const sum = parseFloat(value) + parseFloat(total);
+//   return sum > 0 ? (parseFloat(value) / sum * 100).toFixed(1) : 0;
+// };
 
 export default function Home() {
   // State variables
@@ -115,39 +115,6 @@ export default function Home() {
   //   thickness: 25,
   //   format: 'unit'
   // };
-
-  const cameraStatusData = [
-    { 
-      start: new Date('2023-01-01T00:00:00').getTime(), 
-      end: new Date('2023-01-01T06:00:00').getTime(), 
-      status: true  // Menyala - Hijau
-    },
-    { 
-      start: new Date('2023-01-01T06:00:00').getTime(), 
-      end: new Date('2023-01-01T08:00:00').getTime(), 
-      status: false  // Mati - Merah
-    },
-    { 
-      start: new Date('2023-01-01T08:00:00').getTime(), 
-      end: new Date('2023-01-01T12:00:00').getTime(), 
-      status: true  // Menyala - Hijau
-    },
-    { 
-      start: new Date('2023-01-01T12:00:00').getTime(), 
-      end: new Date('2023-01-01T14:00:00').getTime(), 
-      status: false  // Mati - Merah
-    },
-    { 
-      start: new Date('2023-01-01T14:00:00').getTime(), 
-      end: new Date('2023-01-01T18:00:00').getTime(), 
-      status: true  // Menyala - Hijau
-    },
-    { 
-      start: new Date('2023-01-01T18:00:00').getTime(), 
-      end: new Date('2023-01-01T24:00:00').getTime(), 
-      status: null  // Tidak aktif - Abu-abu
-    }
-  ];
   
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
@@ -157,266 +124,252 @@ export default function Home() {
     setActiveFilterSection2(filter);
   };
 
-  // Fetch data on component mount and when activeFilter changes
-  useEffect(() => {
-   
-    const fetchVehicleTypeData = async () => {
-      try {
-        const response = await vehicles.getByTipe();
-        
-        if (response.status === 200 && Array.isArray(response.data.data)) {
-          const processedData = processVehicleData(response.data.data);
-          setVehicleData(processedData || []);
-        
-        }else {
-          throw new Error('Invalid data format received');
-        }
-        
-      } catch (error) {
-        setVehicleData([]);
-        console.error("Error fetching vehicle type data:", error);
-      }
-    };
+ useEffect(() => {
+  const fetchAllData = async () => {
+    setIsLoading(true);
+    try {
+      const [vehicleResponse, arahResponse, typeResponse] = await Promise.all([
+        vehicles.getAll(),
+        vehicles.getByArah(),
+        vehicles.getByTipe()
+      ]);
+      processVehicleData(vehicleResponse);
+      processArahData(arahResponse);
+      processTypeData(typeResponse);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setDefaultValues();
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const processVehicleData = (data) => {
-      // Define vehicle type mappings and icons
-      const vehicleTypes = {
-        'SM': { name: 'Sepeda Motor', icon: FaMotorcycle },
-        'MP': { name: 'Mobil Penumpang', icon: FaCar },
-        'AUP': { name: 'Angkutan Umum', icon: FaShuttleVan },
-        'TR': { name: 'Truk', icon: FaTruck },
-        'BS': { name: 'Bus', icon: FaBus },
-        'TS': { name: 'Truk Sedang', icon: FaTruckMoving },
-        'TB': { name: 'Truk Besar', icon: FaTruck },
-        'BB': { name: 'Bus Besar', icon: FaBus },
-        'GANDENG': { name: 'Truk Gandeng', icon: FaTruckMoving },
-        'KTB': { name: 'Kendaraan Tidak Bermotor', icon: FaCaravan }
-      };
-    
-      // Extract and sort vehicle data
-      const vehicleData = [];
-      
-      data.forEach(item => {
-        // Find which vehicle type has value 1
-        for (const [key, value] of Object.entries(item)) {
-          if (value === 1 && vehicleTypes[key]) {
-            vehicleData.push({
-              type: key,
-              name: vehicleTypes[key].name,
-              icon: vehicleTypes[key].icon,
-              totalIn: parseInt(item.total_IN, 10),
-              totalOut: parseInt(item.total_OUT, 10)
-            });
-            break;
-          }
-        }
-      });
-    
-      // Sort by total incoming vehicles (descending)
-      vehicleData.sort((a, b) => b.totalIn - a.totalIn);
-    
-      // Calculate total incoming and outgoing
-      const totalIn = vehicleData.reduce((sum, item) => sum + item.totalIn, 0);
-      const totalOut = vehicleData.reduce((sum, item) => sum + item.totalOut, 0);
-    
-      // Prepare data for charts
-      const incomingVehicles = {
-        labels: vehicleData.map(item => item.name),
-        values: vehicleData.map(item => item.totalIn),
-        percentages: vehicleData.map(item => `${((item.totalIn / totalIn) * 100).toFixed(1)}%`),
-        vehicleTypes: vehicleData.map(item => item.name),
-        iconComponents: vehicleData.map(item => item.icon),
-        tooltipLabels: vehicleData.map(item => `${item.name} masuk`),
-        // directionRoad: vehicleData.map(item => `Masuk`),
-        color: '#4ade80',
-        thickness: 25,
-        format: 'unit'
-      };
-    
-      const outgoingVehicles = {
-        labels: vehicleData.map(item => item.name),
-        values: vehicleData.map(item => item.totalOut),
-        percentages: vehicleData.map(item => `${((item.totalOut / totalOut) * 100).toFixed(1)}%`),
-        vehicleTypes: vehicleData.map(item => item.name),
-        iconComponents: vehicleData.map(item => item.icon),
-        tooltipLabels: vehicleData.map(item => `${item.name} keluar`),
-        // directionRoad: vehicleData.map(item => `Keluar`),
-        color: '#BF3D3D',
-        thickness: 25,
-        format: 'unit'
-      };
-    
-      return {
-        incomingVehicles,
-        outgoingVehicles,
-        rawData: vehicleData
-      };
-    };
-    const fetchByArah = async () => {
-      try {
-        const response = await vehicles.getByArah();
+  // Fungsi untuk memproses data jumlah kendaraan
+  const processVehicleData = (response) => {
+    try {
+      if (response.status === 200 && response.data.data.length > 0) {
+        const totalIn = parseFloat(response.data.data[0]?.total_IN) || 0;
+        const totalOut = parseFloat(response.data.data[0]?.total_OUT) || 0;
+        const totalTraffic = totalIn + totalOut;
         
-        if (response.status === 200 && response.data.data.length > 0) {
-          const apiData = response.data.data;
-          
-          // Definisi icon untuk masing-masing arah
-          // const directionIcons = {
-          //   east: FaArrowRight,
-          //   north: FaArrowUp,
-          //   west: FaArrowLeft,
-          //   south: FaArrowDown
-          // };
-          
-          // Warna untuk masing-masing arah
-          // const directionColors = {
-          //   east: '#4ade80',
-          //   north: '#60a5fa',
-          //   west: '#f59e0b',
-          //   south: '#8b5cf6'
-          // };
-          
-          // Data untuk kendaraan masuk
-          const incomingValues = apiData.map(item => parseInt(item.total_IN));
-          const incomingTotal = incomingValues.reduce((a, b) => a + b, 0);
-          const incomingPercentages = apiData.map(item => 
-            ((parseInt(item.total_IN) / incomingTotal) * 100).toFixed(0) + '%'
-          );
-          
-          // Data untuk kendaraan keluar
-          const outgoingValues = apiData.map(item => parseInt(item.total_OUT));
-          const outgoingTotal = outgoingValues.reduce((a, b) => a + b, 0);
-          const outgoingPercentages = apiData.map(item => 
-            ((parseInt(item.total_OUT) / outgoingTotal) * 100).toFixed(0) + '%'
-          );
-          
-          // Format data untuk chart masuk
-          const incomingVehiclesBar2 = {
-            labels: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
-            values: incomingValues,
-            percentages: incomingPercentages,
-            vehicleTypes: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
-            // iconComponents: apiData.map(item => directionIcons[item.arah] || null),
-            directionRoad: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
-            // centerIconComponent: <FaArrowRightToBracket size={28} className="text-green-500" />,
-            centerTitle: "Masuk",
-            tooltipLabels: apiData.map(item => `${item.arah.charAt(0).toUpperCase() + item.arah.slice(1)} masuk`),
-            color: '#4ade80',
-            thickness: 25,
-            format: 'unit'
-          };
-          
-          // Format data untuk chart keluar
-          const outgoingVehiclesBar2 = {
-            labels: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
-            values: outgoingValues,
-            percentages: outgoingPercentages,
-            vehicleTypes: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
-            // iconComponents: apiData.map(item => directionIcons[item.arah] || null),
-            directionRoad: apiData.map(item => item.arah.charAt(0).toUpperCase() + item.arah.slice(1)),
-            // centerIconComponent: <FaArrowRightFromBracket size={28} className="text-red-500" />,
-            centerTitle: "Keluar",
-            tooltipLabels: apiData.map(item => `${item.arah.charAt(0).toUpperCase() + item.arah.slice(1)} keluar`),
-            color: '#BF3D3D',
-            thickness: 25,
-            format: 'unit'
-          };
-          
-          // Simpan data ke state
-          setIncomingVehiclesBar2(incomingVehiclesBar2);
-          setOutgoingVehiclesBar2(outgoingVehiclesBar2);
-          setIOByArahData(apiData.map(item => ({
-            name: item.arah,
-            masuk: parseInt(item.total_IN),
-            keluar: parseInt(item.total_OUT),
-          })));
-        } else {
-          setIOByArahData([]);
-          // Set default data jika API tidak mengembalikan data yang valid
-          setIncomingVehiclesBar2({
-            labels: [],
-            values: [],
-            percentages: [],
-            vehicleTypes: [],
-            iconComponents: [],
-            directionRoad: [],
-            color: '#4ade80',
-            thickness: 25,
-            format: 'unit'
-          });
-          setOutgoingVehiclesBar2({
-            labels: [],
-            values: [],
-            percentages: [],
-            vehicleTypes: [],
-            iconComponents: [],
-            directionRoad: [],
-            color: '#BF3D3D',
-            thickness: 25,
-            format: 'unit'
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setIOByArahData([]);
-      }
-    };
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const response = await vehicles.getAll();
-        
-        if (response.status === 200 && response.data.data.length > 0) {
-          // Periksa apakah total_IN dan total_OUT bukan null
-          const totalIn = response.data.data[0]?.total_IN !== null ? parseFloat(response.data.data[0].total_IN) : 0;
-          const totalOut = response.data.data[0]?.total_OUT !== null ? parseFloat(response.data.data[0].total_OUT) : 0;
-          const totalTraffic = totalIn + totalOut;
-          const inPercentage = totalTraffic > 0 ? (totalIn / totalTraffic * 100).toFixed(1) : 0;
-          const outPercentage = totalTraffic > 0 ? (totalOut / totalTraffic * 100).toFixed(1) : 0;
-          
-          const transformedData = [{
-            name: 'Today',
-            masuk: totalIn,
-            keluar: totalOut,
-            masukPercentage: parseFloat(inPercentage),
-            keluarPercentage: parseFloat(outPercentage)
-          }];
-          setChartData(transformedData);
-        } else {
-          // Set default data jika respons tidak sesuai yang diharapkan
-          setChartData([{
-            name: 'Today',
-            masuk: 0,
-            keluar: 0,
-            masukPercentage: 0,
-            keluarPercentage: 0
-          }]);
-        }
-      } catch (error) {
-        console.error("Error fetching vehicle data:", error);
-        // Set default data jika terjadi error
-        setChartData([{
+        const transformedData = [{
           name: 'Today',
-          masuk: 0,
-          keluar: 0,
-          masukPercentage: 0,
-          keluarPercentage: 0
-        }]);
-      } finally {
-        setIsLoading(false);
+          masuk: totalIn,
+          keluar: totalOut,
+          masukPercentage: totalTraffic > 0 ? parseFloat((totalIn / totalTraffic * 100).toFixed(1)) : 0,
+          keluarPercentage: totalTraffic > 0 ? parseFloat((totalOut / totalTraffic * 100).toFixed(1)) : 0
+        }];
+        
+        setChartData(transformedData);
+      } else {
+        setChartData([getDefaultChartData()]);
       }
-    };
-  
-    const fetchAllData = async () => {
-      await Promise.all([fetchData(), fetchByArah(), fetchVehicleTypeData()]);
-    };
+    } catch (error) {
+      console.error("Error processing vehicle data:", error);
+      setChartData([getDefaultChartData()]);
+    }
+  };
 
-    fetchAllData();
-    // Set up interval for data refresh
-    // const intervalId = setInterval(fetchAllData, 100000); // Refresh every minute
+  // Fungsi untuk memproses data berdasarkan arah
+  const processArahData = (response) => {
+    try {
+      if (response.status === 200 && response.data.data.length > 0) {
+        const apiData = response.data.data;
+        
+        // Data untuk kendaraan masuk
+        const incomingValues = apiData.map(item => parseInt(item.total_IN));
+        const incomingTotal = incomingValues.reduce((a, b) => a + b, 0);
+        
+        // Data untuk kendaraan keluar
+        const outgoingValues = apiData.map(item => parseInt(item.total_OUT));
+        const outgoingTotal = outgoingValues.reduce((a, b) => a + b, 0);
+        
+        // Format data untuk chart masuk
+        const incomingVehiclesBar2 = formatArahData(
+          apiData, 
+          incomingValues, 
+          incomingTotal, 
+          "Masuk", 
+          "masuk", 
+          '#4ade80'
+        );
+        
+        // Format data untuk chart keluar
+        const outgoingVehiclesBar2 = formatArahData(
+          apiData, 
+          outgoingValues, 
+          outgoingTotal, 
+          "Keluar", 
+          "keluar", 
+          '#BF3D3D'
+        );
+        
+        // Simpan data ke state
+        setIncomingVehiclesBar2(incomingVehiclesBar2);
+        setOutgoingVehiclesBar2(outgoingVehiclesBar2);
+        setIOByArahData(apiData.map(item => ({
+          name: item.arah,
+          masuk: parseInt(item.total_IN),
+          keluar: parseInt(item.total_OUT),
+        })));
+      } else {
+        setDefaultArahData();
+      }
+    } catch (error) {
+      console.error('Error processing arah data:', error);
+      setDefaultArahData();
+    }
+  };
+
+  // Helper untuk memformat data arah
+  const formatArahData = (apiData, values, total, centerTitle, direction, color) => {
+    return {
+      labels: apiData.map(item => capitalizeFirstLetter(item.arah)),
+      values: values,
+      percentages: values.map(value => `${((value / total) * 100).toFixed(0)}%`),
+      vehicleTypes: apiData.map(item => capitalizeFirstLetter(item.arah)),
+      directionRoad: apiData.map(item => capitalizeFirstLetter(item.arah)),
+      centerTitle: centerTitle,
+      tooltipLabels: apiData.map(item => `${capitalizeFirstLetter(item.arah)} ${direction}`),
+      color: color,
+      thickness: 25,
+      format: 'unit'
+    };
+  };
+
+  // Fungsi untuk memproses data berdasarkan tipe kendaraan
+  const processTypeData = (response) => {
+    try {
+      if (response.status === 200 && Array.isArray(response.data.data)) {
+        const vehicleData = extractVehicleData(response.data.data);
+        
+        // Sort by total incoming vehicles (descending)
+        vehicleData.sort((a, b) => b.totalIn - a.totalIn);
+        
+        // Calculate total incoming and outgoing
+        const totalIn = vehicleData.reduce((sum, item) => sum + item.totalIn, 0);
+        const totalOut = vehicleData.reduce((sum, item) => sum + item.totalOut, 0);
+        
+        // Format data untuk chart
+        const incomingVehicles = formatTypeData(vehicleData, totalIn, "masuk", '#4ade80');
+        const outgoingVehicles = formatTypeData(vehicleData, totalOut, "keluar", '#BF3D3D');
+        
+        setVehicleData({
+          incomingVehicles,
+          outgoingVehicles,
+          rawData: vehicleData
+        });
+      } else {
+        setVehicleData([]);
+      }
+    } catch (error) {
+      console.error("Error processing vehicle type data:", error);
+      setVehicleData([]);
+    }
+  };
+
+  // Ekstrak data kendaraan
+  const extractVehicleData = (data) => {
+    // Definisi tipe kendaraan dan ikon
+    const vehicleTypes = {
+      'SM': { name: 'Sepeda Motor', icon: FaMotorcycle },
+      'MP': { name: 'Mobil Penumpang', icon: FaCar },
+      'AUP': { name: 'Angkutan Umum', icon: FaShuttleVan },
+      'TR': { name: 'Truk', icon: FaTruck },
+      'BS': { name: 'Bus', icon: FaBus },
+      'TS': { name: 'Truk Sedang', icon: FaTruckMoving },
+      'TB': { name: 'Truk Besar', icon: FaTruck },
+      'BB': { name: 'Bus Besar', icon: FaBus },
+      'GANDENG': { name: 'Truk Gandeng', icon: FaTruckMoving },
+      'KTB': { name: 'Kendaraan Tidak Bermotor', icon: FaCaravan }
+    };
     
-    // Clean up interval on component unmount
-    // return () => clearInterval(intervalId);
-  }, [activeFilter]);
+    // Ekstrak data kendaraan
+    const vehicleData = [];
+    
+    data.forEach(item => {
+      // Cari tipe kendaraan yang memiliki nilai 1
+      for (const [key, value] of Object.entries(item)) {
+        if (value === 1 && vehicleTypes[key]) {
+          vehicleData.push({
+            type: key,
+            name: vehicleTypes[key].name,
+            icon: vehicleTypes[key].icon,
+            totalIn: parseInt(item.total_IN, 10),
+            totalOut: parseInt(item.total_OUT, 10)
+          });
+          break;
+        }
+      }
+    });
+    
+    return vehicleData;
+  };
+
+  // Helper untuk memformat data tipe kendaraan
+  const formatTypeData = (vehicleData, total, direction, color) => {
+    return {
+      labels: vehicleData.map(item => item.name),
+      values: vehicleData.map(item => direction === "masuk" ? item.totalIn : item.totalOut),
+      percentages: vehicleData.map(item => {
+        const value = direction === "masuk" ? item.totalIn : item.totalOut;
+        return `${((value / total) * 100).toFixed(1)}%`;
+      }),
+      vehicleTypes: vehicleData.map(item => item.name),
+      iconComponents: vehicleData.map(item => item.icon),
+      tooltipLabels: vehicleData.map(item => `${item.name} ${direction}`),
+      color: color,
+      thickness: 25,
+      format: 'unit'
+    };
+  };
+
+  // Helper functions
+  const capitalizeFirstLetter = (string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
+  const getDefaultChartData = () => {
+    return {
+      name: 'Today',
+      masuk: 0,
+      keluar: 0,
+      masukPercentage: 0,
+      keluarPercentage: 0
+    };
+  };
+
+  const setDefaultValues = () => {
+    setChartData([getDefaultChartData()]);
+    setDefaultArahData();
+    setVehicleData([]);
+  };
+
+  const setDefaultArahData = () => {
+    const defaultArahConfig = {
+      labels: [],
+      values: [],
+      percentages: [],
+      vehicleTypes: [],
+      directionRoad: [],
+      color: '',
+      thickness: 25,
+      format: 'unit'
+    };
+    
+    setIOByArahData([]);
+    setIncomingVehiclesBar2({...defaultArahConfig, color: '#4ade80'});
+    setOutgoingVehiclesBar2({...defaultArahConfig, color: '#BF3D3D'});
+  };
+
+  // Mulai fetch data
+  fetchAllData();
+
+  // Jika perlu refresh data secara berkala, uncomment kode berikut
+  // const intervalId = setInterval(fetchAllData, 60000); // Refresh setiap menit
+  // return () => clearInterval(intervalId);
+  
+}, [activeFilter]);
 
   return (
     <div className="p-4 text-base-700 flex flex-col items-center gap-8 overflow-y-hidden">

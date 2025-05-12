@@ -5,7 +5,8 @@
   "author": "Indismart",
   "description": "Dishub Jogja Frontend",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "turbo": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

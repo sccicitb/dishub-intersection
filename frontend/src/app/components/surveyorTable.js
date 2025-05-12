@@ -22,19 +22,19 @@ const SurveyInfoTable = () => {
   return (
     <div className="w-full max-w-5xl mx-auto py-2 gap-5 flex flex-col">
     <button
-        className={`btn truncate btn-md border-2 rounded-lg w-fit border-[#7585C1]/90 btn-outline text-[#7585C1]`}
+        className={`btn truncate btn-md border-2 rounded-lg w-fit border-[#314385]/90 btn-outline text-[#314385]`}
         onClick={() => setUploadFormulir("test")}
       >
       Formulir
     </button>
     <div className="card bg-base-100 shadow-xs">
-      <div className="card-body p-0 sm:p-2 outline-2 outline-[#7585C1]/30">
+      <div className="card-body p-0 sm:p-2 outline-2 outline-[#314385]/30">
         <div className="overflow-x-auto w-full">
           <table className="table w-full min-w-[500px]">
             <tbody>
               {surveyData.map((item, index) => (
                 <tr key={index}>
-                  <td className="bg-[#7585C1]/90 w-1/3 font-semibold text-white whitespace-normal py-1.5 px-2">{item.label}</td>
+                  <td className="bg-[#314385]/90 w-1/3 font-semibold text-white whitespace-normal py-1.5 px-2">{item.label}</td>
                   <td className=' whitespace-normal py-1.5 px-2'>{item.value}</td>
                 </tr>
               ))}

@@ -8,7 +8,7 @@ import CCTVStream from '../components/cctvStream';
 export const CameraCard = ({ C = '' }) => {
   const isFullWidth = C.includes('col-span-2'); 
   return (
-    <div className={`rounded-md bg-[#7585C1]/90 min-h-[40px] ${isFullWidth ? 'w-full' : 'w-[80px]'} ${C}`}>
+    <div className={`rounded-md bg-[#314385]/90 min-h-[40px] ${isFullWidth ? 'w-full' : 'w-[80px]'} ${C}`}>
     </div>
   );
 };
@@ -16,7 +16,7 @@ export const CameraCard = ({ C = '' }) => {
 
 export function LayoutKamera ({cols = 1, J = 2, bc = 0, rows = 0, Clicked = (t) => {}}) {
   return (
-    <div className={`card bg-[#7585C1]/20 w-fit h-fit p-2 grid ${cols ? 'grid-cols-' + cols : ' '} gap-2 cursor-pointer`} onClick={() => Clicked()}>
+    <div className={`card bg-[#314385]/20 w-fit h-fit p-2 grid ${cols ? 'grid-cols-' + cols : ' '} gap-2 cursor-pointer`} onClick={() => Clicked()}>
       {
         Array.from({length : bc}).map((_, i ) => (<CameraCard key={i} C={`col-span-2 ${rows ? 'row-span-' + rows + ' ' : ''}`} />))
       }
@@ -120,7 +120,7 @@ const ManajemenKamera = () => {
     <div className='w-[95%] py-10 mx-auto'>
 
       <div className={`grid ${fullSize ? 'grid-cols-1' : 'xl:grid-cols-3 grid-cols-1'} gap-4`}>
-        <div className={`w-full ${fullSize ? 'col-span-1' : 'xl:col-span-2'} bg-[#7585C1]/10 rounded-xl p-4 `}>
+        <div className={`w-full ${fullSize ? 'col-span-1' : 'xl:col-span-2'} bg-[#314385]/10 rounded-xl p-4 `}>
           <h3 className='text-lg font-medium mb-2'>Select Layout</h3>
           <div className='w-full overflow-x-auto'>
             <div className="flex gap-2 min-w-max">

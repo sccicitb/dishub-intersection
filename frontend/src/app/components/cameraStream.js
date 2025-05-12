@@ -13,7 +13,7 @@ const CameraStream = () => {
     detection5: null,
     detection1: null
   });
-  const [activeCamera, setActiveCamera] = useState('detection4');
+  const [activeCamera, setActiveCamera] = useState('detection3');
 
   useEffect(() => {
     // Connect to Socket.IO server

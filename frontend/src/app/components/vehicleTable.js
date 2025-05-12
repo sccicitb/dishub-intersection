@@ -46,25 +46,25 @@ const VehicleTable = () => {
       
       <div className="tabs tabs-boxed mb-4 gap-4 flex">
         <button 
-          className={`btn tab ${activeTab === 'hour' ? 'tab-active bg-[#7585C1]/80 border-none text-white ' : ''}`}
+          className={`btn tab ${activeTab === 'hour' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
           onClick={() => setActiveTab('hour')}
         >
           Data Harian Per Jam
         </button>
         <button 
-          className={`btn tab ${activeTab === 'monthly' ? 'tab-active bg-[#7585C1]/80 border-none text-white ' : ''}`}
+          className={`btn tab ${activeTab === 'monthly' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
           onClick={() => setActiveTab('monthly')}
         >
           Data Bulanan
         </button>
         <button 
-          className={`btn tab ${activeTab === 'days' ? 'tab-active bg-[#7585C1]/80 border-none text-white ' : ''}`}
+          className={`btn tab ${activeTab === 'days' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
           onClick={() => setActiveTab('days')}
         >
           Data Harian
         </button>
         <button 
-          className={`btn tab ${activeTab === 'years' ? 'tab-active bg-[#7585C1]/80 border-none text-white ' : ''}`}
+          className={`btn tab ${activeTab === 'years' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
           onClick={() => setActiveTab('years')}
         >
           Data Tahunan

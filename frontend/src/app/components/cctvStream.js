@@ -27,7 +27,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
           <h3 className="font-medium">{title}</h3>
         </div>
         <div className="flex flex-grow bg-black items-center justify-center text-white text-center w-full">
-          <span className="text-sm w-full flex justify-center">Waiting for data...</span>
+          <span className="text-sm w-full flex justify-center">Waiting for connect...</span>
         </div>
       </div>
     );

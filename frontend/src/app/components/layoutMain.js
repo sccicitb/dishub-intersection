@@ -35,7 +35,7 @@ const Layout = ({ children }) => {
       <div className="drawer 2xl:drawer-open">
         <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content flex flex-col">
-          <div className="navbar bg-[#7585C1]/90 w-full sticky top-0 z-[20] 2xl:z-[40] h-20">
+          <div className="navbar bg-[#314385]/90 w-full sticky top-0 z-[20] 2xl:z-[40] h-20">
             <div className="flex-none 2xl:hidden">
               <label htmlFor="my-drawer-2" aria-label="open sidebar" className="btn btn-square btn-ghost">
                 <Icons.AiOutlineMenu className="inline-block text-xl" />
@@ -59,7 +59,7 @@ const Layout = ({ children }) => {
         {/* Sidebar */}
         <div className="drawer-side z-[40]">
           <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay"></label>
-          <div className="menu bg-[#7585C1]/90 not-2xl:rounded-tr-4xl text-base-content font-semibold min-h-full p-0 w-64 gap-4">
+          <div className="menu bg-[#314385]/90 not-2xl:rounded-tr-4xl text-base-content font-semibold min-h-full p-0 w-64 gap-4">
           <div className="flex justify-center">
           <div className="rounded-tr-4xl bg-neutral-800/90 w-full h-20 p-5">
             <Image

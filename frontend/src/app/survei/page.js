@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react';
 
 function SurveiPage() {
   const [socketConnected, setSocketConnected] = useState(false);
-  const [selectOption, setSelectOption] = useState('detection4');
+  const [selectOption, setSelectOption] = useState('detection3');
   const [streamData, setStreamData] = useState({
     detection3: null,
     detection4: null,
