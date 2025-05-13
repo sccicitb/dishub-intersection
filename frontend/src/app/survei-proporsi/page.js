@@ -11,12 +11,17 @@ const GridHorizontal = lazy(() => import('@/app/components/gridHorizontal'));
 const GrafikRoad = lazy(() => import("@/app/components/roadChart"));
 
 function SurveiProporsi () {
+  const [vehicleData, setVehicleData] = useState(null);
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
   const [activeTitle, setActiveTitle] = useState("Survei LHRK")
-
+  useEffect(() => {
+     import('@/data/sampleVehicleData.json').then((data) => {
+      setVehicleData(data.default);
+    });
+  }, [])
   return (
     <div>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>

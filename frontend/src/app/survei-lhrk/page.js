@@ -11,8 +11,14 @@ const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 
 function SurveiLhrkPage () {
-  const [locationSelect, setLocationSelect] = useState("")
+  const [vehicleData, setVehicleData] = useState(null);
+  const [activeSurveyor, setActiveSurveyor] = useState('Semua');
+  const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
+  const [activePendekatan, setActivePendekatan] = useState('Semua');
+  const [activePergerakan, setActivePergerakan] = useState('Semua');
   const [activeTitle, setActiveTitle] = useState("Survei LHRK")
+  const [locationSelect, setLocationSelect] = useState("")
+  
   function handleClick (T) {
     const replace = T.name.toLowerCase();
     console.log('clicked : ' + JSON.stringify(T));
@@ -35,6 +41,12 @@ function SurveiLhrkPage () {
     const before = "Survei LHRK "
     setActiveTitle(before + locationSelect)
   }, [locationSelect])
+
+  useEffect(() => {
+     import('@/data/sampleVehicleData.json').then((data) => {
+      setVehicleData(data.default);
+    });
+  }, [])
   return (
     <div>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
