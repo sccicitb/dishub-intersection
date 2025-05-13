@@ -1,7 +1,7 @@
-// components/AccumulatedVehicleDirectionTable.jsx
+"use client";
 import React, { useState, useEffect } from 'react';
 
-const AccumulatedVehicleDirectionTable = ({ Data }) => {
+const AccumulatedVehicleDirectionTable = ({ Data, activePergerakan, activePendekatan }) => {
   const [vehicleData, setVehicleData] = useState(Data || {});
   const [loading, setLoading] = useState(!Data);
   const [selectedDirection, setSelectedDirection] = useState('all');
@@ -27,7 +27,7 @@ const AccumulatedVehicleDirectionTable = ({ Data }) => {
     allDirections.forEach(direction => {
       direction.vehicleData?.forEach(periodData => {
         const period = periodData.period;
-        
+
         if (!processedData[period]) {
           processedData[period] = {
             timeSlots: []
@@ -58,7 +58,7 @@ const AccumulatedVehicleDirectionTable = ({ Data }) => {
     allDirections.forEach(direction => {
       direction.vehicleData?.forEach(periodData => {
         const period = periodData.period;
-        
+
         periodData.timeSlots.forEach(slot => {
           const targetSlot = processedData[period].timeSlots.find(
             targetSlot => targetSlot.time === slot.time
@@ -116,7 +116,7 @@ const AccumulatedVehicleDirectionTable = ({ Data }) => {
       return accumulatedData.accumulated?.vehicleData || [];
     } else {
       if (selectedDirection === 'all') {
-        return Object.values(vehicleData || {}).flatMap(direction => 
+        return Object.values(vehicleData || {}).flatMap(direction =>
           direction.vehicleData || []
         );
       }
@@ -333,7 +333,41 @@ const AccumulatedVehicleDirectionTable = ({ Data }) => {
       setSelectedDirection('all');
     }
   };
+  useEffect(() => {
+    let dActive = activePergerakan.toLowerCase().replace(/\s+/g,"");
+    let fActive = activePendekatan.toLowerCase().replace(/\s+/g,"");
+    if (dActive === "semua") {
+      setSelectedTurnType("all");
+    } else if (dActive === "lurus") {
+      setSelectedTurnType("straight");
+    } else if (dActive === "belokkanan") {
+      setSelectedTurnType("rightTurn");
+    } else if (dActive === "belokkiri") {
+      setSelectedTurnType("leftTurn");
+    }
+     if (fActive === "semua") {
+      setSelectedDirection("all");
+      setShowAccumulated("accumulated")
+      setShowAccumulated(true);
+    } else if (fActive === "barat") {
+      setShowAccumulated("individual")
+      setSelectedDirection("west");
+      setShowAccumulated(false);
+    } else if (fActive === "utara") {
+      setShowAccumulated("individual")
+      setSelectedDirection("north");
+      setShowAccumulated(false);
+    } else if (fActive === "selatan") {
+      setShowAccumulated("individual")
+      setSelectedDirection("south");
+      setShowAccumulated(false);
+    } else if (fActive === "timur") {
+      setShowAccumulated("individual")
+      setSelectedDirection("east");
+      setShowAccumulated(false);
+    }
 
+  }, [activePergerakan, activePendekatan])
   if (loading) {
     return (
       <div className="flex justify-center p-8">
@@ -346,7 +380,7 @@ const AccumulatedVehicleDirectionTable = ({ Data }) => {
     <div className="mx-auto p-4 overflow-x-auto gap-5 flex flex-col">
       <div className="w-full gap-5 flex flex-col md:flex-row">
         {/* View Mode Filter */}
-        <div className="form-control w-full md:w-1/4">
+        {/* <div className="form-control w-full md:w-1/4">
           <label className="label">
             <span className="label-text font-medium">Mode Tampilan</span>
           </label>
@@ -358,10 +392,10 @@ const AccumulatedVehicleDirectionTable = ({ Data }) => {
             <option value="accumulated">Akumulasi Semua Arah</option>
             <option value="individual">Per Arah</option>
           </select>
-        </div>
+        </div> */}
 
         {/* Direction Filter - only shown when not accumulated */}
-        {!showAccumulated && (
+        {/* {!showAccumulated && (
           <div className="form-control w-full md:w-1/4">
             <label className="label">
               <span className="label-text font-medium">Arah Simpang</span>
@@ -379,10 +413,10 @@ const AccumulatedVehicleDirectionTable = ({ Data }) => {
               <option value="west">Barat</option>
             </select>
           </div>
-        )}
+        )} */}
 
         {/* Turn Type Filter */}
-        <div className="form-control w-full md:w-1/4">
+        {/* <div className="form-control w-full md:w-1/4">
           <label className="label">
             <span className="label-text font-medium">Jenis Belok</span>
           </label>
@@ -396,7 +430,7 @@ const AccumulatedVehicleDirectionTable = ({ Data }) => {
             <option value="rightTurn">Belok Kanan</option>
             <option value="leftTurn">Belok Kiri</option>
           </select>
-        </div>
+        </div> */}
       </div>
 
       <div className="overflow-x-auto">

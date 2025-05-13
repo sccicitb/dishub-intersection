@@ -71,7 +71,8 @@ function MovePage () {
                 setActivePergerakan={setActivePergerakan} />
             </div>
           </div>
-          <DirectionVehicleTable Data={directionData}/>
+          <DirectionVehicleTable Data={directionData} activePergerakan={activePergerakan} activePendekatan={activePendekatan}/>
+          <ClasificationTable typeClass={activeClassification}/>
         </div>
       </Suspense>
     </div>

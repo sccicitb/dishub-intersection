@@ -126,7 +126,7 @@ function SurveiSimpangPage () {
             </div>
           </div>
           <HourVehicleTable statusHour={true} />
-          <ClasificationTable />
+          <ClasificationTable typeClass={activeClassification}/>
         </div>
       </Suspense>
     </div>

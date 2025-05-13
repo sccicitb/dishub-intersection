@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import { ExportButton } from './exportExcel';
 import dataTable from '@/data/DataTableHour.json';
 import SurveyLalulintasExport from './exportPdf';
-export default function SelectionButtons({vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, serActivePergerakan}) {
+export default function SelectionButtons({vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, setActivePergerakan}) {
   // const [activeSurveyor, setActiveSurveyor] = useState('Semua');
   // const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   // const [activePendekatan, setActivePendekatan] = useState('Semua');
-  // const [activePergerakan, serActivePergerakan] = useState('Semua');
+  // const [activePergerakan, setActivePergerakan] = useState('Semua');
 
   // Opsi untuk surveyor
   const surveyorOptions = ['VIANA', 'Manual', 'Semua'];
@@ -60,7 +60,7 @@ export default function SelectionButtons({vehicleData, activeSurveyor, activeCla
             <button
               key={option}
               className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePergerakan.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
-              onClick={() => serActivePergerakan(option)}
+              onClick={() => setActivePergerakan(option)}
             >
               {option}
             </button>
