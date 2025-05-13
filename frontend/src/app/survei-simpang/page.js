@@ -98,7 +98,7 @@ function SurveiSimpangPage () {
   }, [activeSurveyor])
   return (
     <div>
-      <Suspense fallback={<div>Loading Data...</div>}>
+      <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
         <MapComponent title={activeTitle} onClick={handleClick} />
         <div className="w-[95%] m-auto">
           <div className="lg:grid lg:grid-cols-3 flex flex-col lg:items-center lg:place-items-center gap-5 py-10">
