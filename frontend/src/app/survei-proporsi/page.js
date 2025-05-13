@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, lazy } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 
 const MapComponent = lazy(() => import("@/app/components/map"));
 // const VehicleMonitoringTable = lazy(()=> import( '@/app/components/vehicleMonitoringTable'));
