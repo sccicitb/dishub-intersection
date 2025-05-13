@@ -1,6 +1,6 @@
 // components HourVehicleTable.jsx
 import React, { useState, useEffect } from 'react';
-import dataTable from '@/app/data/DataTableHour.json';
+import dataTable from '@/data/DataTableHour.json';
 import { ExportButton } from './exportExcel';
 
 const HourVehicleTable = ({statusHour}) => {

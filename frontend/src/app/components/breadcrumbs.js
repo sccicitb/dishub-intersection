@@ -1,5 +1,5 @@
 "use client";
-import listMenu from "@/app/data/menu.json";
+import listMenu from "@/data/menu.json";
 import * as AiIcons from "react-icons/ai";
 import * as FaIcons from "react-icons/fa";
 import * as MdIcons from "react-icons/md";

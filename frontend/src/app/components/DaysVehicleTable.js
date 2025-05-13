@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import monthlyData from '@/app/data/DataTableDaysMonth.json';
+import monthlyData from '@/data/DataTableDaysMonth.json';
 
 const DaysVehicleTable = () => {
   const initialMonth = monthlyData.dailyData?.[0]?.month || '';

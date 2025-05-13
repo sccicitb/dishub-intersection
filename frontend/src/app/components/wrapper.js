@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import NotComplete from "@/app/components/notComplete";
-import comingSoonList from "@/app/data/ComingSoonPage.json"; // Pastikan path ini sesuai
+import comingSoonList from "@/data/ComingSoonPage.json"; // Pastikan path ini sesuai
 
 
 export default function PageWrapper({ children }) {

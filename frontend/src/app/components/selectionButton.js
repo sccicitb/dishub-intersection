@@ -1,13 +1,13 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { ExportButton } from './exportExcel';
-import dataTable from '@/app/data/DataTableHour.json';
+import dataTable from '@/data/DataTableHour.json';
 import SurveyLalulintasExport from './exportPdf';
-export default function SelectionButtons({vehicleData}) {
-  const [activeSurveyor, setActiveSurveyor] = useState('Semua');
-  const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
-  const [activePendekatan, setActivePendekatan] = useState('Semua');
-  const [activePergerakan, serActivePergerakan] = useState('Semua');
+export default function SelectionButtons({vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, serActivePergerakan}) {
+  // const [activeSurveyor, setActiveSurveyor] = useState('Semua');
+  // const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
+  // const [activePendekatan, setActivePendekatan] = useState('Semua');
+  // const [activePergerakan, serActivePergerakan] = useState('Semua');
 
   // Opsi untuk surveyor
   const surveyorOptions = ['VIANA', 'Manual', 'Semua'];

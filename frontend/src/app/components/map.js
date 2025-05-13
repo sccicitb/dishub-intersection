@@ -6,8 +6,8 @@ import { useEffect, useState, useRef } from "react";
 import * as turf from "@turf/turf";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { FaAngleDown } from "react-icons/fa6";
-import simpang from "@/app/data/DataSimpang.json";
-import ruangan from "@/app/data/ruangan.json";
+import simpang from "@/data/DataSimpang.json";
+import ruangan from "@/data/ruangan.json";
 import { useAuth } from "../context/authContext";
 
 const MapComponent = ({ title, onClick }) => {

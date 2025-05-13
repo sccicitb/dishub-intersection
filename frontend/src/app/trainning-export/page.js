@@ -5,7 +5,7 @@ const TrainningPage = () => {
   const [vehicleData, setVehicleData] = useState(null);
   
   useEffect(() => {
-    import('@/app/data/sampleVehicleData.json').then((data) => {
+    import('@/data/sampleVehicleData.json').then((data) => {
       setVehicleData(data.default);
     });
   }, []);

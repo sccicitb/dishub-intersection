@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import yearlyData from '@/app/data/DataTableYear.json';
+import yearlyData from '@/data/DataTableYear.json';
 
 const YearlyVehicleTable = () => {
   const [vehicleData, setVehicleData] = useState({ yearlyData: [], lhrtData: [] });

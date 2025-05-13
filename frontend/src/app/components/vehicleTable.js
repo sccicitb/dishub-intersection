@@ -5,7 +5,7 @@ import HourVehicleTable from '@/app/components/HourVehicleTable';
 import MonthlyVehicleTable from '@/app/components/monthlyTable';
 import DaysVehicleTable from '@/app/components/DaysVehicleTable';
 import YearVehicleTable from '@/app/components/YearVehicletable';
-import dataTableRaw from '@/app/data/DataTableYear.json';
+import dataTableRaw from '@/data/DataTableYear.json';
 
 const VehicleTable = () => {
   // const [dataTable, setDataTable] = useState(null);

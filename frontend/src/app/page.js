@@ -1,27 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@/app/context/authContext";
-
-import LintasChart from "@/app/components/lintasChart";
-import { FaCar, FaTruck, FaBus, FaMotorcycle, FaBicycle, FaShuttleVan, FaTractor, FaTruckMoving, FaCaravan } from "react-icons/fa";
-import { FaArrowRightToBracket, FaArrowRightFromBracket } from "react-icons/fa6";
-import TotalChart from "@/app/components/totalChart";
-import MapComponent from "@/app/components/map";
-import GrafikRoad from "@/app/components/roadChart";
-import CameraStatusTimeline from "@/app/components/cameraStatusTime";
+import { useEffect, useState, Suspense, lazy } from "react";
 import { vehicles } from "@/lib/apiAccess";
-import CameraStream from "./components/cameraStream";
 
-// const calculatePercentage = (value, total) => {
-//   const sum = parseFloat(value) + parseFloat(total);
-//   return sum > 0 ? (parseFloat(value) / sum * 100).toFixed(1) : 0;
-// };
+const LintasChart = lazy(() => import("@/app/components/lintasChart"));
+const TotalChart = lazy(() => import("@/app/components/totalChart"));
+const GrafikRoad = lazy(() => import("@/app/components/roadChart"));
 
-export default function Home() {
-  // State variables
+// import CameraStatusTimeline from "@/app/components/cameraStatusTime";
+const CameraStream = lazy(() => import("@/app/components/cameraStream"));
+const MapComponent = lazy(() => import("@/app/components/map"));
+
+// Lazy load dari react-icons/fa
+const FaCar = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaCar })));
+const FaTruck = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaTruck })));
+const FaBus = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaBus })));
+const FaMotorcycle = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaMotorcycle })));
+const FaBicycle = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaBicycle })));
+const FaShuttleVan = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaShuttleVan })));
+const FaTractor = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaTractor })));
+const FaTruckMoving = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaTruckMoving })));
+const FaCaravan = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaCaravan })));
+
+// Lazy load dari react-icons/fa6
+const FaArrowRightToBracket = lazy(() => import("react-icons/fa6").then(mod => ({ default: mod.FaArrowRightToBracket })));
+const FaArrowRightFromBracket = lazy(() => import("react-icons/fa6").then(mod => ({ default: mod.FaArrowRightFromBracket })));
+
+
+export default function Home () {
+  const [isClient, setIsClient] = useState(false)
   const [vehicleData, setVehicleData] = useState(null);
-  // Inisialisasi state dengan nilai default
   const [chartData, setChartData] = useState([{
     name: 'Today',
     masuk: 0,
@@ -31,7 +39,7 @@ export default function Home() {
   }]);
 
   const [ioByArahData, setIOByArahData] = useState([{
-    
+
   }]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -78,7 +86,7 @@ export default function Home() {
     thickness: 25,
     format: 'unit'
   });
-  
+
   const [outgoingVehiclesBar2, setOutgoingVehiclesBar2] = useState({
     labels: [],
     values: [],
@@ -90,8 +98,8 @@ export default function Home() {
     thickness: 25,
     format: 'unit'
   });
-  
-  
+
+
   // const incomingVehiclesBar2 = {
   //   labels: ['Utara', 'Selatan', 'Timur', 'Barat'],
   //   values: [342, 127, 89, 523, 64],
@@ -115,7 +123,7 @@ export default function Home() {
   //   thickness: 25,
   //   format: 'unit'
   // };
-  
+
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
   };
@@ -124,380 +132,377 @@ export default function Home() {
     setActiveFilterSection2(filter);
   };
 
- useEffect(() => {
-  const fetchAllData = async () => {
-    setIsLoading(true);
-    try {
-      const [vehicleResponse, arahResponse, typeResponse] = await Promise.all([
-        vehicles.getAll(),
-        vehicles.getByArah(),
-        vehicles.getByTipe()
-      ]);
-      processVehicleData(vehicleResponse);
-      processArahData(arahResponse);
-      processTypeData(typeResponse);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setDefaultValues();
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setIsLoading(true);
+      try {
+        const [vehicleResponse, arahResponse, typeResponse] = await Promise.all([
+          vehicles.getAll(),
+          vehicles.getByArah(),
+          vehicles.getByTipe()
+        ]);
+        processVehicleData(vehicleResponse);
+        processArahData(arahResponse);
+        processTypeData(typeResponse);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setDefaultValues();
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Fungsi untuk memproses data jumlah kendaraan
-  const processVehicleData = (response) => {
-    try {
-      if (response.status === 200 && response.data.data.length > 0) {
-        const totalIn = parseFloat(response.data.data[0]?.total_IN) || 0;
-        const totalOut = parseFloat(response.data.data[0]?.total_OUT) || 0;
-        const totalTraffic = totalIn + totalOut;
-        
-        const transformedData = [{
-          name: 'Today',
-          masuk: totalIn,
-          keluar: totalOut,
-          masukPercentage: totalTraffic > 0 ? parseFloat((totalIn / totalTraffic * 100).toFixed(1)) : 0,
-          keluarPercentage: totalTraffic > 0 ? parseFloat((totalOut / totalTraffic * 100).toFixed(1)) : 0
-        }];
-        
-        setChartData(transformedData);
-      } else {
+    // Fungsi untuk memproses data jumlah kendaraan
+    const processVehicleData = (response) => {
+      try {
+        if (response.status === 200 && response.data.data.length > 0) {
+          const totalIn = parseFloat(response.data.data[0]?.total_IN) || 0;
+          const totalOut = parseFloat(response.data.data[0]?.total_OUT) || 0;
+          const totalTraffic = totalIn + totalOut;
+
+          const transformedData = [{
+            name: 'Today',
+            masuk: totalIn,
+            keluar: totalOut,
+            masukPercentage: totalTraffic > 0 ? parseFloat((totalIn / totalTraffic * 100).toFixed(1)) : 0,
+            keluarPercentage: totalTraffic > 0 ? parseFloat((totalOut / totalTraffic * 100).toFixed(1)) : 0
+          }];
+
+          setChartData(transformedData);
+        } else {
+          setChartData([getDefaultChartData()]);
+        }
+      } catch (error) {
+        console.error("Error processing vehicle data:", error);
         setChartData([getDefaultChartData()]);
       }
-    } catch (error) {
-      console.error("Error processing vehicle data:", error);
-      setChartData([getDefaultChartData()]);
-    }
-  };
+    };
 
-  // Fungsi untuk memproses data berdasarkan arah
-  const processArahData = (response) => {
-    try {
-      if (response.status === 200 && response.data.data.length > 0) {
-        const apiData = response.data.data;
-        
-        // Data untuk kendaraan masuk
-        const incomingValues = apiData.map(item => parseInt(item.total_IN));
-        const incomingTotal = incomingValues.reduce((a, b) => a + b, 0);
-        
-        // Data untuk kendaraan keluar
-        const outgoingValues = apiData.map(item => parseInt(item.total_OUT));
-        const outgoingTotal = outgoingValues.reduce((a, b) => a + b, 0);
-        
-        // Format data untuk chart masuk
-        const incomingVehiclesBar2 = formatArahData(
-          apiData, 
-          incomingValues, 
-          incomingTotal, 
-          "Masuk", 
-          "masuk", 
-          '#4ade80'
-        );
-        
-        // Format data untuk chart keluar
-        const outgoingVehiclesBar2 = formatArahData(
-          apiData, 
-          outgoingValues, 
-          outgoingTotal, 
-          "Keluar", 
-          "keluar", 
-          '#BF3D3D'
-        );
-        
-        // Simpan data ke state
-        setIncomingVehiclesBar2(incomingVehiclesBar2);
-        setOutgoingVehiclesBar2(outgoingVehiclesBar2);
-        setIOByArahData(apiData.map(item => ({
-          name: item.arah,
-          masuk: parseInt(item.total_IN),
-          keluar: parseInt(item.total_OUT),
-        })));
-      } else {
+    // Fungsi untuk memproses data berdasarkan arah
+    const processArahData = (response) => {
+      try {
+        if (response.status === 200 && response.data.data.length > 0) {
+          const apiData = response.data.data;
+
+          // Data untuk kendaraan masuk
+          const incomingValues = apiData.map(item => parseInt(item.total_IN));
+          const incomingTotal = incomingValues.reduce((a, b) => a + b, 0);
+
+          // Data untuk kendaraan keluar
+          const outgoingValues = apiData.map(item => parseInt(item.total_OUT));
+          const outgoingTotal = outgoingValues.reduce((a, b) => a + b, 0);
+
+          // Format data untuk chart masuk
+          const incomingVehiclesBar2 = formatArahData(
+            apiData,
+            incomingValues,
+            incomingTotal,
+            "Masuk",
+            "masuk",
+            '#4ade80'
+          );
+
+          // Format data untuk chart keluar
+          const outgoingVehiclesBar2 = formatArahData(
+            apiData,
+            outgoingValues,
+            outgoingTotal,
+            "Keluar",
+            "keluar",
+            '#BF3D3D'
+          );
+
+          // Simpan data ke state
+          setIncomingVehiclesBar2(incomingVehiclesBar2);
+          setOutgoingVehiclesBar2(outgoingVehiclesBar2);
+          setIOByArahData(apiData.map(item => ({
+            name: item.arah,
+            masuk: parseInt(item.total_IN),
+            keluar: parseInt(item.total_OUT),
+          })));
+        } else {
+          setDefaultArahData();
+        }
+      } catch (error) {
+        console.error('Error processing arah data:', error);
         setDefaultArahData();
       }
-    } catch (error) {
-      console.error('Error processing arah data:', error);
-      setDefaultArahData();
-    }
-  };
-
-  // Helper untuk memformat data arah
-  const formatArahData = (apiData, values, total, centerTitle, direction, color) => {
-    return {
-      labels: apiData.map(item => capitalizeFirstLetter(item.arah)),
-      values: values,
-      percentages: values.map(value => `${((value / total) * 100).toFixed(0)}%`),
-      vehicleTypes: apiData.map(item => capitalizeFirstLetter(item.arah)),
-      directionRoad: apiData.map(item => capitalizeFirstLetter(item.arah)),
-      centerTitle: centerTitle,
-      tooltipLabels: apiData.map(item => `${capitalizeFirstLetter(item.arah)} ${direction}`),
-      color: color,
-      thickness: 25,
-      format: 'unit'
     };
-  };
 
-  // Fungsi untuk memproses data berdasarkan tipe kendaraan
-  const processTypeData = (response) => {
-    try {
-      if (response.status === 200 && Array.isArray(response.data.data)) {
-        const vehicleData = extractVehicleData(response.data.data);
-        
-        // Sort by total incoming vehicles (descending)
-        vehicleData.sort((a, b) => b.totalIn - a.totalIn);
-        
-        // Calculate total incoming and outgoing
-        const totalIn = vehicleData.reduce((sum, item) => sum + item.totalIn, 0);
-        const totalOut = vehicleData.reduce((sum, item) => sum + item.totalOut, 0);
-        
-        // Format data untuk chart
-        const incomingVehicles = formatTypeData(vehicleData, totalIn, "masuk", '#4ade80');
-        const outgoingVehicles = formatTypeData(vehicleData, totalOut, "keluar", '#BF3D3D');
-        
-        setVehicleData({
-          incomingVehicles,
-          outgoingVehicles,
-          rawData: vehicleData
-        });
-      } else {
+    // Helper untuk memformat data arah
+    const formatArahData = (apiData, values, total, centerTitle, direction, color) => {
+      return {
+        labels: apiData.map(item => capitalizeFirstLetter(item.arah)),
+        values: values,
+        percentages: values.map(value => `${((value / total) * 100).toFixed(0)}%`),
+        vehicleTypes: apiData.map(item => capitalizeFirstLetter(item.arah)),
+        directionRoad: apiData.map(item => capitalizeFirstLetter(item.arah)),
+        centerTitle: centerTitle,
+        tooltipLabels: apiData.map(item => `${capitalizeFirstLetter(item.arah)} ${direction}`),
+        color: color,
+        thickness: 25,
+        format: 'unit'
+      };
+    };
+
+    // Fungsi untuk memproses data berdasarkan tipe kendaraan
+    const processTypeData = (response) => {
+      try {
+        if (response.status === 200 && Array.isArray(response.data.data)) {
+          const vehicleData = extractVehicleData(response.data.data);
+
+          // Sort by total incoming vehicles (descending)
+          vehicleData.sort((a, b) => b.totalIn - a.totalIn);
+
+          // Calculate total incoming and outgoing
+          const totalIn = vehicleData.reduce((sum, item) => sum + item.totalIn, 0);
+          const totalOut = vehicleData.reduce((sum, item) => sum + item.totalOut, 0);
+
+          // Format data untuk chart
+          const incomingVehicles = formatTypeData(vehicleData, totalIn, "masuk", '#4ade80');
+          const outgoingVehicles = formatTypeData(vehicleData, totalOut, "keluar", '#BF3D3D');
+
+          setVehicleData({
+            incomingVehicles,
+            outgoingVehicles,
+            rawData: vehicleData
+          });
+        } else {
+          setVehicleData([]);
+        }
+      } catch (error) {
+        console.error("Error processing vehicle type data:", error);
         setVehicleData([]);
       }
-    } catch (error) {
-      console.error("Error processing vehicle type data:", error);
-      setVehicleData([]);
-    }
-  };
-
-  // Ekstrak data kendaraan
-  const extractVehicleData = (data) => {
-    // Definisi tipe kendaraan dan ikon
-    const vehicleTypes = {
-      'SM': { name: 'Sepeda Motor', icon: FaMotorcycle },
-      'MP': { name: 'Mobil Penumpang', icon: FaCar },
-      'AUP': { name: 'Angkutan Umum', icon: FaShuttleVan },
-      'TR': { name: 'Truk', icon: FaTruck },
-      'BS': { name: 'Bus', icon: FaBus },
-      'TS': { name: 'Truk Sedang', icon: FaTruckMoving },
-      'TB': { name: 'Truk Besar', icon: FaTruck },
-      'BB': { name: 'Bus Besar', icon: FaBus },
-      'GANDENG': { name: 'Truk Gandeng', icon: FaTruckMoving },
-      'KTB': { name: 'Kendaraan Tidak Bermotor', icon: FaCaravan }
     };
-    
+
     // Ekstrak data kendaraan
-    const vehicleData = [];
-    
-    data.forEach(item => {
-      // Cari tipe kendaraan yang memiliki nilai 1
-      for (const [key, value] of Object.entries(item)) {
-        if (value === 1 && vehicleTypes[key]) {
-          vehicleData.push({
-            type: key,
-            name: vehicleTypes[key].name,
-            icon: vehicleTypes[key].icon,
-            totalIn: parseInt(item.total_IN, 10),
-            totalOut: parseInt(item.total_OUT, 10)
-          });
-          break;
+    const extractVehicleData = (data) => {
+      // Definisi tipe kendaraan dan ikon
+      const vehicleTypes = {
+        'SM': { name: 'Sepeda Motor', icon: FaMotorcycle },
+        'MP': { name: 'Mobil Penumpang', icon: FaCar },
+        'AUP': { name: 'Angkutan Umum', icon: FaShuttleVan },
+        'TR': { name: 'Truk', icon: FaTruck },
+        'BS': { name: 'Bus', icon: FaBus },
+        'TS': { name: 'Truk Sedang', icon: FaTruckMoving },
+        'TB': { name: 'Truk Besar', icon: FaTruck },
+        'BB': { name: 'Bus Besar', icon: FaBus },
+        'GANDENG': { name: 'Truk Gandeng', icon: FaTruckMoving },
+        'KTB': { name: 'Kendaraan Tidak Bermotor', icon: FaCaravan }
+      };
+
+      // Ekstrak data kendaraan
+      const vehicleData = [];
+
+      data.forEach(item => {
+        // Cari tipe kendaraan yang memiliki nilai 1
+        for (const [key, value] of Object.entries(item)) {
+          if (value === 1 && vehicleTypes[key]) {
+            vehicleData.push({
+              type: key,
+              name: vehicleTypes[key].name,
+              icon: vehicleTypes[key].icon,
+              totalIn: parseInt(item.total_IN, 10),
+              totalOut: parseInt(item.total_OUT, 10)
+            });
+            break;
+          }
         }
-      }
-    });
-    
-    return vehicleData;
-  };
+      });
 
-  // Helper untuk memformat data tipe kendaraan
-  const formatTypeData = (vehicleData, total, direction, color) => {
-    return {
-      labels: vehicleData.map(item => item.name),
-      values: vehicleData.map(item => direction === "masuk" ? item.totalIn : item.totalOut),
-      percentages: vehicleData.map(item => {
-        const value = direction === "masuk" ? item.totalIn : item.totalOut;
-        return `${((value / total) * 100).toFixed(1)}%`;
-      }),
-      vehicleTypes: vehicleData.map(item => item.name),
-      iconComponents: vehicleData.map(item => item.icon),
-      tooltipLabels: vehicleData.map(item => `${item.name} ${direction}`),
-      color: color,
-      thickness: 25,
-      format: 'unit'
+      return vehicleData;
     };
-  };
 
-  // Helper functions
-  const capitalizeFirstLetter = (string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  };
-
-  const getDefaultChartData = () => {
-    return {
-      name: 'Today',
-      masuk: 0,
-      keluar: 0,
-      masukPercentage: 0,
-      keluarPercentage: 0
+    // Helper untuk memformat data tipe kendaraan
+    const formatTypeData = (vehicleData, total, direction, color) => {
+      return {
+        labels: vehicleData.map(item => item.name),
+        values: vehicleData.map(item => direction === "masuk" ? item.totalIn : item.totalOut),
+        percentages: vehicleData.map(item => {
+          const value = direction === "masuk" ? item.totalIn : item.totalOut;
+          return `${((value / total) * 100).toFixed(1)}%`;
+        }),
+        vehicleTypes: vehicleData.map(item => item.name),
+        iconComponents: vehicleData.map(item => item.icon),
+        tooltipLabels: vehicleData.map(item => `${item.name} ${direction}`),
+        color: color,
+        thickness: 25,
+        format: 'unit'
+      };
     };
-  };
 
-  const setDefaultValues = () => {
-    setChartData([getDefaultChartData()]);
-    setDefaultArahData();
-    setVehicleData([]);
-  };
-
-  const setDefaultArahData = () => {
-    const defaultArahConfig = {
-      labels: [],
-      values: [],
-      percentages: [],
-      vehicleTypes: [],
-      directionRoad: [],
-      color: '',
-      thickness: 25,
-      format: 'unit'
+    // Helper functions
+    const capitalizeFirstLetter = (string) => {
+      return string.charAt(0).toUpperCase() + string.slice(1);
     };
-    
-    setIOByArahData([]);
-    setIncomingVehiclesBar2({...defaultArahConfig, color: '#4ade80'});
-    setOutgoingVehiclesBar2({...defaultArahConfig, color: '#BF3D3D'});
-  };
 
-  // Mulai fetch data
-  fetchAllData();
+    const getDefaultChartData = () => {
+      return {
+        name: 'Today',
+        masuk: 0,
+        keluar: 0,
+        masukPercentage: 0,
+        keluarPercentage: 0
+      };
+    };
 
-  // Jika perlu refresh data secara berkala, uncomment kode berikut
-  // const intervalId = setInterval(fetchAllData, 60000); // Refresh setiap menit
-  // return () => clearInterval(intervalId);
-  
-}, [activeFilter]);
+    const setDefaultValues = () => {
+      setChartData([getDefaultChartData()]);
+      setDefaultArahData();
+      setVehicleData([]);
+    };
+
+    const setDefaultArahData = () => {
+      const defaultArahConfig = {
+        labels: [],
+        values: [],
+        percentages: [],
+        vehicleTypes: [],
+        directionRoad: [],
+        color: '',
+        thickness: 25,
+        format: 'unit'
+      };
+
+      setIOByArahData([]);
+      setIncomingVehiclesBar2({ ...defaultArahConfig, color: '#4ade80' });
+      setOutgoingVehiclesBar2({ ...defaultArahConfig, color: '#BF3D3D' });
+    };
+
+    fetchAllData();
+
+    // Jika perlu refresh data secara berkala, uncomment kode berikut
+    // const intervalId = setInterval(fetchAllData, 60000); // Refresh setiap menit
+    // return () => clearInterval(intervalId);
+
+  }, [activeFilter]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, [])
+
+  if (!isClient) return null;
 
   return (
     <div className="p-4 text-base-700 flex flex-col items-center gap-8 overflow-y-hidden">
-      <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
-      <div className="w-[90%]">
-        <div className="flex flex-wrap gap-2 mb-8 justify-start">
-          <button
-            onClick={() => handleFilterChange('day')}
-            className={`px-3 py-1.5 rounded-md ${
-              activeFilter === 'day'
+      <Suspense fallback={<div>Loading Charts...</div>}>
+        <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
+        <div className="w-[90%]">
+          <div className="flex flex-wrap gap-2 mb-8 justify-start">
+            <button
+              onClick={() => handleFilterChange('day')}
+              className={`px-3 py-1.5 rounded-md ${activeFilter === 'day'
                 ? 'bg-blue-950 text-white'
                 : 'bg-base-300 hover:bg-blue-200'
-            }`}
-          >
-            Hari Ini
-          </button>
-          <button
-            onClick={() => handleFilterChange('month')}
-            className={`px-3 py-1.5 rounded-md ${
-              activeFilter === 'month'
+                }`}
+            >
+              Hari Ini
+            </button>
+            <button
+              onClick={() => handleFilterChange('month')}
+              className={`px-3 py-1.5 rounded-md ${activeFilter === 'month'
                 ? 'bg-blue-950 text-white'
                 : 'bg-base-300 hover:bg-blue-200'
-            }`}
-          >
-            Bulan Ini
-          </button>
-          <button
-            onClick={() => handleFilterChange('year')}
-            className={`px-3 py-1.5 rounded-md ${
-              activeFilter === 'year'
+                }`}
+            >
+              Bulan Ini
+            </button>
+            <button
+              onClick={() => handleFilterChange('year')}
+              className={`px-3 py-1.5 rounded-md ${activeFilter === 'year'
                 ? 'bg-blue-950 text-white'
                 : 'bg-base-300 hover:bg-blue-200'
-            }`}
-          >
-            Tahun Ini
-          </button>
-          <button
-            onClick={() => handleFilterChange('period')}
-            className={`px-3 py-1.5 rounded-md ${
-              activeFilter === 'period'
+                }`}
+            >
+              Tahun Ini
+            </button>
+            <button
+              onClick={() => handleFilterChange('period')}
+              className={`px-3 py-1.5 rounded-md ${activeFilter === 'period'
                 ? 'bg-blue-950 text-white'
                 : 'bg-base-300 hover:bg-blue-200'
-            }`}
-          >
-            Periode Ini
-          </button>
+                }`}
+            >
+              Periode Ini
+            </button>
+          </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="font-medium">Loading chart data...</div>
+            </div>
+          ) : (
+            <TotalChart data={chartData} />
+          )}
         </div>
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="text-blue-950">Loading chart data...</div>
+            <div className="font-medium">Loading chart data...</div>
           </div>
         ) : (
-          <TotalChart data={chartData} />
+          <div className="justify-between w-[90%] flex flex-col gap-5">
+            <div className="flex flex-col md:flex-row items-center bg-base-200/90 p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
+              <div className="w-full md:w-1/2">
+                <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Masuk</h2>
+                <LintasChart positionText={true} chartData={vehicleData?.incomingVehicles} />
+              </div>
+              <div className="w-full md:w-1/2">
+                <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Keluar</h2>
+                <LintasChart positionText={false} chartData={vehicleData?.outgoingVehicles} />
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row items-center justify-center not-xl:gap-2 gap-15 bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
+              <div className="w-full md:w-1/2">
+                <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Masuk</h2>
+                <LintasChart positionText={true} chartData={incomingVehiclesBar2} />
+              </div>
+              <div className="w-full md:w-1/2">
+                <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Keluar</h2>
+                <LintasChart positionText={false} chartData={outgoingVehiclesBar2} />
+              </div>
+            </div>
+            <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100">
+              <GrafikRoad />
+            </div>
+          </div>
         )}
-      </div>
-      
-      {/* Rest of your component remains unchanged */}
-      <div className="flex flex-col md:flex-row items-center justify-between w-[90%] bg-base-200/90 p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
-        <div className="w-full md:w-1/2">
-          <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Masuk</h2>
-          <LintasChart positionText={true} chartData={vehicleData?.incomingVehicles}/>
-        </div>
-        <div className="w-full md:w-1/2">
-          <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Keluar</h2>
-          <LintasChart positionText={false} chartData={vehicleData?.outgoingVehicles}/>
-        </div>
-      </div>
-      <div className="flex flex-col md:flex-row items-center justify-center not-xl:gap-2 gap-15 w-[90%] bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
-        <div className="w-full md:w-1/2">
-          <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Masuk</h2>
-          <LintasChart positionText={true} chartData={incomingVehiclesBar2}/>
-        </div>
-        <div className="w-full md:w-1/2">
-          <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Keluar</h2>
-          <LintasChart positionText={false} chartData={outgoingVehiclesBar2}/>
-        </div>
-      </div>
-      <div className="w-[90%] h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100">
-        <GrafikRoad />
-        {/* <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-2 py-10">
-          <div>
-            <GrafikRoad />
-          </div>
-          <div>
-          <GrafikRoad />
-          </div>
-        </div> */}
-      </div>
+      </Suspense>
       <div className="w-[90%]">
-      <div className="w-full bg-blue-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
+        <div className="w-full bg-blue-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
         <div className="flex flex-wrap gap-2 mt-8 justify-start">
           <button
             onClick={() => handleFilterSection2('day')}
-            className={`px-3 py-1.5 rounded-md ${
-              activeFilterSection2 === 'day'
-                ? 'bg-blue-950 text-white'
-                : 'bg-base-300 hover:bg-blue-200'
-            }`}
+            className={`px-3 py-1.5 rounded-md ${activeFilterSection2 === 'day'
+              ? 'bg-blue-950 text-white'
+              : 'bg-base-300 hover:bg-blue-200'
+              }`}
           >
             Hari Ini
           </button>
           <button
             onClick={() => handleFilterSection2('month')}
-            className={`px-3 py-1.5 rounded-md ${
-              activeFilterSection2 === 'month'
-                ? 'bg-blue-950 text-white'
-                : 'bg-base-300 hover:bg-blue-200'
-            }`}
+            className={`px-3 py-1.5 rounded-md ${activeFilterSection2 === 'month'
+              ? 'bg-blue-950 text-white'
+              : 'bg-base-300 hover:bg-blue-200'
+              }`}
           >
             Bulan Ini
           </button>
           <button
             onClick={() => handleFilterSection2('year')}
-            className={`px-3 py-1.5 rounded-md ${
-              activeFilterSection2 === 'year'
-                ? 'bg-blue-950 text-white'
-                : 'bg-base-300 hover:bg-blue-200'
-            }`}
+            className={`px-3 py-1.5 rounded-md ${activeFilterSection2 === 'year'
+              ? 'bg-blue-950 text-white'
+              : 'bg-base-300 hover:bg-blue-200'
+              }`}
           >
             Tahun Ini
           </button>
           <button
             onClick={() => handleFilterSection2('period')}
-            className={`px-3 py-1.5 rounded-md ${
-              activeFilterSection2 === 'period'
-                ? 'bg-blue-950 text-white'
-                : 'bg-base-300 hover:bg-blue-200'
-            }`}
+            className={`px-3 py-1.5 rounded-md ${activeFilterSection2 === 'period'
+              ? 'bg-blue-950 text-white'
+              : 'bg-base-300 hover:bg-blue-200'
+              }`}
           >
             Periode Ini
           </button>

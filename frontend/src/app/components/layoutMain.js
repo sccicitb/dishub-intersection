@@ -4,7 +4,7 @@ import * as Icons from "react-icons/ai";
 import * as FaIcons from "react-icons/fa";
 import * as RiIcons from "react-icons/ri";
 import * as MdIcons from "react-icons/md";
-import listMenu from "@/app/data/menu.json";
+import listMenu from "@/data/menu.json";
 import ThemeToggle from "@/app/components/customTheme";
 import { Logout } from "@/app/auth/logout";
 // import ClockBar from "@/app/components/clockBar";
