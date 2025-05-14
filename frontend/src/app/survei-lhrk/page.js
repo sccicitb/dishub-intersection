@@ -18,7 +18,7 @@ function SurveiLhrkPage () {
   const [activePergerakan, setActivePergerakan] = useState('Semua');
   const [activeTitle, setActiveTitle] = useState("Survei LHRK")
   const [locationSelect, setLocationSelect] = useState("")
-  
+
   function handleClick (T) {
     const replace = T.name.toLowerCase();
     console.log('clicked : ' + JSON.stringify(T));
@@ -43,7 +43,7 @@ function SurveiLhrkPage () {
   }, [locationSelect])
 
   useEffect(() => {
-     import('@/data/sampleVehicleData.json').then((data) => {
+    import('@/data/sampleVehicleData.json').then((data) => {
       setVehicleData(data.default);
     });
   }, [])
@@ -67,6 +67,7 @@ function SurveiLhrkPage () {
             </div>
           </div>
           <VehicleTable />
+          <ClasificationTable typeClass={activeClassification} />
         </div>
       </Suspense>
     </div>
