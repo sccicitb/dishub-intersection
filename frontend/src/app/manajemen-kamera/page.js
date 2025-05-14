@@ -3,6 +3,7 @@
 import { io } from 'socket.io-client'
 import { useState, useEffect, lazy, Suspense } from 'react'
 import CCTVStream from '../components/cctvStream';
+import CameraActive from '../components/cameraActive';
 
 const RecentVehicle = lazy(() => import('../components/recentVehicle'));
 const MapComponent = lazy(() => import('../components/map'));
@@ -10,7 +11,7 @@ const MapComponent = lazy(() => import('../components/map'));
 export const CameraCard = ({ C = '' }) => {
   const isFullWidth = C.includes('col-span-2');
   return (
-    <div className={`rounded-md bg-[#314385]/80 min-h-[40px] ${isFullWidth ? 'w-full' : 'w-[80px]'} ${C}`}>
+    <div className={`rounded-md bg-[#314385]/80 min-h-[30px] ${isFullWidth ? 'w-full' : 'w-[60px]'} ${C}`}>
     </div>
   );
 };
@@ -29,35 +30,7 @@ export function LayoutKamera ({ cols = 1, J = 2, bc = 0, rows = 0, Clicked = (t)
   );
 }
 
-export const CameraPosition = ({ layout }) => {
-  const [socketConnected, setSocketConnected] = useState(false);
-  const [streamData, setStreamData] = useState({
-    detection3: null,
-    detection4: null,
-    detection5: null,
-    detection1: null
-  });
-
-  useEffect(() => {
-    const socket = io('https://sxe-data.layanancerdas.id');
-    socket.on('connect', () => setSocketConnected(true));
-    socket.on('disconnect', () => setSocketConnected(false));
-
-    socket.on('result_detection_3', (data) => {
-      setStreamData(prev => ({ ...prev, detection3: data }));
-    });
-    socket.on('result_detection', (data) => {
-      setStreamData(prev => ({ ...prev, detection1: data }));
-    });
-    socket.on('result_detection_4', (data) => {
-      setStreamData(prev => ({ ...prev, detection4: data }));
-    });
-    socket.on('result_detection_5', (data) => {
-      setStreamData(prev => ({ ...prev, detection5: data }));
-    });
-
-    return () => socket.disconnect();
-  }, []);
+export const CameraPosition = ({ layout, streamData }) => {
 
   const streams = [
     streamData.detection,
@@ -109,6 +82,12 @@ const ManajemenKamera = () => {
   const [layout, setLayout] = useState({ cols: 2, J: 4, bc: 0, rows: 0 });
   const [fullSize, setFullSize] = useState(false);
   const isMobile = useIsMobile();
+  const [optionCamera, setOptionCamera] = useState('peta');
+
+  const handleCameraSelect = (data) => {
+    setOptionCamera(data);
+  };
+
   const handleClick = (layoutData) => {
     setLayout(layoutData);
   };
@@ -141,6 +120,34 @@ const ManajemenKamera = () => {
         break;
     }
   }
+   const [socketConnected, setSocketConnected] = useState(false);
+  const [streamData, setStreamData] = useState({
+    detection3: null,
+    detection4: null,
+    detection5: null,
+    detection1: null
+  });
+
+  useEffect(() => {
+    const socket = io('https://sxe-data.layanancerdas.id');
+    socket.on('connect', () => setSocketConnected(true));
+    socket.on('disconnect', () => setSocketConnected(false));
+
+    socket.on('result_detection_3', (data) => {
+      setStreamData(prev => ({ ...prev, detection3: data }));
+    });
+    socket.on('result_detection', (data) => {
+      setStreamData(prev => ({ ...prev, detection1: data }));
+    });
+    socket.on('result_detection_4', (data) => {
+      setStreamData(prev => ({ ...prev, detection4: data }));
+    });
+    socket.on('result_detection_5', (data) => {
+      setStreamData(prev => ({ ...prev, detection5: data }));
+    });
+
+    return () => socket.disconnect();
+  }, []);
   return (
     <div className='w-[95%] py-10 mx-auto'>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
@@ -173,18 +180,24 @@ const ManajemenKamera = () => {
               </div>
             </div>
             <div className='overflow-y-auto lg:max-h-[480px]'>
-              <CameraPosition layout={layout} />
+              <CameraPosition layout={layout} streamData={streamData} />
             </div>
-              <MapComponent title={activeTitle} onClick={handleClickCamera} />
+            <CameraActive onOptionChange={handleCameraSelect}>
+              <div className="h-[40vh] overflow-y-auto">
+                {optionCamera === "peta" ? (
+                  <MapComponent onClick={handleClickCamera} sizeHeight={"35vh"} />
+                ) : (
+                  <div></div>
+                )}
+              </div>
+            </CameraActive>
           </div>
 
           {!fullSize && (
-            <div className='h-fit lg:max-h-[1130px]'>
-              <RecentVehicle customCSS={'h-[500px] lg:h-[1120px] max-h-full'} />
+            <div className='h-fit'>
+              <RecentVehicle customCSS={'h-[500px] lg:h-[1010px] max-h-full'} />
             </div>
           )}
-        </div>
-        <div>
         </div>
       </Suspense>
     </div>

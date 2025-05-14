@@ -10,7 +10,7 @@ import simpang from "@/data/DataSimpang.json";
 import ruangan from "@/data/ruangan.json";
 import { useAuth } from "../context/authContext";
 
-const MapComponent = ({ title, onClick }) => {
+const MapComponent = ({ title, onClick, sizeHeight }) => {
   const { setLoading } = useAuth();
   const mapRef = useRef(null);
 
@@ -164,10 +164,10 @@ const MapComponent = ({ title, onClick }) => {
   return (
     <div>
       <div className="p-5 text-xl font-semibold"> 
-        {title || "Titik Lokasi Kamera"}
+        {title || null}
       </div>
       <div className="w-full">
-        <div style={{ width: "100%", height: "50vh" }} className="relative">
+        <div style={{ width: "100", height: sizeHeight ? sizeHeight : "50vh" }} className="relative">
           <Map
             ref={mapRef}
             mapLib={import("maplibre-gl")}
