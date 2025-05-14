@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { ExportButton } from './exportExcel';
-import dataTable from '@/data/DataTableHour.json';
+// import { ExportButton } from './exportExcel';
+// import dataTable from '@/data/DataTableHour.json';
 import SurveyLalulintasExport from './exportPdf';
-export default function SelectionButtons({vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, setActivePergerakan}) {
+export default function SelectionButtons({exportPdf, vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, setActivePergerakan}) {
   // const [activeSurveyor, setActiveSurveyor] = useState('Semua');
   // const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   // const [activePendekatan, setActivePendekatan] = useState('Semua');
@@ -82,12 +82,15 @@ export default function SelectionButtons({vehicleData, activeSurveyor, activeCla
           ))}
         </div>
       </div>
-      <div className='space-y-2'>
+      {exportPdf && (
+      
+        <div className='space-y-2'>
         <div className="w-full gap-5 flex overflow-x-auto join">
           {/* <ExportButton vehicleData={dataTable} fileName='Data_Kendaraan_perjam'/> */}
           <SurveyLalulintasExport  vehicleData={vehicleData}/>
         </div>
       </div>
+      )}
     </div>
   );
 }

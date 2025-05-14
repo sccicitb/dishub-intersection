@@ -122,11 +122,12 @@ function SurveiSimpangPage () {
                 activePendekatan={activePendekatan}
                 setActivePendekatan={setActivePendekatan}
                 activePergerakan={activePergerakan}
-                setActivePergerakan={setActivePergerakan} />
+                setActivePergerakan={setActivePergerakan}
+                exportPdf={true} />
             </div>
           </div>
           <HourVehicleTable statusHour={true} />
-          <ClasificationTable typeClass={activeClassification}/>
+          <ClasificationTable typeClass={activeClassification} />
         </div>
       </Suspense>
     </div>

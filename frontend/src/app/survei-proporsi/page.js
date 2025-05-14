@@ -38,7 +38,8 @@ function SurveiProporsi () {
                 activePendekatan={activePendekatan}
                 setActivePendekatan={setActivePendekatan}
                 activePergerakan={activePergerakan}
-                setActivePergerakan={setActivePergerakan} />
+                setActivePergerakan={setActivePergerakan} 
+                />
             </div>
           </div>
           <div className="flex flex-col w-fit bg-[#7585C1]/20 rounded-xl mx-auto font-semibold">

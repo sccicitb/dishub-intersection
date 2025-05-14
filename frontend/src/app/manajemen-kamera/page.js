@@ -8,7 +8,7 @@ import CCTVStream from '../components/cctvStream';
 export const CameraCard = ({ C = '' }) => {
   const isFullWidth = C.includes('col-span-2'); 
   return (
-    <div className={`rounded-md bg-[#314385]/90 min-h-[40px] ${isFullWidth ? 'w-full' : 'w-[80px]'} ${C}`}>
+    <div className={`rounded-md bg-[#314385]/80 min-h-[40px] ${isFullWidth ? 'w-full' : 'w-[80px]'} ${C}`}>
     </div>
   );
 };
@@ -67,7 +67,7 @@ export const CameraPosition = ({ layout }) => {
   const { cols = 1, J = 2, bc = 0, rows = 0 } = layout;
   
   return (
-    <div className={`grid ${cols ? 'grid-cols-' + cols : ''} gap-2 py-5 min-h-[500px]`}>
+    <div className={`grid ${cols ? 'grid-cols-' + cols : ''} gap-2 py-5 min-h-[800px]`}>
       {Array.from({ length: bc }).map((_, i) => (
         <div key={`bc-${i}`} className={`col-span-2 ${rows ? `row-span-${rows}` : ''}`}>
           <CCTVStream
@@ -120,7 +120,7 @@ const ManajemenKamera = () => {
     <div className='w-[95%] py-10 mx-auto'>
 
       <div className={`grid ${fullSize ? 'grid-cols-1' : 'xl:grid-cols-3 grid-cols-1'} gap-4`}>
-        <div className={`w-full ${fullSize ? 'col-span-1' : 'xl:col-span-2'} bg-[#314385]/10 rounded-xl p-4 `}>
+        <div className={`w-full ${fullSize ? 'col-span-1' : 'xl:col-span-2'} bg-[#314385]/10 rounded-xl p-4 h-fit`}>
           <h3 className='text-lg font-medium mb-2'>Select Layout</h3>
           <div className='w-full overflow-x-auto'>
             <div className="flex gap-2 min-w-max">
@@ -147,11 +147,13 @@ const ManajemenKamera = () => {
                 />
             </div>
           </div>
-          <CameraPosition layout={layout} />
+          <div className='overflow-y-auto lg:max-h-[960px]'>
+            <CameraPosition layout={layout} />
+          </div>
         </div>
 
         {!fullSize && (
-          <div>
+          <div className='h-fit lg:max-h-[1130px]'>
             <RecentVehicle />
           </div>
         )}
