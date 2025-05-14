@@ -154,7 +154,7 @@ const ManajemenKamera = () => {
 
         {!fullSize && (
           <div className='h-fit lg:max-h-[1130px]'>
-            <RecentVehicle />
+            <RecentVehicle customCSS={'h-[500px] lg:h-[1000px]'}/>
           </div>
         )}
       </div>

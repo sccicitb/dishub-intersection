@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default function RecentVehicle () {
+export default function RecentVehicle ({customCSS}) {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -156,7 +156,7 @@ export default function RecentVehicle () {
         </button>
       </div>
 
-      <div className="pr-2 h-[500px] lg:h-[1000px] overflow-y-auto">
+      <div className={`pr-2  ${customCSS}  overflow-y-auto`}>
         {recentEvents.map(event => (
           <div key={event.id} className="flex flex-row gap-4 h-fit">
             <div className="w-1/3">

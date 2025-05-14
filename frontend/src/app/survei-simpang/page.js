@@ -15,14 +15,15 @@ function SurveiSimpangPage () {
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
-  const [selectOption, setSelectOption] = useState('detection3');
+  const [selectOption, setSelectOption] = useState('detection4');
   const [streamData, setStreamData] = useState({
     detection3: null,
     detection4: null,
     detection5: null,
     detection1: null
   });
-  const [activeTitle, setActiveTitle] = useState("Simpang Tempel");
+  const title= "Survei "
+  const [activeTitle, setActiveTitle] = useState(title);
   // const [activeCamera, setActiveCamera] = useState('detection4');
 
   useEffect(() => {
@@ -69,19 +70,19 @@ function SurveiSimpangPage () {
     switch (replace) {
       case 'simpang piyungan':
         setSelectOption('detection4');
-        setActiveTitle('Simpang Piyungan');
+        setActiveTitle(title +'Simpang Piyungan');
         break;
       case 'simpang demen glagah':
         setSelectOption('detection3');
-        setActiveTitle('Simpang Demen Glagah');
+        setActiveTitle(title +'Simpang Demen Glagah');
         break;
       case 'simpang tempel':
         setSelectOption('detection5');
-        setActiveTitle('Simpang Tempel');
+        setActiveTitle(title +'Simpang Tempel');
         break;
       case 'simpang prambanan':
         setSelectOption('detection1');
-        setActiveTitle('Simpang Prambanan');
+        setActiveTitle(title +'Simpang Prambanan');
         break;
     }
   }
@@ -102,11 +103,11 @@ function SurveiSimpangPage () {
         <MapComponent title={activeTitle} onClick={handleClick} />
         <div className="w-[95%] m-auto">
           <div className="lg:grid lg:grid-cols-3 flex flex-col lg:items-center lg:place-items-center gap-5 py-10">
-            <RecentVehicle />
+            <RecentVehicle customCSS={'h-[400px]'} />
             <div className="lg:col-span-2 w-full h-full items-center flex bg-black">
               <CCTVStream
                 data={streamData[selectOption]}
-                customLarge="h-[470px]"
+                customLarge="h-[400px]"
                 title="CCTV Camera 3"
               />
             </div>
