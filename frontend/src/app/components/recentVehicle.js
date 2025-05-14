@@ -106,6 +106,15 @@ export default function RecentVehicle ({customCSS}) {
       type: "Crossed line",
       origin: "Vehicle car",
       objectId: "500"
+    },
+    {
+      id: 12,
+      channel: "Patuk",
+      time: "04/02/2025 11:08:23",
+      triggerName: "Exit",
+      type: "Crossed line",
+      origin: "Vehicle car",
+      objectId: "500"
     }
   ];
   const fetchVehicles = async () => {
