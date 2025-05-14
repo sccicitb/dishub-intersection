@@ -22,7 +22,7 @@ function SurveiSimpangPage () {
     detection5: null,
     detection1: null
   });
-  const title= "Survei "
+  const title = "Survei "
   const [activeTitle, setActiveTitle] = useState(title);
   // const [activeCamera, setActiveCamera] = useState('detection4');
 
@@ -70,19 +70,19 @@ function SurveiSimpangPage () {
     switch (replace) {
       case 'simpang piyungan':
         setSelectOption('detection4');
-        setActiveTitle(title +'Simpang Piyungan');
+        setActiveTitle(title + 'Simpang Piyungan');
         break;
       case 'simpang demen glagah':
         setSelectOption('detection3');
-        setActiveTitle(title +'Simpang Demen Glagah');
+        setActiveTitle(title + 'Simpang Demen Glagah');
         break;
       case 'simpang tempel':
         setSelectOption('detection5');
-        setActiveTitle(title +'Simpang Tempel');
+        setActiveTitle(title + 'Simpang Tempel');
         break;
       case 'simpang prambanan':
         setSelectOption('detection1');
-        setActiveTitle(title +'Simpang Prambanan');
+        setActiveTitle(title + 'Simpang Prambanan');
         break;
     }
   }
@@ -104,11 +104,12 @@ function SurveiSimpangPage () {
         <div className="w-[95%] m-auto">
           <div className="lg:grid lg:grid-cols-3 flex flex-col lg:items-center lg:place-items-center gap-5 py-10">
             <RecentVehicle customCSS={'h-[400px]'} />
-            <div className="lg:col-span-2 w-full h-full items-center flex bg-black">
+            <div className="lg:col-span-2 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden">
               <CCTVStream
                 data={streamData[selectOption]}
-                customLarge="h-[400px]"
-                title="CCTV Camera 3"
+                large
+                title={'CCTV Camera ' + selectOption.slice(-1)}
+                onClick={() => setActiveCamera('detection3')}
               />
             </div>
           </div>
