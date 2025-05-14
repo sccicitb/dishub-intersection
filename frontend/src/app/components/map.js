@@ -267,7 +267,7 @@ const Dropdown = ({ isOpen, toggleOpen, label, children }) => (
       </button>
     </div>
     {isOpen && (
-      <div className="absolute left-0 top-12 mt-2 w-64 rounded-xl shadow-xs bg-base-100/90 z-30">
+      <div className="absolute left-0 top-12 mt-2 w-64 rounded-xl shadow-xs bg-base-100/90 z-10">
         <div className="py-1 flex flex-col">{children}</div>
       </div>
     )}
