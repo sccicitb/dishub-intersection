@@ -151,8 +151,8 @@ const ManajemenKamera = () => {
   return (
     <div className='w-[95%] py-10 mx-auto'>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
-        <div className={`grid ${fullSize ? 'grid-cols-1' : 'xl:grid-cols-3 grid-cols-1'} gap-4`}>
-          <div className={`w-full ${fullSize ? 'col-span-1' : 'xl:col-span-2'} bg-[#314385]/10 rounded-xl p-4 h-fit flex flex-col gap-5`}>
+        <div className={`grid ${fullSize ? 'grid-cols-1' : 'xl:grid-cols-3 grid-cols-1'} h-fit gap-4`}>
+          <div className={`w-full ${fullSize ? 'col-span-1' : 'xl:col-span-2'} bg-[#314385]/10 rounded-xl p-4 h-full flex flex-col gap-5`}>
             <h3 className='text-lg font-medium mb-2'>Select Layout</h3>
             <div className='w-full overflow-x-auto'>
               <div className="flex gap-2 min-w-max">
@@ -192,11 +192,8 @@ const ManajemenKamera = () => {
               </div>
             </CameraActive>
           </div>
-
           {!fullSize && (
-            <div className='h-fit'>
-              <RecentVehicle customCSS={'h-[500px] lg:h-[1010px] max-h-full'} />
-            </div>
+            <RecentVehicle customCSS={'h-[500px] xl:h-[90%] max-h-full'} />
           )}
         </div>
       </Suspense>
