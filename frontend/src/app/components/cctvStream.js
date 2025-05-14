@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 
-export default function CCTVStream({ data, title, customLarge, large = false, onClick }) {
+export default function CCTVStream ({ data, title, customLarge, large = false, onClick }) {
   const [imageError, setImageError] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+
   const { message } = data || {};
   const {
     image_url = "",
@@ -11,16 +12,24 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
     fps = 0,
     id_simpang = "",
     count = 0,
-  } = message || {};  
+  } = message || {};
 
   useEffect(() => {
     setImageError(false);
   }, [image_url]);
 
+  const handleImageError = () => {
+    console.warn("Failed to load image:", image_url);
+    setImageError(true);
+  };
+
+  const fallbackImage = "/image/no-camera.jpg";
+
   if (!data) {
     return (
-      <div 
-        className={`flex flex-col w-full ${customLarge} h-full min-h-[420px] ${onClick ? 'cursor-pointer' : ''}`}
+      <div
+        className={`flex flex-col w-full ${customLarge} h-full min-h-[420px] ${onClick ? "cursor-pointer" : ""
+          }`}
         onClick={onClick}
       >
         <div className="bg-black text-white p-2">
@@ -33,13 +42,11 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
     );
   }
 
-
   return (
     <>
       <div
-        className={`flex flex-col ${large ? "h-fit" : "h-fit"} ${
-          onClick ? "cursor-pointer" : ""
-        }`}
+        className={`flex flex-col ${large ? "h-fit" : "h-fit"} ${onClick ? "cursor-pointer" : ""
+          }`}
         onClick={onClick}
       >
         <div className="bg-black text-white p-3 flex justify-between items-center">
@@ -62,25 +69,21 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
         </div>
 
         <div className="flex-grow bg-black relative overflow-hidden min-h-[420px] max-h-[420px]">
-          {imageError ? (
-            <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-              Failed to load image
-            </div>
-          ) : (
-            <img
-              src={image_url}
-              alt={`CCTV Stream ${id_simpang}`}
-              className="w-full min-w-[100%] h-full object-contain"
-              onError={() => setImageError(true)}
-            />
-          )}
+          <img
+            src={imageError ? fallbackImage : image_url}
+            alt={`CCTV Stream ${id_simpang}`}
+            className="w-full h-full object-contain transition-opacity duration-200"
+            onError={handleImageError}
+          />
 
           <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-3 text-xs">
             <div className="flex justify-between">
               <span>ID: {id_simpang}</span>
               <span>Frame: {count}</span>
             </div>
-            <div className="mt-1">{timestamp && new Date(timestamp).toLocaleString()}</div>
+            <div className="mt-1">
+              {timestamp && new Date(timestamp).toLocaleString()}
+            </div>
           </div>
         </div>
       </div>
@@ -90,7 +93,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
         <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center">
           <div className="relative w-full h-full flex items-center justify-center">
             <img
-              src={image_url}
+              src={imageError ? fallbackImage : image_url}
               alt="Fullscreen CCTV"
               className="max-w-full max-h-full object-contain"
             />
