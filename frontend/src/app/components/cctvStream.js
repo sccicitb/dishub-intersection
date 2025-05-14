@@ -1,10 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 
-export default function CCTVStream ({ data, title, customLarge, large = false, onClick }) {
+export default function CCTVStream({ data, title, customLarge, large = false, onClick }) {
   const [imageError, setImageError] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-
   const { message } = data || {};
   const {
     image_url = "",
@@ -18,82 +17,68 @@ export default function CCTVStream ({ data, title, customLarge, large = false, o
     setImageError(false);
   }, [image_url]);
 
-  const handleImageError = () => {
-    console.warn("Failed to load image:", image_url);
-    setImageError(true);
-  };
-
-  const fallbackImage = "/image/no-camera.jpg";
-
-  if (!data) {
-    return (
-      <div
-        className={`flex flex-col w-full ${customLarge} h-full min-h-[420px] ${onClick ? "cursor-pointer" : ""
-          }`}
-        onClick={onClick}
-      >
-        <div className="bg-black text-white p-2">
-          <h3 className="font-medium">{title}</h3>
-        </div>
-        <div className="flex flex-grow bg-black items-center justify-center text-white text-center w-full">
-          <span className="text-sm w-full flex justify-center">Waiting for connect...</span>
-        </div>
-      </div>
-    );
-  }
+  const showWaitingScreen = !data || imageError;
 
   return (
     <>
-      <div
-        className={`flex flex-col ${large ? "h-fit" : "h-fit"} ${onClick ? "cursor-pointer" : ""
-          }`}
+      <div className={`flex flex-col w-full ${customLarge ?? ""} ${large ? "h-fit" : "h-fit"} `}
         onClick={onClick}
       >
         <div className="bg-black text-white p-3 flex justify-between items-center">
           <h3 className="font-medium">{title}</h3>
-          <div className="flex items-center gap-2">
-            <span className="text-xs bg-green-500 px-2 py-1 rounded-full">
-              {fps.toFixed(1)} FPS
-            </span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsFullScreen(true);
-              }}
-              title="View Fullscreen"
-              className="text-xs bg-white text-black px-2 py-1 rounded hover:bg-gray-200"
-            >
-              Fullscreen
-            </button>
-          </div>
+          {!showWaitingScreen && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-green-500 px-2 py-1 rounded-full">
+                {fps.toFixed(1)} FPS
+              </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsFullScreen(true);
+                }}
+                title="View Fullscreen"
+                className="text-xs bg-white text-black px-2 py-1 rounded hover:bg-gray-200"
+              >
+                Fullscreen
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="flex-grow bg-black relative overflow-hidden min-h-[420px] max-h-[420px]">
-          <img
-            src={imageError ? fallbackImage : image_url}
-            alt={`CCTV Stream ${id_simpang}`}
-            className="w-full h-full object-contain transition-opacity duration-200"
-            onError={handleImageError}
-          />
+        <div className="flex-grow bg-black relative overflow-hidden min-h-[420px] max-h-[420px] items-center content-center ">
+          {showWaitingScreen ? (
+            <div className="flex items-center justify-center text-white text-sm w-full text-center h-full align-baseline">
+              Waiting for connect...
+            </div>
+          ) : (
+            <img
+              src={image_url}
+              alt={`CCTV Stream ${id_simpang}`}
+              className="w-full min-w-[100%] h-full object-contain"
+              onError={() => setImageError(true)}
+            />
+          )}
 
-          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-3 text-xs">
-            <div className="flex justify-between">
-              <span>ID: {id_simpang}</span>
-              <span>Frame: {count}</span>
+          {!showWaitingScreen && (
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-3 text-xs">
+              <div className="flex justify-between">
+                <span>ID: {id_simpang}</span>
+                <span>Frame: {count}</span>
+              </div>
+              <div className="mt-1">
+                {timestamp && new Date(timestamp).toLocaleString()}
+              </div>
             </div>
-            <div className="mt-1">
-              {timestamp && new Date(timestamp).toLocaleString()}
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Fullscreen Modal */}
-      {isFullScreen && (
+      {isFullScreen && !imageError && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center">
           <div className="relative w-full h-full flex items-center justify-center">
             <img
-              src={imageError ? fallbackImage : image_url}
+              src={image_url}
               alt="Fullscreen CCTV"
               className="max-w-full max-h-full object-contain"
             />
