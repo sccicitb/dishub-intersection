@@ -6,6 +6,8 @@ import CCTVStream from '../components/cctvStream';
 import CameraActive from '../components/cameraActive';
 import DataSimpang from '@/data/DataSimpang.json'
 import { FaRegEye, FaRegEyeSlash, FaPencil, FaTrashCan } from "react-icons/fa6";
+import { FiDownload } from "react-icons/fi";
+import { IoIosAdd } from "react-icons/io";
 
 const RecentVehicle = lazy(() => import('../components/recentVehicle'));
 const MapComponent = lazy(() => import('../components/map'));
@@ -95,6 +97,10 @@ const ManajemenKamera = () => {
     detection5: null,
   });
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+
   const handleToggle = (index, checked) => {
     const updated = [...dataSimpang.buildings];
     updated[index].model_detection = checked;
@@ -158,10 +164,65 @@ const ManajemenKamera = () => {
       socket.disconnect();
     };
   }, []);
+  const [inputValue, setInputValue] = useState("");
+  const [showDialog, setShowDialog] = useState(false);
+  const [dataKalender, setDataKalender] = useState([]);
+  const changeInputSearch = (e) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleAddNewCamera = () => {
+    setShowDialog(true); // munculkan popup
+  };
+
+  const closeDialog = () => {
+    setShowDialog(false);
+  };
+
+  useEffect(() => {
+    console.log(inputValue)
+  }, [inputValue])
+
+  useEffect(() => {
+    import("@/data/DataKalender.json").then((data) => {
+      setDataKalender(data.holidays)
+    })
+  }, [])
+
+  // filter search
+  const filteredBuildings = DataSimpang.buildings.filter((buildings) => buildings.name.toLowerCase().includes(inputValue.toLowerCase()))
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = dataKalender.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(dataKalender.length / itemsPerPage);
 
   return (
     <div className='w-[95%] py-10 mx-auto'>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
+        {showDialog && (
+          <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-md shadow-md w-[300px]">
+              <h2 className="text-lg font-semibold mb-4">Tambah Kamera</h2>
+              <div className="mb-4">
+                <input
+                  type="text"
+                  className="input input-bordered w-full"
+                  placeholder="Nama kamera (kosong boleh)"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button className="btn btn-sm" onClick={closeDialog}>Batal</button>
+                <button className="btn btn-sm btn-primary" onClick={closeDialog}>Simpan</button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className={`grid ${fullSize ? 'grid-cols-1' : 'xl:grid-cols-3 grid-cols-1'} h-fit gap-4`}>
           <div className={`w-full ${fullSize ? 'col-span-1' : 'xl:col-span-2'} bg-[#314385]/10 rounded-xl p-4 h-full flex flex-col gap-5`}>
             <h3 className='text-lg font-medium mb-2'>Select Layout</h3>
@@ -193,7 +254,10 @@ const ManajemenKamera = () => {
             <div className='overflow-y-auto lg:max-h-[490px]'>
               <CameraPosition layout={layout} streamData={streamData} />
             </div>
-            <CameraActive onOptionChange={handleCameraSelect}>
+            <CameraActive onOptionChange={handleCameraSelect} inputSearch={changeInputSearch}
+              searchValue={inputValue}
+              addNewCamera={handleAddNewCamera}
+            >
               <div className="h-[40vh] overflow-y-auto my-5">
                 {optionCamera === "peta" ? (
                   <MapComponent onClick={handleClickCamera} sizeHeight={"35vh"} />
@@ -202,6 +266,7 @@ const ManajemenKamera = () => {
                     <table className="table">
                       <thead className="bg-stone-900/90 text-white">
                         <tr className="text-center">
+                          <th rowSpan={2}>No</th>
                           <th rowSpan={2}>Kamera</th>
                           <th rowSpan={2}>Tautan</th>
                           <th colSpan={2}>Koordinat</th>
@@ -217,11 +282,12 @@ const ManajemenKamera = () => {
                       </thead>
                       <tbody>
                         {/* row 1 */}
-                        {DataSimpang.buildings?.map((dataSimpang, i) => {
+                        {filteredBuildings?.map((dataSimpang, i) => {
                           return (
                             <tr key={i} className="text-medium font-normal text-center">
                               <td>{i + 1}</td>
                               <td>{dataSimpang.name}</td>
+                              <td>-</td>
                               <td>{dataSimpang.location.latitude}</td>
                               <td>{dataSimpang.location.longitude}</td>
                               <td>-</td>
@@ -235,10 +301,11 @@ const ManajemenKamera = () => {
                                 />
                               </td>
                               <td>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 justify-center">
                                   <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
                                     <FaRegEye className="text-yellow-300 text-lg" />
                                   </button>
+
                                   <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
                                     <FaPencil className="text-green-300 text-lg" />
                                   </button>
@@ -254,13 +321,13 @@ const ManajemenKamera = () => {
                     </table>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-4 mt-5 w-full">
-                    {DataSimpang.buildings?.map((dataCamera, index) => (
+                  <div className="grid grid-col-1 lg:grid-cols-3 gap-4 mt-5 w-full">
+                    {filteredBuildings?.map((dataCamera, index) => (
                       <div className="w-full" key={index}>
                         <CCTVStream
                           heightCamera
                           customLarge={'h-[90px]'}
-                          data={streamData[dataCamera.camera.id] ? streamData[dataCamera.camera.id]: null}
+                          data={streamData[dataCamera.camera.id] ? streamData[dataCamera.camera.id] : null}
                           title={dataCamera.name || `CCTV Camera ${index + 1}`}
                           onClick={() => handleClickCamera(dataCamera)}
                         />
@@ -274,6 +341,87 @@ const ManajemenKamera = () => {
           {!fullSize && (
             <RecentVehicle customCSS={'h-[500px] xl:h-[1000px] max-h-full'} />
           )}
+        </div>
+        <div>
+          <div className="flex gap-2 w-full justify-end mt-5">
+            <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize"><FiDownload />Impor Data</button>
+            <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize"><IoIosAdd className="text-xl" />Tambah Data</button>
+          </div>
+          <div className="overflow-x-auto w-full bg-base-200 mt-5">
+            <table className="table">
+              <thead className="bg-stone-900/90 text-white">
+                <tr className="text-center">
+                  <th rowSpan={2}>No</th>
+                  <th rowSpan={2}>Tanggal</th>
+                  <th rowSpan={2}>Events</th>
+                  <th rowSpan={2}>Keterangan</th>
+                  <th rowSpan={2}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Display only current page items */}
+                {currentItems?.map((dataK, i) => {
+                  return (
+                    <tr key={i} className="text-medium font-normal text-center">
+                      <td>{indexOfFirstItem + i + 1}</td>
+                      <td>{dataK.tanggal}</td>
+                      <td>{dataK.events}</td>
+                      <td>{dataK.keterangan}</td>
+                      <td>
+                        <div className="flex gap-2 justify-center">
+                          <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
+                            <FaPencil className="text-green-300 text-lg" />
+                          </button>
+                          <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
+                            <FaTrashCan className="text-red-300 text-lg" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+
+            {/* Pagination Component */}
+            <div className="flex justify-start m-4">
+              <div className="join">
+                {/* Previous button */}
+                <button
+                  className="join-item btn btn-sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  «
+                </button>
+
+                {/* Page buttons */}
+                {[...Array(totalPages).keys()].map(number => (
+                  <button
+                    key={number + 1}
+                    onClick={() => paginate(number + 1)}
+                    className={`join-item btn btn-sm ${currentPage === number + 1 ? 'btn-active' : ''}`}
+                  >
+                    {number + 1}
+                  </button>
+                ))}
+
+                {/* Next button */}
+                <button
+                  className="join-item btn btn-sm"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  »
+                </button>
+              </div>
+            </div>
+
+            {/* Data info */}
+            <div className="text-start text-sm text-gray-600 m-4">
+              Menampilkan {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, dataKalender.length)} dari {dataKalender.length} data
+            </div>
+          </div>
         </div>
       </Suspense>
     </div>

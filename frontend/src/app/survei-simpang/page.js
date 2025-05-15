@@ -94,6 +94,7 @@ function SurveiSimpangPage () {
       setVehicleData(data.default);
     });
   }, []);
+  
   useEffect(() => {
     console.log(activeSurveyor)
   }, [activeSurveyor])

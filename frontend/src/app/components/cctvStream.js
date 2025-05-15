@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 
-export default function CCTVStream({ data, title, customLarge, large = false, onClick, heightCamera }) {
+export default function CCTVStream ({ data, title, customLarge, large = false, onClick, heightCamera }) {
   const [imageError, setImageError] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  
+
   // Get message data with fallback
   const { message } = data || {};
-  
+
   // Extract values with fallbacks
   const {
     image_url,
@@ -17,7 +17,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
     id_simpang = "",
     count = 0,
   } = message || {};
-  
+
   // Reset error state when image URL changes
   useEffect(() => {
     if (image_url) {
@@ -27,13 +27,13 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
 
   // Check if image_url is empty or undefined
   const isValidImageUrl = image_url && image_url !== "";
-  
+
   // Show waiting screen if no data, error with image, or invalid image URL
   const showWaitingScreen = !data || imageError || !isValidImageUrl;
 
   return (
     <>
-      <div 
+      <div
         className={`flex flex-col w-full ${customLarge ?? ""} ${large ? "h-fit" : "h-fit"}`}
         onClick={onClick}
       >
@@ -57,11 +57,22 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
             </div>
           )}
         </div>
-        
+
         <div className={`flex-grow bg-black relative overflow-hidden max-h-[420px] flex items-center justify-center ${heightCamera ? "h-full" : " min-h-[420px]"} `}>
           {showWaitingScreen ? (
-            <div className="flex items-center justify-center text-white text-sm w-full text-center h-full min-h-[242px]">
-              Waiting for connection...
+            <div className="flex items-center justify-center text-white text-sm w-full text-center h-full flex-col relative">
+              <img
+                src={"/image/no-camera.jpg"}
+                alt={`CCTV Stream ${id_simpang || title}`}
+                className={`w-full h-full object-contain`}
+                onError={() => setImageError(true)}
+              >
+              </img>
+                <div className="absolute top-1/2 w-full text-center ">
+                  Waiting for connection...
+                </div>
+              <div className="h-15 bg-black">
+              </div>
             </div>
           ) : (
             <img
@@ -71,7 +82,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
               onError={() => setImageError(true)}
             />
           )}
-          
+
           {!showWaitingScreen && (
             <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-3 text-xs">
               <div className="flex justify-between">
@@ -85,7 +96,7 @@ export default function CCTVStream({ data, title, customLarge, large = false, on
           )}
         </div>
       </div>
-      
+
       {/* Fullscreen Modal */}
       {isFullScreen && !showWaitingScreen && isValidImageUrl && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center">
