@@ -7,6 +7,7 @@
         "latitude": -7.755390,
         "longitude": 110.489030
       },
+      "model_detection": true,
       "category": "timur"
     },
     {
@@ -16,6 +17,7 @@
         "latitude": -7.838162,
         "longitude": 110.476066
       },
+      "model_detection": true,
       "category": "timur"
     },
     {
@@ -25,6 +27,7 @@
         "latitude": -7.888059,
         "longitude": 110.092591
       },
+      "model_detection": true,
       "category": "barat"
     },
     {
@@ -34,6 +37,7 @@
         "latitude": -7.653937,
         "longitude": 110.325663
       },
+      "model_detection": true,
       "category": "utara"
     }
   ]

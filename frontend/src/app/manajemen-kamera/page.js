@@ -4,6 +4,8 @@ import { io } from 'socket.io-client'
 import { useState, useEffect, lazy, Suspense } from 'react'
 import CCTVStream from '../components/cctvStream';
 import CameraActive from '../components/cameraActive';
+import DataSimpang from '@/data/DataSimpang.json'
+import { FaRegEye, FaRegEyeSlash, FaPencil, FaTrashCan } from "react-icons/fa6";
 
 const RecentVehicle = lazy(() => import('../components/recentVehicle'));
 const MapComponent = lazy(() => import('../components/map'));
@@ -83,6 +85,13 @@ const ManajemenKamera = () => {
   const [fullSize, setFullSize] = useState(false);
   const isMobile = useIsMobile();
   const [optionCamera, setOptionCamera] = useState('peta');
+  const [dataSimpang, setDataSimpang] = useState(DataSimpang);
+
+  const handleToggle = (index, checked) => {
+    const updated = [...dataSimpang.buildings];
+    updated[index].model_detection = checked;
+    setDataSimpang({ ...dataSimpang, buildings: updated });
+  };
 
   const handleCameraSelect = (data) => {
     setOptionCamera(data);
@@ -120,7 +129,7 @@ const ManajemenKamera = () => {
         break;
     }
   }
-   const [socketConnected, setSocketConnected] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
   const [streamData, setStreamData] = useState({
     detection3: null,
     detection4: null,
@@ -183,9 +192,65 @@ const ManajemenKamera = () => {
               <CameraPosition layout={layout} streamData={streamData} />
             </div>
             <CameraActive onOptionChange={handleCameraSelect}>
-              <div className="h-[40vh] overflow-y-auto">
+              <div className="h-[40vh] overflow-y-auto my-5">
                 {optionCamera === "peta" ? (
                   <MapComponent onClick={handleClickCamera} sizeHeight={"35vh"} />
+                ) : optionCamera === "daftar" ? (
+                  <div className="overflow-x-auto w-full bg-base-200 mt-5">
+                    <table className="table">
+                      <thead className="bg-stone-900/90 text-white">
+                        <tr className="text-center">
+                          <th rowSpan={2}>Kamera</th>
+                          <th rowSpan={2}>Tautan</th>
+                          <th colSpan={2}>Koordinat</th>
+                          <th rowSpan={2}>Resolusi</th>
+                          <th rowSpan={2}>Frame Rate</th>
+                          <th rowSpan={2}>Model Deteksi</th>
+                          <th rowSpan={2}>Action</th>
+                        </tr>
+                        <tr>
+                          <td>Latitude</td>
+                          <td>Longitude</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* row 1 */}
+                        {DataSimpang.buildings?.map((dataSimpang, i) => {
+                          return (
+                            <tr key={i} className="text-medium font-normal text-center">
+                              <td>{i + 1}</td>
+                              <td>{dataSimpang.name}</td>
+                              <td>{dataSimpang.location.latitude}</td>
+                              <td>{dataSimpang.location.longitude}</td>
+                              <td>-</td>
+                              <td>-</td>
+                              <td>
+                                <input
+                                  type="checkbox"
+                                  className={`toggle ${dataSimpang.model_detection ? 'checked:toggle-success' : 'toggle-error'} toggle-sm`}
+                                  checked={dataSimpang.model_detection}
+                                  onChange={(e) => handleToggle(i, e.target.checked)}
+                                />
+                              </td>
+                              <td>
+                               <div className="flex gap-2">
+                                  <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
+                                    <FaRegEye className="text-yellow-300 text-lg" />
+                                  </button>
+                                  <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
+                                    <FaPencil className="text-green-300 text-lg" />
+                                  </button>
+                                  <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
+                                    <FaTrashCan className="text-red-300 text-lg" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 ) : (
                   <div></div>
                 )}
@@ -193,7 +258,7 @@ const ManajemenKamera = () => {
             </CameraActive>
           </div>
           {!fullSize && (
-            <RecentVehicle customCSS={'h-[500px] xl:h-[90%] max-h-full'} />
+            <RecentVehicle customCSS={'h-[500px] xl:h-[1000px] max-h-full'} />
           )}
         </div>
       </Suspense>
