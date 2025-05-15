@@ -58,7 +58,7 @@ export const CameraPosition = ({ layout, streamData }) => {
         <CCTVStream
           key={`j-${i}`}
           data={streams[(i + bc) % streams.length]}
-          customLarge="min-h-[470px] h-full"
+          // customLarge={"h-fit w-32"}
           title={`CCTV Camera ${i + 1 + bc}`}
         />
       ))}
@@ -78,14 +78,22 @@ const useIsMobile = () => {
 
   return isMobile;
 };
+
 const ManajemenKamera = () => {
   const [selectOption, setSelectOption] = useState('detection4');
-  const [activeTitle, setActiveTitle] = useState('Kamera Aktif')
+  const [activeTitle, setActiveTitle] = useState('Kamera Aktif');
   const [layout, setLayout] = useState({ cols: 2, J: 4, bc: 0, rows: 0 });
   const [fullSize, setFullSize] = useState(false);
   const isMobile = useIsMobile();
   const [optionCamera, setOptionCamera] = useState('peta');
   const [dataSimpang, setDataSimpang] = useState(DataSimpang);
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [streamData, setStreamData] = useState({
+    detection1: null,
+    detection3: null,
+    detection4: null,
+    detection5: null,
+  });
 
   const handleToggle = (index, checked) => {
     const updated = [...dataSimpang.buildings];
@@ -100,6 +108,7 @@ const ManajemenKamera = () => {
   const handleClick = (layoutData) => {
     setLayout(layoutData);
   };
+
   useEffect(() => {
     if (isMobile) {
       handleClick({ cols: 1, J: 4, bc: 0, rows: 0 });
@@ -107,56 +116,49 @@ const ManajemenKamera = () => {
     }
   }, [isMobile]);
 
-  function handleClickCamera (T) {
+  const handleClickCamera = (T) => {
     const replace = T.name.toLowerCase();
-    console.log('clicked : ' + JSON.stringify(T));
     switch (replace) {
       case 'simpang piyungan':
-        setSelectOption('detection4');
-        // setActiveTitle('Simpang Piyungan');
+        setSelectOption('detection3');
         break;
       case 'simpang demen glagah':
-        setSelectOption('detection3');
-        // setActiveTitle('Simpang Demen Glagah');
+        setSelectOption('detection4');
         break;
       case 'simpang tempel':
         setSelectOption('detection5');
-        // setActiveTitle('Simpang Tempel');
         break;
       case 'simpang prambanan':
         setSelectOption('detection1');
-        // setActiveTitle('Simpang Prambanan');
         break;
     }
-  }
-  const [socketConnected, setSocketConnected] = useState(false);
-  const [streamData, setStreamData] = useState({
-    detection3: null,
-    detection4: null,
-    detection5: null,
-    detection1: null
-  });
+  };
 
   useEffect(() => {
     const socket = io('https://sxe-data.layanancerdas.id');
+
     socket.on('connect', () => setSocketConnected(true));
     socket.on('disconnect', () => setSocketConnected(false));
 
-    socket.on('result_detection_3', (data) => {
-      setStreamData(prev => ({ ...prev, detection3: data }));
-    });
-    socket.on('result_detection', (data) => {
-      setStreamData(prev => ({ ...prev, detection1: data }));
-    });
-    socket.on('result_detection_4', (data) => {
-      setStreamData(prev => ({ ...prev, detection4: data }));
-    });
-    socket.on('result_detection_5', (data) => {
-      setStreamData(prev => ({ ...prev, detection5: data }));
+    DataSimpang.buildings.forEach((building) => {
+      const { id, title, socketEvent } = building.camera;
+
+      socket.on(socketEvent, (data) => {
+        setStreamData((prev) => ({
+          ...prev,
+          [building.camera.id]: data,
+        }));
+      });
     });
 
-    return () => socket.disconnect();
+    return () => {
+      DataSimpang.buildings.forEach((building) => {
+        socket.off(building.camera.socketEvent);
+      });
+      socket.disconnect();
+    };
   }, []);
+
   return (
     <div className='w-[95%] py-10 mx-auto'>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
@@ -188,7 +190,7 @@ const ManajemenKamera = () => {
                 />
               </div>
             </div>
-            <div className='overflow-y-auto lg:max-h-[480px]'>
+            <div className='overflow-y-auto lg:max-h-[490px]'>
               <CameraPosition layout={layout} streamData={streamData} />
             </div>
             <CameraActive onOptionChange={handleCameraSelect}>
@@ -233,7 +235,7 @@ const ManajemenKamera = () => {
                                 />
                               </td>
                               <td>
-                               <div className="flex gap-2">
+                                <div className="flex gap-2">
                                   <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
                                     <FaRegEye className="text-yellow-300 text-lg" />
                                   </button>
@@ -252,7 +254,19 @@ const ManajemenKamera = () => {
                     </table>
                   </div>
                 ) : (
-                  <div></div>
+                  <div className="grid grid-cols-3 gap-4 mt-5 w-full">
+                    {DataSimpang.buildings?.map((dataCamera, index) => (
+                      <div className="w-full" key={index}>
+                        <CCTVStream
+                          heightCamera
+                          customLarge={'h-[90px]'}
+                          data={streamData[dataCamera.camera.id] ? streamData[dataCamera.camera.id]: null}
+                          title={dataCamera.name || `CCTV Camera ${index + 1}`}
+                          onClick={() => handleClickCamera(dataCamera)}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </CameraActive>

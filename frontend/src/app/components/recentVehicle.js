@@ -176,7 +176,7 @@ export default function RecentVehicle ({customCSS}) {
                   className="w-full h-24 object-cover"
                 />
               ) || (
-                  <div className="w-full h-24 bg-base-100 flex items-center justify-center">
+                  <div className="w-full h-24 bg-black/90 text-white flex items-center justify-center">
                     No image
                   </div>
                 )}
