@@ -42,6 +42,7 @@
 
 "use client"
 import React, { useState, useEffect } from 'react';
+import { IoIosArrowUp, IoIosArrowDown, IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 // Contoh data JSON
 const sampleData = [
@@ -93,25 +94,13 @@ export default function GridVertical({ position, jsonData = sampleData }) {
       {/* Navigation arrows (tidak berfungsi, hanya tampilan) */}
       <div className={`justify-evenly items-center flex ${!position ? ' transform rotate-180 ' : '  '}`}>
       {/* Left arrow */}
-        <button className="p-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+       <IoIosArrowBack className="text-lg"/>
         
         {/* Middle arrow */}
-        <button className="p-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+       <IoIosArrowDown className="text-lg"/>
         
         {/* Right arrow */}
-        <button className="p-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+       <IoIosArrowForward className="text-lg"/>
       </div>
     </div>
   );

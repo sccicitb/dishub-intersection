@@ -116,7 +116,7 @@ export default function GridHorizontal({ position, jsonData = sampleData }) {
   }, [jsonData]);
 
   return (
-    <div className="h-34 w-56 justify-evenly flex flex-col bg-base-100 text-xs">
+    <div className="h-34 w-54 justify-evenly flex flex-col bg-base-100 text-xs">
       {/* Row 1 - Up Arrow */}
       {/* position true for above false for top */}
       <div className={`flex items-center ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -127,8 +127,8 @@ export default function GridHorizontal({ position, jsonData = sampleData }) {
             </div>
           ))}
         </div>
-        <div className="px-4">
-          <IoIosArrowUp className="text-xl" />
+        <div className="p-1">
+          <IoIosArrowUp className="text-lg" />
         </div>
       </div>
       
@@ -141,8 +141,8 @@ export default function GridHorizontal({ position, jsonData = sampleData }) {
             </div>
           ))}
         </div>
-        <div className={`px-4 items-center flex ${!position ? ' transform rotate-180 ' : '  '}`}>
-          <IoIosArrowForward className="text-xl"/>
+        <div className={`p-1 items-center flex ${!position ? ' transform rotate-180 ' : '  '}`}>
+          <IoIosArrowForward className="text-lg"/>
         </div>
       </div>
       
@@ -155,8 +155,8 @@ export default function GridHorizontal({ position, jsonData = sampleData }) {
             </div>
           ))}
         </div>
-        <div className="px-4 items-center">
-            <IoIosArrowDown className="text-xl"/>
+        <div className="p-1 items-center">
+            <IoIosArrowDown className="text-lg"/>
           </div>
       </div>
     </div>
