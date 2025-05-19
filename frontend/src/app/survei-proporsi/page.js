@@ -18,7 +18,7 @@ function SurveiProporsi () {
   const [activePergerakan, setActivePergerakan] = useState('Semua');
   const [activeTitle, setActiveTitle] = useState("Survei LHRK")
   useEffect(() => {
-     import('@/data/sampleVehicleData.json').then((data) => {
+    import('@/data/sampleVehicleData.json').then((data) => {
       setVehicleData(data.default);
     });
   }, [])
@@ -38,29 +38,31 @@ function SurveiProporsi () {
                 activePendekatan={activePendekatan}
                 setActivePendekatan={setActivePendekatan}
                 activePergerakan={activePergerakan}
-                setActivePergerakan={setActivePergerakan} 
-                />
+                setActivePergerakan={setActivePergerakan}
+              />
             </div>
           </div>
-          <div className="flex flex-col w-fit bg-[#7585C1]/20 rounded-xl mx-auto font-semibold">
-            <div className="flex justify-between">
-              <div></div>
-              <GridVertical position={true} />
-              <div></div>
-            </div>
-            <div className="flex justify-center">
-              <div className="">
-                <GridHorizontal position={true} />
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-[700px] py-10 flex flex-col w-fit bg-[#7585C1]/20 rounded-xl mx-auto font-semibold">
+              <div className="flex justify-between">
+                <div></div>
+                <GridVertical position={true} />
+                <div></div>
               </div>
-              <div className="w-56 text-center items-center flex font-semibold text-xl bg-base-300"><div className="m-auto">Jumlah<br /> Kendaraan</div></div>
-              <div className="">
-                <GridHorizontal />
+              <div className="flex justify-center">
+                <div className="">
+                  <GridHorizontal position={true} />
+                </div>
+                <div className="w-38 text-center items-center flex font-semibold text-lg bg-base-300"><div className="m-auto">Jumlah<br /> Kendaraan</div></div>
+                <div className="">
+                  <GridHorizontal />
+                </div>
               </div>
-            </div>
-            <div className="flex justify-center">
-              <div></div>
-              <GridVertical />
-              <div></div>
+              <div className="flex justify-center">
+                <div></div>
+                <GridVertical />
+                <div></div>
+              </div>
             </div>
           </div>
           <GrafikRoad />

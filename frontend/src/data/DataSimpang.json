@@ -7,7 +7,7 @@
       "model_detection": true,
       "category": "timur",
       "camera": {
-        "id": "detection1",
+        "id": "detection1", 
         "title": "Camera 1",
         "socketEvent": "result_detection"
       }

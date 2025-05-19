@@ -57,6 +57,7 @@
 
 "use client"
 import React, { useState, useEffect } from 'react';
+import { IoIosArrowUp, IoIosArrowDown, IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 // Data sampel untuk setiap baris
 const sampleData = {
@@ -115,22 +116,19 @@ export default function GridHorizontal({ position, jsonData = sampleData }) {
   }, [jsonData]);
 
   return (
-    <div className="h-48 justify-evenly flex flex-col bg-base-100">
+    <div className="h-34 w-56 justify-evenly flex flex-col bg-base-100 text-xs">
       {/* Row 1 - Up Arrow */}
+      {/* position true for above false for top */}
       <div className={`flex items-center ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className="grid grid-cols-4 flex-grow">
           {displayData.row1.map((item) => (
-            <div key={item.id} className="p-3 text-center text-xs overflow-hidden">
+            <div key={item.id} className="p-2 text-center text-xs overflow-hidden truncate">
               {item.content}
             </div>
           ))}
         </div>
         <div className="px-4">
-          <button>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-            </svg>
-          </button>
+          <IoIosArrowUp className="text-xl" />
         </div>
       </div>
       
@@ -138,17 +136,13 @@ export default function GridHorizontal({ position, jsonData = sampleData }) {
       <div className={`items-center flex ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className="grid grid-cols-4 flex-grow">
           {displayData.row2.map((item) => (
-            <div key={item.id} className="px-4 py-2 text-center text-xs overflow-hidden">
+            <div key={item.id} className="p-2 text-center text-xs overflow-hidden truncate">
               {item.content}
             </div>
           ))}
         </div>
         <div className={`px-4 items-center flex ${!position ? ' transform rotate-180 ' : '  '}`}>
-          <button>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+          <IoIosArrowForward className="text-xl"/>
         </div>
       </div>
       
@@ -156,18 +150,14 @@ export default function GridHorizontal({ position, jsonData = sampleData }) {
       <div className={`items-center flex ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className="grid grid-cols-4 flex-grow">
           {displayData.row3.map((item) => (
-            <div key={item.id} className="px-4 py-2 text-center text-xs overflow-hidden">
+            <div key={item.id} className="px-4 py-2 text-center text-xs overflow-hidden truncate">
               {item.content}
             </div>
           ))}
         </div>
-        <div className="px-4">
-          <button>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
+        <div className="px-4 items-center">
+            <IoIosArrowDown className="text-xl"/>
+          </div>
       </div>
     </div>
   );

@@ -80,11 +80,11 @@ export default function GridVertical({ position, jsonData = sampleData }) {
   }, [jsonData]);
 
   return (
-    <div className={`flex bg-base-100 mx-auto w-56 ${!position ? 'flex-col-reverse' : 'flex-col'}`}>   
+    <div className={`flex bg-base-100 mx-auto w-38 ${!position ? 'flex-col-reverse' : 'flex-col'}`}>   
       {/* Grid dengan data dinamis */}
       <div className="grid grid-cols-3">
         {currentData.map((item) => (
-          <div key={item.id} className="py-5 px-2 text-center overflow-hidden text-xs truncate">
+          <div key={item.id} className="p-3 text-center overflow-hidden text-xs truncate">
             {item.content}
           </div>
         ))}
