@@ -43,7 +43,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { IoIosArrowUp, IoIosArrowDown, IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-
+import { HiMiniArrowTurnUpLeft, HiOutlineArrowTurnUpRight, HiMiniArrowLongUp  } from "react-icons/hi2";
 // // Contoh data JSON
 // const sampleData = [
 //   { id: 1, content: "Item 1" },
@@ -152,7 +152,7 @@ const GridVertical = ({ position, data }) => {
             </div>
           ))}
         </div>
-        <IoIosArrowBack className="text-lg mt-1" />
+        <HiMiniArrowTurnUpLeft className={`text-xl m-auto p-0.5 ${position ? 'tranform rotate-180 scale-x-[-1] ': '' }`} />
       </div>
 
       {/* Row 2 - Arrow Back */}
@@ -164,7 +164,7 @@ const GridVertical = ({ position, data }) => {
             </div>
           ))}
         </div>
-        <IoIosArrowUp className={`text-lg mt-1 ${position ? 'transform rotate-180' : ''}`} />
+        <HiMiniArrowLongUp className={`text-xl m-auto p-0.5 ${position ? 'transform rotate-180' : ''}`} />
       </div>
 
       {/* Row 3 - Arrow Down */}
@@ -176,7 +176,7 @@ const GridVertical = ({ position, data }) => {
             </div>
           ))}
         </div>
-        <IoIosArrowForward className="text-lg mt-1" />
+        <HiOutlineArrowTurnUpRight className={`text-xl m-auto p-0.5 ${position ? ' transform scale-x-[-1] rotate-180' : ''}`} />
       </div>
       {typeVehicle.type.map((item, index) => (
         <div
