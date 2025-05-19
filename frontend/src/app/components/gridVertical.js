@@ -81,7 +81,7 @@ export default function GridVertical({ position, jsonData = sampleData }) {
   }, [jsonData]);
 
   return (
-    <div className={`flex bg-base-100 mx-auto w-38 ${!position ? 'flex-col-reverse' : 'flex-col'}`}>   
+    <div className={`flex bg-stone-300 mx-auto w-38 ${!position ? 'flex-col-reverse' : 'flex-col'}`}>   
       {/* Grid dengan data dinamis */}
       <div className="grid grid-cols-3">
         {currentData.map((item) => (

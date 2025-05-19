@@ -9,6 +9,7 @@ const SelectionButtons = lazy(() => import("@/app/components/selectionButton"));
 const GridVertical = lazy(() => import('@/app/components/gridVertical'));
 const GridHorizontal = lazy(() => import('@/app/components/gridHorizontal'));
 const GrafikRoad = lazy(() => import("@/app/components/roadChart"));
+const CameraStatus2 = lazy(() => import("@/app/components/cameraStatusVer2"));
 
 function SurveiProporsi () {
   const [vehicleData, setVehicleData] = useState(null);
@@ -43,7 +44,7 @@ function SurveiProporsi () {
             </div>
           </div>
           <div className="w-full overflow-x-auto">
-            <div className="min-w-[700px] py-10 flex flex-col w-fit bg-[#7585C1]/20 rounded-xl mx-auto font-semibold">
+            <div className="min-w-[550px] flex flex-col w-fit bg-[#BCC3E1] mx-auto font-semibold">
               <div className="flex justify-between">
                 <div></div>
                 <GridVertical position={true} />
@@ -53,7 +54,7 @@ function SurveiProporsi () {
                 <div className="">
                   <GridHorizontal position={true} />
                 </div>
-                <div className="w-38 text-center items-center flex font-semibold text-lg bg-base-300"><div className="m-auto">Jumlah<br /> Kendaraan</div></div>
+                <div className="w-38 text-center items-center flex font-medium text-md bg-stone-400"><div className="m-auto">Jumlah<br /> Kendaraan</div></div>
                 <div className="">
                   <GridHorizontal />
                 </div>
@@ -65,6 +66,7 @@ function SurveiProporsi () {
               </div>
             </div>
           </div>
+          <CameraStatus2 />
           <GrafikRoad />
         </div>
       </Suspense>

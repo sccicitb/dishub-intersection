@@ -116,7 +116,7 @@ export default function GridHorizontal({ position, jsonData = sampleData }) {
   }, [jsonData]);
 
   return (
-    <div className="h-34 w-54 justify-evenly flex flex-col bg-base-100 text-xs">
+    <div className="h-34 w-52 justify-evenly flex flex-col bg-stone-300 text-xs">
       {/* Row 1 - Up Arrow */}
       {/* position true for above false for top */}
       <div className={`flex items-center ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
