@@ -9,7 +9,7 @@
       "camera": {
         "id": "detection1", 
         "title": "Camera 1",
-        "socketEvent": "result_detection"
+        "socketEvent": "result_detection_2"
       }
     },
     {
