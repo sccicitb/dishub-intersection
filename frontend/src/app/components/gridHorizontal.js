@@ -166,7 +166,7 @@
 
 "use client"
 import React, { useState, useEffect } from 'react';
-import { IoIosArrowUp, IoIosArrowDown, IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { HiMiniArrowTurnRightUp, HiMiniArrowTurnRightDown, HiArrowRight  } from "react-icons/hi2";
 
 // GridHorizontal Component for East-West routes
 const GridHorizontal = ({ position, data }) => {
@@ -214,7 +214,7 @@ const GridHorizontal = ({ position, data }) => {
           ))}
         </div>
         <div className="p-1">
-          <IoIosArrowUp className="text-lg" />
+          <HiMiniArrowTurnRightUp className={`text-lg ${!position ? 'transform rotate-180 scale-y-[-1]': ''}`} />
         </div>
       </div>
 
@@ -228,7 +228,7 @@ const GridHorizontal = ({ position, data }) => {
           ))}
         </div>
         <div className={`p-1 items-center flex ${!position ? 'transform rotate-180' : ''}`}>
-          <IoIosArrowForward className="text-lg" />
+          <HiArrowRight className="text-lg" />
         </div>
       </div>
 
@@ -242,7 +242,7 @@ const GridHorizontal = ({ position, data }) => {
           ))}
         </div>
         <div className="p-1 items-center">
-          <IoIosArrowDown className="text-lg" />
+          <HiMiniArrowTurnRightDown className={`text-lg ${!position ? 'transform rotate-180 scale-y-[-1]': ''}`} />
         </div>
       </div>
       {typeVehicle.type.map((item, index) => (
