@@ -166,7 +166,7 @@
 
 "use client"
 import React, { useState, useEffect } from 'react';
-import { HiMiniArrowTurnRightUp, HiMiniArrowTurnRightDown, HiArrowRight  } from "react-icons/hi2";
+import { HiMiniArrowTurnRightUp, HiMiniArrowTurnRightDown, HiArrowLongRight  } from "react-icons/hi2";
 
 // GridHorizontal Component for East-West routes
 const GridHorizontal = ({ position, data }) => {
@@ -228,7 +228,7 @@ const GridHorizontal = ({ position, data }) => {
           ))}
         </div>
         <div className={`p-1 items-center flex ${!position ? 'transform rotate-180' : ''}`}>
-          <HiArrowRight className="text-lg" />
+          <HiArrowLongRight className="text-lg" />
         </div>
       </div>
 
