@@ -180,9 +180,9 @@ function SurveiProporsi () {
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
         <MapComponent title={"Survei Proporsi"} onClick={handleClick} />
         <div className="w-[95%] m-auto">
-          <div className="flex w-full not-lg:flex-col lg:h-[550px] lg:items-center lg:place-items-center gap-16 py-10">
+          <div className="lg:grid lg:grid-cols-3 flex flex-col lg:items-center lg:place-items-center gap-5 py-10">
             <RecentVehicle customCSS={'h-[320px]'} />
-            <div className="lg:col-span-1 w-[90%] h-fit items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
+            <div className="lg:col-span-2 h-fit items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
               <div className="w-[60%]">
               <CCTVStream
                 heightCamera
