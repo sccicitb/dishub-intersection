@@ -22,21 +22,9 @@ app.get("/", (req, res) => {
 });
 
 require("./app/routes/vehicle.routes.js")(app);
-// require("./app/routes/holiday.routes.js")(app);
-require("./app/routes/maps.routes.js")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
-// Cek apakah file ini dijalankan langsung
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}.`);
-  });
-}
-
-module.exports = app; // 💡 penting: ekspor app untuk supertest
-module.exports.close = () => {
-  if (listener && typeof listener.close === 'function') {
-    listener.close();
-  }
-};
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}.`);
+});
