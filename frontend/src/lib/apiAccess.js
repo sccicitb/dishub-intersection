@@ -13,3 +13,7 @@ export const vehicles = {
   getByMinute: () => getRequest("/vehicles/getRataPer15Menit"),
   getByTipe: () => getRequest("/vehicles/getGroupTipeKendaraan"),
 }
+
+export const maps = {
+  getAll: () => getRequest("/maps/buildings")
+}

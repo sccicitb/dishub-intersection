@@ -4,10 +4,11 @@ import { io } from 'socket.io-client'
 import { useState, useEffect, lazy, Suspense } from 'react'
 import CCTVStream from '../components/cctvStream';
 import CameraActive from '../components/cameraActive';
-import DataSimpang from '@/data/DataSimpang.json'
+// import DataSimpang from '@/data/DataSimpang.json'
 import { FaRegEye, FaRegEyeSlash, FaPencil, FaTrashCan } from "react-icons/fa6";
 import { FiDownload } from "react-icons/fi";
 import { IoIosAdd } from "react-icons/io";
+import { maps } from "@/lib/apiAccess"
 
 const RecentVehicle = lazy(() => import('../components/recentVehicle'));
 const MapComponent = lazy(() => import('../components/map'));
@@ -35,41 +36,41 @@ export function LayoutKamera ({ cols = 1, J = 2, bc = 0, rows = 0, Clicked = (t)
 }
 
 export const CameraPosition = ({ layout, streamData }) => {
-
-  const streams = [
-    streamData.detection,
-    streamData.detection3,
-    streamData.detection4,
-    streamData.detection5
-  ];
+  const streams = Object.values(streamData).filter(Boolean);
 
   const { cols = 1, J = 2, bc = 0, rows = 0 } = layout;
 
+  const totalSlots = bc + J;
+
   return (
     <div className={`grid ${cols ? 'grid-cols-' + cols : ''} gap-2 py-5 min-h-[800px]`}>
-      {Array.from({ length: bc }).map((_, i) => (
-        <div key={`bc-${i}`} className={`col-span-2 ${rows ? `row-span-${rows}` : ''}`}>
-          <CCTVStream
-            data={streams[i % streams.length]}
-            customLarge="min-h-[470px] h-full"
-            title={`CCTV Camera ${i + 1}`}
-          />
-        </div>
-      ))}
-      {Array.from({ length: J }).map((_, i) => (
-        <CCTVStream
-          key={`j-${i}`}
-          data={streams[(i + bc) % streams.length]}
-          // customLarge={"h-fit w-32"}
-          title={`CCTV Camera ${i + 1 + bc}`}
-        />
-      ))}
+      {streams.slice(0, totalSlots).map((stream, i) => {
+        const isLarge = i < bc;
+        return (
+          <div
+            key={`stream-${i}`}
+            className={`${isLarge ? 'col-span-2' : ''} ${isLarge && rows ? `row-span-${rows}` : ''}`}
+          >
+            <CCTVStream
+              data={stream}
+              customLarge={isLarge ? 'min-h-[470px] h-full' : undefined}
+              title={`CCTV Camera ${i + 1}`}
+            />
+          </div>
+        );
+      })}
     </div>
   );
-}
+};
+
+
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
+ // const streams = Object.entries(streamData)
+  // .filter(([key]) => key.includes('detection'))
+  // .map(([, value]) => value)
+  // .filter(Boolean);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -88,23 +89,34 @@ const ManajemenKamera = () => {
   const [fullSize, setFullSize] = useState(false);
   const isMobile = useIsMobile();
   const [optionCamera, setOptionCamera] = useState('peta');
-  const [dataSimpang, setDataSimpang] = useState(DataSimpang);
+  const [dataSimpang, setDataSimpang] = useState([]);
   const [socketConnected, setSocketConnected] = useState(false);
   const [streamData, setStreamData] = useState({
     detection1: null,
-    detection3: null,
-    detection4: null,
-    detection5: null,
   });
 
+    useEffect(() => {
+    const fetchCameras = async () => {
+      try {
+        const res = await maps.getAll();
+        // console.log("Hasil getAll:", res); 
+        const detectedCameras = res.data.buildings;
+        setDataSimpang(detectedCameras);
+      } catch (err) {
+        console.error("Failed to fetch cameras:", err);
+      }
+    };
+
+    fetchCameras();
+  }, []);
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
   const handleToggle = (index, checked) => {
-    const updated = [...dataSimpang.buildings];
+    const updated = [...dataSimpang];
     updated[index].model_detection = checked;
-    setDataSimpang({ ...dataSimpang, buildings: updated });
+    setDataSimpang(updated); // ✅ Tetap array
   };
 
   const handleCameraSelect = (data) => {
@@ -139,31 +151,42 @@ const ManajemenKamera = () => {
         break;
     }
   };
-
+ 
   useEffect(() => {
-    const socket = io('https://sxe-data.layanancerdas.id');
+  const socket = io('https://sxe-data.layanancerdas.id');
 
-    socket.on('connect', () => setSocketConnected(true));
-    socket.on('disconnect', () => setSocketConnected(false));
+  socket.on('connect', () => setSocketConnected(true));
+  socket.on('disconnect', () => setSocketConnected(false));
 
-    DataSimpang.buildings.forEach((building) => {
-      const { id, title, socketEvent } = building.camera;
+  return () => {
+    socket.disconnect();
+  };
+}, []);
 
-      socket.on(socketEvent, (data) => {
-        setStreamData((prev) => ({
-          ...prev,
-          [building.camera.id]: data,
-        }));
-      });
+useEffect(() => {
+  const socket = io('https://sxe-data.layanancerdas.id');
+
+  dataSimpang.forEach((building) => {
+    if (!building?.camera?.socketEvent || !building?.camera?.id) return;
+
+    socket.on(building.camera.socketEvent, (data) => {
+      setStreamData((prev) => ({
+        ...prev,
+        [building.camera.id]: data,
+      }));
     });
+  });
 
-    return () => {
-      DataSimpang.buildings.forEach((building) => {
+  return () => {
+    dataSimpang.forEach((building) => {
+      if (building?.camera?.socketEvent) {
         socket.off(building.camera.socketEvent);
-      });
-      socket.disconnect();
-    };
-  }, []);
+      }
+    });
+  };
+}, [dataSimpang]);
+
+
   const [inputValue, setInputValue] = useState("");
   const [showDialog, setShowDialog] = useState(false);
   const [dataKalender, setDataKalender] = useState([]);
@@ -190,7 +213,8 @@ const ManajemenKamera = () => {
   }, [])
 
   // filter search
-  const filteredBuildings = DataSimpang.buildings.filter((buildings) => buildings.name.toLowerCase().includes(inputValue.toLowerCase()))
+  const filteredBuildings = dataSimpang.filter((buildings) => buildings.name.toLowerCase().includes(inputValue.toLowerCase()))
+  
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -321,18 +345,20 @@ const ManajemenKamera = () => {
                     </table>
                   </div>
                 ) : (
-                  <div className="grid grid-col-1 lg:grid-cols-3 gap-4 mt-5 w-full">
-                    {filteredBuildings?.map((dataCamera, index) => (
-                      <div className="w-full" key={index}>
-                        <CCTVStream
-                          heightCamera
-                          customLarge={'h-[90px]'}
-                          data={streamData[dataCamera.camera.id] ? streamData[dataCamera.camera.id] : null}
-                          title={dataCamera.name || `CCTV Camera ${index + 1}`}
-                          onClick={() => handleClickCamera(dataCamera)}
-                        />
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-5 w-full">
+                    {filteredBuildings?.map((dataCamera, index) => {
+                      return (
+                        <div className="w-full" key={index}>
+                          <CCTVStream
+                            heightCamera
+                            customLarge={'h-[90px]'}
+                            data={streamData[dataCamera.camera.id] ? streamData[dataCamera.camera.id] : null}
+                            title={dataCamera.name || `CCTV Camera ${index + 1}`}
+                            onClick={() => handleClickCamera(dataCamera)}
+                          />
+                        </div>
+                      )}
+                    )}
                   </div>
                 )}
               </div>

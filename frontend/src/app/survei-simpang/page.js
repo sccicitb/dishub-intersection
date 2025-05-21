@@ -10,7 +10,8 @@ const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const MapComponent = lazy(() => import("@/app/components/map"));
 
-import DataSimpang from '@/data/DataSimpang.json';
+import { maps } from '@/lib/apiAccess'
+// import DataSimpang from '@/data/DataSimpang.json';
 
 function SurveiSimpangPage () {
   const [socketConnected, setSocketConnected] = useState(false);
@@ -19,13 +20,39 @@ function SurveiSimpangPage () {
   const [activePendekatan, setActivePendekatan] = useState('Semua');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
 
-  const [activeCamera, setActiveCamera] = useState(DataSimpang.buildings[0].camera.id);
-  const [activeTitle, setActiveTitle] = useState("Survei " + DataSimpang.buildings[0].name);
-  const [streamData, setStreamData] = useState({});
+  const [activeCamera, setActiveCamera] = useState();
+  const [activeTitle, setActiveTitle] = useState("Survei ");
   const [vehicleData, setVehicleData] = useState(null);
+  const [dataCamera, setDataCamera] = useState([])
+  const [streamData, setStreamData] = useState({
+    detection3: null,
+    detection4: null,
+    detection5: null,
+    detection1: null
+  });
+
+  useEffect(() => {
+    const fetchSimpang = async () => {
+      try {
+        const res = await maps.getAll()
+        const datafetch = res.data.buildings;
+        const dynamicStreamData = {};
+        datafetch.forEach((item) => {
+          dynamicStreamData[item.camera.id] = null;
+        });
+        
+        setDataCamera(datafetch);
+        setStreamData(dynamicStreamData);
+        setDataCamera(datafetch)
+        setActiveCamera(datafetch[3].camera.id)
+        setActiveTitle("Survei " + datafetch[3].name)
+      } catch (err) { console.error(err) }
+    }
+    fetchSimpang()
+  }, [])
   
-  const activeSimpang = DataSimpang.buildings.find(b => b.camera.id === activeCamera);
-  // Setup socket
+  const activeSimpang = dataCamera.find(b => b.camera.id === activeCamera);
+  
   useEffect(() => {
     const socket = io('https://sxe-data.layanancerdas.id');
 
@@ -39,21 +66,22 @@ function SurveiSimpangPage () {
       setSocketConnected(false);
     });
 
-    // Subscribe all available socket events dynamically
-    DataSimpang.buildings.forEach((building) => {
-      const event = building.camera.socketEvent;
-      socket.on(event, (data) => {
-        setStreamData(prev => ({
-          ...prev,
-          [building.camera.id]: data
-        }));
+    if (dataCamera.length > 0) {
+      dataCamera.forEach((building) => {
+        const event = building.camera.socketEvent;
+        socket.on(event, (data) => {
+          setStreamData((prev) => ({
+            ...prev,
+            [building.camera.id]: data,
+          }));
+        });
       });
-    });
+    }
 
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [dataCamera]);
 
   // Load dummy data
   useEffect(() => {
@@ -80,7 +108,7 @@ function SurveiSimpangPage () {
                   <CCTVStream
                   data={streamData[activeCamera]}
                   large
-                  title={`CCTV Camera ${activeCamera.slice(-1) } (${activeSimpang?.name})`}
+                  title={activeCamera ? `CCTV Camera ${activeCamera.slice(-1) } (${activeSimpang?.name})` : `CCTV Camera (Loading...)`}
                 />
               </div>
             </div>

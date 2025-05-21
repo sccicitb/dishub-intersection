@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import CCTVStream from '../components/cctvStream';
 import CameraStatusTimeline from "@/app/components/cameraStatusTime";
-import DataSimpang from '@/data/DataSimpang.json';
+import { maps } from '@/lib/apiAccess';
 
 const CameraStream = () => {
   const [socketConnected, setSocketConnected] = useState(false);
@@ -13,9 +13,20 @@ const CameraStream = () => {
   const [cameras, setCameras] = useState([]);
 
   useEffect(() => {
-    //  model_detection = true
-    const detectedCameras = DataSimpang.buildings.filter(b => b.model_detection && b.camera);
-    setCameras(detectedCameras);
+    const fetchCameras = async () => {
+      try {
+        const res = await maps.getAll();
+        // console.log("Hasil getAll:", res); 
+        const detectedCameras = res.data.buildings.filter(
+          b => b.model_detection && b.camera
+        );
+        setCameras(detectedCameras);
+      } catch (err) {
+        console.error("Failed to fetch cameras:", err);
+      }
+    };
+
+    fetchCameras();
   }, []);
 
   useEffect(() => {
@@ -31,8 +42,7 @@ const CameraStream = () => {
       setSocketConnected(false);
     });
 
-    // Pasang listener berdasarkan kamera dari JSON
-    DataSimpang.buildings.forEach(building => {
+    cameras.forEach(building => {
       const cam = building.camera;
       if (cam?.socketEvent && cam?.id) {
         socket.on(cam.socketEvent, (data) => {
@@ -44,7 +54,7 @@ const CameraStream = () => {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [cameras]);
 
   const cameraStatusData = [
     { start: new Date('2023-01-01T00:00:00').getTime(), end: new Date('2023-01-01T06:00:00').getTime(), status: true },
