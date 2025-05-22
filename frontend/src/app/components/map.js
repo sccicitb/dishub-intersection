@@ -6,9 +6,11 @@ import { useEffect, useState, useRef } from "react";
 import * as turf from "@turf/turf";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { FaAngleDown } from "react-icons/fa6";
-import simpang from "@/data/DataSimpang.json";
+// import simpang from "@/data/DataSimpang.json";
 import ruangan from "@/data/ruangan.json";
 import { useAuth } from "../context/authContext";
+import { maps } from '@/lib/apiAccess';
+
 
 const MapComponent = ({ title, onClick, sizeHeight }) => {
   const { setLoading } = useAuth();
@@ -39,8 +41,19 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
   };
 
   useEffect(() => {
-    const initialBuildings = simpang.buildings || [];
-    setLokasiSimpang(simpang);
+    const fetchLocation = async () => {
+      try {
+        const res = await maps.getAll();
+        // console.log("Hasil getAll:", res); 
+        const detectedCameras = res.data.buildings
+        setLokasiSimpang(detectedCameras);
+      } catch (err) {
+        console.error("Failed to fetch cameras:", err);
+      }
+    };
+    // setLokasiSimpang(simpang);
+    fetchLocation();
+    const initialBuildings = lokasiSimpang || [];
 
     if (initialBuildings.length > 0) {
       const coordinates = initialBuildings.map((g) => [
@@ -152,7 +165,7 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
           [bounds[0], bounds[1]],
           [bounds[2], bounds[3]],
         ],
-        { padding: 30, maxZoom: 20 }
+        { padding: 20, maxZoom: 20 }
       );
     }
     setSelectedSimpang(null);
@@ -175,13 +188,13 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
             initialViewState={{
               longitude: center.longitude,
               latitude: center.latitude,
-              zoom: 15,
+              zoom: 7,
             }}
             onLoad={fitBoundsTosimpang}
           >
             <NavigationControl position="top-right" />
 
-            {lokasiSimpang?.buildings?.map((simpang) => (
+            {lokasiSimpang?.map((simpang) => (
               <Marker
                 key={simpang.id}
                 longitude={simpang.location.longitude}
@@ -211,7 +224,7 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
                 toggleOpen={() => setIsOpen(!isOpen)}
                 label="Pilih Kamera"
               >
-                {simpang.buildings?.map((item) => (
+                {lokasiSimpang?.map((item) => (
                   <DropdownItem
                     key={item.id}
                     label={item.name}

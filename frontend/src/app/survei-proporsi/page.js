@@ -15,6 +15,8 @@ const CameraStatus2 = lazy(() => import("@/app/components/cameraStatusVer2"));
 const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 
+import { maps } from '@/lib/apiAccess';
+// import DataSimpang from '@/data/DataSimpang.json';
 
 function SurveiProporsi () {
   const [vehicleData, setVehicleData] = useState(null);
@@ -22,15 +24,40 @@ function SurveiProporsi () {
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
-  const [activeTitle, setActiveTitle] = useState("Survei Proporsi");
-  const [selectOption, setSelectOption] = useState('detection4');
+  // const [activeTitle, setActiveTitle] = useState("Survei Proporsi");
+  // const [selectOption, setSelectOption] = useState('detection4');
   const [socketConnected, setSocketConnected] = useState(false);
+  const [activeTitle, setActiveTitle] = useState("Survei");
+  const [activeCamera, setActiveCamera] = useState();
+  const [dataCamera, setDataCamera] = useState([])
   const [streamData, setStreamData] = useState({
     detection3: null,
     detection4: null,
     detection5: null,
     detection1: null
   });
+
+  useEffect(() => {
+    const fetchSimpang = async () => {
+      try {
+        const res = await maps.getAll()
+        const datafetch = res.data.buildings;
+        const dynamicStreamData = {};
+        datafetch.forEach((item) => {
+          dynamicStreamData[item.camera.id] = null;
+        });
+
+        setDataCamera(datafetch);
+        setStreamData(dynamicStreamData);
+        setDataCamera(datafetch)
+        setActiveCamera(datafetch[3].camera.id)
+        setActiveTitle("Survei " + datafetch[3].name)
+      } catch (err) { console.error(err) }
+    }
+    fetchSimpang()
+  }, [])
+  const activeSimpang = dataCamera.find(b => b.camera.id === activeCamera);
+
 
   useEffect(() => {
     import('@/data/sampleVehicleData.json').then((data) => {
@@ -40,7 +67,6 @@ function SurveiProporsi () {
   // const [activeCamera, setActiveCamera] = useState('detection4');
 
   useEffect(() => {
-    // Connect to Socket.IO server
     const socket = io('https://sxe-data.layanancerdas.id');
 
     socket.on('connect', () => {
@@ -48,60 +74,42 @@ function SurveiProporsi () {
       setSocketConnected(true);
     });
 
-
     socket.on('disconnect', () => {
       console.log('Socket disconnected');
       setSocketConnected(false);
     });
 
-    // Subscribe to the three detection topics
-    socket.on('result_detection_3', (data) => {
-      setStreamData(prev => ({ ...prev, detection3: data }));
-    });
-
-    socket.on('result_detection', (data) => {
-      setStreamData(prev => ({ ...prev, detection1: data }));
-    });
-
-    socket.on('result_detection_4', (data) => {
-      setStreamData(prev => ({ ...prev, detection4: data }));
-    });
-
-    socket.on('result_detection_5', (data) => {
-      setStreamData(prev => ({ ...prev, detection5: data }));
-    });
+    if (dataCamera.length > 0) {
+      dataCamera.forEach((building) => {
+        const event = building.camera.socketEvent;
+        socket.on(event, (data) => {
+          setStreamData((prev) => ({
+            ...prev,
+            [building.camera.id]: data,
+          }));
+        });
+      });
+    }
 
     return () => {
       socket.disconnect();
     };
+  }, [dataCamera]);
+
+
+  useEffect(() => {
+    import('@/data/sampleVehicleData.json').then((data) => {
+      setVehicleData(data.default);
+    });
   }, []);
 
-  function handleClick (T) {
-    const replace = T.name.toLowerCase();
-    console.log(replace);
-    console.log('clicked : ' + JSON.stringify(T));
-    switch (replace) {
-      case 'simpang piyungan':
-        setSelectOption('detection4');
-        setActiveTitle(title + 'Simpang Piyungan');
-        break;
-      case 'simpang demen glagah':
-        setSelectOption('detection3');
-        setActiveTitle(title + 'Simpang Demen Glagah');
-        break;
-      case 'simpang tempel':
-        setSelectOption('detection5');
-        setActiveTitle(title + 'Simpang Tempel');
-        break;
-      case 'simpang prambanan':
-        setSelectOption('detection1');
-        setActiveTitle(title + 'Simpang Prambanan');
-        break;
-    }
-  }
+  const handleClick = (building) => {
+    setActiveCamera(building.camera.id);
+    setActiveTitle("Survei " + building.name);
+  };
 
-  
-const [intersectionData, setIntersectionData] = useState({
+
+  const [intersectionData, setIntersectionData] = useState({
     // North route data
     north: {
       row1: [
@@ -193,19 +201,24 @@ const [intersectionData, setIntersectionData] = useState({
   return (
     <div>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
-        <MapComponent title={"Survei Proporsi"} />
+        <MapComponent title={"Survei Proporsi"} onClick={handleClick} />
         <div className="w-[95%] m-auto">
-            <div className="lg:grid lg:grid-cols-3 flex flex-col lg:items-center lg:place-items-center gap-5 py-10">
-              <RecentVehicle customCSS={'h-[400px]'} />
-              <div className="lg:col-span-2 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden">
+          <div className="lg:grid lg:grid-cols-3 flex flex-col lg:items-center lg:place-items-center gap-5 py-10">
+            <RecentVehicle customCSS={'h-[320px]'} />
+            <div className="lg:col-span-2 h-fit items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
+              <div className="w-[60%]">
                 <CCTVStream
-                  customLarge={'h-[100px]'}
-                  data={streamData[selectOption]}
-                  title={'CCTV Camera ' + selectOption.slice(-1)}
-                  onClick={() => setActiveCamera('detection3')}
+                  heightCamera
+                  // customLarge={'h-[120px] w-fit'}
+                  data={streamData[activeCamera]}
+                  title={activeCamera
+                    ? `CCTV Camera  ${activeCamera.slice(-1)} (${activeSimpang?.name ?? ""})`
+                    : "CCTV Camera (Loading...)"}
+                  onClick={() => setActiveCamera(activeSimpang?.camera.id)}
                 />
               </div>
             </div>
+          </div>
           <div className="xl:grid xl:grid-cols-2 items-center place-items-center py-10">
             {/* <SurveyInfoTable /> */}
             {/* <div className="w-full justify-end flex flex-col">
@@ -244,14 +257,14 @@ const [intersectionData, setIntersectionData] = useState({
               </div>
             </div>
           </div> */}
-           <div className="w-full overflow-x-auto">
+          <div className="w-full overflow-x-auto">
             <div className="min-w-[450px] flex flex-col w-fit bg-[#BCC3E1] mx-auto font-semibold">
               <div className="flex justify-center">
                 <div></div>
                 <GridVertical position={true} data={intersectionData.north} />
                 <div></div>
               </div>
-              
+
               <div className="flex justify-center">
                 <div className="">
                   <GridHorizontal position={true} data={intersectionData.west} />
@@ -265,7 +278,7 @@ const [intersectionData, setIntersectionData] = useState({
                   <GridHorizontal position={false} data={intersectionData.east} />
                 </div>
               </div>
-              
+
               <div className="flex justify-center">
                 <div></div>
                 <GridVertical position={false} data={intersectionData.south} />
