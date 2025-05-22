@@ -100,7 +100,7 @@ const ManajemenKamera = () => {
   });
   const [inputValue, setInputValue] = useState("");
   const [showDialog, setShowDialog] = useState(false);
-
+  const [showDialogKalender, setShowDialogKalender] = useState(false)
   // Calendar states - simplified and fixed
   const [dataKalender, setDataKalender] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -108,7 +108,11 @@ const ManajemenKamera = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
   const [mode, setMode] = useState("append");
-
+  const [kalenderForm, setKalenderForm] = useState({
+    date: "",
+    event_type: "",
+    description: ""
+  });
   // Fetch calendar data with proper pagination
   const fetchCalendar = async (page = 1, limit = 5) => {
     setIsLoadingCalendar(true);
@@ -150,7 +154,25 @@ const ManajemenKamera = () => {
       console.error("Failed to fetch calendar total:", err);
       setTotalItems(0);
     }
-};
+  };
+
+  const createCalendar = async (data) => {
+    try {
+      if (!data) return console.log("data tidak sesuai cek kembali!")
+      const push = {
+        date: data.tanggal,
+        event_type: data.events,
+        description: data.deskripsi
+      }
+      const res = await calendar.createData(push)
+      if (!res.status === 201) {
+        console.log("data gagal dibuat!")
+      }
+      console.log("data sukses terbuat")
+    } catch (err) {
+      console.error("Failed to fetch create new data calendar: ", err)
+    }
+  }
   // Initialize data on component mount
   useEffect(() => {
     fetchCameras();
@@ -292,6 +314,7 @@ const ManajemenKamera = () => {
     setStatus(null); // Clear previous status
   };
 
+
   return (
     <div className='w-[95%] py-10 mx-auto'>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
@@ -314,6 +337,84 @@ const ManajemenKamera = () => {
             </div>
           </div>
         )}
+        {showDialogKalender && (
+          <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-xl shadow-md lg:w-[400px] w-[90%]">
+              <h2 className="text-lg font-semibold mb-4">Tambah Tanggal</h2>
+
+              {/* Input Date */}
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">Tanggal (yy-mm-dd)</label>
+                <input
+                  type="text"
+                  className="input input-bordered w-full"
+                  placeholder="25-12-25"
+                  value={kalenderForm.date}
+                  onChange={(e) => setKalenderForm({ ...kalenderForm, date: e.target.value })}
+                />
+              </div>
+
+              {/* Input Event Type */}
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">Tipe Event</label>
+                <input
+                  type="text"
+                  className="input input-bordered w-full"
+                  placeholder="Libur Nasional"
+                  value={kalenderForm.event_type}
+                  onChange={(e) => setKalenderForm({ ...kalenderForm, event_type: e.target.value })}
+                />
+              </div>
+
+              {/* Input Description */}
+              <div className="mb-4">
+                <label className="block mb-1 font-medium">Deskripsi</label>
+                <input
+                  type="text"
+                  className="input input-bordered w-full"
+                  placeholder="Hari Raya Natal"
+                  value={kalenderForm.description}
+                  onChange={(e) => setKalenderForm({ ...kalenderForm, description: e.target.value })}
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex justify-end gap-2">
+                <button className="btn btn-sm" onClick={() => {
+                  setShowDialogKalender(false);
+                  setKalenderForm({ date: "", event_type: "", description: "" });
+                }}>
+                  Batal
+                </button>
+                <button className="btn btn-sm bg-[#314385] text-white" onClick={async () => {
+                  // Validasi sederhana
+                  if (!kalenderForm.date || !kalenderForm.event_type) {
+                    alert("Tanggal dan Tipe Event wajib diisi!");
+                    return;
+                  }
+
+                  // Kirim ke API
+                  await createCalendar({
+                    tanggal: kalenderForm.date,
+                    events: kalenderForm.event_type,
+                    deskripsi: kalenderForm.description
+                  });
+
+                  // Tutup dialog dan reset form
+                  setShowDialogKalender(false);
+                  setKalenderForm({ date: "", event_type: "", description: "" });
+
+                  // Refresh data kalender
+                  fetchCalendar(currentPage, itemsPerPage);
+                  fetchCalendarTotal();
+                }}>
+                  Simpan
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* Main Content Grid */}
         <div className={`grid ${fullSize ? 'grid-cols-1' : 'xl:grid-cols-3 grid-cols-1'} h-fit gap-4`}>
@@ -442,13 +543,14 @@ const ManajemenKamera = () => {
         {/* Calendar Management Section */}
         <div>
           {/* File Upload Section */}
-          <div className="flex gap-2 w-full justify-end mt-5">
+          <div className="flex gap-2 w-full justify-end mt-5 flex-wrap">
             <input
               type="file"
               accept=".xls,.xlsx"
               onChange={handleFileChange}
-              className='block w-fit text-sm text-slate-500 
+              className='block w-fit text-sm text-slate-500  bg-slate-50/50 hover:bg-slate-200 p-1 rounded-full
                 file:mr-4 file:py-2 file:px-4
+                file:hover:cursor-pointer
                 file:rounded-full file:border-0
                 file:text-sm file:font-semibold
                 file:bg-[#314385]/10 file:text-[#314385]/80
@@ -462,7 +564,7 @@ const ManajemenKamera = () => {
               <FiDownload />
               Impor Data
             </button>
-            <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize">
+            <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize" onClick={() => setShowDialogKalender(!showDialogKalender)}>
               <IoIosAdd className="text-xl" />
               Tambah Data
             </button>
@@ -546,7 +648,7 @@ const ManajemenKamera = () => {
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1 || isLoadingCalendar}
                 >
-                  <IoChevronBackSharp className="text-xl"/>
+                  <IoChevronBackSharp className="text-xl" />
                 </button>
 
                 <div className="flex items-center gap-1">
@@ -581,7 +683,7 @@ const ManajemenKamera = () => {
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages || isLoadingCalendar}
                 >
-                  <IoChevronForwardSharp className="text-xl"/>
+                  <IoChevronForwardSharp className="text-xl" />
                 </button>
               </div>
 
