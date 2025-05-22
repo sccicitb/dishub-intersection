@@ -21,3 +21,16 @@ export const deleteRequest = (url) => apiRequest('delete', url)
 export const updateRequest = (url, data) => apiRequest('put', url, data) 
 
 export const createRequest = (url, data) => apiRequest('post', url, data)
+
+export const calendar = {
+  getAll: (page, limit) => getRequest(`/holidays?page=${page}&limit=${limit}`),
+
+  // Upload Excel FormData
+  uploadFile: (file, mode = 'append') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('mode', mode);
+
+    return axiosInstance.post('/holidays/import', formData);
+  }
+};
