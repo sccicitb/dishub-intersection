@@ -1,0 +1,29 @@
+{
+  "holidays": [
+    {
+      "date": "2025-01-01",
+      "event_type": "Libur Nasional",
+      "description": "Tahun Baru 2025 Masehi"
+    },
+    {
+      "date": "2025-03-31",
+      "event_type": "Libur Nasional",
+      "description": "Idul Fitri 1446 Hijriah (Hari Pertama)"
+    },
+    {
+      "date": "2025-04-01",
+      "event_type": "Libur Nasional",
+      "description": "Idul Fitri 1446 Hijriah (Hari Kedua)"
+    },
+    {
+      "date": "2025-04-02",
+      "event_type": "Cuti Bersama",
+      "description": "Idul Fitri 1446 Hijriah"
+    },
+    {
+      "date": "2025-08-17",
+      "event_type": "Libur Nasional",
+      "description": "Hari Kemerdekaan Republik Indonesia"
+    }
+  ]
+}
