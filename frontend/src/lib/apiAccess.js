@@ -13,3 +13,11 @@ export const vehicles = {
   getByMinute: () => getRequest("/vehicles/getRataPer15Menit"),
   getByTipe: () => getRequest("/vehicles/getGroupTipeKendaraan"),
 }
+
+export const maps = {
+  getAll: () => getRequest("/maps/buildings")
+}
+
+export const calendar = {
+  getAll: (page, limit) => getRequest(`/holidays?page=${page}&limit=${limit}`)
+}

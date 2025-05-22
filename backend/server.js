@@ -24,8 +24,8 @@ app.get("/", (req, res) => {
 });
 
 require("./app/routes/vehicle.routes.js")(app);
-// require("./app/routes/holiday.routes.js")(app);
-// require("./app/routes/maps.routes.js")(app);
+require("./app/routes/holiday.routes.js")(app);
+require("./app/routes/maps.routes.js")(app);
 require('./app/routes/camera.routes.js')(app);
 
 // set port, listen for requests
