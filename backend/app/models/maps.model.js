@@ -1,5 +1,6 @@
 const db = require('../config/db');
 
+// Sudah ada
 const getBuildings = async () => {
   const [rows] = await db.query(`
     SELECT
@@ -21,4 +22,40 @@ const getBuildings = async () => {
   return rows;
 };
 
-module.exports = { getBuildings };
+// Tambahan baru
+const getCameraById = async (id) => {
+  const [rows] = await db.query('SELECT * FROM cameras WHERE id = ?', [id]);
+  return rows[0];
+};
+
+const deleteCameraById = async (id) => {
+  const [result] = await db.query('DELETE FROM cameras WHERE id = ?', [id]);
+  return result;
+};
+
+const createCamera = async ({ title, category, status, latitude, longitude, socketEvent }) => {
+  const [result] = await db.query(
+    `INSERT INTO cameras (name, category, status, latitude, longitude, socket_event)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [title, category, status, latitude, longitude, socketEvent]
+  );
+  return result.insertId;
+};
+
+const updateCamera = async (id, { title, category, status, latitude, longitude, socketEvent }) => {
+  const [result] = await db.query(
+    `UPDATE cameras
+     SET name = ?, category = ?, status = ?, latitude = ?, longitude = ?, socket_event = ?
+     WHERE id = ?`,
+    [title, category, status, latitude, longitude, socketEvent, id]
+  );
+  return result;
+};
+
+module.exports = {
+  getBuildings,
+  getCameraById,
+  deleteCameraById,
+  createCamera,
+  updateCamera
+};
