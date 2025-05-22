@@ -105,4 +105,13 @@ Holiday.appendOrUpdate = async (dataArray, result) => {
   }
 };
 
+Holiday.countAll = async (result) => {
+  try {
+    const [res] = await db.query("SELECT COUNT(*) as total FROM holidays");
+    result(null, res[0].total);
+  } catch (err) {
+    result(err, null);
+  }
+};
+
 module.exports = Holiday;

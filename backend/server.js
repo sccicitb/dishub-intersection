@@ -24,8 +24,11 @@ app.get("/", (req, res) => {
 require("./app/routes/vehicle.routes.js")(app);
 require("./app/routes/holiday.routes.js")(app);
 
-// set port, listen for requests
+// Simpan instance listen di variabel
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
+
+// Export app dan server
+module.exports = { app, server };

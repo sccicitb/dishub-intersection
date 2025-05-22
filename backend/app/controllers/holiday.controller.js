@@ -35,16 +35,29 @@ exports.getPaginated = (req, res) => {
       return res.status(500).json({ status: "error", message: err.message });
     }
 
-    // 🔄 Ubah struktur data
-    const holidays = data.map(item => ({
+    // Ambil total count untuk pagination
+    Holiday.countAll((err2, total) => {
+      if (err2) {
+        return res.status(500).json({ status: "error", message: err2.message });
+      }
+
+      const holidays = data.map(item => ({
+        id: item.id,
         tanggal: formatTanggalIndo(item.date),
         events: item.event_type,
         keterangan: item.description
-      }));      
+      }));
 
-    res.json({ holidays });
+      res.json({
+        total,
+        page,
+        limit,
+        holidays
+      });
+    });
   });
 };
+
 
 // Tambah data
 exports.create = (req, res) => {
