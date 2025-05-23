@@ -109,10 +109,13 @@ const ManajemenKamera = () => {
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
   const [mode, setMode] = useState("append");
   const [kalenderForm, setKalenderForm] = useState({
+    id: 0,
     date: "",
     event_type: "",
-    description: ""
+    description: "",
+    rawDate: "",
   });
+  const [statusDialogKalender, setStatusDialogKalender] = useState(false)
   // Fetch calendar data with proper pagination
   const fetchCalendar = async (page = 1, limit = 5) => {
     setIsLoadingCalendar(true);
@@ -155,7 +158,22 @@ const ManajemenKamera = () => {
       setTotalItems(0);
     }
   };
-
+  const updateCalendar = async (data) => {
+    try {
+      if (!data) return console.log("data tidak sesuai cek kembali!")
+      const pushData = {
+        date: data.tanggal,
+        event_type: data.events,
+        description: data.deskripsi
+      }
+      const res = await calendar.updateById(data.id, pushData)
+      if (!res.status === 201) {
+        console.log('data gagal dirubah!')
+      }
+    } catch (error) {
+      console.error("Failed to fetch create new data calendar: ", err)
+    }
+  }
   const createCalendar = async (data) => {
     try {
       if (!data) return console.log("data tidak sesuai cek kembali!")
@@ -314,7 +332,60 @@ const ManajemenKamera = () => {
     setStatus(null); // Clear previous status
   };
 
+  const updateDataKalender = (data) => {
+    setShowDialogKalender(!showDialogKalender)
+    setKalenderForm({ id: data.id, date: formatTanggal(data.tanggal), rawDate: formatToDateInput(data.tanggal), event_type: data.events, description: data.keterangan })
+    setStatusDialogKalender(false)
+  }
+  useEffect(() => {
+    console.log("Updated kalenderForm:", kalenderForm);
+  }, [kalenderForm]);
 
+  const formatToDateInput = (tanggal) => {
+    const bulanMap = {
+      Januari: "01",
+      Februari: "02",
+      Maret: "03",
+      April: "04",
+      Mei: "05",
+      Juni: "06",
+      Juli: "07",
+      Agustus: "08",
+      September: "09",
+      Oktober: "10",
+      November: "11",
+      Desember: "12",
+    };
+    const [tgl, namaBulan, tahun] = tanggal.split(" ");
+    const bulan = bulanMap[namaBulan];
+    return `${tahun}-${bulan}-${tgl.padStart(2, "0")}`;
+  };
+
+  const formatTanggal = (tanggal) => {
+    const bulanMap = {
+      Januari: "01",
+      Februari: "02",
+      Maret: "03",
+      April: "04",
+      Mei: "05",
+      Juni: "06",
+      Juli: "07",
+      Agustus: "08",
+      September: "09",
+      Oktober: "10",
+      November: "11",
+      Desember: "12",
+    };
+    const [tgl, namaBulan, tahun] = tanggal.split(" ");
+    const bulan = bulanMap[namaBulan];
+    return `${tgl.padStart(2, "0")}/${bulan}/${tahun}`;
+  };
+
+  const convertToYYMMDD = (isoDate) => {
+    const [year, month, day] = isoDate.split("-");
+    const shortYear = year.slice(-2); // Ambil 2 digit terakhir
+    return `${shortYear}-${month}-${day}`;
+  };
   return (
     <div className='w-[95%] py-10 mx-auto'>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
@@ -346,11 +417,18 @@ const ManajemenKamera = () => {
               <div className="mb-4">
                 <label className="block mb-1 font-medium">Tanggal (yy-mm-dd)</label>
                 <input
-                  type="text"
+                  type="date"
                   className="input input-bordered w-full"
-                  placeholder="25-12-25"
-                  value={kalenderForm.date}
-                  onChange={(e) => setKalenderForm({ ...kalenderForm, date: e.target.value })}
+                  value={kalenderForm.rawDate} // harus dalam format yyyy-mm-dd untuk input type="date"
+                  onChange={(e) => {
+                    const raw = e.target.value; // misal: "2025-12-26"
+                    const formattedDate = convertToYYMMDD(raw); // jadi "26-12-25"
+                    setKalenderForm({
+                      ...kalenderForm,
+                      rawDate: raw, // untuk ditampilkan kembali di input
+                      date: formattedDate, // untuk dikirim ke backend
+                    });
+                  }}
                 />
               </div>
 
@@ -393,16 +471,26 @@ const ManajemenKamera = () => {
                     return;
                   }
 
-                  // Kirim ke API
-                  await createCalendar({
-                    tanggal: kalenderForm.date,
-                    events: kalenderForm.event_type,
-                    deskripsi: kalenderForm.description
-                  });
+                  if (!statusDialogKalender) {
+                    updateCalendar({
+                      id: kalenderForm.id,
+                      tanggal: kalenderForm.date,
+                      events: kalenderForm.event_type,
+                      deskripsi: kalenderForm.description
+                    })
+                  } else {
+                    // Kirim ke API
+                    await createCalendar({
+                      tanggal: kalenderForm.date,
+                      events: kalenderForm.event_type,
+                      deskripsi: kalenderForm.description
+                    });
+                  }
 
                   // Tutup dialog dan reset form
                   setShowDialogKalender(false);
-                  setKalenderForm({ date: "", event_type: "", description: "" });
+                  setStatusDialogKalender(false)
+                  setKalenderForm({ id: 0, date: "", event_type: "", description: "" });
 
                   // Refresh data kalender
                   fetchCalendar(currentPage, itemsPerPage);
@@ -564,7 +652,7 @@ const ManajemenKamera = () => {
               <FiDownload />
               Impor Data
             </button>
-            <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize" onClick={() => setShowDialogKalender(!showDialogKalender)}>
+            <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize" onClick={() => { setShowDialogKalender(!showDialogKalender), setStatusDialogKalender(true) }}>
               <IoIosAdd className="text-xl" />
               Tambah Data
             </button>
@@ -606,7 +694,7 @@ const ManajemenKamera = () => {
                       <td>{dataK.keterangan}</td>
                       <td>
                         <div className="flex gap-2 justify-center">
-                          <button className="p-1 cursor-pointer hover:bg-gray-100 rounded">
+                          <button className="p-1 cursor-pointer hover:bg-gray-100 rounded" onClick={() => updateDataKalender(dataK)}>
                             <FaPencil className="text-green-300 text-lg" />
                           </button>
                           <button className="p-1 cursor-pointer hover:bg-gray-100 rounded">
