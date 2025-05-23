@@ -174,6 +174,18 @@ const ManajemenKamera = () => {
       console.error("Failed to fetch create new data calendar: ", err)
     }
   }
+  const deleteDataKalender = async (id) => {
+    try {
+      if (!id) return console.log("data tidak sesuai cek kembali!")
+      const res = await calendar.deleteById(id)
+      fetchCalendar(1, itemsPerPage);
+      if (!res.status === 201) {
+        console.log('data gagal dirubah!')
+      }
+    } catch (error) {
+      console.error("Failed to fetch create new data calendar: ", err)
+    }
+  }
   const createCalendar = async (data) => {
     try {
       if (!data) return console.log("data tidak sesuai cek kembali!")
@@ -697,7 +709,7 @@ const ManajemenKamera = () => {
                           <button className="p-1 cursor-pointer hover:bg-gray-100 rounded" onClick={() => updateDataKalender(dataK)}>
                             <FaPencil className="text-green-300 text-lg" />
                           </button>
-                          <button className="p-1 cursor-pointer hover:bg-gray-100 rounded">
+                          <button className="p-1 cursor-pointer hover:bg-gray-100 rounded" onClick={() => deleteDataKalender(dataK.id)}>
                             <FaTrashCan className="text-red-300 text-lg" />
                           </button>
                         </div>
