@@ -19,6 +19,14 @@ export const deleteRequest = (url) => apiRequest('delete', url)
 export const updateRequest = (url, data) => apiRequest('put', url, data)
 export const createRequest = (url, data) => apiRequest('post', url, data)
 
+
+export const maps = {
+  getAll: () => getRequest(`/maps/buildings`),
+  updateById: (id, data) => updateRequest(`/cameras/${id}`, data),
+  createData: (data) => createRequest(`/cameras`, data),
+  deleteById: (id) => deleteRequest(`/cameras/${id}`)
+}
+
 export const calendar = {
   getAll: (page, limit) => getRequest(`/holidays?page=${page}&limit=${limit}`),
   // Upload Excel FormData

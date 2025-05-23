@@ -8,8 +8,8 @@ import CameraActive from '../components/cameraActive';
 import { FaRegEye, FaRegEyeSlash, FaPencil, FaTrashCan } from "react-icons/fa6";
 import { FiDownload } from "react-icons/fi";
 import { IoIosAdd } from "react-icons/io";
-import { maps } from "@/lib/apiAccess"
-import { calendar } from "@/lib/apiService"
+// import { maps } from "@/lib/apiAccess"
+import { calendar, maps } from "@/lib/apiService"
 import { IoChevronBackSharp, IoChevronForwardSharp } from "react-icons/io5";
 
 const RecentVehicle = lazy(() => import('../components/recentVehicle'));
@@ -85,14 +85,11 @@ const useIsMobile = () => {
 };
 
 const ManajemenKamera = () => {
-  const [selectOption, setSelectOption] = useState('detection4');
-  const [activeTitle, setActiveTitle] = useState('Kamera Aktif');
   const [layout, setLayout] = useState({ cols: 2, J: 4, bc: 0, rows: 0 });
   const [fullSize, setFullSize] = useState(false);
   const isMobile = useIsMobile();
   const [optionCamera, setOptionCamera] = useState('peta');
   const [dataSimpang, setDataSimpang] = useState([]);
-  const [socketConnected, setSocketConnected] = useState(false);
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState(null);
   const [streamData, setStreamData] = useState({
@@ -107,7 +104,6 @@ const ManajemenKamera = () => {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
-  const [mode, setMode] = useState("append");
   const [kalenderForm, setKalenderForm] = useState({
     id: 0,
     date: "",
@@ -115,28 +111,21 @@ const ManajemenKamera = () => {
     description: "",
     rawDate: "",
   });
+  const [formCameras, setFormCameras] = useState({
+    id: 0,
+    title: "",
+    category: "",
+    status: false,
+    latitude: "",
+    longitude: "",
+    socketEvent: ""
+  })
   const [statusDialogKalender, setStatusDialogKalender] = useState(false)
-  // Fetch calendar data with proper pagination
-  const fetchCalendar = async (page = 1, limit = 5) => {
-    setIsLoadingCalendar(true);
-    try {
-      const res = await calendar.getAll(page, limit);
-      console.log("Calendar API Response:", res);
+  const [statusDialogCameras, setStatusDialogCameras] = useState(false)
 
-      if (res?.data?.holidays) {
-        setDataKalender(res.data.holidays);
-        // Since BE doesn't provide total count, we use the array length
-        // For proper pagination, BE should return total count
-      }
-    } catch (err) {
-      console.error("Failed to fetch calendar:", err);
-      setDataKalender([]);
-    } finally {
-      setIsLoadingCalendar(false);
-    }
-  };
+  // Fetch API Calendar, Maps, Cameras
 
-  // Fetch cameras data
+  //# Fetch GET Camera (Maps)
   const fetchCameras = async () => {
     try {
       const res = await maps.getAll();
@@ -147,17 +136,84 @@ const ManajemenKamera = () => {
     }
   };
 
-  const fetchCalendarTotal = async () => {
+  //# Fetch Create Camera (Maps)
+  const createCameras = async (data) => {
+    const push = {
+      title: data.title,
+      category: data.category,
+      status: data.status || false,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      socketEvent: data.socketEvent,
+    };
+
     try {
-      const res = await calendar.getAll(1, 999999); // Large limit to get all data
-      if (res?.data?.holidays) {
-        setTotalItems(res.data.holidays.length);
+      const res = await maps.createData(push);
+      if (res.status !== 201) {
+        console.log("Data tidak berhasil ditambahkan, silakan coba lagi!");
+        return;
       }
+      console.log("Data berhasil ditambahkan!");
     } catch (err) {
-      console.error("Failed to fetch calendar total:", err);
-      setTotalItems(0);
+      console.error("Gagal menambahkan kamera:", err);
     }
   };
+
+  //# Fetch update Camera (Maps)
+  const updateCameras = async (id, data) => {
+    const push = {
+      title: data.title,
+      category: data.category,
+      status: data.status || false,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      socketEvent: data.socketEvent,
+    };
+
+    try {
+      const res = await maps.updateById(id, push);
+      if (res.status !== 201) {
+        console.log("Data tidak berhasil ditambahkan, silakan coba lagi!");
+        return;
+      }
+      console.log("Data berhasil ditambahkan!");
+    } catch (err) {
+      console.error("Gagal menambahkan kamera:", err);
+    }
+  };
+
+  const deleteCameras = async (id) => {
+    try {
+      const res = await maps.deleteById(id);
+      if (res.status !== 201) {
+        console.log("Data tidak berhasil dihapus, silakan coba lagi!");
+        return;
+      }
+      console.log("Data berhasil dihapus!");
+    } catch (err) {
+      console.error("Gagal menambahkan kamera:", err);
+    }
+  }
+  //# Fetch GET calendar data with proper pagination
+  const fetchCalendar = async (page = 1, limit = 5) => {
+    setIsLoadingCalendar(true);
+    try {
+      const res = await calendar.getAll(page, limit);
+      console.log("Calendar API Response:", res);
+
+      if (res?.data?.holidays) {
+        setDataKalender(res.data.holidays);
+      }
+      setTotalItems(res.data.total)
+    } catch (err) {
+      console.error("Failed to fetch calendar:", err);
+      setDataKalender([]);
+    } finally {
+      setIsLoadingCalendar(false);
+    }
+  };
+
+  //# Fetch Update Calendar
   const updateCalendar = async (data) => {
     try {
       if (!data) return console.log("data tidak sesuai cek kembali!")
@@ -174,6 +230,8 @@ const ManajemenKamera = () => {
       console.error("Failed to fetch create new data calendar: ", err)
     }
   }
+
+  //# Fetch Delete Calendar
   const deleteDataKalender = async (id) => {
     try {
       if (!id) return console.log("data tidak sesuai cek kembali!")
@@ -186,7 +244,10 @@ const ManajemenKamera = () => {
       console.error("Failed to fetch create new data calendar: ", err)
     }
   }
+
+  //# Fetch Create Calendar
   const createCalendar = async (data) => {
+    ''
     try {
       if (!data) return console.log("data tidak sesuai cek kembali!")
       const push = {
@@ -207,7 +268,6 @@ const ManajemenKamera = () => {
   useEffect(() => {
     fetchCameras();
     fetchCalendar(1, itemsPerPage);
-    fetchCalendarTotal();
   }, []);
 
   // Refetch calendar when page or items per page changes
@@ -236,30 +296,12 @@ const ManajemenKamera = () => {
     }
   }, [isMobile]);
 
-  const handleClickCamera = (T) => {
-    const replace = T.name.toLowerCase();
-    switch (replace) {
-      case 'simpang piyungan':
-        setSelectOption('detection3');
-        break;
-      case 'simpang demen glagah':
-        setSelectOption('detection4');
-        break;
-      case 'simpang tempel':
-        setSelectOption('detection5');
-        break;
-      case 'simpang prambanan':
-        setSelectOption('detection1');
-        break;
-    }
-  };
-
   // Socket connection for real-time data
   useEffect(() => {
     const socket = io('https://sxe-data.layanancerdas.id');
 
-    socket.on('connect', () => setSocketConnected(true));
-    socket.on('disconnect', () => setSocketConnected(false));
+    socket.on('connect', () => console.log("socket connected"));
+    socket.on('disconnect', () => console.log("socket disconnected"));
 
     return () => {
       socket.disconnect();
@@ -295,9 +337,22 @@ const ManajemenKamera = () => {
   };
 
   const handleAddNewCamera = () => {
+    setStatusDialogCameras(false)
     setShowDialog(true);
   };
 
+  const handleSelectCameras = (id, select) => {
+    if (!select) return console.error("select tidak diketahui")
+    if (select === "edit") {
+      setStatusDialogCameras(true)
+      setShowDialog(true);
+      setFormCameras({ ...formCameras, id: id })
+    } else if (select === "delete") {
+      deleteCameras(id)
+    } else {
+      handleAddNewCamera()
+    }
+  }
   const closeDialog = () => {
     setShowDialog(false);
   };
@@ -330,7 +385,7 @@ const ManajemenKamera = () => {
 
     try {
       setStatus("Uploading...");
-      const response = await calendar.uploadFile(file, mode);
+      const response = await calendar.uploadFile(file, "append");
       setStatus(`Sukses upload: ${response.data.processsed} data`);
       // Refresh calendar data after successful upload
       fetchCalendar(currentPage, itemsPerPage);
@@ -404,22 +459,109 @@ const ManajemenKamera = () => {
         {/* Add Camera Dialog */}
         {showDialog && (
           <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-md shadow-md w-[300px]">
-              <h2 className="text-lg font-semibold mb-4">Tambah Kamera</h2>
-              <div className="mb-4">
+            <div className="bg-white p-6 rounded-md shadow-md w-[300px] space-y-4">
+              <h2 className="text-lg font-semibold">Tambah Kamera</h2>
+
+              {/* Input Title */}
+              <input
+                type="text"
+                className="input input-bordered w-full"
+                placeholder="Nama Kamera"
+                value={formCameras.title}
+                onChange={(e) =>
+                  setFormCameras({ ...formCameras, title: e.target.value })
+                }
+              />
+
+              {/* Input Category */}
+              <input
+                type="text"
+                className="input input-bordered w-full"
+                placeholder="Kategori"
+                value={formCameras.category}
+                onChange={(e) =>
+                  setFormCameras({ ...formCameras, category: e.target.value })
+                }
+              />
+
+              {/* Input Latitude */}
+              <input
+                type="text"
+                className="input input-bordered w-full"
+                placeholder="Latitude"
+                value={formCameras.latitude}
+                onChange={(e) =>
+                  setFormCameras({ ...formCameras, latitude: e.target.value })
+                }
+              />
+
+              {/* Input Longitude */}
+              <input
+                type="text"
+                className="input input-bordered w-full"
+                placeholder="Longitude"
+                value={formCameras.longitude}
+                onChange={(e) =>
+                  setFormCameras({ ...formCameras, longitude: e.target.value })
+                }
+              />
+
+              {/* Input Socket Event */}
+              <input
+                type="text"
+                className="input input-bordered w-full"
+                placeholder="Socket Event"
+                value={formCameras.socketEvent}
+                onChange={(e) =>
+                  setFormCameras({ ...formCameras, socketEvent: e.target.value })
+                }
+              />
+
+              {/* Toggle Status */}
+              <div className="form-control flex-row items-center gap-2">
                 <input
-                  type="text"
-                  className="input input-bordered w-full"
-                  placeholder="Nama kamera (kosong boleh)"
+                  type="checkbox"
+                  className="toggle"
+                  checked={formCameras.status}
+                  onChange={(e) =>
+                    setFormCameras({ ...formCameras, status: e.target.checked })
+                  }
                 />
+                <label className="label-text">Status Aktif</label>
               </div>
-              <div className="flex justify-end gap-2">
-                <button className="btn btn-sm" onClick={closeDialog}>Batal</button>
-                <button className="btn btn-sm btn-primary" onClick={closeDialog}>Simpan</button>
+
+              {/* Tombol Aksi */}
+              <div className="flex justify-end gap-2 pt-2">
+                <button className="btn btn-sm" onClick={closeDialog}>
+                  Batal
+                </button>
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={async () => {
+                    if (!statusDialogCameras) {
+                      createCameras(formCameras);
+                    } else {
+                      updateCameras(formCameras.id, formCameras)
+                    }
+                    setFormCameras({
+                      id: 0,
+                      title: "",
+                      category: "",
+                      status: false,
+                      latitude: "",
+                      longitude: "",
+                      socketEvent: ""
+                    })
+                    closeDialog();
+                  }}
+                >
+                  Simpan
+                </button>
               </div>
             </div>
           </div>
         )}
+
         {showDialogKalender && (
           <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded-xl shadow-md lg:w-[400px] w-[90%]">
@@ -506,7 +648,6 @@ const ManajemenKamera = () => {
 
                   // Refresh data kalender
                   fetchCalendar(currentPage, itemsPerPage);
-                  fetchCalendarTotal();
                 }}>
                   Simpan
                 </button>
@@ -559,7 +700,7 @@ const ManajemenKamera = () => {
             >
               <div className="h-[40vh] overflow-y-auto my-5">
                 {optionCamera === "peta" ? (
-                  <MapComponent onClick={handleClickCamera} sizeHeight={"35vh"} />
+                  <MapComponent sizeHeight={"35vh"} />
                 ) : optionCamera === "daftar" ? (
                   <div className="overflow-x-auto w-full bg-base-200 mt-5">
                     <table className="table">
@@ -602,10 +743,10 @@ const ManajemenKamera = () => {
                                 <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
                                   <FaRegEye className="text-yellow-300 text-lg" />
                                 </button>
-                                <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
+                                <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer" onClick={(id) => handleSelectCameras(id, 'edit')}>
                                   <FaPencil className="text-green-300 text-lg" />
                                 </button>
-                                <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
+                                <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer" onClick={(id) => handleSelectCameras(id, 'delete')}>
                                   <FaTrashCan className="text-red-300 text-lg" />
                                 </button>
                               </div>
