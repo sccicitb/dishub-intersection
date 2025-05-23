@@ -1,6 +1,8 @@
 const express = require("express");
 // const bodyParser = require("body-parser"); /* deprecated */
 const cors = require("cors");
+const checkCameraStatus = require('./jobs/checkCameraStatus');
+checkCameraStatus(); // jalanin cron saat server start
 
 const app = express();
 
@@ -23,8 +25,8 @@ app.get("/", (req, res) => {
 
 require("./app/routes/vehicle.routes.js")(app);
 require("./app/routes/holiday.routes.js")(app);
-// require("./app/routes/holiday.routes.js")(app);
 require("./app/routes/maps.routes.js")(app);
+require('./app/routes/camera.routes.js')(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
