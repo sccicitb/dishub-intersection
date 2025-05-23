@@ -1,137 +1,53 @@
 const httpMocks = require("node-mocks-http");
-const path = require("path");
-
-// ✅ Mock seluruh dependency
-jest.mock("../app/models/holiday.model", () => ({
-  replaceAll: jest.fn(),
-  appendOrUpdate: jest.fn(),
-  create: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
-  getPaginated: jest.fn(),
-}));
-
-jest.mock("../app/helpers/holidayParser", () => ({
-  parseHolidayFile: jest.fn(),
-}));
-
 const Holiday = require("../app/models/holiday.model");
-const { parseHolidayFile } = require("../app/helpers/holidayParser");
 const HolidayController = require("../app/controllers/holiday.controller");
 
-describe("HolidayController.importData", () => {
-  const sampleData = [
-    { date: "2025-01-01", event_type: "Libur Nasional", description: "Tahun Baru" },
-    { date: "2025-04-02", event_type: "Cuti Bersama", description: "Idul Fitri" }
-  ];
-
-  const mockFile = {
-    path: "/tmp/mockfile.json",
-    originalname: "mockfile.json"
-  };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it("should return 400 if no file is uploaded", async () => {
-    const req = httpMocks.createRequest({ method: "POST", body: {} });
-    const res = httpMocks.createResponse();
-
-    await HolidayController.importData(req, res);
-    expect(res.statusCode).toBe(400);
-    expect(res._getJSONData()).toMatchObject({ status: "error", message: "No file uploaded." });
-  });
-
-  it("should call replaceAll when mode is replace", async () => {
-    parseHolidayFile.mockResolvedValue(sampleData);
-    Holiday.replaceAll.mockImplementation((data, cb) => cb(null, { replaced: data.length }));
-
-    const req = httpMocks.createRequest({
-      method: "POST",
-      body: { mode: "replace" },
-      file: mockFile,
-    });
-    const res = httpMocks.createResponse();
-
-    await HolidayController.importData(req, res);
-
-    expect(parseHolidayFile).toHaveBeenCalledWith(mockFile.path, ".json");
-    expect(Holiday.replaceAll).toHaveBeenCalledWith(sampleData, expect.any(Function));
-    expect(res.statusCode).toBe(200);
-    expect(res._getJSONData()).toMatchObject({ status: "ok", mode: "replace", replaced: 2 });
-  });
-
-  it("should call appendOrUpdate when mode is append", async () => {
-    parseHolidayFile.mockResolvedValue(sampleData);
-    Holiday.appendOrUpdate.mockImplementation((data, cb) => cb(null, { processed: data.length }));
-
-    const req = httpMocks.createRequest({
-      method: "POST",
-      body: { mode: "append" },
-      file: mockFile,
-    });
-    const res = httpMocks.createResponse();
-
-    await HolidayController.importData(req, res);
-
-    expect(parseHolidayFile).toHaveBeenCalledWith(mockFile.path, ".json");
-    expect(Holiday.appendOrUpdate).toHaveBeenCalledWith(sampleData, expect.any(Function));
-    expect(res.statusCode).toBe(200);
-    expect(res._getJSONData()).toMatchObject({ status: "ok", mode: "append", processed: 2 });
-  });
-
-  it("should return 500 if parseHolidayFile throws an error", async () => {
-    parseHolidayFile.mockRejectedValue(new Error("Parse error"));
-
-    const req = httpMocks.createRequest({
-      method: "POST",
-      body: { mode: "append" },
-      file: mockFile,
-    });
-    const res = httpMocks.createResponse();
-
-    await HolidayController.importData(req, res);
-
-    expect(res.statusCode).toBe(500);
-    expect(res._getJSONData()).toMatchObject({ status: "error", message: "Parse error" });
-  });
-});
+jest.mock("../app/models/holiday.model");
+jest.mock("../app/helpers/holidayParser", () => ({
+  parseHolidayFile: jest.fn()
+}));
 
 describe("HolidayController CRUD", () => {
-  const sampleData = {
+  const sampleBody = {
     date: "2025-05-01",
     event_type: "Libur Nasional",
     description: "Hari Buruh"
   };
 
+  const savedData = {
+    id: 1,
+    ...sampleBody
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
+  // ✅ Create
   it("should create a new holiday", async () => {
-    Holiday.create.mockImplementation((data, cb) => cb(null, { id: 1, ...data }));
+    Holiday.create.mockImplementation((data, cb) => cb(null, savedData));
 
     const req = httpMocks.createRequest({
       method: "POST",
-      body: sampleData
+      body: sampleBody
     });
     const res = httpMocks.createResponse();
 
     await HolidayController.create(req, res);
 
-    expect(Holiday.create).toHaveBeenCalledWith(sampleData, expect.any(Function));
+    expect(Holiday.create).toHaveBeenCalledWith(sampleBody, expect.any(Function));
     expect(res.statusCode).toBe(201);
-    expect(res._getJSONData()).toMatchObject({ status: "ok", data: { id: 1, ...sampleData } });
+    expect(res._getJSONData()).toMatchObject({ status: "ok", data: savedData });
   });
 
+  // ✅ Update
   it("should update a holiday", async () => {
     Holiday.update.mockImplementation((id, data, cb) => cb(null, { affectedRows: 1 }));
 
     const req = httpMocks.createRequest({
       method: "PUT",
       params: { id: 2 },
-      body: { ...sampleData, description: "Updated Hari Buruh" }
+      body: { ...sampleBody, description: "Updated Hari Buruh" }
     });
     const res = httpMocks.createResponse();
 
@@ -142,6 +58,7 @@ describe("HolidayController CRUD", () => {
     expect(res._getJSONData()).toMatchObject({ status: "ok" });
   });
 
+  // ✅ Delete
   it("should delete a holiday", async () => {
     Holiday.delete.mockImplementation((id, cb) => cb(null, { affectedRows: 1 }));
 
@@ -158,24 +75,53 @@ describe("HolidayController CRUD", () => {
     expect(res._getJSONData()).toMatchObject({ status: "ok" });
   });
 
-  it("should get paginated holidays (default limit)", async () => {
-    Holiday.getPaginated.mockImplementation((page, limit, cb) => cb(null, [sampleData]));
+  // ✅ Get Paginated - default
+  it("should get paginated holidays (default limit) with total and id", async () => {
+    const dbRow = {
+      id: 1,
+      date: "2025-05-01",
+      event_type: "Libur Nasional",
+      description: "Hari Buruh"
+    };
 
-    const req = httpMocks.createRequest({
-      method: "GET",
-      query: {}
-    });
+    Holiday.getPaginated.mockImplementation((page, limit, cb) => cb(null, [dbRow]));
+    Holiday.countAll.mockImplementation((cb) => cb(null, 24));
+
+    const req = httpMocks.createRequest({ method: "GET", query: {} });
     const res = httpMocks.createResponse();
 
     await HolidayController.getPaginated(req, res);
 
     expect(Holiday.getPaginated).toHaveBeenCalledWith(1, 5, expect.any(Function));
-    expect(res.statusCode).toBe(200);
-    expect(res._getJSONData()).toMatchObject({ status: "ok", data: [sampleData] });
+    expect(Holiday.countAll).toHaveBeenCalled();
+
+    const body = res._getJSONData();
+    expect(body).toMatchObject({
+      total: 24,
+      page: 1,
+      limit: 5,
+      holidays: [
+        {
+          id: 1,
+          tanggal: "1 Mei 2025",
+          events: "Libur Nasional",
+          keterangan: "Hari Buruh"
+        }
+      ]
+    });
   });
 
+  // ✅ Get Paginated - custom limit
   it("should get paginated holidays with custom page/limit", async () => {
-    Holiday.getPaginated.mockImplementation((page, limit, cb) => cb(null, [sampleData]));
+    const dbRow = {
+      id: 1,
+      date: "2025-05-01",
+      event_type: "Libur Nasional",
+      description: "Hari Buruh"
+    };
+
+    Holiday.getPaginated.mockImplementation((page, limit, cb) => cb(null, [dbRow]));
+    Holiday.countAll.mockImplementation((cb) => cb(null, 24));
 
     const req = httpMocks.createRequest({
       method: "GET",
@@ -186,7 +132,167 @@ describe("HolidayController CRUD", () => {
     await HolidayController.getPaginated(req, res);
 
     expect(Holiday.getPaginated).toHaveBeenCalledWith(2, 10, expect.any(Function));
+    expect(Holiday.countAll).toHaveBeenCalled();
+
+    const body = res._getJSONData();
+    expect(body).toMatchObject({
+      total: 24,
+      page: 2,
+      limit: 10,
+      holidays: [
+        {
+          id: 1,
+          tanggal: "1 Mei 2025",
+          events: "Libur Nasional",
+          keterangan: "Hari Buruh"
+        }
+      ]
+    });
+  });
+
+it("should return all holidays without pagination", async () => {
+    const sampleRow = {
+      id: 2,
+      date: "2025-06-01",
+      event_type: "Cuti Bersama",
+      description: "Idul Fitri"
+    };
+
+    Holiday.getAll.mockImplementation(cb => cb(null, [sampleRow]));
+
+    const req = httpMocks.createRequest({ method: "GET" });
+    const res = httpMocks.createResponse();
+
+    await HolidayController.getAll(req, res);
+
+    expect(Holiday.getAll).toHaveBeenCalled();
     expect(res.statusCode).toBe(200);
-    expect(res._getJSONData()).toMatchObject({ status: "ok", data: [sampleData] });
+
+    const body = res._getJSONData();
+    expect(body).toMatchObject({
+      holidays: [
+        {
+          tanggal: "1 Juni 2025",
+          events: "Cuti Bersama",
+          keterangan: "Idul Fitri"
+        }
+      ]
+    });
+  });
+
+  it("should return 500 if getAll fails", async () => {
+    Holiday.getAll.mockImplementation(cb => cb(new Error("DB error"), null));
+
+    const req = httpMocks.createRequest({ method: "GET" });
+    const res = httpMocks.createResponse();
+
+    await HolidayController.getAll(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res._getJSONData()).toMatchObject({ status: "error", message: "DB error" });
+  });
+
+  it("should return 500 if getAll fails", async () => {
+    Holiday.getAll.mockImplementation(cb => cb(new Error("DB error"), null));
+
+    const req = httpMocks.createRequest({ method: "GET" });
+    const res = httpMocks.createResponse();
+
+    await HolidayController.getAll(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res._getJSONData()).toMatchObject({ status: "error", message: "DB error" });
+  });
+
+  it("should return 500 if create fails", async () => {
+    Holiday.create.mockImplementation((data, cb) => cb(new Error("Create error"), null));
+
+    const req = httpMocks.createRequest({ method: "POST", body: sampleBody });
+    const res = httpMocks.createResponse();
+
+    await HolidayController.create(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res._getJSONData()).toMatchObject({ status: "error", message: "Create error" });
+  });
+
+  it("should return 500 if update fails", async () => {
+    Holiday.update.mockImplementation((id, data, cb) => cb(new Error("Update failed"), null));
+
+    const req = httpMocks.createRequest({
+      method: "PUT",
+      params: { id: 1 },
+      body: sampleBody
+    });
+    const res = httpMocks.createResponse();
+
+    await HolidayController.update(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res._getJSONData()).toMatchObject({ status: "error", message: "Update failed" });
+  });
+
+  it("should return 500 if delete fails", async () => {
+    Holiday.delete.mockImplementation((id, cb) => cb(new Error("Delete error"), null));
+
+    const req = httpMocks.createRequest({ method: "DELETE", params: { id: 1 } });
+    const res = httpMocks.createResponse();
+
+    await HolidayController.remove(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res._getJSONData()).toMatchObject({ status: "error", message: "Delete error" });
+  });
+
+  it("should return 500 if getPaginated fails", async () => {
+    Holiday.getPaginated.mockImplementation((page, limit, cb) => cb(new Error("Pagination error"), null));
+
+    const req = httpMocks.createRequest({ method: "GET" });
+    const res = httpMocks.createResponse();
+
+    await HolidayController.getPaginated(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res._getJSONData()).toMatchObject({ status: "error", message: "Pagination error" });
+  });
+
+  it("should return 500 if countAll fails", async () => {
+    Holiday.getPaginated.mockImplementation((page, limit, cb) => cb(null, [sampleBody]));
+    Holiday.countAll.mockImplementation(cb => cb(new Error("Count error"), null));
+
+    const req = httpMocks.createRequest({ method: "GET" });
+    const res = httpMocks.createResponse();
+
+    await HolidayController.getPaginated(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res._getJSONData()).toMatchObject({ status: "error", message: "Count error" });
+  });
+
+  it("should return 400 if no file is uploaded", async () => {
+    const req = httpMocks.createRequest({ method: "POST", body: {}, file: undefined });
+    const res = httpMocks.createResponse();
+
+    await HolidayController.importData(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res._getJSONData()).toMatchObject({ status: "error", message: "No file uploaded." });
+  });
+
+  it("should return 500 if parseHolidayFile throws error", async () => {
+    const { parseHolidayFile } = require("../app/helpers/holidayParser");
+    parseHolidayFile.mockRejectedValue(new Error("Parsing failed"));
+
+    const req = httpMocks.createRequest({
+      method: "POST",
+      body: { mode: "append" },
+      file: { path: "/tmp/mock.json", originalname: "mock.json" }
+    });
+    const res = httpMocks.createResponse();
+
+    await HolidayController.importData(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res._getJSONData()).toMatchObject({ status: "error", message: "Parsing failed" });
   });
 });

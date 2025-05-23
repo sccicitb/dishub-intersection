@@ -28,8 +28,9 @@ require("./app/routes/holiday.routes.js")(app);
 require("./app/routes/maps.routes.js")(app);
 require('./app/routes/camera.routes.js')(app);
 
-// set port, listen for requests
+// Simpan instance listen di variabel
 const PORT = process.env.PORT || 8080;
+
 // Cek apakah file ini dijalankan langsung
 if (require.main === module) {
   app.listen(PORT, () => {
