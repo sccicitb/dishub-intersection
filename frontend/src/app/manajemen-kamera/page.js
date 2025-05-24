@@ -8,9 +8,11 @@ import CameraActive from '../components/cameraActive';
 import { FaRegEye, FaRegEyeSlash, FaPencil, FaTrashCan } from "react-icons/fa6";
 import { FiDownload } from "react-icons/fi";
 import { IoIosAdd } from "react-icons/io";
-// import { maps } from "@/lib/apiAccess"
 import { calendar, maps } from "@/lib/apiService"
 import { IoChevronBackSharp, IoChevronForwardSharp } from "react-icons/io5";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const RecentVehicle = lazy(() => import('../components/recentVehicle'));
 const MapComponent = lazy(() => import('../components/map'));
@@ -113,12 +115,17 @@ const ManajemenKamera = () => {
   });
   const [formCameras, setFormCameras] = useState({
     id: 0,
-    title: "",
+    name: "",
     category: "",
-    status: false,
-    latitude: "",
-    longitude: "",
-    socketEvent: ""
+    model_detection: false,
+    camera: {
+      title: "",
+      socketEvent: ""
+    },
+    location: {
+      latitude: "",
+      longitude: "",
+    },
   })
   const [statusDialogKalender, setStatusDialogKalender] = useState(false)
   const [statusDialogCameras, setStatusDialogCameras] = useState(false)
@@ -133,6 +140,7 @@ const ManajemenKamera = () => {
       setDataSimpang(detectedCameras);
     } catch (err) {
       console.error("Failed to fetch cameras:", err);
+      toast.error("Gagal mengambil data kamera!", { position: 'top-right' });
     }
   };
 
@@ -149,13 +157,22 @@ const ManajemenKamera = () => {
 
     try {
       const res = await maps.createData(push);
-      if (res.status !== 201) {
-        console.log("Data tidak berhasil ditambahkan, silakan coba lagi!");
-        return;
+      // Perbaikan: Gunakan res.status === 200 atau 201 untuk success
+      if (res.status === 201 || res.status === 200) {
+        toast.success("Kamera berhasil ditambahkan!!", {
+          position: 'top-right'
+        });
+        console.log("Data berhasil ditambahkan!");
+        // Refresh data setelah berhasil
+        await fetchCameras();
+      } else {
+        toast.error("Data tidak berhasil ditambahkan, silakan coba lagi!", {
+          position: 'top-right'
+        });
       }
-      console.log("Data berhasil ditambahkan!");
     } catch (err) {
       console.error("Gagal menambahkan kamera:", err);
+      toast.error("Gagal menambahkan kamera!", { position: 'top-right' });
     }
   };
 
@@ -172,28 +189,48 @@ const ManajemenKamera = () => {
 
     try {
       const res = await maps.updateById(id, push);
-      if (res.status !== 201) {
-        console.log("Data tidak berhasil ditambahkan, silakan coba lagi!");
-        return;
+      // Perbaikan: Biasanya update menggunakan status 200
+      if (res.status === 200 || res.status === 201) {
+        toast.success("Kamera berhasil diperbaharui!!", {
+          position: 'top-right'
+        });
+        console.log("Data berhasil diperbaharui!");
+        // Refresh data setelah berhasil
+        await fetchCameras();
+      } else {
+        toast.error("Data tidak berhasil diperbaharui, silakan coba lagi!", {
+          position: 'top-right'
+        });
       }
-      console.log("Data berhasil ditambahkan!");
     } catch (err) {
-      console.error("Gagal menambahkan kamera:", err);
+      console.error("Gagal memperbaharui kamera:", err);
+      toast.error("Gagal memperbaharui kamera!", { position: 'top-right' });
     }
   };
 
+  //# Fetch Delete Camera (Maps)
   const deleteCameras = async (id) => {
     try {
       const res = await maps.deleteById(id);
-      if (res.status !== 201) {
-        console.log("Data tidak berhasil dihapus, silakan coba lagi!");
-        return;
+      // Perbaikan: Delete biasanya menggunakan status 200 atau 204
+      if (res.status === 200 || res.status === 204) {
+        toast.success("Kamera berhasil dihapus!!", {
+          position: 'top-right'
+        });
+        console.log("Data berhasil dihapus!");
+        // Refresh data setelah berhasil
+        await fetchCameras();
+      } else {
+        toast.error("Data tidak berhasil dihapus, silakan coba lagi!", {
+          position: 'top-right'
+        });
       }
-      console.log("Data berhasil dihapus!");
     } catch (err) {
-      console.error("Gagal menambahkan kamera:", err);
+      console.error("Gagal menghapus kamera:", err);
+      toast.error("Gagal menghapus kamera!", { position: 'top-right' });
     }
-  }
+  };
+
   //# Fetch GET calendar data with proper pagination
   const fetchCalendar = async (page = 1, limit = 5) => {
     setIsLoadingCalendar(true);
@@ -203,11 +240,12 @@ const ManajemenKamera = () => {
 
       if (res?.data?.holidays) {
         setDataKalender(res.data.holidays);
+        setTotalItems(res.data.total);
       }
-      setTotalItems(res.data.total)
     } catch (err) {
       console.error("Failed to fetch calendar:", err);
       setDataKalender([]);
+      toast.error("Gagal mengambil data kalender!", { position: 'top-right' });
     } finally {
       setIsLoadingCalendar(false);
     }
@@ -216,54 +254,103 @@ const ManajemenKamera = () => {
   //# Fetch Update Calendar
   const updateCalendar = async (data) => {
     try {
-      if (!data) return console.log("data tidak sesuai cek kembali!")
+      if (!data) {
+        console.log("data tidak sesuai cek kembali!");
+        toast.error("Data tidak valid!", { position: 'top-right' });
+        return;
+      }
+
       const pushData = {
         date: data.tanggal,
         event_type: data.events,
         description: data.deskripsi
-      }
-      const res = await calendar.updateById(data.id, pushData)
-      if (!res.status === 201) {
-        console.log('data gagal dirubah!')
+      };
+
+      const res = await calendar.updateById(data.id, pushData);
+      console.log(res);
+
+      // Perbaikan: Gunakan === untuk comparison yang benar
+      if (res.status === 200 || res.status === 201) {
+        toast.success("Data Kalender berhasil dirubah!!", {
+          position: 'top-right'
+        });
+        // Refresh data setelah berhasil
+        await fetchCalendar(1, itemsPerPage);
+      } else {
+        toast.error("Data tidak berhasil diperbaharui, silakan coba lagi!", {
+          position: 'top-right'
+        });
       }
     } catch (error) {
-      console.error("Failed to fetch create new data calendar: ", err)
+      console.error("Failed to update calendar: ", error);
+      toast.error("Gagal memperbaharui kalender!", { position: 'top-right' });
     }
-  }
+  };
 
   //# Fetch Delete Calendar
   const deleteDataKalender = async (id) => {
     try {
-      if (!id) return console.log("data tidak sesuai cek kembali!")
-      const res = await calendar.deleteById(id)
-      fetchCalendar(1, itemsPerPage);
-      if (!res.status === 201) {
-        console.log('data gagal dirubah!')
+      if (!id) {
+        console.log("data tidak sesuai cek kembali!");
+        toast.error("ID tidak valid!", { position: 'top-right' });
+        return;
+      }
+
+      const res = await calendar.deleteById(id);
+
+      // Perbaikan: Delete biasanya menggunakan status 200 atau 204
+      if (res.status === 200 || res.status === 204) {
+        toast.success("Data Kalender berhasil dihapus!!", {
+          position: 'top-right'
+        });
+        // Refresh data setelah berhasil
+        await fetchCalendar(1, itemsPerPage);
+      } else {
+        toast.error("Data tidak berhasil dihapus, silahkan coba lagi!", {
+          position: 'top-right'
+        });
       }
     } catch (error) {
-      console.error("Failed to fetch create new data calendar: ", err)
+      console.error("Failed to delete calendar: ", error);
+      toast.error("Gagal menghapus kalender!", { position: 'top-right' });
     }
-  }
+  };
 
   //# Fetch Create Calendar
   const createCalendar = async (data) => {
-    ''
     try {
-      if (!data) return console.log("data tidak sesuai cek kembali!")
+      if (!data) {
+        console.log("data tidak sesuai cek kembali!");
+        toast.error("Data tidak valid!", { position: 'top-right' });
+        return;
+      }
+
       const push = {
         date: data.tanggal,
         event_type: data.events,
         description: data.deskripsi
+      };
+
+      const res = await calendar.createData(push);
+
+      // Perbaikan: Create biasanya menggunakan status 201
+      if (res.status === 201 || res.status === 200) {
+        toast.success("Data Kalender berhasil ditambahkan!!", {
+          position: 'top-right'
+        });
+        // Refresh data setelah berhasil
+        await fetchCalendar(1, itemsPerPage);
+      } else {
+        toast.error("Data tidak berhasil ditambahkan, silahkan coba lagi!", {
+          position: 'top-right'
+        });
       }
-      const res = await calendar.createData(push)
-      if (!res.status === 201) {
-        console.log("data gagal dibuat!")
-      }
-      console.log("data sukses terbuat")
     } catch (err) {
-      console.error("Failed to fetch create new data calendar: ", err)
+      console.error("Failed to create calendar: ", err);
+      toast.error("Gagal menambahkan kalender!", { position: 'top-right' });
     }
-  }
+  };
+
   // Initialize data on component mount
   useEffect(() => {
     fetchCameras();
@@ -341,18 +428,36 @@ const ManajemenKamera = () => {
     setShowDialog(true);
   };
 
-  const handleSelectCameras = (id, select) => {
+  const handleSelectCameras = (id, select, data) => {
     if (!select) return console.error("select tidak diketahui")
     if (select === "edit") {
-      setStatusDialogCameras(true)
+      console.log(data)
+      setFormCameras({
+        id: data.id,
+        category: data.category,
+        model_detection: data.model_detection,
+        name: data.name || "",
+        camera: {
+          title: data?.camera?.title ?? "",
+          socketEvent: data?.camera?.socketEvent ?? ""
+        },
+        location: {
+          latitude: data.location.latitude || "",
+          longitude: data.location.longitude || ""
+        }
+      });
+
       setShowDialog(true);
-      setFormCameras({ ...formCameras, id: id })
+      setStatusDialogCameras(true)
+      // setFormCameras({ ...formCameras, id: id })
     } else if (select === "delete") {
       deleteCameras(id)
     } else {
       handleAddNewCamera()
     }
   }
+  useEffect(() => console.log(formCameras), [formCameras])
+
   const closeDialog = () => {
     setShowDialog(false);
   };
@@ -450,81 +555,127 @@ const ManajemenKamera = () => {
     const shortYear = year.slice(-2); // Ambil 2 digit terakhir
     return `${shortYear}-${month}-${day}`;
   };
+
+
+  // Array untuk kategori arah
+  const categoryOptions = [
+    { value: '', label: 'Pilih Kategori' },
+    { value: 'timur', label: 'Timur' },
+    { value: 'barat', label: 'Barat' },
+    { value: 'utara', label: 'Utara' },
+    { value: 'selatan', label: 'Selatan' }
+  ];
   return (
     <div className='w-[95%] py-10 mx-auto'>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
+        <ToastContainer />
+
         {/* Add Camera Dialog */}
         {showDialog && (
           <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded-md shadow-md w-[300px] space-y-4">
-              <h2 className="text-lg font-semibold">Tambah Kamera</h2>
+              <h2 className="text-lg font-semibold">
+                {statusDialogCameras ? "Edit Kamera" : "Tambah Kamera"}
+              </h2>
 
-              {/* Input Title */}
+              {/* Input Camera Title */}
               <input
                 type="text"
-                className="input input-bordered w-full"
+                className="input input-bordered w-full border-gray-300"
                 placeholder="Nama Kamera"
-                value={formCameras.title}
+                value={formCameras.camera.title}
                 onChange={(e) =>
-                  setFormCameras({ ...formCameras, title: e.target.value })
+                  setFormCameras({
+                    ...formCameras,
+                    camera: { ...formCameras.camera, title: e.target.value }
+                  })
+                }
+              />
+
+              {/* Input Location Title */}
+              <input
+                type="text"
+                className="input input-bordered w-full border-gray-300"
+                placeholder="Nama Simpang"
+                value={formCameras.name}
+                onChange={(e) =>
+                  setFormCameras({
+                    ...formCameras, name: e.target.value
+                  })
                 }
               />
 
               {/* Input Category */}
-              <input
-                type="text"
-                className="input input-bordered w-full"
-                placeholder="Kategori"
+              <select
+                className="border bg-white text-stone-400 text-sm rounded-md px-3 py-2 w-full border-gray-300"
                 value={formCameras.category}
                 onChange={(e) =>
                   setFormCameras({ ...formCameras, category: e.target.value })
                 }
-              />
+              >
+                <option value="" disabled>Pilih Kategori</option>
+                <option value="timur">Timur</option>
+                <option value="barat">Barat</option>
+                <option value="utara">Utara</option>
+                <option value="selatan">Selatan</option>
+              </select>
 
               {/* Input Latitude */}
               <input
                 type="text"
-                className="input input-bordered w-full"
+                className="input input-bordered w-full border-gray-300"
                 placeholder="Latitude"
-                value={formCameras.latitude}
+                value={formCameras.location.latitude}
                 onChange={(e) =>
-                  setFormCameras({ ...formCameras, latitude: e.target.value })
+                  setFormCameras({
+                    ...formCameras,
+                    location: { ...formCameras.location, latitude: e.target.value }
+                  })
                 }
               />
 
               {/* Input Longitude */}
               <input
                 type="text"
-                className="input input-bordered w-full"
+                className="input input-bordered w-full border-gray-300"
                 placeholder="Longitude"
-                value={formCameras.longitude}
+                value={formCameras.location.longitude}
                 onChange={(e) =>
-                  setFormCameras({ ...formCameras, longitude: e.target.value })
+                  setFormCameras({
+                    ...formCameras,
+                    location: { ...formCameras.location, longitude: e.target.value }
+                  })
                 }
               />
 
               {/* Input Socket Event */}
               <input
                 type="text"
-                className="input input-bordered w-full"
+                className="input input-bordered w-full border-gray-300"
                 placeholder="Socket Event"
-                value={formCameras.socketEvent}
+                value={formCameras.camera.socketEvent}
                 onChange={(e) =>
-                  setFormCameras({ ...formCameras, socketEvent: e.target.value })
+                  setFormCameras({
+                    ...formCameras,
+                    camera: { ...formCameras.camera, socketEvent: e.target.value }
+                  })
                 }
               />
 
-              {/* Toggle Status */}
-              <div className="form-control flex-row items-center gap-2">
+              {/* Toggle Model Detection */}
+              <div className="form-control flex flex-row items-center gap-2">
                 <input
                   type="checkbox"
                   className="toggle"
-                  checked={formCameras.status}
+                  checked={formCameras.model_detection}
                   onChange={(e) =>
-                    setFormCameras({ ...formCameras, status: e.target.checked })
+                    setFormCameras({
+                      ...formCameras,
+                      model_detection: e.target.checked
+                    })
                   }
                 />
-                <label className="label-text">Status Aktif</label>
+                <label className="label-text">Status {formCameras.model_detection ? "Aktif" : "Mati"}</label>
               </div>
 
               {/* Tombol Aksi */}
@@ -538,17 +689,22 @@ const ManajemenKamera = () => {
                     if (!statusDialogCameras) {
                       createCameras(formCameras);
                     } else {
-                      updateCameras(formCameras.id, formCameras)
+                      updateCameras(formCameras.id, formCameras);
                     }
                     setFormCameras({
                       id: 0,
-                      title: "",
+                      name: "",
                       category: "",
-                      status: false,
-                      latitude: "",
-                      longitude: "",
-                      socketEvent: ""
-                    })
+                      model_detection: false,
+                      camera: {
+                        title: "",
+                        socketEvent: ""
+                      },
+                      location: {
+                        latitude: "",
+                        longitude: ""
+                      }
+                    });
                     closeDialog();
                   }}
                 >
@@ -558,6 +714,7 @@ const ManajemenKamera = () => {
             </div>
           </div>
         )}
+
 
         {showDialogKalender && (
           <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
@@ -632,7 +789,7 @@ const ManajemenKamera = () => {
                   } else {
                     // Kirim ke API
                     await createCalendar({
-                      tanggal: kalenderForm.raw,
+                      tanggal: kalenderForm.rawDate,
                       events: kalenderForm.event_type,
                       deskripsi: kalenderForm.description
                     });
@@ -705,11 +862,11 @@ const ManajemenKamera = () => {
                         <tr className="text-center">
                           <th rowSpan={2}>No</th>
                           <th rowSpan={2}>Kamera</th>
-                          <th rowSpan={2}>Tautan</th>
+                          <th rowSpan={2}>Tautan Socket</th>
                           <th colSpan={2}>Koordinat</th>
                           <th rowSpan={2}>Resolusi</th>
                           <th rowSpan={2}>Frame Rate</th>
-                          <th rowSpan={2}>Model Deteksi</th>
+                          <th rowSpan={2}>Status</th>
                           <th rowSpan={2}>Action</th>
                         </tr>
                         <tr>
@@ -718,54 +875,63 @@ const ManajemenKamera = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredBuildings?.map((dataSimpang, i) => (
-                          <tr key={i} className="text-medium font-normal text-center">
-                            <td>{i + 1}</td>
-                            <td>{dataSimpang.name}</td>
-                            <td>-</td>
-                            <td>{dataSimpang.location.latitude}</td>
-                            <td>{dataSimpang.location.longitude}</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>
-                              <input
-                                type="checkbox"
-                                className={`toggle ${dataSimpang.model_detection ? 'checked:toggle-success' : 'toggle-error'} toggle-sm`}
-                                checked={dataSimpang.model_detection}
-                                onChange={(e) => handleToggle(i, e.target.checked)}
-                              />
-                            </td>
-                            <td>
-                              <div className="flex gap-2 justify-center">
-                                <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
-                                  <FaRegEye className="text-yellow-300 text-lg" />
-                                </button>
-                                <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer" onClick={(id) => handleSelectCameras(id, 'edit')}>
-                                  <FaPencil className="text-green-300 text-lg" />
-                                </button>
-                                <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer" onClick={(id) => handleSelectCameras(id, 'delete')}>
-                                  <FaTrashCan className="text-red-300 text-lg" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                        {filteredBuildings?.map((dataSimpang, i) => {
+                          console.log(dataSimpang)
+                          return (
+                            <tr key={i} className="text-medium font-normal text-left">
+                              <td className="text-center">{i + 1}</td>
+                              <td>{dataSimpang.name}</td>
+                              <td>{dataSimpang?.camera?.socketEvent || "-"}</td>
+                              <td>{dataSimpang.location.latitude}</td>
+                              <td>{dataSimpang.location.longitude}</td>
+                              <td>-</td>
+                              <td>-</td>
+                              <td>
+                                <input
+                                  type="checkbox"
+                                  className={`toggle ${dataSimpang.model_detection ? 'checked:toggle-success' : 'toggle-error'} toggle-sm`}
+                                  checked={dataSimpang.model_detection}
+                                  onChange={(e) => handleToggle(i, e.target.checked)}
+                                />
+                              </td>
+                              <td>
+                                <div className="flex gap-2 justify-center">
+                                  {/* <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer">
+                                    <FaRegEye className="text-yellow-300 text-lg" />
+                                  </button> */}
+                                  <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer" onClick={(id) => handleSelectCameras(id, 'edit', dataSimpang)}>
+                                    <FaPencil className="text-green-300 text-lg" />
+                                  </button>
+                                  <button className="p-1 hover:bg-transparent focus:outline-none cursor-pointer" onClick={(id) => handleSelectCameras(id, 'delete')}>
+                                    <FaTrashCan className="text-red-300 text-lg" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-5 w-full">
-                    {filteredBuildings?.map((dataCamera, index) => (
-                      <div className="w-full" key={index}>
-                        <CCTVStream
-                          heightCamera
-                          customLarge={'h-[90px]'}
-                          data={streamData[dataCamera.camera.id] ? streamData[dataCamera.camera.id] : null}
-                          title={dataCamera.name || `CCTV Camera ${index + 1}`}
-                          onClick={() => handleClickCamera(dataCamera)}
-                        />
-                      </div>
-                    ))}
+                    {filteredBuildings?.map((dataCamera, index) => {
+                      const cameraId = dataCamera?.camera?.id;
+                      const stream = cameraId ? streamData[cameraId] : null;
+
+                      return (
+                        <div className="w-full" key={index}>
+                          <CCTVStream
+                            heightCamera
+                            customLarge={'h-[90px]'}
+                            data={stream}
+                            title={dataCamera?.name || `CCTV Camera ${index + 1}`}
+                            onClick={() => handleClickCamera(dataCamera)}
+                          />
+                        </div>
+                      );
+                    })}
+
                   </div>
                 )}
               </div>

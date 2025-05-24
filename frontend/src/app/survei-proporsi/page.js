@@ -15,7 +15,7 @@ const CameraStatus2 = lazy(() => import("@/app/components/cameraStatusVer2"));
 const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 
-import { maps } from '@/lib/apiAccess';
+import { maps } from '@/lib/apiService';
 // import DataSimpang from '@/data/DataSimpang.json';
 
 function SurveiProporsi () {
@@ -29,7 +29,8 @@ function SurveiProporsi () {
   const [socketConnected, setSocketConnected] = useState(false);
   const [activeTitle, setActiveTitle] = useState("Survei");
   const [activeCamera, setActiveCamera] = useState();
-  const [dataCamera, setDataCamera] = useState([])
+  const [dataCamera, setDataCamera] = useState([]);
+  const [activeSimpang, setActiveSimpang] = useState("");
   const [streamData, setStreamData] = useState({
     detection3: null,
     detection4: null,
@@ -42,21 +43,32 @@ function SurveiProporsi () {
       try {
         const res = await maps.getAll()
         const datafetch = res.data.buildings;
-        const dynamicStreamData = {};
-        datafetch.forEach((item) => {
-          dynamicStreamData[item.camera.id] = null;
-        });
-
         setDataCamera(datafetch);
-        setStreamData(dynamicStreamData);
+
         setDataCamera(datafetch)
-        setActiveCamera(datafetch[3].camera.id)
-        setActiveTitle("Survei " + datafetch[3].name)
+        setActiveCamera(datafetch[0].camera.id)
       } catch (err) { console.error(err) }
     }
     fetchSimpang()
   }, [])
-  const activeSimpang = dataCamera.find(b => b.camera.id === activeCamera);
+
+  useEffect(() => {
+    const dynamicStreamData = {};
+    dataCamera.forEach((item) => {
+      if (item.camera && item.camera.id) {
+        dynamicStreamData[item.camera.id] = null;
+      }
+    });
+    setStreamData(dynamicStreamData);
+    const foundCamera = dataCamera.find(b => b.camera?.id === activeCamera);
+    console.log(foundCamera)
+    if (foundCamera) {
+      setActiveSimpang(foundCamera.name)
+      setActiveCamera(foundCamera.camera.id)
+    } else {
+      setActiveCamera(null)
+    }
+  }, [dataCamera])
 
 
   useEffect(() => {
@@ -79,17 +91,21 @@ function SurveiProporsi () {
       setSocketConnected(false);
     });
 
+
     if (dataCamera.length > 0) {
       dataCamera.forEach((building) => {
-        const event = building.camera.socketEvent;
-        socket.on(event, (data) => {
-          setStreamData((prev) => ({
-            ...prev,
-            [building.camera.id]: data,
-          }));
-        });
+        if (building.camera && building.camera.socketEvent) {
+          const event = building.camera.socketEvent;
+          socket.on(event, (data) => {
+            setStreamData((prev) => ({
+              ...prev,
+              [building.camera.id]: data,
+            }));
+          });
+        }
       });
     }
+
 
     return () => {
       socket.disconnect();
@@ -106,6 +122,7 @@ function SurveiProporsi () {
   const handleClick = (building) => {
     setActiveCamera(building.camera.id);
     setActiveTitle("Survei " + building.name);
+    setActiveSimpang(building.name)
   };
 
 
@@ -212,7 +229,7 @@ function SurveiProporsi () {
                   // customLarge={'h-[120px] w-fit'}
                   data={streamData[activeCamera]}
                   title={activeCamera
-                    ? `CCTV Camera  ${activeCamera.slice(-1)} (${activeSimpang?.name ?? ""})`
+                    ? `CCTV Camera  ${activeCamera.slice(-1)} (${activeSimpang ?? ""})`
                     : "CCTV Camera (Loading...)"}
                   onClick={() => setActiveCamera(activeSimpang?.camera.id)}
                 />
