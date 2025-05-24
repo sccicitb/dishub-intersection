@@ -10,7 +10,7 @@ const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const MapComponent = lazy(() => import("@/app/components/map"));
 
-import { maps } from '@/lib/apiAccess'
+import { maps } from '@/lib/apiService'
 // import DataSimpang from '@/data/DataSimpang.json';
 
 function SurveiSimpangPage () {
@@ -19,7 +19,7 @@ function SurveiSimpangPage () {
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
-
+  const [activeSimpang, setActiveSimpang] = useState("")
   const [activeCamera, setActiveCamera] = useState();
   const [activeTitle, setActiveTitle] = useState("Survei ");
   const [vehicleData, setVehicleData] = useState(null);
@@ -36,23 +36,35 @@ function SurveiSimpangPage () {
       try {
         const res = await maps.getAll()
         const datafetch = res.data.buildings;
-        const dynamicStreamData = {};
-        datafetch.forEach((item) => {
-          dynamicStreamData[item.camera.id] = null;
-        });
-        
+
+
         setDataCamera(datafetch);
-        setStreamData(dynamicStreamData);
-        setDataCamera(datafetch)
-        setActiveCamera(datafetch[3].camera.id)
-        setActiveTitle("Survei " + datafetch[3].name)
+        setActiveCamera(datafetch[0].camera.id)
+        // setActiveTitle("Survei " + datafetch[0].name)
       } catch (err) { console.error(err) }
     }
     fetchSimpang()
   }, [])
-  
-  const activeSimpang = dataCamera.find(b => b.camera.id === activeCamera);
-  
+
+  useEffect(() => {
+    const dynamicStreamData = {};
+    dataCamera.forEach((item) => {
+      if (item.camera && item.camera.id) {
+        dynamicStreamData[item.camera.id] = null;
+      }
+    });
+    setStreamData(dynamicStreamData);
+    const foundCamera = dataCamera.find(b => b.camera?.id === activeCamera);
+    console.log(foundCamera)
+    if (foundCamera) {
+      setActiveCamera(foundCamera.camera.id);
+      setActiveSimpang(foundCamera.name)
+    } else {
+      setActiveCamera(null);
+    }
+  }, [dataCamera])
+
+
   useEffect(() => {
     const socket = io('https://sxe-data.layanancerdas.id');
 
@@ -68,15 +80,18 @@ function SurveiSimpangPage () {
 
     if (dataCamera.length > 0) {
       dataCamera.forEach((building) => {
-        const event = building.camera.socketEvent;
-        socket.on(event, (data) => {
-          setStreamData((prev) => ({
-            ...prev,
-            [building.camera.id]: data,
-          }));
-        });
+        if (building.camera && building.camera.socketEvent) {
+          const event = building.camera.socketEvent;
+          socket.on(event, (data) => {
+            setStreamData((prev) => ({
+              ...prev,
+              [building.camera.id]: data,
+            }));
+          });
+        }
       });
     }
+
 
     return () => {
       socket.disconnect();
@@ -93,6 +108,7 @@ function SurveiSimpangPage () {
   const handleClick = (building) => {
     setActiveCamera(building.camera.id);
     setActiveTitle("Survei " + building.name);
+    setActiveSimpang(building.name)
   };
 
   return (
@@ -103,12 +119,12 @@ function SurveiSimpangPage () {
         <div className="w-[95%] m-auto">
           <div className="lg:grid lg:grid-cols-3 flex flex-col lg:items-center lg:place-items-center gap-5 py-10">
             <RecentVehicle customCSS={'h-[320px]'} />
-              <div className="lg:col-span-2 h-fit items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
-                <div className="w-[60%]">              
-                  <CCTVStream
+            <div className="lg:col-span-2 h-fit items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
+              <div className="w-[60%]">
+                <CCTVStream
                   data={streamData[activeCamera]}
                   large
-                  title={activeCamera ? `CCTV Camera ${activeCamera.slice(-1) } (${activeSimpang?.name})` : `CCTV Camera (Loading...)`}
+                  title={activeCamera ? `CCTV Camera ${activeCamera.slice(-1)} (${activeSimpang})` : `CCTV Camera (Loading...)`}
                 />
               </div>
             </div>

@@ -41,3 +41,7 @@ export const calendar = {
   updateById: (id, data) => updateRequest(`/holidays/${id}`, data),
   deleteById: (id) => deleteRequest(`/holidays/${id}`)
 };
+
+export const logCamera = {
+  getById: (id) => getRequest(`/cameras/${id}/status-log`)
+}

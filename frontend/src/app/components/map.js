@@ -53,6 +53,11 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
     };
     // setLokasiSimpang(simpang);
     fetchLocation();
+
+    setKeymap(mapStyles[theme]);
+  }, []);
+
+  useEffect(() => {
     const initialBuildings = lokasiSimpang || [];
 
     if (initialBuildings.length > 0) {
@@ -74,9 +79,7 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
       }, {});
       setCategorizedBuildings(grouped);
     }
-
-    setKeymap(mapStyles[theme]);
-  }, []);
+  }, [lokasiSimpang])
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -176,7 +179,7 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
 
   return (
     <div>
-      <div className="p-5 text-xl font-semibold"> 
+      <div className="p-5 text-xl font-semibold">
         {title || null}
       </div>
       <div className="w-full">
@@ -257,6 +260,8 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
                   )
                 )}
               </Dropdown>
+              
+              <button className="btn btn-md rounded-xl shadow-xs capitalize" onClick={() => fitBoundsTosimpang()}>reset view</button>
             </div>
           </div>
         </div>
@@ -289,9 +294,8 @@ const Dropdown = ({ isOpen, toggleOpen, label, children }) => (
 
 const DropdownItem = ({ label, onClick, icon, bold = false }) => (
   <div
-    className={`w-fit py-2 px-5 m-2 rounded-xl cursor-pointer hover:bg-base-200 ${
-      bold ? "font-bold text-md bg-base-200" : "font-semibold text-md"
-    }`}
+    className={`w-fit py-2 px-5 m-2 rounded-xl cursor-pointer hover:bg-base-200 ${bold ? "font-bold text-md bg-base-200" : "font-semibold text-md"
+      }`}
     onClick={onClick}
   >
     <div className="flex items-center gap-3">

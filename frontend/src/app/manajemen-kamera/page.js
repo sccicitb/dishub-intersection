@@ -404,9 +404,6 @@ const ManajemenKamera = () => {
     setKalenderForm({ id: data.id, date: formatTanggal(data.tanggal), rawDate: formatToDateInput(data.tanggal), event_type: data.events, description: data.keterangan })
     setStatusDialogKalender(false)
   }
-  useEffect(() => {
-    console.log("Updated kalenderForm:", kalenderForm);
-  }, [kalenderForm]);
 
   const formatToDateInput = (tanggal) => {
     const bulanMap = {
@@ -626,16 +623,16 @@ const ManajemenKamera = () => {
                   }
 
                   if (!statusDialogKalender) {
-                    updateCalendar({
+                    await updateCalendar({
                       id: kalenderForm.id,
-                      tanggal: kalenderForm.date,
+                      tanggal: kalenderForm.rawDate,
                       events: kalenderForm.event_type,
                       deskripsi: kalenderForm.description
                     })
                   } else {
                     // Kirim ke API
                     await createCalendar({
-                      tanggal: kalenderForm.date,
+                      tanggal: kalenderForm.raw,
                       events: kalenderForm.event_type,
                       deskripsi: kalenderForm.description
                     });
@@ -644,7 +641,7 @@ const ManajemenKamera = () => {
                   // Tutup dialog dan reset form
                   setShowDialogKalender(false);
                   setStatusDialogKalender(false)
-                  setKalenderForm({ id: 0, date: "", event_type: "", description: "" });
+                  setKalenderForm({ id: 0, date: "", rawDate: "", event_type: "", description: "" });
 
                   // Refresh data kalender
                   fetchCalendar(currentPage, itemsPerPage);

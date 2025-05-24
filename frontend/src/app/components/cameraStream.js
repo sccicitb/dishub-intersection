@@ -4,13 +4,15 @@ import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import CCTVStream from '../components/cctvStream';
 import CameraStatusTimeline from "@/app/components/cameraStatusTime";
-import { maps } from '@/lib/apiAccess';
+import { maps, logCamera } from '@/lib/apiService';
 
 const CameraStream = () => {
   const [socketConnected, setSocketConnected] = useState(false);
   const [streamData, setStreamData] = useState({});
   const [activeCamera, setActiveCamera] = useState('');
   const [cameras, setCameras] = useState([]);
+  const [cameraLogs, setCameraLogs] = useState({});
+
 
   useEffect(() => {
     const fetchCameras = async () => {
@@ -56,14 +58,37 @@ const CameraStream = () => {
     };
   }, [cameras]);
 
-  const cameraStatusData = [
-    { start: new Date('2023-01-01T00:00:00').getTime(), end: new Date('2023-01-01T06:00:00').getTime(), status: true },
-    { start: new Date('2023-01-01T06:00:00').getTime(), end: new Date('2023-01-01T08:00:00').getTime(), status: false },
-    { start: new Date('2023-01-01T08:00:00').getTime(), end: new Date('2023-01-01T12:00:00').getTime(), status: true },
-    { start: new Date('2023-01-01T12:00:00').getTime(), end: new Date('2023-01-01T14:00:00').getTime(), status: false },
-    { start: new Date('2023-01-01T14:00:00').getTime(), end: new Date('2023-01-01T18:00:00').getTime(), status: true },
-    { start: new Date('2023-01-01T18:00:00').getTime(), end: new Date('2023-01-01T24:00:00').getTime(), status: null }
-  ];
+  const getLogcamera = async (id) => {
+    try {
+      const res = await logCamera.getById(id);
+      // console.log(JSON.stringify(res))
+      // Asumsikan hasilnya dalam format array objek seperti: { start: ..., end: ..., status: ... }
+      let logs = Array.isArray(res.data.logs) ? res.data.logs : []; 
+      // const logs = res.data || [];
+      
+      setCameraLogs(prev => ({
+        ...prev,
+        [id]: logs
+      }));
+      // console.log("Logs untuk kamera ID", id, logs);
+    } catch (err) {
+      console.error("Gagal fetch data: ", err);
+    }
+  };
+
+  useEffect(() => {
+    if (cameras.length > 0) {
+      cameras.forEach(cam => {
+        if (cam?.id) {
+          getLogcamera(cam.id);
+        }
+      });
+    }
+  }, [cameras]);
+
+  useEffect(()=>{
+      console.log("Logs untuk kamera ID", cameraLogs);
+  },[cameraLogs])
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-5">
@@ -75,7 +100,7 @@ const CameraStream = () => {
             large
             onClick={() => setActiveCamera(cam.camera.id)}
           />
-          <CameraStatusTimeline cameraStatusData={cameraStatusData} />
+          <CameraStatusTimeline cameraStatusData={cameraLogs[cam.id] || []} />
         </div>
       ))}
     </div>
