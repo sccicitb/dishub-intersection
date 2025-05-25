@@ -1,0 +1,164 @@
+{
+  "surveyData": [
+    {
+      "direction": "U",
+      "rows": [
+        {
+          "type": "BKi / BKIJT",
+          "mp": { "terlindung": 49, "terlawan": 49 },
+          "ks": { "terlindung": 7, "terlawan": 9 },
+          "sm": { "terlindung": 19, "terlawan": 4, "smpTerlindung": 4, "smpTerlawan": 8 },
+          "total": { "terlindung": 75, "terlawan": 62, "smpTerlindung": 62, "smpTerlawan": 66 },
+          "ktb": { "rasio": 0.05, "count": 0 },
+          "rktb": 4
+        },
+        {
+          "type": "Lurus",
+          "mp": { "terlindung": 680, "terlawan": 680 },
+          "ks": { "terlindung": 91, "terlawan": 118 },
+          "sm": { "terlindung": 263, "terlawan": 53, "smpTerlindung": 53, "smpTerlawan": 105 },
+          "total": { "terlindung": 1034, "terlawan": 851, "smpTerlindung": 851, "smpTerlawan": 903 },
+          "ktb": { "rasio": 0.69, "count": 4 },
+          "rktb": null
+        },
+        {
+          "type": "BKa",
+          "mp": { "terlindung": 257, "terlawan": 257 },
+          "ks": { "terlindung": 34, "terlawan": 44 },
+          "sm": { "terlindung": 99, "terlawan": 20, "smpTerlindung": 20, "smpTerlawan": 40 },
+          "total": { "terlindung": 390, "terlawan": 321, "smpTerlindung": 321, "smpTerlawan": 341 },
+          "ktb": { "rasio": 0.26, "count": 0 },
+          "rktb": null
+        }
+      ],
+      "subtotal": {
+        "mp": { "terlindung": 986, "terlawan": 986 },
+        "ks": { "terlindung": 132, "terlawan": 171 },
+        "sm": { "terlindung": 381, "terlawan": 77, "smpTerlindung": 77, "smpTerlawan": 153 },
+        "total": { "terlindung": 1499, "terlawan": 1234, "smpTerlindung": 1234, "smpTerlawan": 1310 },
+        "ktb": 4,
+        "rktb": 0.003
+      }
+    },
+    {
+      "direction": "S",
+      "rows": [
+        {
+          "type": "BKi / BKIJT",
+          "mp": { "terlindung": 152, "terlawan": 152 },
+          "ks": { "terlindung": 6, "terlawan": 8 },
+          "sm": { "terlindung": 35, "terlawan": 7, "smpTerlindung": 7, "smpTerlawan": 14 },
+          "total": { "terlindung": 193, "terlawan": 167, "smpTerlindung": 167, "smpTerlawan": 174 },
+          "ktb": { "rasio": 0.11, "count": 2 },
+          "rktb": null
+        },
+        {
+          "type": "Lurus",
+          "mp": { "terlindung": 627, "terlawan": 627 },
+          "ks": { "terlindung": 24, "terlawan": 31 },
+          "sm": { "terlindung": 144, "terlawan": 29, "smpTerlindung": 29, "smpTerlawan": 58 },
+          "total": { "terlindung": 795, "terlawan": 687, "smpTerlindung": 687, "smpTerlawan": 716 },
+          "ktb": { "rasio": 0.47, "count": 3 },
+          "rktb": null
+        },
+        {
+          "type": "BKa",
+          "mp": { "terlindung": 554, "terlawan": 554 },
+          "ks": { "terlindung": 21, "terlawan": 27 },
+          "sm": { "terlindung": 127, "terlawan": 25, "smpTerlindung": 25, "smpTerlawan": 51 },
+          "total": { "terlindung": 702, "terlawan": 606, "smpTerlindung": 606, "smpTerlawan": 632 },
+          "ktb": { "rasio": 0.42, "count": 2 },
+          "rktb": null
+        }
+      ],
+      "subtotal": {
+        "mp": { "terlindung": 1333, "terlawan": 1333 },
+        "ks": { "terlindung": 51, "terlawan": 66 },
+        "sm": { "terlindung": 306, "terlawan": 61, "smpTerlindung": 61, "smpTerlawan": 123 },
+        "total": { "terlindung": 1690, "terlawan": 1460, "smpTerlindung": 1460, "smpTerlawan": 1522 },
+        "ktb": 7,
+        "rktb": 0.004
+      }
+    },
+    {
+      "direction": "T",
+      "rows": [
+        {
+          "type": "BKi / BKIJT",
+          "mp": { "terlindung": 428, "terlawan": 428 },
+          "ks": { "terlindung": 25, "terlawan": 33 },
+          "sm": { "terlindung": 224, "terlawan": 45, "smpTerlindung": 45, "smpTerlawan": 90 },
+          "total": { "terlindung": 677, "terlawan": 506, "smpTerlindung": 506, "smpTerlawan": 551 },
+          "ktb": { "rasio": 0.43, "count": 10 },
+          "rktb": null
+        },
+        {
+          "type": "Lurus",
+          "mp": { "terlindung": 550, "terlawan": 550 },
+          "ks": { "terlindung": 32, "terlawan": 42 },
+          "sm": { "terlindung": 288, "terlawan": 58, "smpTerlindung": 58, "smpTerlawan": 115 },
+          "total": { "terlindung": 870, "terlawan": 650, "smpTerlindung": 650, "smpTerlawan": 707 },
+          "ktb": { "rasio": 0.55, "count": 6 },
+          "rktb": null
+        },
+        {
+          "type": "BKa",
+          "mp": { "terlindung": 21, "terlawan": 21 },
+          "ks": { "terlindung": 1, "terlawan": 1 },
+          "sm": { "terlindung": 11, "terlawan": 2, "smpTerlindung": 2, "smpTerlawan": 4 },
+          "total": { "terlindung": 33, "terlawan": 24, "smpTerlindung": 24, "smpTerlawan": 26 },
+          "ktb": { "rasio": 0.02, "count": 1 },
+          "rktb": null
+        }
+      ],
+      "subtotal": {
+        "mp": { "terlindung": 999, "terlawan": 999 },
+        "ks": { "terlindung": 58, "terlawan": 76 },
+        "sm": { "terlindung": 523, "terlawan": 105, "smpTerlindung": 105, "smpTerlawan": 209 },
+        "total": { "terlindung": 1580, "terlawan": 1180, "smpTerlindung": 1180, "smpTerlawan": 1284 },
+        "ktb": 17,
+        "rktb": 0.011
+      }
+    },
+    {
+      "direction": "B",
+      "rows": [
+        {
+          "type": "BKi / BKIJT",
+          "mp": { "terlindung": 102, "terlawan": 102 },
+          "ks": { "terlindung": 23, "terlawan": 30 },
+          "sm": { "terlindung": 62, "terlawan": 12, "smpTerlindung": 12, "smpTerlawan": 25 },
+          "total": { "terlindung": 187, "terlawan": 144, "smpTerlindung": 144, "smpTerlawan": 157 },
+          "ktb": { "rasio": 0.19, "count": 2 },
+          "rktb": null
+        },
+        {
+          "type": "Lurus",
+          "mp": { "terlindung": 321, "terlawan": 321 },
+          "ks": { "terlindung": 71, "terlawan": 92 },
+          "sm": { "terlindung": 194, "terlawan": 39, "smpTerlindung": 39, "smpTerlawan": 78 },
+          "total": { "terlindung": 586, "terlawan": 452, "smpTerlindung": 452, "smpTerlawan": 491 },
+          "ktb": { "rasio": 0.58, "count": 6 },
+          "rktb": null
+        },
+        {
+          "type": "BKa",
+          "mp": { "terlindung": 127, "terlawan": 127 },
+          "ks": { "terlindung": 28, "terlawan": 36 },
+          "sm": { "terlindung": 76, "terlawan": 15, "smpTerlindung": 15, "smpTerlawan": 30 },
+          "total": { "terlindung": 231, "terlawan": 178, "smpTerlindung": 178, "smpTerlawan": 193 },
+          "ktb": { "rasio": 0.23, "count": 1 },
+          "rktb": null
+        }
+      ],
+      "subtotal": {
+        "mp": { "terlindung": 550, "terlawan": 550 },
+        "ks": { "terlindung": 122, "terlawan": 158 },
+        "sm": { "terlindung": 332, "terlawan": 66, "smpTerlindung": 66, "smpTerlawan": 133 },
+        "total": { "terlindung": 1004, "terlawan": 774, "smpTerlindung": 774, "smpTerlawan": 841 },
+        "ktb": 9,
+        "rktb": 0.009
+      }
+    }
+  ]
+}

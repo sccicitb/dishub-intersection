@@ -28,5 +28,10 @@
     "name": "Manajemen Kamera",
     "url": "/manajemen-kamera",
     "icon": "RiCamera3Line"
+  },
+  {
+    "name": "Survei Kinerja",
+    "url": "/survei-kinerja",
+    "icon": "RiProgress6Line"
   }
 ]
