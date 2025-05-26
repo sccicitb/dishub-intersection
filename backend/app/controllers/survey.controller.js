@@ -6,7 +6,7 @@ const { getPeriodsAndSlots } = require('../helpers/arus');
 const surveyModel = require('../models/survey.model');
 const mapsModel = require('../models/maps.model');
 
-const getHourlySummary = async (req, res) => {
+const getVehicleSummaryPer15Min = async (req, res) => {
   try {
     const filters = {
       cameraId: req.query.camera_id,
@@ -63,4 +63,4 @@ const exportVehicleData = async (req, res) => {
   }
 };
 
-module.exports = { getHourlySummary, exportVehicleData };
+module.exports = { getVehicleSummaryPer15Min, exportVehicleData };

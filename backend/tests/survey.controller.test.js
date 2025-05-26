@@ -13,7 +13,7 @@ jest.mock('fs');
 
 jest.spyOn(console, 'error').mockImplementation(() => {});
 
-describe('Controller: getHourlySummary', () => {
+describe('Controller: getVehicleSummaryPer15Min', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -43,7 +43,7 @@ describe('Controller: getHourlySummary', () => {
     const mockData = { vehicleData: [{ period: 'Pagi', timeSlots: [] }] };
     surveyModel.getVehicleDataGrouped.mockResolvedValueOnce(mockData);
 
-    await surveyController.getHourlySummary(req, res);
+    await surveyController.getVehicleSummaryPer15Min(req, res);
 
     expect(fs.readFileSync).toHaveBeenCalled();
     expect(surveyModel.getVehicleDataGrouped).toHaveBeenCalledWith(
@@ -69,7 +69,7 @@ describe('Controller: getHourlySummary', () => {
     const mockData = { vehicleData: [] };
     surveyModel.getVehicleDataGrouped.mockResolvedValueOnce(mockData);
 
-    await surveyController.getHourlySummary(req, res);
+    await surveyController.getVehicleSummaryPer15Min(req, res);
 
     expect(surveyModel.getVehicleDataGrouped).toHaveBeenCalledWith(
       { cameraId: undefined, approach: undefined, direction: undefined, classificationType: 'luar_kota' },
@@ -83,7 +83,7 @@ describe('Controller: getHourlySummary', () => {
     const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
 
     fs.readFileSync.mockImplementationOnce(() => { throw new Error('File error'); });
-    await surveyController.getHourlySummary(req, res);
+    await surveyController.getVehicleSummaryPer15Min(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ message: 'Failed to fetch vehicle data' });
@@ -106,7 +106,7 @@ describe('Controller: getHourlySummary', () => {
     const mockData = { vehicleData: [] };
     surveyModel.getVehicleDataGrouped.mockResolvedValueOnce(mockData);
 
-    await surveyController.getHourlySummary(req, res);
+    await surveyController.getVehicleSummaryPer15Min(req, res);
     expect(surveyModel.getVehicleDataGrouped).toHaveBeenCalledWith(
       expect.objectContaining({ date: '2025-05-28' }),
       expect.any(Array)
