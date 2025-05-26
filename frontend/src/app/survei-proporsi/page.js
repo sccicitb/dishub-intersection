@@ -278,13 +278,13 @@ function SurveiProporsi () {
             <div className="min-w-[450px] flex flex-col w-fit bg-[#BCC3E1] mx-auto font-semibold">
               <div className="flex justify-center">
                 <div></div>
-                <GridVertical position={true} data={intersectionData.north} />
+                <GridVertical position={true} data={intersectionData.north} category />
                 <div></div>
               </div>
 
               <div className="flex justify-center">
                 <div className="">
-                  <GridHorizontal position={true} data={intersectionData.west} />
+                  <GridHorizontal position={true} data={intersectionData.west} category />
                 </div>
                 <div className="w-40 text-center items-center flex font-medium text-md bg-stone-400">
                   <div className="m-auto">
@@ -292,13 +292,13 @@ function SurveiProporsi () {
                   </div>
                 </div>
                 <div className="">
-                  <GridHorizontal position={false} data={intersectionData.east} />
+                  <GridHorizontal position={false} data={intersectionData.east} category />
                 </div>
               </div>
 
               <div className="flex justify-center">
                 <div></div>
-                <GridVertical position={false} data={intersectionData.south} />
+                <GridVertical position={false} data={intersectionData.south} category />
                 <div></div>
               </div>
             </div>
