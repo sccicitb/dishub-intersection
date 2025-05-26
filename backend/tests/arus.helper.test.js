@@ -93,31 +93,33 @@ describe('countArus', () => {
 });
 
 describe('getPeriodsAndSlots', () => {
-  it('should generate periods and 15-min slots, aggregate correctly', () => {
-    // Only 1 row in 'Pagi', should appear in the correct slot
+  it('should generate periods and 15-min slots (default)', () => {
     const arusRows = [
-      { waktu: new Date('2023-05-12T06:01:00'), SM: 5, MP: 3, AUP: 2, TR:0, BS:0, TS:0, BB:0, TB:0, GANDEG:0, KTB:0 }
+      { waktu: new Date('2023-05-12T06:01:00'), SM: 5, MP: 3, AUP: 2 }
     ];
     const periods = getPeriodsAndSlots(arusRows);
-
-    // Find the Pagi period
     const pagi = periods.find(p => p.name === 'Pagi');
-    expect(pagi).toBeDefined();
-    // The first slot (06:00 - 06:15) should have the data
-    expect(pagi.timeSlots[0].status).toBe(1);
-    expect(pagi.timeSlots[0].data.sm).toBe(5);
-    expect(pagi.timeSlots[0].data.mp).toBe(3);
-    expect(pagi.timeSlots[0].data.aup).toBe(2);
-    expect(pagi.timeSlots[0].data.total).toBe(10);
+    expect(pagi.timeSlots[0].time).toBe('06:00 - 06:15');
   });
 
-  it('should have status 0 and total 0 if slotData is empty', () => {
-    const periods = getPeriodsAndSlots([]);
-    periods.forEach(period => {
-      period.timeSlots.forEach(slot => {
-        expect(slot.status === 0 || slot.status === 1).toBeTruthy();
-        expect(typeof slot.data.total).toBe('number');
-      });
-    });
+  it('should generate 1-hour interval slots when interval is 1h', () => {
+    const arusRows = [
+      { waktu: new Date('2023-05-12T06:01:00'), SM: 1, MP: 2, AUP: 3 },
+      { waktu: new Date('2023-05-12T06:59:00'), SM: 4, MP: 1, AUP: 2 }
+    ];
+    const periods = getPeriodsAndSlots(arusRows, '1h');
+    const pagi = periods.find(p => p.name === 'Pagi');
+    expect(pagi.timeSlots[0].time).toBe('06:00 - 07:00');
+    expect(pagi.timeSlots[0].data.sm).toBe(5); // 1+4
+    expect(pagi.timeSlots[0].data.total).toBe(13); // 1+4+2+1+3+2 = 13
+  });
+
+  it('should handle unknown/invalid interval by falling back to 15min', () => {
+    const arusRows = [
+      { waktu: new Date('2023-05-12T06:01:00'), SM: 2, MP: 3, AUP: 1 }
+    ];
+    const periods = getPeriodsAndSlots(arusRows, 'notavalidinterval');
+    const pagi = periods.find(p => p.name === 'Pagi');
+    expect(pagi.timeSlots[0].time).toBe('06:00 - 06:15');
   });
 });

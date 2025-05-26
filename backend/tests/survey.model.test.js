@@ -1,131 +1,106 @@
 // File : survey.model.test.js
 const surveyModel = require('../app/models/survey.model');
 const db = require('../app/config/db');
+const arusHelper = require('../app/helpers/arus');
 
-// Mock DB connection
 jest.mock('../app/config/db');
+jest.mock('../app/helpers/arus');
 
-describe('Unit Test: getVehicleDataGrouped', () => {
+describe('Unit Test: getVehicleDataGrouped with interval', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should group and sum vehicle data per slot and period', async () => {
-    db.query.mockResolvedValueOnce([[
+  it('should group vehicle data per 15min slot by default', async () => {
+    db.query.mockResolvedValueOnce([
+      [
+        { waktu: '2025-05-26T06:00:00', SM: 5, MP: 3, AUP: 2 },
+        { waktu: '2025-05-26T06:15:00', SM: 6, MP: 4, AUP: 1 }
+      ]
+    ]);
+    arusHelper.getPeriodsAndSlots.mockReturnValue([
       {
-        waktu: '2025-05-26T05:04:00', // Pagi, slot 1 ("05:00 - 05:15")
-        SM: 5,
-        MP: 3,
-        AUP: 2
-      },
-      {
-        waktu: '2025-05-26T05:16:00', // Pagi, slot 2 ("05:15 - 05:30")
-        SM: 6,
-        MP: 4,
-        AUP: 1
-      },
-      {
-        waktu: '2025-05-26T12:03:00', // Siang, slot 1 ("12:00 - 12:15")
-        SM: 2,
-        MP: 1,
-        AUP: 1
+        name: 'Pagi',
+        timeSlots: [
+          { time: '06:00 - 06:15', status: 1, data: { sm: 5, mp: 3, aup: 2, total: 10 } },
+          { time: '06:15 - 06:30', status: 1, data: { sm: 6, mp: 4, aup: 1, total: 11 } }
+        ]
       }
-    ]]);
+    ]);
 
-    const filters = {
-      cameraId: null,
-      approach: null,
-      direction: null
-    };
+    const filters = { cameraId: null, approach: null, direction: null, date: '2025-05-26' };
     const includedSubCodes = ['SM', 'MP', 'AUP'];
     const result = await surveyModel.getVehicleDataGrouped(filters, includedSubCodes);
-
-    expect(result).toHaveProperty('vehicleData');
-    expect(Array.isArray(result.vehicleData)).toBe(true);
-
-    const pagiPeriod = result.vehicleData.find(p => p.period === 'Pagi');
-    const siangPeriod = result.vehicleData.find(p => p.period === 'Siang');
-
-    expect(pagiPeriod).toBeDefined();
-    expect(siangPeriod).toBeDefined();
-
-    expect(pagiPeriod.timeSlots.length).toBe(2); // 2 slot di pagi
-    expect(siangPeriod.timeSlots.length).toBe(1);
-
-    expect(pagiPeriod.timeSlots[0].time).toBe('05:00 - 05:15');
-    expect(pagiPeriod.timeSlots[0].data.total).toBe(10); // 5+3+2
-    expect(pagiPeriod.timeSlots[1].time).toBe('05:15 - 05:30');
-    expect(pagiPeriod.timeSlots[1].data.total).toBe(11); // 6+4+1
-
-    expect(siangPeriod.timeSlots[0].time).toBe('12:00 - 12:15');
-    expect(siangPeriod.timeSlots[0].data.total).toBe(4); // 2+1+1
-
-    expect(pagiPeriod.timeSlots[0].data.SM).toBe(5);
-    expect(pagiPeriod.timeSlots[1].data.MP).toBe(4);
-    expect(siangPeriod.timeSlots[0].data.AUP).toBe(1);
+    expect(arusHelper.getPeriodsAndSlots).toHaveBeenCalledWith(expect.any(Array), '15min');
+    expect(result.vehicleData[0].timeSlots[0].time).toBe('06:00 - 06:15');
+    expect(result.vehicleData[0].timeSlots[1].time).toBe('06:15 - 06:30');
   });
 
-  it('should return empty array if no matching rows', async () => {
+  it('should group vehicle data per 1h slot when interval=1h', async () => {
+    db.query.mockResolvedValueOnce([
+      [
+        { waktu: '2025-05-26T06:01:00', SM: 2, MP: 2, AUP: 1 },
+        { waktu: '2025-05-26T06:55:00', SM: 4, MP: 3, AUP: 2 }
+      ]
+    ]);
+    arusHelper.getPeriodsAndSlots.mockReturnValue([
+      {
+        name: 'Pagi',
+        timeSlots: [
+          { time: '06:00 - 07:00', status: 1, data: { sm: 6, mp: 5, aup: 3, total: 14 } }
+        ]
+      }
+    ]);
+    const filters = { cameraId: 1, approach: 'utara', direction: 'lurus', date: '2025-05-26' };
+    const includedSubCodes = ['SM', 'MP', 'AUP'];
+    const result = await surveyModel.getVehicleDataGrouped(filters, includedSubCodes, '1h');
+    expect(arusHelper.getPeriodsAndSlots).toHaveBeenCalledWith(expect.any(Array), '1h');
+    expect(result.vehicleData[0].timeSlots[0].time).toBe('06:00 - 07:00');
+    expect(result.vehicleData[0].timeSlots[0].data.sm).toBe(6);
+    expect(result.vehicleData[0].timeSlots[0].data.total).toBe(14);
+  });
+
+  it('should fallback to 15min if interval is missing/unknown', async () => {
     db.query.mockResolvedValueOnce([[]]);
-    const result = await surveyModel.getVehicleDataGrouped({}, ['SM', 'MP']);
+    arusHelper.getPeriodsAndSlots.mockReturnValue([]);
+
+    const result = await surveyModel.getVehicleDataGrouped({}, ['SM', 'MP', 'AUP']);
+    expect(arusHelper.getPeriodsAndSlots).toHaveBeenCalledWith(expect.any(Array), '15min');
     expect(result).toEqual({ vehicleData: [] });
   });
 
-  it('should accumulate data if multiple rows in the same slot', async () => {
-    db.query.mockResolvedValueOnce([[
-      {
-        waktu: '2025-05-26T05:03:00', // "05:00 - 05:15"
-        SM: 2,
-        MP: 1,
-        AUP: 1
-      },
-      {
-        waktu: '2025-05-26T05:10:00', // same slot "05:00 - 05:15"
-        SM: 3,
-        MP: 2,
-        AUP: 1
-      }
-    ]]);
-    const result = await surveyModel.getVehicleDataGrouped({}, ['SM', 'MP', 'AUP']);
-    const pagiPeriod = result.vehicleData.find(p => p.period === 'Pagi');
-    expect(pagiPeriod).toBeDefined();
-    expect(pagiPeriod.timeSlots.length).toBe(1);
-    expect(pagiPeriod.timeSlots[0].data.total).toBe(10); // (2+3)+(1+2)+(1+1) = 5+3+2 = 10
-    expect(pagiPeriod.timeSlots[0].data.SM).toBe(5);
-    expect(pagiPeriod.timeSlots[0].data.MP).toBe(3);
-    expect(pagiPeriod.timeSlots[0].data.AUP).toBe(2);
-  });
-
-  it('should correctly apply filters in query (cameraId, approach, direction)', async () => {
+  it('should pass custom interval to helper if given as 60min', async () => {
     db.query.mockResolvedValueOnce([[]]);
-    const filters = {
-      cameraId: 1,
-      approach: 'utara',
-      direction: 'lurus'
-    };
-    await surveyModel.getVehicleDataGrouped(filters, ['SM', 'MP']);
-    const lastCall = db.query.mock.calls[0];
-    expect(lastCall[1][0]).toBe(1);
-    expect(lastCall[1][1]).toBe('utara');
-    expect(lastCall[1][2]).toBe('lurus');
-    expect(typeof lastCall[1][3]).toBe('string'); // start
-    expect(typeof lastCall[1][4]).toBe('string'); // end
+    arusHelper.getPeriodsAndSlots.mockReturnValue([]);
+
+    await surveyModel.getVehicleDataGrouped({}, ['SM', 'MP'], '60min');
+    expect(arusHelper.getPeriodsAndSlots).toHaveBeenCalledWith(expect.any(Array), '60min');
   });
 
-  it('should skip rows not in defined period', async () => {
-    db.query.mockResolvedValueOnce([[
-      {
-        waktu: '2025-05-26T23:55:00',
-        SM: 1,
-        MP: 2,
-        AUP: 3
-      }
-    ]]);
-    const result = await surveyModel.getVehicleDataGrouped({}, ['SM', 'MP', 'AUP']);
-    const malamPeriod = result.vehicleData.find(p => p.period === 'Malam');
-    expect(malamPeriod).toBeDefined();
-    expect(malamPeriod.timeSlots[0].data.total).toBe(6); // 1+2+3
-    expect(malamPeriod.timeSlots[0].time).toBe('23:45 - 24:00');
+  it('should pass correct params to DB query', async () => {
+    db.query.mockResolvedValueOnce([[]]);
+    arusHelper.getPeriodsAndSlots.mockReturnValue([]);
+
+    const filters = {
+      cameraId: 3,
+      approach: 'utara',
+      direction: 'lurus',
+      date: '2025-05-26'
+    };
+    await surveyModel.getVehicleDataGrouped(filters, ['SM', 'MP', 'AUP'], '1h');
+    const callArgs = db.query.mock.calls[0];
+    expect(callArgs[1][0]).toBe(3);
+    expect(callArgs[1][1]).toBe('utara');
+    expect(callArgs[1][2]).toBe('lurus');
+    expect(callArgs[1][3]).toBe('2025-05-26 00:00:00');
+    expect(callArgs[1][4]).toBe('2025-05-26 23:59:59');
+  });
+
+  it('should return empty vehicleData if DB returns no rows', async () => {
+    db.query.mockResolvedValueOnce([[]]);
+    arusHelper.getPeriodsAndSlots.mockReturnValue([]);
+    const result = await surveyModel.getVehicleDataGrouped({}, ['SM', 'MP']);
+    expect(result).toEqual({ vehicleData: [] });
   });
 });
 
