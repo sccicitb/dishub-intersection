@@ -2,9 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const surveyController = require('../app/controllers/survey.controller');
 const surveyModel = require('../app/models/survey.model');
+const mapsModel = require('../app/models/maps.model');
+const arusHelper = require('../app/helpers/arus');
 
-// Mock model dan fs agar tidak benar-benar query db/file system
+// Mock model dan helper agar tidak benar-benar query db/file system
 jest.mock('../app/models/survey.model');
+jest.mock('../app/models/maps.model');
+jest.mock('../app/helpers/arus');
 jest.mock('fs');
 
 jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -107,5 +111,115 @@ describe('Controller: getHourlySummary', () => {
       expect.objectContaining({ date: '2025-05-28' }),
       expect.any(Array)
     );
+  });
+});
+
+describe('Controller: exportVehicleData', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should return JSON with correct surveyInfo and periods', async () => {
+    const req = {
+      query: {
+        simpang_id: '1',
+        date: '2023-05-12'
+      }
+    };
+    const res = {
+      json: jest.fn(),
+      status: jest.fn().mockReturnThis()
+    };
+
+    // Mock return value for mapsModel
+    mapsModel.getSimpangById.mockResolvedValue({
+      id: 1,
+      kategori: 'Utara'
+    });
+
+    // Mock return value for surveyModel
+    surveyModel.getArusBySimpangDate.mockResolvedValue([
+      // bisa diisi row dummy jika helper benar-benar butuh
+    ]);
+
+    // Mock return value for periods/slots
+    arusHelper.getPeriodsAndSlots.mockReturnValue([
+      {
+        name: 'Pagi',
+        timeSlots: [
+          {
+            time: '06:00 - 06:15',
+            status: 1,
+            data: {
+              sm: 10, mp: 5, aup: 1, trMp: 5, tr: 0, bs: 0, ts: 0,
+              bb: 0, tb: 0, gandengSemitrailer: 0, ktb: 0, total: 16
+            }
+          }
+        ]
+      }
+    ]);
+
+    await surveyController.exportVehicleData(req, res);
+
+    expect(mapsModel.getSimpangById).toHaveBeenCalledWith('1');
+    expect(surveyModel.getArusBySimpangDate).toHaveBeenCalledWith('1', '2023-05-12');
+    expect(arusHelper.getPeriodsAndSlots).toHaveBeenCalled();
+
+    expect(res.json).toHaveBeenCalledWith({
+      surveyInfo: {
+        simpangCode: 1,
+        direction: 'Utara',
+        surveyor: 'VIANA',
+        date: '2023-05-12'
+      },
+      periods: [
+        {
+          name: 'Pagi',
+          timeSlots: [
+            {
+              time: '06:00 - 06:15',
+              status: 1,
+              data: {
+                sm: 10, mp: 5, aup: 1, trMp: 5, tr: 0, bs: 0, ts: 0,
+                bb: 0, tb: 0, gandengSemitrailer: 0, ktb: 0, total: 16
+              }
+            }
+          ]
+        }
+      ]
+    });
+  });
+
+  it('should return 400 if missing params', async () => {
+    const req = { query: {} };
+    const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+    await surveyController.exportVehicleData(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'simpang_id and date required' });
+  });
+
+  it('should return 404 if simpang not found', async () => {
+    const req = { query: { simpang_id: '999', date: '2023-05-12' } };
+    const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+    mapsModel.getSimpangById.mockResolvedValue(null);
+
+    await surveyController.exportVehicleData(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Simpang not found' });
+  });
+
+  it('should return 500 on unexpected error', async () => {
+    const req = { query: { simpang_id: '1', date: '2023-05-12' } };
+    const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+    mapsModel.getSimpangById.mockRejectedValue(new Error('DB error'));
+
+    await surveyController.exportVehicleData(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Internal server error' });
   });
 });

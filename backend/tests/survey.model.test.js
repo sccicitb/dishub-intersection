@@ -1,3 +1,4 @@
+// File : survey.model.test.js
 const surveyModel = require('../app/models/survey.model');
 const db = require('../app/config/db');
 
@@ -223,4 +224,31 @@ describe('Unit Test: getVehicleDataGrouped (Time Filtering)', () => {
     global.Date = realDate;
   });
 
+});
+
+describe('Unit Test: getArusBySimpangDate', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should query arus rows by simpang and date', async () => {
+    const mockRows = [
+      { waktu: '2023-05-12T06:01:00', SM: 10, MP: 5, AUP: 2 }
+    ];
+    db.query.mockResolvedValueOnce([mockRows]);
+
+    const result = await surveyModel.getArusBySimpangDate('1', '2023-05-12');
+    expect(db.query).toHaveBeenCalledWith(
+      'SELECT * FROM arus WHERE ID_Simpang = ? AND DATE(waktu) = ?',
+      ['1', '2023-05-12']
+    );
+    expect(result).toEqual(mockRows);
+  });
+
+  it('should return empty array if no result', async () => {
+    db.query.mockResolvedValueOnce([[]]);
+    const result = await surveyModel.getArusBySimpangDate('1', '2023-05-12');
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(0);
+  });
 });

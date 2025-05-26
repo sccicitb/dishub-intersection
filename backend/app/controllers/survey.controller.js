@@ -1,7 +1,10 @@
+// app/controllers/survey.controller.js
 const fs = require('fs');
 const path = require('path');
 const subCodeMap = require('../helpers/subCodeMap');
+const { getPeriodsAndSlots } = require('../helpers/arus');
 const surveyModel = require('../models/survey.model');
+const mapsModel = require('../models/maps.model');
 
 const getHourlySummary = async (req, res) => {
   try {
@@ -30,4 +33,34 @@ const getHourlySummary = async (req, res) => {
   }
 };
 
-module.exports = { getHourlySummary };
+const exportVehicleData = async (req, res) => {
+  try {
+    const { simpang_id, date } = req.query;
+    if (!simpang_id || !date) return res.status(400).json({ error: 'simpang_id and date required' });
+
+    // Ambil info simpang
+    const simpang = await mapsModel.getSimpangById(simpang_id);
+    if (!simpang) return res.status(404).json({ error: 'Simpang not found' });
+
+    // Ambil data arus
+    const arusRows = await surveyModel.getArusBySimpangDate(simpang_id, date);
+
+    // Proses periods & slot (pakai helper baru)
+    const periods = getPeriodsAndSlots(arusRows);
+
+    // Compose surveyInfo
+    const surveyInfo = {
+      simpangCode: simpang.id,
+      direction: simpang.kategori,
+      surveyor: 'VIANA',
+      date
+    };
+
+    return res.json({ surveyInfo, periods });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+module.exports = { getHourlySummary, exportVehicleData };

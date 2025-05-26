@@ -1,3 +1,4 @@
+// app/models/survey.model.js
 const db = require('../config/db');
 
 const getVehicleDataGrouped = async ({ cameraId, approach, direction, date }, includedSubCodes) => {
@@ -116,4 +117,9 @@ const getVehicleDataGrouped = async ({ cameraId, approach, direction, date }, in
   return { vehicleData };
 };
 
-module.exports = { getVehicleDataGrouped };
+const getArusBySimpangDate = async (simpang_id, date) => {
+  const [rows] = await db.query(`SELECT * FROM arus WHERE ID_Simpang = ? AND DATE(waktu) = ?`, [simpang_id, date]);
+  return rows;
+};
+
+module.exports = { getVehicleDataGrouped, getArusBySimpangDate };

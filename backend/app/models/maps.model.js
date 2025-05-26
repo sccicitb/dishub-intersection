@@ -1,3 +1,4 @@
+// app/models/maps.model.jsa
 const db = require('../config/db');
 
 // Sudah ada
@@ -52,10 +53,16 @@ const updateCamera = async (id, { title, category, status, latitude, longitude, 
   return result;
 };
 
+const getSimpangById = async (id) => {
+  const [rows] = await db.query(`SELECT * FROM simpang WHERE id = ?`, [id]);
+  return rows[0];
+};
+
 module.exports = {
   getBuildings,
   getCameraById,
   deleteCameraById,
   createCamera,
-  updateCamera
+  updateCamera,
+  getSimpangById
 };
