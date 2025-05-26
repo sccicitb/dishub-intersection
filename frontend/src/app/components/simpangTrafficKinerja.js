@@ -68,44 +68,45 @@ const SimpangTrafficKinerja = () => {
         </div>
 
         {dataSimpang && (
-          <div className="w-full overflow-x-auto flex gap-4">
-            {(selectedCategory === "" ? categoryNames : [selectedCategory]).map((key) => {
-              const simpang = dataSimpang[key];
-              const directions = simpang.directions;
+          <div className="w-full overflow-x-auto scroll-smooth snap-x snap-mandatory">
+            <div className={`flex gap-4 w-fit ${ [selectedCategory].length > 0 ? "justify-center mx-auto" : ""
+              }`}>
+              {(selectedCategory === "" ? categoryNames : [selectedCategory]).map((key) => {
+                const simpang = dataSimpang[key];
+                const directions = simpang.directions;
 
-              return (
-                <div
-                  key={key}
-                  className="min-w-[350px] flex flex-col w-fit bg-[#BCC3E1] mx-auto font-semibold"
-                >
-                  <div className="flex justify-center">
-                    <div></div>
-                    <GridVertical position={true} data={directions.north} col={1} />
-                    <div></div>
-                  </div>
-
-                  <div className="flex justify-center">
-                    <div>
-                      <GridHorizontal position={true} data={directions.west} col={1} />
+                return (
+                  <div
+                    key={key}
+                    className="min-w-[350px] snap-end bg-[#BCC3E1] font-semibold flex flex-col">
+                    <div className="flex justify-center">
+                      <div></div>
+                      <GridVertical position={true} data={directions.north} col={1} />
+                      <div></div>
                     </div>
-                    <div className="w-40 text-center items-center flex font-medium text-xs p-5 bg-stone-400">
-                      <div className="m-auto">{simpang.name}</div>
+
+                    <div className="flex justify-center">
+                      <div>
+                        <GridHorizontal position={true} data={directions.west} col={1} />
+                      </div>
+                      <div className="w-40 text-center items-center flex font-medium text-xs p-5 bg-stone-400">
+                        <div className="m-auto">{simpang.name}</div>
+                      </div>
+                      <div>
+                        <GridHorizontal position={false} data={directions.east} col={1} />
+                      </div>
                     </div>
-                    <div>
-                      <GridHorizontal position={false} data={directions.east} col={1} />
+
+                    <div className="flex justify-center">
+                      <div></div>
+                      <GridVertical position={false} data={directions.south} col={1} />
+                      <div></div>
                     </div>
                   </div>
+                );
+              })}
 
-                  <div className="flex justify-center">
-                    <div></div>
-                    <GridVertical position={false} data={directions.south} col={1} />
-                    <div></div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* {dataSimpang && selectedCategory && (
+              {/* {dataSimpang && selectedCategory && (
               <div className="w-full overflow-x-auto">
                 <div className="min-w-[350px] flex flex-col w-fit bg-[#BCC3E1] mx-auto font-semibold">
                   <div className="flex justify-center">
@@ -136,6 +137,7 @@ const SimpangTrafficKinerja = () => {
                 </div>
               </div>
             )} */}
+            </div>
           </div>
         )}
 

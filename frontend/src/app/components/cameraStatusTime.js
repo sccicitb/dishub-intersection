@@ -42,7 +42,7 @@ const CameraStatusTimeline = ({ cameraStatusData = [] }) => {
     <div className="p-4">
       <h2 className="text-lg font-semibold mb-3">Timeline Status Kamera per Jam (WIB)</h2>
       {/* <div className="flex space-x-1"> */}
-      <div className="flex">
+      <div className="flex w-full">
         {hours.map((hour) => {
           const status = statusPerHour[hour];
           let bgColor = "bg-gray-300"; // default abu-abu untuk tidak ada data
@@ -54,7 +54,7 @@ const CameraStatusTimeline = ({ cameraStatusData = [] }) => {
             <div
               key={hour}
               title={`${hour}:00 - Status: ${status !== undefined ? status : "Tidak ada data"}`}
-              className={`${bgColor} w-6 h-6 cursor-default`}
+              className={`${bgColor} w-6 h-6 flex-1 cursor-default`}
               // className={`${bgColor} w-6 h-6 rounded-sm cursor-default`}
             />
           );
