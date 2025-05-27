@@ -16,12 +16,14 @@ function SurveiLhrkPage () {
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
+  const [activeCamera, setActiveCamera] = useState('detection1');
   const [activeTitle, setActiveTitle] = useState("Survei LHRK")
+  const [activeSimpang, setActiveSimpang] = useState("");
   const [locationSelect, setLocationSelect] = useState("")
 
-  function handleClick (T) {
-    const replace = T.name.toLowerCase();
-    console.log('clicked : ' + JSON.stringify(T));
+  function handleClick (building) {
+    const replace = building.name.toLowerCase();
+    console.log('clicked : ' + JSON.stringify(building));
     switch (replace) {
       case 'simpang piyungan':
         setLocationSelect('Simpang Piyungan');
@@ -36,6 +38,15 @@ function SurveiLhrkPage () {
         setLocationSelect('Simpang Prambanan');
         break;
     }
+
+    if (!building || !building.camera || !building.camera.id) {
+      console.warn("Invalid building or camera data", building);
+      return;
+    }
+
+    setActiveTitle("Survei " + building.name);
+    setActiveSimpang(building.name);
+    setActiveCamera(building.camera.id);
   }
   useEffect(() => {
     const before = "Survei LHRK "
@@ -66,7 +77,7 @@ function SurveiLhrkPage () {
                 setActivePergerakan={setActivePergerakan} />
             </div>
           </div>
-          <VehicleTable />
+          <VehicleTable activeCamera={activeCamera}/>
           <ClasificationTable typeClass={activeClassification} />
         </div>
       </Suspense>

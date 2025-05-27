@@ -45,3 +45,7 @@ export const calendar = {
 export const logCamera = {
   getById: (id) => getRequest(`/cameras/${id}/status-log`)
 }
+
+export const survey = {
+  getAll: (camera_id, date, interval) => getRequest(`/surveys/data-summary?camera_id=${camera_id}&date=${date}${interval ? '&interval=1h' : ''}`),
+}

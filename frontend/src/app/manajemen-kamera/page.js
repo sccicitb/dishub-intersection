@@ -491,7 +491,7 @@ const ManajemenKamera = () => {
     try {
       setStatus("Uploading...");
       const response = await calendar.uploadFile(file, "append");
-      setStatus(`Sukses upload: ${response.data.processsed} data`);
+      setStatus(`Sukses upload: ${response.data.processed} data`);
       // Refresh calendar data after successful upload
       fetchCalendar(currentPage, itemsPerPage);
     } catch (error) {

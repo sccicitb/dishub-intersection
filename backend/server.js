@@ -28,7 +28,6 @@ require("./app/routes/holiday.routes.js")(app);
 require("./app/routes/maps.routes.js")(app);
 require('./app/routes/camera.routes.js')(app);
 require("./app/routes/survey.routes.js")(app);
-
 // Simpan instance listen di variabel
 const PORT = process.env.PORT || 8080;
 

@@ -7,8 +7,6 @@ const { getIntervals } = require('../helpers/timeHelper');
 const { TURN_MAP, ROWS, JENIS_KENDARAAN } = require('../helpers/turnLogic');
 const surveyModel = require('../models/survey.model');
 const mapsModel = require('../models/maps.model');
-
-
 /**
  * GET /api/surveys/data-summary
  * Param: interval = '15min' (default) | '1h' | '60min'

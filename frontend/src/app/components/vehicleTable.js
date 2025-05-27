@@ -6,77 +6,98 @@ import MonthlyVehicleTable from '@/app/components/monthlyTable';
 import DaysVehicleTable from '@/app/components/DaysVehicleTable';
 import YearVehicleTable from '@/app/components/YearVehicletable';
 import dataTableRaw from '@/data/DataTableYear.json';
+import { maps, survey } from '@/lib/apiService';
 
-const VehicleTable = () => {
-  // const [dataTable, setDataTable] = useState(null);
-  // const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('hour'); // 'daily' or 'monthly'
+const VehicleTable = ({ activeCamera }) => {
+  const [activeTab, setActiveTab] = useState('hour');
+  const [vehicleData, setVehicleData] = useState([]);
 
-  // useEffect(() => {
-  //   try {
-  //     // Di sini kita bisa memproses data jika diperlukan sebelum diteruskan ke komponen
-  //     setDataTable(dataTableRaw);
-  //     setLoading(false);
-  //   } catch (err) {
-  //     setError('Terjadi kesalahan saat memuat data');
-  //     setLoading(false);
-  //   }
-  // }, []);
+  const formatDateToInput = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex justify-center p-8 my-2">
-  //       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-  //     </div>
-  //   );
-  // }
+  const formatDateToYMDForAPI = (dateStr) => {
+    return dateStr.replace(/-/g, '/');
+  };
 
-  // if (error) {
-  //   return (
-  //     <div className="bg-red-200 border border-red-400 text-red-700 px-4 py-3 rounded my-2" >
-  //       {error}
-  //     </div>
-  //   );
-  // }
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
+
+  const fetchSurvey = async (active, date) => {
+    try {
+      const res = await survey.getAll(active.slice(active.indexOf('n') + 1), date);
+      const datafetch = res?.data?.vehicleData || [];
+      setVehicleData(datafetch);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeCamera) {
+      fetchSurvey(activeCamera.slice(activeCamera.indexOf('n') + 1), formatDateToYMDForAPI(dateInput));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeCamera) {
+      fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput));
+    }
+  }, [dateInput, activeCamera]);
 
   return (
     <div className="mx-auto">
       <h2 className="text-xl font-bold mb-4">Data Pemantauan Kendaraan</h2>
-      
+
       <div className="tabs tabs-boxed mb-4 gap-4 flex">
-        <button 
+        <div className="flex gap-5 items-center">
+          <label className="mr-2 font-medium">Pilih Tanggal:</label>
+          <input
+            type="date"
+            className="border rounded px-2 py-1"
+            value={dateInput}
+            onChange={(e) => setDateInput(e.target.value)}
+          />
+        </div>
+        <button
           className={`btn tab ${activeTab === 'hour' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
           onClick={() => setActiveTab('hour')}
         >
           Data Harian Per Jam
         </button>
-        <button 
+        <button
           className={`btn tab ${activeTab === 'monthly' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
           onClick={() => setActiveTab('monthly')}
         >
           Data Bulanan
         </button>
-        <button 
+        <button
           className={`btn tab ${activeTab === 'days' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
           onClick={() => setActiveTab('days')}
         >
           Data Harian
         </button>
-        <button 
+        <button
           className={`btn tab ${activeTab === 'years' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
           onClick={() => setActiveTab('years')}
         >
           Data Tahunan
         </button>
       </div>
-      
+
       {activeTab === 'hour' && (
         <div className="rounded-lg">
-          <HourVehicleTable />
+          <HourVehicleTable vehicleData={vehicleData} />
         </div>
       )}
-      
+
       {activeTab === 'monthly' && (
         <div className="rounded-lg">
           <MonthlyVehicleTable />

@@ -35,6 +35,7 @@ function MovePage () {
         break;
     }
   }
+  
   useEffect(() => {
     const before = "Survei Pergerakan "
     setActiveTitle(before + locationSelect)
