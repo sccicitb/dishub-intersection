@@ -21,7 +21,7 @@ function SurveiSimpangPage () {
   const [activeSimpang, setActiveSimpang] = useState("");
   const [activeCamera, setActiveCamera] = useState('detection1');
   const [activeTitle, setActiveTitle] = useState("Survei ");
-  const [vehicleData, setVehicleData] = useState(null);
+  const [vehicleData, setVehicleData] = useState([]);
   const [dataCamera, setDataCamera] = useState([]);
   const [streamData, setStreamData] = useState({});
 
@@ -51,7 +51,7 @@ function SurveiSimpangPage () {
         ]);
 
         const cameraData = mapsRes?.data?.buildings || [];
-        const vehicleData = surveyRes?.data?.vehicleData || [];
+        const vehicleData = Array.isArray(surveyRes?.data?.vehicleData) ? surveyRes.data.vehicleData : [];
 
         setDataCamera(cameraData);
         setActiveCamera(cameraData[0]?.camera?.id || '');
@@ -195,7 +195,9 @@ function SurveiSimpangPage () {
             />
           </div>
 
-          <HourVehicleTable statusHour={true} vehicleData={vehicleData} />
+          {Array.isArray(vehicleData) && vehicleData.length > 0 && (
+            <HourVehicleTable statusHour={true} vehicleData={vehicleData} />
+          )}
           <ClasificationTable typeClass={activeClassification} />
         </div>
       </Suspense>
