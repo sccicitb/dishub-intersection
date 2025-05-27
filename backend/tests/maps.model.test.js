@@ -1,3 +1,4 @@
+// File : maps.model.test.js
 const db = require('../app/config/db');
 const mapsModel = require('../app/models/maps.model');
 
@@ -96,6 +97,27 @@ describe('Unit Test: maps.model.js', () => {
         expect.stringContaining('UPDATE cameras'),
         ['Cam Updated', 'barat', 0, -7.8, 110.5, 'result_detection_edited', 3]
       );
+    });
+  });
+
+  describe('Unit Test: getSimpangById', () => {
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should return simpang row by id', async () => {
+      const mockRow = [{ id: 1, kategori: 'Utara' }];
+      db.query.mockResolvedValueOnce([mockRow]);
+
+      const result = await mapsModel.getSimpangById(1);
+      expect(db.query).toHaveBeenCalledWith('SELECT * FROM simpang WHERE id = ?', [1]);
+      expect(result).toEqual(mockRow[0]);
+    });
+
+    it('should return undefined if not found', async () => {
+      db.query.mockResolvedValueOnce([[]]);
+      const result = await mapsModel.getSimpangById(999);
+      expect(result).toBeUndefined();
     });
   });
 });

@@ -4,6 +4,7 @@ const db = require('../app/config/db');
 
 // Mock DB
 jest.mock('../app/config/db');
+jest.spyOn(console, 'error').mockImplementation(() => {});
 
 describe('Camera Status Controller', () => {
   afterEach(() => {
