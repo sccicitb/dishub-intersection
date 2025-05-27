@@ -2,9 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const subCodeMap = require('../helpers/subCodeMap');
 const { getPeriodsAndSlots } = require('../helpers/arus');
+const { getSubCodes } = require('../helpers/classificationHelper');
+const { getIntervals } = require('../helpers/timeHelper');
+const { TURN_MAP, ROWS, JENIS_KENDARAAN } = require('../helpers/turnLogic');
 const surveyModel = require('../models/survey.model');
 const mapsModel = require('../models/maps.model');
-
 /**
  * GET /api/surveys/data-summary
  * Param: interval = '15min' (default) | '1h' | '60min'
@@ -82,4 +84,45 @@ const exportVehicleData = async (req, res) => {
   }
 };
 
-module.exports = { getVehicleSummaryData, exportVehicleData };
+const getSurveyProporsi = async (req, res) => {
+  try {
+    const { ID_Simpang, type, date } = req.query;
+    if (!ID_Simpang || !type) {
+      return res.status(400).json({ message: "ID_Simpang dan type wajib diisi" });
+    }
+    const queryDate = date || (new Date()).toISOString().slice(0, 10);
+    const jenisKendaraanDB = JENIS_KENDARAAN.map(code => subCodeMap[code] || code);
+    const arahList = ['north', 'south', 'east', 'west'];
+    const grid = {};
+    let vehicleCount = 0;
+
+    // Ambil semua data sekali query
+    const rows = await surveyModel.getArusSummaryGrid(ID_Simpang, jenisKendaraanDB, queryDate);
+
+    for (const arah of arahList) {
+      grid[arah] = { row1: [], row2: [], row3: [] };
+      for (let rowIdx = 0; rowIdx < ROWS.length; rowIdx++) {
+        const { row, turn } = ROWS[rowIdx];
+        const ke_arah = TURN_MAP[arah][turn];
+        // Cari baris yang sesuai dari hasil SQL
+        const found = rows.find(r => r.dari_arah === arah && r.ke_arah === ke_arah);
+        for (let colIdx = 0; colIdx < jenisKendaraanDB.length; colIdx++) {
+          const jenis = jenisKendaraanDB[colIdx];
+          const total = found ? Number(found[jenis] || 0) : 0;
+          grid[arah][row].push({
+            id: `${arah[0]}${rowIdx + 1}-${colIdx + 1}`,
+            content: total
+          });
+          vehicleCount += total;
+        }
+      }
+    }
+    grid.vehicleCount = vehicleCount;
+    res.json(grid);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = { getVehicleSummaryData, exportVehicleData, getSurveyProporsi, getSurveyProporsi };

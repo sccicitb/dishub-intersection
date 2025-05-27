@@ -4,12 +4,19 @@ const surveyController = require('../app/controllers/survey.controller');
 const surveyModel = require('../app/models/survey.model');
 const mapsModel = require('../app/models/maps.model');
 const arusHelper = require('../app/helpers/arus');
+const subCodeMap = require('../app/helpers/subCodeMap');
 
 // Mock model dan helper agar tidak benar-benar query db/file system
 jest.mock('../app/models/survey.model');
 jest.mock('../app/models/maps.model');
 jest.mock('../app/helpers/arus');
 jest.mock('fs');
+jest.mock('../app/helpers/subCodeMap', () => ({
+  SM: 'SM',
+  MP: 'MP',
+  BS: 'BS',
+  TR: 'TR'
+}));
 
 jest.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -273,5 +280,47 @@ describe('Controller: exportVehicleData', () => {
     await surveyController.exportVehicleData(req, res);
     expect(arusHelper.getPeriodsAndSlots).toHaveBeenCalledWith([], '1h');
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ interval: '1h' }));
+  });
+});
+
+describe('Controller: getSurveyProporsi (Grid)', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('should return valid grid format', async () => {
+    surveyModel.getArusSummaryGrid.mockResolvedValue([
+      { dari_arah: 'north', ke_arah: 'west', SM: 2, MP: 3, BS: 1, TR: 0 },
+      { dari_arah: 'north', ke_arah: 'south', SM: 4, MP: 0, BS: 0, TR: 2 },
+      { dari_arah: 'north', ke_arah: 'east', SM: 1, MP: 1, BS: 0, TR: 1 }
+    ]);
+
+    const req = {
+      query: { ID_Simpang: 5, type: 'luar_kota', date: '2025-05-27' }
+    };
+    const res = {
+      json: jest.fn(),
+      status: jest.fn().mockReturnThis()
+    };
+
+    await surveyController.getSurveyProporsi(req, res);
+
+    // Cek response json
+    expect(res.json).toHaveBeenCalled();
+    const response = res.json.mock.calls[0][0];
+    expect(response.north).toBeDefined();
+    expect(Array.isArray(response.north.row1)).toBe(true);
+    expect(response.north.row1[0]).toHaveProperty('id');
+    expect(typeof response.north.row1[0].content).toBe('number');
+    expect(typeof response.vehicleCount).toBe('number');
+  });
+
+  it('should 400 if missing params', async () => {
+    const req = { query: {} };
+    const res = {
+      json: jest.fn(),
+      status: jest.fn().mockReturnThis()
+    };
+    await surveyController.getSurveyProporsi(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: expect.any(String) }));
   });
 });

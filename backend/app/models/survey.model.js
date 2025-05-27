@@ -61,4 +61,44 @@ const getArusBySimpangDate = async (simpang_id, date) => {
   return rows;
 };
 
-module.exports = { getVehicleDataGrouped, getArusBySimpangDate };
+const getArusSummaryByInterval = async (ID_Simpang, dbSubCodes, start, end) => {
+  const selectFields = dbSubCodes.map(code => `SUM(\`${code}\`) AS \`${code}\``).join(', ');
+  const sql = `
+    SELECT dari_arah, ${selectFields}
+    FROM arus
+    WHERE ID_Simpang = ?
+      AND waktu >= ? AND waktu < ?
+    GROUP BY dari_arah
+  `;
+  const [rows] = await db.query(sql, [ID_Simpang, start, end]);
+  return rows;
+};
+
+const getSumForCell = async (ID_Simpang, dari_arah, ke_arah, jenis, date) => {
+  // date: 'YYYY-MM-DD'
+  const sql = `
+    SELECT SUM(\`${jenis}\`) AS total
+    FROM arus
+    WHERE ID_Simpang = ?
+      AND dari_arah = ?
+      AND ke_arah = ?
+      AND DATE(waktu) = ?
+  `;
+  const [rows] = await db.query(sql, [ID_Simpang, dari_arah, ke_arah, date]);
+  return Number(rows[0]?.total) || 0;
+};
+
+const getArusSummaryGrid = async (ID_Simpang, jenisKendaraanDB, queryDate) => {
+  const selectFields = jenisKendaraanDB.map(code => `SUM(\`${code}\`) AS \`${code}\``).join(', ');
+  const sql = `
+    SELECT dari_arah, ke_arah, ${selectFields}
+    FROM arus
+    WHERE ID_Simpang = ?
+      AND DATE(waktu) = ?
+    GROUP BY dari_arah, ke_arah
+  `;
+  const [rows] = await db.query(sql, [ID_Simpang, queryDate]);
+  return rows; // Array of { dari_arah, ke_arah, SM, MP, ... }
+};
+
+module.exports = { getVehicleDataGrouped, getArusBySimpangDate, getArusSummaryByInterval, getSumForCell, getArusSummaryGrid };
