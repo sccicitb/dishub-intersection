@@ -50,14 +50,23 @@ function SurveiSimpangPage () {
           survey.getAll(activeCamera.slice(activeCamera.indexOf('n') + 1), formatDateToYMDForAPI(dateInput)),
         ]);
 
-        const cameraData = mapsRes?.data?.buildings || [];
+        // Safe data extraction dengan fallback
+        const cameraData = Array.isArray(mapsRes?.data?.buildings) ? mapsRes.data.buildings : [];
         const vehicleData = Array.isArray(surveyRes?.data?.vehicleData) ? surveyRes.data.vehicleData : [];
 
         setDataCamera(cameraData);
-        setActiveCamera(cameraData[0]?.camera?.id || '');
+        
+        // Safe access untuk camera data
+        if (cameraData.length > 0 && cameraData[0]?.camera?.id) {
+          setActiveCamera(cameraData[0].camera.id);
+        }
+        
         setVehicleData(vehicleData);
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching initial data:', err);
+        // Set default values jika terjadi error
+        setDataCamera([]);
+        setVehicleData([]);
       }
     };
 
@@ -67,10 +76,11 @@ function SurveiSimpangPage () {
   const fetchSurvey = async (active, date) => {
     try {
       const res = await survey.getAll(active.slice(active.indexOf('n') + 1), date);
-      const datafetch = res?.data?.vehicleData || [];
+      const datafetch = Array.isArray(res?.data?.vehicleData) ? res.data.vehicleData : [];
       setVehicleData(datafetch);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching survey data:', err);
+      setVehicleData([]);
     }
   };
 
@@ -83,9 +93,10 @@ function SurveiSimpangPage () {
   useEffect(() => {
     const dynamicStreamData = {};
 
-    if (Array.isArray(dataCamera)) {
+    // Safe iteration dengan proper null checks
+    if (Array.isArray(dataCamera) && dataCamera.length > 0) {
       dataCamera.forEach((item) => {
-        if (item.camera && item.camera.id) {
+        if (item && item.camera && item.camera.id) {
           dynamicStreamData[item.camera.id] = null;
         }
       });
@@ -93,59 +104,90 @@ function SurveiSimpangPage () {
 
     setStreamData(dynamicStreamData);
 
-    const foundCamera = Array.isArray(dataCamera)
-      ? dataCamera.find(b => b.camera?.id === activeCamera)
+    // Safe search dengan proper null checks
+    const foundCamera = Array.isArray(dataCamera) && dataCamera.length > 0
+      ? dataCamera.find(b => b && b.camera && b.camera.id === activeCamera)
       : null;
 
-    if (foundCamera) {
+    if (foundCamera && foundCamera.camera && foundCamera.camera.id && foundCamera.name) {
       setActiveCamera(foundCamera.camera.id);
       setActiveSimpang(foundCamera.name);
-    } else {
-      setActiveCamera(null);
+    } else if (!foundCamera && Array.isArray(dataCamera) && dataCamera.length === 0) {
+      // Reset jika tidak ada data camera
+      setActiveCamera('');
+      setActiveSimpang('');
     }
-  }, [dataCamera]);
+  }, [dataCamera, activeCamera]);
 
   useEffect(() => {
-    const socket = io('https://sxe-data.layanancerdas.id');
+    let socket = null;
+    
+    try {
+      socket = io('https://sxe-data.layanancerdas.id');
 
-    socket.on('connect', () => {
-      console.log('Socket connected');
-      setSocketConnected(true);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('Socket disconnected');
-      setSocketConnected(false);
-    });
-
-    if (Array.isArray(dataCamera)) {
-      dataCamera.forEach((building) => {
-        if (building.camera && building.camera.socketEvent) {
-          const event = building.camera.socketEvent;
-          socket.on(event, (data) => {
-            setStreamData((prev) => ({
-              ...prev,
-              [building.camera.id]: data,
-            }));
-          });
-        }
+      socket.on('connect', () => {
+        console.log('Socket connected');
+        setSocketConnected(true);
       });
+
+      socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+        setSocketConnected(false);
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+        setSocketConnected(false);
+      });
+
+      // Safe socket event registration
+      if (Array.isArray(dataCamera) && dataCamera.length > 0) {
+        dataCamera.forEach((building) => {
+          if (building && building.camera && building.camera.socketEvent && building.camera.id) {
+            const event = building.camera.socketEvent;
+            socket.on(event, (data) => {
+              setStreamData((prev) => ({
+                ...prev,
+                [building.camera.id]: data,
+              }));
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error setting up socket connection:', error);
     }
 
     return () => {
-      socket.disconnect();
+      if (socket) {
+        try {
+          socket.disconnect();
+        } catch (error) {
+          console.error('Error disconnecting socket:', error);
+        }
+      }
     };
   }, [dataCamera]);
 
   const handleClick = (building) => {
-    if (!building || !building.camera || !building.camera.id) {
+    // Comprehensive validation
+    if (!building || 
+        typeof building !== 'object' || 
+        !building.camera || 
+        typeof building.camera !== 'object' || 
+        !building.camera.id ||
+        !building.name) {
       console.warn("Invalid building or camera data", building);
       return;
     }
 
-    setActiveTitle("Survei " + building.name);
-    setActiveSimpang(building.name);
-    setActiveCamera(building.camera.id);
+    try {
+      setActiveTitle("Survei " + building.name);
+      setActiveSimpang(building.name);
+      setActiveCamera(building.camera.id);
+    } catch (error) {
+      console.error('Error in handleClick:', error);
+    }
   };
 
   return (
@@ -159,7 +201,7 @@ function SurveiSimpangPage () {
             <div className="lg:col-span-2 h-fit items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
               <div className="w-[60%]">
                 <CCTVStream
-                  data={streamData[activeCamera]}
+                  data={streamData[activeCamera] || null}
                   large
                   title={activeCamera ? `CCTV Camera ${activeCamera.slice(-1)} (${activeSimpang})` : `CCTV Camera (Loading...)`}
                 />
