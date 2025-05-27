@@ -3,40 +3,10 @@ import React, { useState, useEffect } from 'react';
 import dataTable from '@/data/DataTableHour.json';
 import { ExportButton } from './exportExcel';
 
-const HourVehicleTable = ({statusHour}) => {
-  const [vehicleData, setVehicleData] = useState([]);
+const HourVehicleTable = ({statusHour, vehicleData}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // const fetchData = async () => {
-    //   try {
-    //     const response = await axios.get('/api/vehicle-data');
-    //     setVehicleData(response.data.vehicleData);
-    //     setLoading(false);
-    //   } catch (err) {
-    //     setError('Gagal memuat data. Silakan coba lagi nanti.');
-    //     setLoading(false);
-    //   }
-    // };
-    setVehicleData(dataTable.vehicleData);
-
-    // fetchData();
-  }, []);
-
-  // if (loading) {
-  //   return <div className="flex justify-center p-8">
-  //     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-  //   </div>;
-  // }
-
-  // if (error) {
-  //   return <div className="bg-red-200 border border-red-400 text-red-700 px-4 py-3 rounded">
-  //     {error}
-  //   </div>;
-  // }
-
-  // Generate rows berdasarkan data dari API
   const generateRows = () => {
     let rows = [];
     let rowCount = 0;

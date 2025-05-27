@@ -10,8 +10,7 @@ const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const MapComponent = lazy(() => import("@/app/components/map"));
 
-import { maps } from '@/lib/apiService'
-// import DataSimpang from '@/data/DataSimpang.json';
+import { maps, survey } from '@/lib/apiService';
 
 function SurveiSimpangPage () {
   const [socketConnected, setSocketConnected] = useState(false);
@@ -19,51 +18,92 @@ function SurveiSimpangPage () {
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
-  const [activeSimpang, setActiveSimpang] = useState("")
-  const [activeCamera, setActiveCamera] = useState();
+  const [activeSimpang, setActiveSimpang] = useState("");
+  const [activeCamera, setActiveCamera] = useState('detection1');
   const [activeTitle, setActiveTitle] = useState("Survei ");
   const [vehicleData, setVehicleData] = useState(null);
-  const [dataCamera, setDataCamera] = useState([])
-  const [streamData, setStreamData] = useState({
-    detection3: null,
-    detection4: null,
-    detection5: null,
-    detection1: null
-  });
+  const [dataCamera, setDataCamera] = useState([]);
+  const [streamData, setStreamData] = useState({});
+
+  const formatDateToInput = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const formatDateToYMDForAPI = (dateStr) => {
+    return dateStr.replace(/-/g, '/');
+  };
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
 
   useEffect(() => {
-    const fetchSimpang = async () => {
+    const fetchData = async () => {
       try {
-        const res = await maps.getAll()
-        const datafetch = res.data.buildings;
+        const [mapsRes, surveyRes] = await Promise.all([
+          maps.getAll(),
+          survey.getAll(activeCamera.slice(activeCamera.indexOf('n') + 1), formatDateToYMDForAPI(dateInput)),
+        ]);
 
+        const cameraData = mapsRes?.data?.buildings || [];
+        const vehicleData = surveyRes?.data?.vehicleData || [];
 
-        setDataCamera(datafetch);
-        setActiveCamera(datafetch[0].camera.id)
-        // setActiveTitle("Survei " + datafetch[0].name)
-      } catch (err) { console.error(err) }
+        setDataCamera(cameraData);
+        setActiveCamera(cameraData[0]?.camera?.id || '');
+        setVehicleData(vehicleData);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const fetchSurvey = async (active, date) => {
+    try {
+      const res = await survey.getAll(active.slice(active.indexOf('n') + 1), date);
+      const datafetch = res?.data?.vehicleData || [];
+      setVehicleData(datafetch);
+    } catch (err) {
+      console.error(err);
     }
-    fetchSimpang()
-  }, [])
+  };
+
+  useEffect(() => {
+    if (activeCamera) {
+      fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput));
+    }
+  }, [dateInput, activeCamera]);
 
   useEffect(() => {
     const dynamicStreamData = {};
-    dataCamera.forEach((item) => {
-      if (item.camera && item.camera.id) {
-        dynamicStreamData[item.camera.id] = null;
-      }
-    });
+
+    if (Array.isArray(dataCamera)) {
+      dataCamera.forEach((item) => {
+        if (item.camera && item.camera.id) {
+          dynamicStreamData[item.camera.id] = null;
+        }
+      });
+    }
+
     setStreamData(dynamicStreamData);
-    const foundCamera = dataCamera.find(b => b.camera?.id === activeCamera);
-    console.log(foundCamera)
+
+    const foundCamera = Array.isArray(dataCamera)
+      ? dataCamera.find(b => b.camera?.id === activeCamera)
+      : null;
+
     if (foundCamera) {
       setActiveCamera(foundCamera.camera.id);
-      setActiveSimpang(foundCamera.name)
+      setActiveSimpang(foundCamera.name);
     } else {
       setActiveCamera(null);
     }
-  }, [dataCamera])
-
+  }, [dataCamera]);
 
   useEffect(() => {
     const socket = io('https://sxe-data.layanancerdas.id');
@@ -78,7 +118,7 @@ function SurveiSimpangPage () {
       setSocketConnected(false);
     });
 
-    if (dataCamera.length > 0) {
+    if (Array.isArray(dataCamera)) {
       dataCamera.forEach((building) => {
         if (building.camera && building.camera.socketEvent) {
           const event = building.camera.socketEvent;
@@ -92,23 +132,20 @@ function SurveiSimpangPage () {
       });
     }
 
-
     return () => {
       socket.disconnect();
     };
   }, [dataCamera]);
 
-  // Load dummy data
-  useEffect(() => {
-    import('@/data/sampleVehicleData.json').then((data) => {
-      setVehicleData(data.default);
-    });
-  }, []);
-
   const handleClick = (building) => {
-    setActiveCamera(building.camera.id);
+    if (!building || !building.camera || !building.camera.id) {
+      console.warn("Invalid building or camera data", building);
+      return;
+    }
+
     setActiveTitle("Survei " + building.name);
-    setActiveSimpang(building.name)
+    setActiveSimpang(building.name);
+    setActiveCamera(building.camera.id);
   };
 
   return (
@@ -148,7 +185,17 @@ function SurveiSimpangPage () {
             </div>
           </div>
 
-          <HourVehicleTable statusHour={true} />
+          <div className="w-full flex justify-end mb-4">
+            <label className="mr-2 font-medium">Pilih Tanggal:</label>
+            <input
+              type="date"
+              className="border rounded px-2 py-1"
+              value={dateInput}
+              onChange={(e) => setDateInput(e.target.value)}
+            />
+          </div>
+
+          <HourVehicleTable statusHour={true} vehicleData={vehicleData} />
           <ClasificationTable typeClass={activeClassification} />
         </div>
       </Suspense>
