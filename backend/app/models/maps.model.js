@@ -23,46 +23,37 @@ const getBuildings = async () => {
   return rows;
 };
 
-// Tambahan baru
-const getCameraById = async (id) => {
-  const [rows] = await db.query('SELECT * FROM cameras WHERE id = ?', [id]);
-  return rows[0];
-};
-
-const deleteCameraById = async (id) => {
-  const [result] = await db.query('DELETE FROM cameras WHERE id = ?', [id]);
-  return result;
-};
-
-const createCamera = async ({ title, category, status, latitude, longitude, socketEvent }) => {
-  const [result] = await db.query(
-    `INSERT INTO cameras (name, category, status, latitude, longitude, socket_event)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [title, category, status, latitude, longitude, socketEvent]
+// Ambil semua simpang
+const getBuildingsRaw = async () => {
+  const [rows] = await db.query(
+    `SELECT id, Nama_Simpang AS name, latitude, longitude, kategori 
+     FROM simpang WHERE Kota = 'Jogja'`
   );
-  return result.insertId;
+  return rows;
 };
 
-const updateCamera = async (id, { title, category, status, latitude, longitude, socketEvent }) => {
-  const [result] = await db.query(
-    `UPDATE cameras
-     SET name = ?, category = ?, status = ?, latitude = ?, longitude = ?, socket_event = ?
-     WHERE id = ?`,
-    [title, category, status, latitude, longitude, socketEvent, id]
+// Ambil semua kamera (relasi ke simpang)
+const getAllCamerasRaw = async () => {
+  const [rows] = await db.query(
+    `SELECT id AS camera_id, CONCAT('detection', id) AS id, ID_Simpang AS location_id, name AS title, socket_event AS socketEvent FROM cameras`
   );
-  return result;
+  return rows;
 };
 
-const getSimpangById = async (id) => {
-  const [rows] = await db.query(`SELECT * FROM simpang WHERE id = ?`, [id]);
-  return rows[0];
+// Ambil semua simpang beserta array kamera (nested)
+const getBuildingsWithCameras = async () => {
+  const [buildings] = await db.query(
+    `SELECT id, Nama_Simpang AS name, latitude, longitude, kategori FROM simpang WHERE Kota = 'Jogja'`
+  );
+  const [cameras] = await db.query(
+    `SELECT id AS camera_id, ID_Simpang AS location_id, name AS title, socket_event AS socketEvent FROM cameras`
+  );
+  return { buildings, cameras };
 };
 
 module.exports = {
   getBuildings,
-  getCameraById,
-  deleteCameraById,
-  createCamera,
-  updateCamera,
-  getSimpangById
+  getBuildingsRaw,
+  getAllCamerasRaw,
+  getBuildingsWithCameras
 };
