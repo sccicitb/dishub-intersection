@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from 'react';
 
-export default function VehicleClassificationTable ({ typeClass }) {
+const VehicleClassificationTable = ({ typeClass }) => {
   const [classificationData, setClassificationData] = useState([]);
   const [selectedType, setSelectedType] = useState('luar_kota');
   const [theme, setTheme] = useState('light');
@@ -122,3 +122,5 @@ export default function VehicleClassificationTable ({ typeClass }) {
     </div>
   );
 }
+
+export default VehicleClassificationTable;

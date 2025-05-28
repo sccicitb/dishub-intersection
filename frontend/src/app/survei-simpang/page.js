@@ -13,10 +13,11 @@ const MapComponent = lazy(() => import("@/app/components/map"));
 import { maps, survey } from '@/lib/apiService';
 
 function SurveiSimpangPage () {
-  const [socketConnected, setSocketConnected] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
+  const [activeInterval, setActiveInterval] = useState('');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
   const [activeSimpang, setActiveSimpang] = useState("");
   const [activeCamera, setActiveCamera] = useState('detection1');
@@ -55,12 +56,12 @@ function SurveiSimpangPage () {
         const vehicleData = Array.isArray(surveyRes?.data?.vehicleData) ? surveyRes.data.vehicleData : [];
 
         setDataCamera(cameraData);
-        
+
         // Safe access untuk camera data
         if (cameraData.length > 0 && cameraData[0]?.camera?.id) {
           setActiveCamera(cameraData[0].camera.id);
         }
-        
+
         setVehicleData(vehicleData);
       } catch (err) {
         console.error('Error fetching initial data:', err);
@@ -73,12 +74,15 @@ function SurveiSimpangPage () {
     fetchData();
   }, []);
 
-  const fetchSurvey = async (active, date) => {
+  const fetchSurvey = async (active, date, interval) => {
+    setLoading(true)
     try {
-      const res = await survey.getAll(active.slice(active.indexOf('n') + 1), date);
+      const res = await survey.getAll(active.slice(active.indexOf('n') + 1), date, interval);
       const datafetch = Array.isArray(res?.data?.vehicleData) ? res.data.vehicleData : [];
       setVehicleData(datafetch);
+      setLoading(false)
     } catch (err) {
+      setLoading(false)
       console.error('Error fetching survey data:', err);
       setVehicleData([]);
     }
@@ -86,9 +90,9 @@ function SurveiSimpangPage () {
 
   useEffect(() => {
     if (activeCamera) {
-      fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput));
+      fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval);
     }
-  }, [dateInput, activeCamera]);
+  }, [dateInput, activeCamera, activeInterval]);
 
   useEffect(() => {
     const dynamicStreamData = {};
@@ -113,7 +117,6 @@ function SurveiSimpangPage () {
       setActiveCamera(foundCamera.camera.id);
       setActiveSimpang(foundCamera.name);
     } else if (!foundCamera && Array.isArray(dataCamera) && dataCamera.length === 0) {
-      // Reset jika tidak ada data camera
       setActiveCamera('');
       setActiveSimpang('');
     }
@@ -121,23 +124,20 @@ function SurveiSimpangPage () {
 
   useEffect(() => {
     let socket = null;
-    
+
     try {
       socket = io('https://sxe-data.layanancerdas.id');
 
       socket.on('connect', () => {
         console.log('Socket connected');
-        setSocketConnected(true);
       });
 
       socket.on('disconnect', () => {
         console.log('Socket disconnected');
-        setSocketConnected(false);
       });
 
       socket.on('connect_error', (error) => {
         console.error('Socket connection error:', error);
-        setSocketConnected(false);
       });
 
       // Safe socket event registration
@@ -171,12 +171,12 @@ function SurveiSimpangPage () {
 
   const handleClick = (building) => {
     // Comprehensive validation
-    if (!building || 
-        typeof building !== 'object' || 
-        !building.camera || 
-        typeof building.camera !== 'object' || 
-        !building.camera.id ||
-        !building.name) {
+    if (!building ||
+      typeof building !== 'object' ||
+      !building.camera ||
+      typeof building.camera !== 'object' ||
+      !building.camera.id ||
+      !building.name) {
       console.warn("Invalid building or camera data", building);
       return;
     }
@@ -218,11 +218,14 @@ function SurveiSimpangPage () {
                 setActiveSurveyor={setActiveSurveyor}
                 activeClassification={activeClassification}
                 setActiveClassification={setActiveClassification}
+                setActiveInterval={setActiveInterval}
                 activePendekatan={activePendekatan}
+                activeInterval={activeInterval}
                 setActivePendekatan={setActivePendekatan}
                 activePergerakan={activePergerakan}
                 setActivePergerakan={setActivePergerakan}
-                exportPdf={true}
+                exportPdf
+                interval
               />
             </div>
           </div>
@@ -237,9 +240,10 @@ function SurveiSimpangPage () {
             />
           </div>
 
-          {Array.isArray(vehicleData) && vehicleData.length > 0 && (
-            <HourVehicleTable statusHour={true} vehicleData={vehicleData} />
-          )}
+          {loading ? (<div>Loading...</div>) :
+            Array.isArray(vehicleData) && vehicleData.length > 0 && (
+              <HourVehicleTable statusHour={true} vehicleData={vehicleData} />
+            )}
           <ClasificationTable typeClass={activeClassification} />
         </div>
       </Suspense>
