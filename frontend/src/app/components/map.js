@@ -2,7 +2,6 @@
 
 import Map, { NavigationControl, Marker } from "@vis.gl/react-maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl from "maplibre-gl";
 import { useEffect, useState, useRef } from "react";
 import * as turf from "@turf/turf";
 import { FaMapMarkerAlt } from "react-icons/fa";
@@ -187,7 +186,7 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
         <div style={{ width: "100", height: sizeHeight ? sizeHeight : "50vh" }} className="relative">
           <Map
             ref={mapRef}
-            mapLib={maplibregl}
+            mapLib={import("maplibre-gl")}
             mapStyle={mapStyles[theme]}
             initialViewState={{
               longitude: center.longitude,

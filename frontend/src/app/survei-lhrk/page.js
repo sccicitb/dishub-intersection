@@ -1,9 +1,8 @@
 "use client";
 import { useState, useEffect, Suspense, lazy } from 'react';
 
-import { survey } from '@/lib/apiService';
+// import { survey } from '@/lib/apiService';
 
-const MapComponent = lazy(() => import("@/app/components/map"));
 // const VehicleMonitoringTable = lazy(() => import('@/app/components/vehicleMonitoringTable'));
 const VehicleTable = lazy(() => import("@/app/components/vehicleTable"));
 const ClasificationTable = lazy(() => import("@/app/components/clasificationTable"));
@@ -11,6 +10,7 @@ const SurveyInfoTable = lazy(() => import("@/app/components/surveyorTable"));
 const SelectionButtons = lazy(() => import("@/app/components/selectionButton"));
 const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
+const MapComponent = lazy(() => import("@/app/components/map"));
 
 function SurveiLhrkPage () {
   const [loading, setLoading] = useState(false);

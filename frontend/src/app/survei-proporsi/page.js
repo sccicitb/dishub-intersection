@@ -6,7 +6,6 @@ import { maps, survey, logCamera } from '@/lib/apiService';
 
 // import DataSimpang from '@/data/DataSimpang.json';
 
-const MapComponent = lazy(() => import("@/app/components/map"));
 // const VehicleMonitoringTable = lazy(()=> import( '@/app/components/vehicleMonitoringTable'));
 const VehicleTable = lazy(() => import("@/app/components/vehicleTable"));
 const SurveyInfoTable = lazy(() => import("@/app/components/surveyorTable"));
@@ -18,6 +17,8 @@ const CameraStatus2 = lazy(() => import("@/app/components/cameraStatusVer2"));
 const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const CameraStatusTimeline = lazy(() => import('@/app/components/cameraStatusTime'))
+const MapComponent = lazy(() => import("@/app/components/map"));
+
 
 function SurveiProporsi () {
   const [loading, setLoading] = useState(false);
