@@ -128,6 +128,8 @@ export default function GrafikRoad() {
     }
   };
 
+  if (!trafficData || !Array.isArray(trafficData.hours)) return null;
+
   return (
     <div className="w-full">
       <h2 className="text-xl font-medium mt-4 text-center">Lalu Lintas Jam-Jaman Rata-Rata</h2>

@@ -69,7 +69,8 @@ function MovePage () {
                 activePendekatan={activePendekatan}
                 setActivePendekatan={setActivePendekatan}
                 activePergerakan={activePergerakan}
-                setActivePergerakan={setActivePergerakan} />
+                setActivePergerakan={setActivePergerakan}
+                arahPergerakan />
             </div>
           </div>
           <DirectionVehicleTable Data={directionData} activePergerakan={activePergerakan} activePendekatan={activePendekatan}/>
