@@ -96,7 +96,7 @@ const HourVehicleTable = ({statusHour, vehicleData}) => {
           </tr>
           <tr className="bg-base-300">
             <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
-              Interval<br />15 menit
+              Interval<br />
             </th>
             <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               SM

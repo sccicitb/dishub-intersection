@@ -8,7 +8,7 @@ import YearVehicleTable from '@/app/components/YearVehicletable';
 import dataTableRaw from '@/data/DataTableYear.json';
 import { maps, survey } from '@/lib/apiService';
 
-const VehicleTable = ({ activeCamera }) => {
+const VehicleTable = ({ activeCamera, activeInterval }) => {
   const [activeTab, setActiveTab] = useState('hour');
   const [vehicleData, setVehicleData] = useState([]);
 
@@ -30,9 +30,9 @@ const VehicleTable = ({ activeCamera }) => {
 
   const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
 
-  const fetchSurvey = async (active, date) => {
+  const fetchSurvey = async (active, date, activeInterval) => {
     try {
-      const res = await survey.getAll(active.slice(active.indexOf('n') + 1), date);
+      const res = await survey.getAll(active.slice(active.indexOf('n') + 1), date, activeInterval);
       const datafetch = res?.data?.vehicleData || [];
       setVehicleData(datafetch);
     } catch (err) {
@@ -48,9 +48,9 @@ const VehicleTable = ({ activeCamera }) => {
 
   useEffect(() => {
     if (activeCamera) {
-      fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput));
+      fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval);
     }
-  }, [dateInput, activeCamera]);
+  }, [dateInput, activeCamera, activeInterval]);
 
   return (
     <div className="mx-auto">
@@ -70,7 +70,7 @@ const VehicleTable = ({ activeCamera }) => {
           className={`btn tab ${activeTab === 'hour' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
           onClick={() => setActiveTab('hour')}
         >
-          Data Harian Per Jam
+          Data Harian Per Hari
         </button>
         <button
           className={`btn tab ${activeTab === 'monthly' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}

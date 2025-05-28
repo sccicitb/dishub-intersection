@@ -18,6 +18,7 @@ const CameraStatus2 = lazy(() => import("@/app/components/cameraStatusVer2"));
 const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const CameraStatusTimeline = lazy(() => import('@/app/components/cameraStatusTime'))
+
 function SurveiProporsi () {
   const [loading, setLoading] = useState(false);
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');

@@ -1,6 +1,8 @@
 "use client";
-import { io } from 'socket.io-client';
 import { useState, useEffect, Suspense, lazy } from 'react';
+
+import { survey } from '@/lib/apiService';
+
 const MapComponent = lazy(() => import("@/app/components/map"));
 // const VehicleMonitoringTable = lazy(() => import('@/app/components/vehicleMonitoringTable'));
 const VehicleTable = lazy(() => import("@/app/components/vehicleTable"));
@@ -11,53 +13,83 @@ const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 
 function SurveiLhrkPage () {
-  const [vehicleData, setVehicleData] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
+  const [activeInterval, setActiveInterval] = useState('');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
+  const [activeSimpang, setActiveSimpang] = useState("");
+  const [vehicleData, setVehicleData] = useState([]);
   const [activeCamera, setActiveCamera] = useState('detection1');
   const [activeTitle, setActiveTitle] = useState("Survei LHRK")
-  const [activeSimpang, setActiveSimpang] = useState("");
-  const [locationSelect, setLocationSelect] = useState("")
 
-  function handleClick (building) {
-    const replace = building.name.toLowerCase();
-    console.log('clicked : ' + JSON.stringify(building));
-    switch (replace) {
-      case 'simpang piyungan':
-        setLocationSelect('Simpang Piyungan');
-        break;
-      case 'simpang demen glagah':
-        setLocationSelect('Simpang Demen Glagah');
-        break;
-      case 'simpang tempel':
-        setLocationSelect('Simpang Tempel');
-        break;
-      case 'simpang prambanan':
-        setLocationSelect('Simpang Prambanan');
-        break;
-    }
 
-    if (!building || !building.camera || !building.camera.id) {
+  // const formatDateToInput = (date) => {
+  //   if (!date) return "";
+  //   const d = new Date(date);
+  //   const yyyy = d.getFullYear();
+  //   const mm = String(d.getMonth() + 1).padStart(2, '0');
+  //   const dd = String(d.getDate()).padStart(2, '0');
+  //   return `${yyyy}-${mm}-${dd}`;
+  // };
+
+  // const formatDateToYMDForAPI = (dateStr) => {
+  //   return dateStr.replace(/-/g, '/');
+  // };
+
+  // const yesterday = new Date();
+  // yesterday.setDate(yesterday.getDate() - 1);
+  // const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
+
+
+  // const fetchSurvey = async (active, date, interval) => {
+  //   setLoading(true)
+  //   try {
+  //     const res = await survey.getAll(active.slice(active.indexOf('n') + 1), date, interval);
+  //     const datafetch = Array.isArray(res?.data?.vehicleData) ? res.data.vehicleData : [];
+  //     setVehicleData(datafetch);
+  //     setLoading(false)
+  //   } catch (err) {
+  //     setLoading(false)
+  //     console.error('Error fetching survey data:', err);
+  //     setVehicleData([]);
+  //   }
+  // };
+
+  const handleClick = (building) => {
+    // Comprehensive validation
+    if (!building ||
+      typeof building !== 'object' ||
+      !building.camera ||
+      typeof building.camera !== 'object' ||
+      !building.camera.id ||
+      !building.name) {
       console.warn("Invalid building or camera data", building);
       return;
     }
 
-    setActiveTitle("Survei " + building.name);
-    setActiveSimpang(building.name);
-    setActiveCamera(building.camera.id);
-  }
-  useEffect(() => {
-    const before = "Survei LHRK "
-    setActiveTitle(before + locationSelect)
-  }, [locationSelect])
+    try {
+      setActiveTitle("Survei " + building.name);
+      setActiveSimpang(building.name);
+      setActiveCamera(building.camera.id);
+    } catch (error) {
+      console.error('Error in handleClick:', error);
+    }
+  };
 
-  useEffect(() => {
-    import('@/data/sampleVehicleData.json').then((data) => {
-      setVehicleData(data.default);
-    });
-  }, [])
+  // useEffect(() => {
+  //   if (activeCamera) {
+  //     fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval);
+  //   }
+  // }, [dateInput, activeCamera, activeInterval]);
+
+  // useEffect(() => {
+  //   if (activeCamera) {
+  //     fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval);
+  //   }
+  // }, []);
+
   return (
     <div>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
@@ -71,14 +103,29 @@ function SurveiLhrkPage () {
                 setActiveSurveyor={setActiveSurveyor}
                 activeClassification={activeClassification}
                 setActiveClassification={setActiveClassification}
+                setActiveInterval={setActiveInterval}
+                activeInterval={activeInterval}
                 activePendekatan={activePendekatan}
                 setActivePendekatan={setActivePendekatan}
                 activePergerakan={activePergerakan}
-                setActivePergerakan={setActivePergerakan} />
+                setActivePergerakan={setActivePergerakan}
+                interval
+              />
             </div>
           </div>
-          <VehicleTable activeCamera={activeCamera}/>
-          <ClasificationTable typeClass={activeClassification} />
+          {/* <div className="w-full flex justify-end mb-4">
+            <label className="mr-2 font-medium">Pilih Tanggal:</label>
+            <input
+              type="date"
+              className="border rounded px-2 py-1"
+              value={dateInput}
+              onChange={(e) => setDateInput(e.target.value)}
+            />
+          </div> */}
+          {loading ? (<div className='my-5'>Loading...</div>) : (
+            <VehicleTable activeCamera={activeCamera} activeInterval={activeInterval}/>
+          )}
+          <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval} />
         </div>
       </Suspense>
     </div>

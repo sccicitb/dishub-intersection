@@ -219,8 +219,8 @@ function SurveiSimpangPage () {
                 activeClassification={activeClassification}
                 setActiveClassification={setActiveClassification}
                 setActiveInterval={setActiveInterval}
-                activePendekatan={activePendekatan}
                 activeInterval={activeInterval}
+                activePendekatan={activePendekatan}
                 setActivePendekatan={setActivePendekatan}
                 activePergerakan={activePergerakan}
                 setActivePergerakan={setActivePergerakan}
