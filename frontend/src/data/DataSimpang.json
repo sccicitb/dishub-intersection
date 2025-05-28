@@ -6,11 +6,19 @@
       "location": { "latitude": -7.75539, "longitude": 110.48903 },
       "model_detection": true,
       "category": "timur",
-      "camera": {
-        "id": "detection1", 
-        "title": "Camera 1",
-        "socketEvent": "result_detection_2"
-      }
+      "camera": [
+        {
+          "id": "detection1", 
+          "title": "Camera 1",
+          "socketEvent": "result_detection_2"
+        },
+        {
+          "id": "detection2", 
+          "title": "Camera 1",
+          "socketEvent": "result_detection_2"
+        }
+        
+      ]
     },
     {
       "id": 4,

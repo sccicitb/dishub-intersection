@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { IoIosAdd } from "react-icons/io";
 
-const CameraActive = ({ children, onOptionChange, addNewCamera, inputSearch, searchValue }) => {
+const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inputSearch, searchValue }) => {
   const [optionSelect, setOptionSelect] = useState('peta');
   const activeOption = ["peta", "pratinjau", "daftar"]
 
@@ -38,6 +38,7 @@ const CameraActive = ({ children, onOptionChange, addNewCamera, inputSearch, sea
           <div className="w-full flex flex-wrap gap-4 items-center justify-between">
             <h3 className="text-lg font-semibold">Kamera Aktif</h3>
             <div className="flex gap-2">
+              <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewMaps}><IoIosAdd className="text-xl" />Tambah Maps</button>
               <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewCamera}><IoIosAdd className="text-xl" />Tambah kamera</button>
               <label className="input rounded-md bg-[#314385]/10">
                 <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">

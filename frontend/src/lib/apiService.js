@@ -22,9 +22,17 @@ export const createRequest = (url, data) => apiRequest('post', url, data)
 
 export const maps = {
   getAll: () => getRequest(`/maps/buildings`),
+  updateById: (id, data) => updateRequest(`/maps/${id}`, data),
+  createData: (data) => createRequest(`/maps`, data),
+  deleteById: (id) => deleteRequest(`/maps/${id}`)
+}
+
+export const cameras = {
+  getAll: () => getRequest(`/cameras/`),
   updateById: (id, data) => updateRequest(`/cameras/${id}`, data),
   createData: (data) => createRequest(`/cameras`, data),
   deleteById: (id) => deleteRequest(`/cameras/${id}`)
+
 }
 
 export const calendar = {
