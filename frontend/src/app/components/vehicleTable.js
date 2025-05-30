@@ -32,7 +32,7 @@ const VehicleTable = ({ activeCamera, activeInterval }) => {
 
   const fetchSurvey = async (active, date, activeInterval) => {
     try {
-      const res = await survey.getAll(active.slice(active.indexOf('n') + 1), date, activeInterval);
+      const res = await survey.getAll(active, date, activeInterval);
       const datafetch = res?.data?.vehicleData || [];
       setVehicleData(datafetch);
     } catch (err) {
@@ -42,7 +42,7 @@ const VehicleTable = ({ activeCamera, activeInterval }) => {
 
   useEffect(() => {
     if (activeCamera) {
-      fetchSurvey(activeCamera.slice(activeCamera.indexOf('n') + 1), formatDateToYMDForAPI(dateInput));
+      fetchSurvey(activeCamera.slice(activeCamera), formatDateToYMDForAPI(dateInput));
     }
   }, []);
 

@@ -58,25 +58,28 @@ function SurveiLhrkPage () {
   // };
 
   const handleClick = (building) => {
-    // Comprehensive validation
-    if (!building ||
+    // Pastikan objek valid dan memiliki properti kamera
+    if (
+      !building ||
       typeof building !== 'object' ||
       !building.camera ||
-      typeof building.camera !== 'object' ||
-      !building.camera.id ||
-      !building.name) {
+      typeof building.camera !== 'object' || // setelah pemilihan kamera, harus objek
+      !building.camera.camera_id
+    ) {
       console.warn("Invalid building or camera data", building);
       return;
     }
 
     try {
-      setActiveTitle("Survei " + building.name);
-      setActiveSimpang(building.name);
-      setActiveCamera(building.camera.id);
+      const title = building.camera.name || "Tanpa Nama";
+      setActiveTitle("Survei " + title);
+      setActiveSimpang(title);
+      setActiveCamera(building.camera.camera_id);
     } catch (error) {
-      console.error('Error in handleClick:', error);
+      console.error("Error in handleClick:", error);
     }
   };
+
 
   // useEffect(() => {
   //   if (activeCamera) {
@@ -123,7 +126,7 @@ function SurveiLhrkPage () {
             />
           </div> */}
           {loading ? (<div className='my-5'>Loading...</div>) : (
-            <VehicleTable activeCamera={activeCamera} activeInterval={activeInterval}/>
+            <VehicleTable activeCamera={activeCamera} activeInterval={activeInterval} />
           )}
           <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval} />
         </div>

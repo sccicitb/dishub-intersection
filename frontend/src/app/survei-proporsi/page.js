@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, lazy } from "react";
 import { io } from 'socket.io-client'
-import { maps, survey, logCamera } from '@/lib/apiService';
+import { cameras, survey, logCamera } from '@/lib/apiService';
 
 // import DataSimpang from '@/data/DataSimpang.json';
 
@@ -27,16 +27,12 @@ function SurveiProporsi () {
   const [activePendekatan, setActivePendekatan] = useState('Semua');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
   const [socketConnected, setSocketConnected] = useState(false);
-  const [activeTitle, setActiveTitle] = useState("Survei");
-  const [activeCamera, setActiveCamera] = useState();
+  const [activeTitle, setActiveTitle] = useState("Survei ");
+  const [activeCamera, setActiveCamera] = useState('detection1');
   const [dataCamera, setDataCamera] = useState([]);
   const [activeSimpang, setActiveSimpang] = useState("");
-  const [streamData, setStreamData] = useState({
-    detection3: null,
-    detection4: null,
-    detection5: null,
-    detection1: null
-  });
+  const [streamData, setStreamData] = useState({});
+
   const [categoryNames] = useState([
     { name: 'luar_kota', display: 'Luar Kota' },
     { name: 'dalam_kota', display: "Dalam Kota" },
@@ -152,30 +148,39 @@ function SurveiProporsi () {
   });
 
 
-
   useEffect(() => {
     const dynamicStreamData = {};
-    dataCamera.forEach((item) => {
-      if (item.camera && item.camera.id) {
-        dynamicStreamData[item.camera.id] = null;
-      }
-    });
-    setStreamData(dynamicStreamData);
-    const foundCamera = dataCamera.find(b => b.camera?.id === activeCamera);
-    console.log(foundCamera)
-    if (foundCamera) {
-      setActiveSimpang(foundCamera.name)
-      setActiveCamera(foundCamera.camera.id)
-    } else {
-      setActiveCamera(null)
+
+    // Safe iteration dengan proper null checks
+    if (Array.isArray(dataCamera) && dataCamera.length > 0) {
+      dataCamera.forEach((item) => {
+        if (item && item.camera && item.camera.id) {
+          dynamicStreamData[item.camera.id] = null;
+        }
+      });
     }
-  }, [dataCamera])
+
+    setStreamData(dynamicStreamData);
+
+    // Safe search dengan proper null checks
+    const foundCamera = Array.isArray(dataCamera) && dataCamera.length > 0
+      ? dataCamera.find(b => b && b.id === activeCamera)
+      : null;
+
+    if (foundCamera && foundCamera && foundCamera.id && foundCamera.name) {
+      setActiveCamera(foundCamera.id);
+      setActiveSimpang(foundCamera.name);
+    } else if (!foundCamera && Array.isArray(dataCamera) && dataCamera.length === 0) {
+      setActiveCamera('');
+      setActiveSimpang('');
+    }
+  }, [dataCamera, activeCamera]);
 
 
   const fetchSurveyProporsi = async (simpang_id, type, date) => {
     setLoading(true)
     try {
-      const res = await survey.getProporsi(simpang_id.slice(simpang_id.indexOf('n') + 1), type, date);
+      const res = await survey.getProporsi(simpang_id, type, date);
       const datafetch = res ? res.data : [];
       console.log(datafetch)
       setIntersectionData(datafetch);
@@ -190,40 +195,56 @@ function SurveiProporsi () {
   // const [activeCamera, setActiveCamera] = useState('detection4');
 
   useEffect(() => {
-    const socket = io('https://sxe-data.layanancerdas.id');
+    let socket = null;
 
-    socket.on('connect', () => {
-      console.log('Socket connected');
-      setSocketConnected(true);
-    });
+    try {
+      socket = io('https://sxe-data.layanancerdas.id');
 
-    socket.on('disconnect', () => {
-      console.log('Socket disconnected');
-      setSocketConnected(false);
-    });
-
-
-    if (dataCamera.length > 0) {
-      dataCamera.forEach((building) => {
-        if (building.camera && building.camera.socketEvent) {
-          const event = building.camera.socketEvent;
-          socket.on(event, (data) => {
-            setStreamData((prev) => ({
-              ...prev,
-              [building.camera.id]: data,
-            }));
-          });
-        }
+      socket.on('connect', () => {
+        console.log('Socket connected');
       });
+
+      socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+      });
+
+      // Safe socket event registration
+      if (Array.isArray(dataCamera) && dataCamera.length > 0) {
+        dataCamera.forEach((building) => {
+          if (building && building && building.socket_event && building.id) {
+            const event = building.socket_event;
+            socket.on(event, (data) => {
+              setStreamData((prev) => ({
+                ...prev,
+                [building.id]: data,
+              }));
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error setting up socket connection:', error);
     }
+
     return () => {
-      socket.disconnect();
+      if (socket) {
+        try {
+          socket.disconnect();
+        } catch (error) {
+          console.error('Error disconnecting socket:', error);
+        }
+      }
     };
   }, [dataCamera]);
 
+
   const getLogcamera = async (id) => {
     try {
-      const res = await logCamera.getById(id.slice(id.indexOf('n') + 1));
+      const res = await logCamera.getById(id);
       let logs = Array.isArray(res.data.logs) ? res.data.logs : [];
       setCameraLogs(prev => ({
         ...prev,
@@ -238,12 +259,14 @@ function SurveiProporsi () {
   useEffect(() => {
     const fetchSimpang = async () => {
       try {
-        const res = await maps.getAll()
-        const datafetch = res.data.buildings;
-        setDataCamera(datafetch);
+        const res = await cameras.getAll()
+        const cameraData = Array.isArray(res?.data?.cameras) ? res.data.cameras : [];
 
-        setDataCamera(datafetch)
-        setActiveCamera(datafetch[0].camera.id)
+        setDataCamera(cameraData)
+        console.log(cameraData)
+        if (cameraData.length > 0 && cameraData[0]?.id) {
+          setActiveCamera(cameraData[0]?.id);
+        }
       } catch (err) { console.error(err) }
     }
     fetchSimpang()
@@ -263,10 +286,29 @@ function SurveiProporsi () {
   }, [activeCamera, dateInput, selectedCategory]);
 
   const handleClick = (building) => {
-    setActiveCamera(building.camera.id);
-    setActiveTitle("Survei " + building.name);
-    setActiveSimpang(building.name)
+    // Pastikan objek valid dan memiliki properti kamera
+    if (
+      !building ||
+      typeof building !== 'object' ||
+      !building.camera ||
+      typeof building.camera !== 'object' || // setelah pemilihan kamera, harus objek
+      !building.camera.camera_id
+    ) {
+      console.warn("Invalid building or camera data", building);
+      return;
+    }
+
+    try {
+      const title = building.camera.name || "Tanpa Nama";
+      setActiveTitle("Survei " + title);
+      setActiveSimpang(title);
+      setActiveCamera(building.camera.camera_id);
+    } catch (error) {
+      console.error("Error in handleClick:", error);
+    }
   };
+
+
 
   const handleCategoryChange = (e) => {
     setSelectedCategory(e.target.value);
@@ -284,10 +326,8 @@ function SurveiProporsi () {
                 <CCTVStream
                   heightCamera
                   // customLarge={'h-[120px] w-fit'}
-                  data={streamData[activeCamera]}
-                  title={activeCamera
-                    ? `CCTV Camera  ${activeCamera.slice(-1)} (${activeSimpang ?? ""})`
-                    : "CCTV Camera (Loading...)"}
+                  data={streamData[activeCamera] || null}
+                  title={activeCamera ? `CCTV Camera ${activeCamera} (${activeSimpang})` : `CCTV Camera (Loading...)`}
                   onClick={() => setActiveCamera(activeSimpang?.camera.id)}
                 />
               </div>
