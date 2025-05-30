@@ -2,6 +2,8 @@
 import { useState, useEffect, Suspense, lazy } from 'react';
 import { io } from 'socket.io-client';
 
+import { cameras, maps, survey } from '@/lib/apiService';
+
 const ClasificationTable = lazy(() => import("@/app/components/clasificationTable"));
 const HourVehicleTable = lazy(() => import('@/app/components/HourVehicleTable'));
 const SelectionButtons = lazy(() => import("@/app/components/selectionButton"));
@@ -10,7 +12,6 @@ const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const MapComponent = lazy(() => import("@/app/components/map"));
 
-import { maps, survey } from '@/lib/apiService';
 
 function SurveiSimpangPage () {
   const [loading, setLoading] = useState(false);
@@ -46,20 +47,20 @@ function SurveiSimpangPage () {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [mapsRes, surveyRes] = await Promise.all([
-          maps.getAll(),
-          survey.getAll(activeCamera.slice(activeCamera.indexOf('n') + 1), formatDateToYMDForAPI(dateInput)),
+        const [cameraRes, surveyRes] = await Promise.all([
+          cameras.getAll(),
+          // survey.getAll(activeCamera.slice(activeCamera.indexOf('n') + 1), formatDateToYMDForAPI(dateInput)),
+          survey.getAll(activeCamera, formatDateToYMDForAPI(dateInput)),
         ]);
 
         // Safe data extraction dengan fallback
-        const cameraData = Array.isArray(mapsRes?.data?.buildings) ? mapsRes.data.buildings : [];
+        const cameraData = Array.isArray(cameraRes?.data?.cameras) ? cameraRes.data.cameras : [];
         const vehicleData = Array.isArray(surveyRes?.data?.vehicleData) ? surveyRes.data.vehicleData : [];
 
         setDataCamera(cameraData);
-
-        // Safe access untuk camera data
-        if (cameraData.length > 0 && cameraData[0]?.camera?.id) {
-          setActiveCamera(cameraData[0].camera.id);
+ 
+        if (cameraData.length > 0 && cameraData[0]?.id) {
+          setActiveCamera(cameraData[0]?.id);
         }
 
         setVehicleData(vehicleData);
@@ -77,7 +78,7 @@ function SurveiSimpangPage () {
   const fetchSurvey = async (active, date, interval) => {
     setLoading(true)
     try {
-      const res = await survey.getAll(active.slice(active.indexOf('n') + 1), date, interval);
+      const res = await survey.getAll(active, date, interval);
       const datafetch = Array.isArray(res?.data?.vehicleData) ? res.data.vehicleData : [];
       setVehicleData(datafetch);
       setLoading(false)
@@ -110,11 +111,11 @@ function SurveiSimpangPage () {
 
     // Safe search dengan proper null checks
     const foundCamera = Array.isArray(dataCamera) && dataCamera.length > 0
-      ? dataCamera.find(b => b && b.camera && b.camera.id === activeCamera)
+      ? dataCamera.find(b => b && b.id === activeCamera)
       : null;
 
-    if (foundCamera && foundCamera.camera && foundCamera.camera.id && foundCamera.name) {
-      setActiveCamera(foundCamera.camera.id);
+    if (foundCamera && foundCamera && foundCamera.id && foundCamera.name) {
+      setActiveCamera(foundCamera.id);
       setActiveSimpang(foundCamera.name);
     } else if (!foundCamera && Array.isArray(dataCamera) && dataCamera.length === 0) {
       setActiveCamera('');
@@ -143,12 +144,12 @@ function SurveiSimpangPage () {
       // Safe socket event registration
       if (Array.isArray(dataCamera) && dataCamera.length > 0) {
         dataCamera.forEach((building) => {
-          if (building && building.camera && building.camera.socketEvent && building.camera.id) {
-            const event = building.camera.socketEvent;
+          if (building && building && building.socket_event && building.id) {
+            const event = building.socket_event;
             socket.on(event, (data) => {
               setStreamData((prev) => ({
                 ...prev,
-                [building.camera.id]: data,
+                [building.id]: data,
               }));
             });
           }
@@ -203,7 +204,7 @@ function SurveiSimpangPage () {
                 <CCTVStream
                   data={streamData[activeCamera] || null}
                   large
-                  title={activeCamera ? `CCTV Camera ${activeCamera.slice(-1)} (${activeSimpang})` : `CCTV Camera (Loading...)`}
+                  title={activeCamera ? `CCTV Camera ${activeCamera} (${activeSimpang})` : `CCTV Camera (Loading...)`}
                 />
               </div>
             </div>
