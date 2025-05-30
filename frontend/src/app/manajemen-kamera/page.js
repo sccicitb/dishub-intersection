@@ -1,7 +1,9 @@
 "use client";
 
 import { io } from 'socket.io-client'
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import CCTVStream from '../components/cctvStream';
 import CameraActive from '../components/cameraActive';
 // import DataSimpang from '@/data/DataSimpang.json'
@@ -117,8 +119,14 @@ const ManajemenKamera = () => {
   const [actionDialog, setActionDialog] = useState("");
   const [formCameras, setFormCameras] = useState({
     id: "",
-    title: "",
-    socketEvent: ""
+    name: "",
+    url: "",
+    thumbnail_url: "",
+    location: "",
+    resolution: "",
+    status: 0,
+    socket_event: "",
+    ID_Simpang: 0
   });
 
   const [formMaps, setFormMaps] = useState({
@@ -130,8 +138,16 @@ const ManajemenKamera = () => {
       latitude: "",
       longitude: "",
     },
+    socket_event: "",
+    name: "",
+    kategori: "",
+    kota: "",
+    ukuran_kota: "",
+    tanggal: "",
+    periode: "",
+    ditangani_oleh: ""
   })
-
+  const [dataMapsID, setDataMapsID] = useState([])
   const [statusDialogKalender, setStatusDialogKalender] = useState(false)
   const [statusDialogCameras, setStatusDialogCameras] = useState(false)
   const [mergedCameraData, setMergedCameraData] = useState([]);
@@ -143,6 +159,7 @@ const ManajemenKamera = () => {
     try {
       const res = await maps.getAll();
       const location = res.data.buildings;
+      // console.log(location)
       setDataSimpang(location);
     } catch (err) {
       console.error("Failed to fetch location:", err);
@@ -153,7 +170,7 @@ const ManajemenKamera = () => {
   const fetchCameras = async () => {
     try {
       const res = await cameras.getAll();
-      const detectedCameras = res.data;
+      const detectedCameras = res.data.cameras;
       setDataCameras(detectedCameras || []);
     } catch (err) {
       if (err.response) {
@@ -173,15 +190,45 @@ const ManajemenKamera = () => {
     }
   };
 
+  const fetchMapsById = async (id) => {
+    try {
+      const res = await maps.getById(id);
+      const detectedSimpang = res.data;
+      setDataMapsID(detectedSimpang || []);
+    } catch (err) {
+      if (err.response) {
+        if (err.response.status === 404) {
+          toast.info("API kamera belum tersedia (404)", { position: 'top-right' });
+        } else {
+          toast.error(`Gagal mengambil data Simpang! (${err.response.status})`, { position: 'top-right' });
+        }
+      } else if (err.request) {
+        toast.error("Server tidak merespons saat mengambil data Simpang.", { position: 'top-right' });
+      } else {
+        toast.error("Terjadi kesalahan saat menghubungi API Simpang.", { position: 'top-right' });
+      }
+
+      console.error("Failed to fetch cameras:", err);
+      setDataCameras([]);
+    }
+  };
+
   //# Fetch Create Camera (Maps)
   const createMaps = async (data) => {
     const push = {
-      title: data.title,
-      category: data.category,
-      status: data.status || false,
+      model_detection: data.model_detection || false,
       latitude: data.latitude,
       longitude: data.longitude,
-      socketEvent: data.socketEvent,
+      socket_event: data.socket_event,
+      name: data.name,
+      latitude: data.location.latitude,
+      longitude: data.location.longitude,
+      kategori: data.category,
+      kota: data.kota,
+      ukuran_kota: data.ukuran_kota,
+      tanggal: data.tanggal,
+      periode: data.periode,
+      ditangani_oleh: data.ditangani_oleh
     };
 
     try {
@@ -208,9 +255,14 @@ const ManajemenKamera = () => {
   //# Fetch Create Camera (Maps)
   const createCameras = async (data) => {
     const push = {
-      location: data.location,
-      title: data.title,
-      socketEvent: data.socketEvent,
+      name: data.name || "",
+      url: data.url || "",
+      thumbnail_url: data.thumbnail_url || "",
+      location: data.location || "",
+      resolution: data.resolution || "",
+      status: data.status || "",
+      socket_event: data.socket_event || "",
+      ID_Simpang: data.ID_Simpang || 0
     };
 
     try {
@@ -237,13 +289,18 @@ const ManajemenKamera = () => {
   //# Fetch update Camera (Maps)
   const updateCameras = async (id, data) => {
     const push = {
+      name: data.name,
+      url: data.url,
+      thumbnail_url: data.thumbnail_url,
       location: data.location,
-      title: data.title,
-      socketEvent: data.socketEvent,
+      resolution: data.resolution,
+      status: data.status,
+      socket_event: data.socket_event,
+      ID_Simpang: data.ID_Simpang
     };
 
     try {
-      const res = await maps.updateById(id, push);
+      const res = await cameras.updateById(id, push);
       // Perbaikan: Biasanya update menggunakan status 200
       if (res.status === 200 || res.status === 201) {
         toast.success("Kamera berhasil diperbaharui!!", {
@@ -252,6 +309,7 @@ const ManajemenKamera = () => {
         console.log("Data berhasil diperbaharui!");
         // Refresh data setelah berhasil
         await fetchMaps();
+        await fetchCameras();
       } else {
         toast.error("Data tidak berhasil diperbaharui, silakan coba lagi!", {
           position: 'top-right'
@@ -266,12 +324,19 @@ const ManajemenKamera = () => {
   //# Fetch update Maps
   const updateMaps = async (id, data) => {
     const push = {
-      title: data.title,
-      category: data.category,
-      status: data.status || false,
+      model_detection: data.model_detection || false,
       latitude: data.latitude,
       longitude: data.longitude,
-      socketEvent: data.socketEvent,
+      socket_event: data.socket_event,
+      name: data.name,
+      latitude: data.location.latitude,
+      longitude: data.location.longitude,
+      kategori: data.category,
+      kota: data.kota,
+      ukuran_kota: data.ukuran_kota,
+      tanggal: data.tanggal,
+      periode: data.periode,
+      ditangani_oleh: data.ditangani_oleh
     };
 
     try {
@@ -306,6 +371,7 @@ const ManajemenKamera = () => {
         });
         console.log("Data berhasil dihapus!");
         // Refresh data setelah berhasil
+        await fetchCameras();
         await fetchMaps();
       } else {
         toast.error("Data tidak berhasil dihapus, silakan coba lagi!", {
@@ -377,7 +443,7 @@ const ManajemenKamera = () => {
       };
 
       const res = await calendar.updateById(data.id, pushData);
-      console.log(res);
+      // console.log(res);
 
       // Perbaikan: Gunakan === untuk comparison yang benar
       if (res.status === 200 || res.status === 201) {
@@ -465,18 +531,18 @@ const ManajemenKamera = () => {
     const combineData = () => {
       const result = dataSimpang.map(building => {
         // Ambil semua kamera yang memiliki building.id yang cocok
-        const relatedCameras = dataCameras.filter(camera => camera.building_id === building.id);
+        const relatedCameras = dataCameras.filter(camera => camera.ID_Simpang === building.id);
 
         return {
           ...building,
-          camera: Array.isArray(building.camera)
-            ? building.camera
-            : building.camera
-              ? [building.camera]
-              : [],
+          // camera: Array.isArray(building.camera)
+          //   ? building.camera
+          //   : building.camera
+          //     ? [building.camera]
+          //     : [],
 
           // Tambahkan kamera yang terkait jika ada di dataCameras (optional)
-          extraCameras: relatedCameras || [], // optional jika ingin akses kamera dari API lain
+          camera: relatedCameras || [], // optional jika ingin akses kamera dari API lain
         };
       });
 
@@ -489,9 +555,9 @@ const ManajemenKamera = () => {
   }, [dataSimpang, dataCameras]);
 
 
-  useEffect(() => {
-    console.log(mergedCameraData)
-  }, [mergedCameraData])
+  // useEffect(() => {
+  //   console.log(mergedCameraData)
+  // }, [mergedCameraData])
 
   useEffect(() => {
     fetchMaps();
@@ -540,36 +606,47 @@ const ManajemenKamera = () => {
   useEffect(() => {
     const socket = io('https://sxe-data.layanancerdas.id');
 
-    dataSimpang.forEach((building) => {
-      if (!building?.camera?.socketEvent || !building?.camera?.id) return;
+    mergedCameraData.forEach((building) => {
+      if (!Array.isArray(building?.camera)) return;
+      building.camera.forEach((cam) => {
+        console.log(cam)
+        if (!cam?.socket_event || !cam?.id) return;
 
-      socket.on(building.camera.socketEvent, (data) => {
-        setStreamData((prev) => ({
-          ...prev,
-          [building.camera.id]: data,
-        }));
+        socket.on(cam.socket_event, (data) => {
+          setStreamData((prev) => ({
+            ...prev,
+            [cam.id]: data,
+          }));
+        });
       });
     });
 
     return () => {
-      dataSimpang.forEach((building) => {
-        if (building?.camera?.socketEvent) {
-          socket.off(building.camera.socketEvent);
-        }
+      mergedCameraData.forEach((building) => {
+        if (!Array.isArray(building?.camera)) return;
+
+        building.camera.forEach((cam) => {
+          if (cam?.socket_event) {
+            socket.off(cam.socket_event);
+          }
+        });
       });
     };
-  }, [dataSimpang]);
+  }, [mergedCameraData]);
+
 
   const changeInputSearch = (e) => {
     setInputValue(e.target.value);
   };
 
   const handleAddNewCamera = () => {
+    setActionDialog("create_cameras")
     setStatusDialogCameras(false)
     setShowDialog(true);
   };
 
   const handleAddNewMaps = () => {
+    setActionDialog("create_maps")
     setStatusDialogCameras(true)
     setShowDialog(true);
   };
@@ -581,9 +658,15 @@ const ManajemenKamera = () => {
 
     if (select === "edit_cameras") {
       setFormCameras({
-        id: data?.id || "",
-        title: data?.title || "",
-        socketEvent: data?.socketEvent || ""
+        id: data?.id || 0,
+        name: data?.name || "",
+        url: data?.url || "",
+        thumbnail_url: data?.thumbnail_url || "",
+        location: data?.location || "",
+        resolution: data?.resolution || "",
+        status: data?.status || 0,
+        socket_event: data?.socket_event || "",
+        ID_Simpang: data?.ID_Simpang || 0
       });
 
       setShowDialog(true);
@@ -592,16 +675,24 @@ const ManajemenKamera = () => {
     } else if (select === "delete_maps") {
       deleteMaps(id)
     } else if (select === "edit_maps") {
+      fetchMapsById(id)
       console.log(data)
       setFormMaps({
-        id: data.id,
-        category: data.category,
-        model_detection: data.model_detection,
-        name: data.name || "",
+        id: id,
+        category: dataMapsID.kategori || data.category || "",
+        model_detection: dataMapsID.model_detection || data.model_detection || false,
+        name: dataMapsID.name || data.name || "",
         location: {
-          latitude: data.location.latitude || "",
-          longitude: data.location.longitude || ""
-        }
+          latitude: dataMapsID.latitude || data.location || "",
+          longitude: dataMapsID.longitude || data.location || ""
+        },
+        socket_event: dataMapsID.socket_event || data.socket_event,
+        kategori: dataMapsID.category || data.category,
+        kota: dataMapsID.Kota || data.kota,
+        ukuran_kota: dataMapsID.Ukuran_Kota || data.ukuran_kota,
+        tanggal: dataMapsID?.Tanggal?.split("T")[0] || data.tanggal,
+        periode: dataMapsID.Periode || data.periode,
+        ditangani_oleh: dataMapsID.Ditangani_Oleh || data.ditangani_oleh
       });
       setShowDialog(true);
 
@@ -609,7 +700,7 @@ const ManajemenKamera = () => {
       handleAddNewCamera()
     }
   }
-  useEffect(() => console.log(formMaps), [formMaps])
+  // useEffect(() => console.log(formMaps), [formMaps])
 
   const closeDialog = () => {
     setActionDialog("")
@@ -724,8 +815,22 @@ const ManajemenKamera = () => {
               </h2>
               {actionDialog === "edit_maps" || statusDialogCameras ? (
                 <div className='flex flex-col gap-3'>
-
                   {/* Input Location Title */}
+                  <div>
+                    <label className="label">Nama Kota</label>
+                    <input
+                      type="text"
+                      className="input input-bordered w-full border-gray-300"
+                      value={formMaps.kota}
+                      onChange={(e) =>
+                        setFormMaps({
+                          ...formMaps, kota: e.target.value
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* Input  */}
                   <div>
                     <label className="label">Nama Lokasi</label>
                     <input
@@ -740,11 +845,67 @@ const ManajemenKamera = () => {
                     />
                   </div>
 
+                  {/* Input Location Title */}
+                  <div>
+                    <label className="label">Ukuran Kota</label>
+                    <input
+                      type="text"
+                      className="input input-bordered w-full border-gray-300"
+                      value={formMaps.ukuran_kota}
+                      onChange={(e) =>
+                        setFormMaps({
+                          ...formMaps, ukuran_kota: e.target.value
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* Input date create */}
+                  <div>
+                    <label className="label">Pilih Tanggal:</label>
+                    <input
+                      type="date"
+                      className="border rounded px-2 py-1 w-full border-gray-300"
+                      value={formMaps.tanggal}
+                      onChange={(e) => setFormMaps({ ...formMaps, tanggal: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Input Location Title */}
+                  <div>
+                    <label className="label">Ditangani</label>
+                    <input
+                      type="text"
+                      className="input input-bordered w-full border-gray-300"
+                      value={formMaps.ditangani_oleh}
+                      onChange={(e) =>
+                        setFormMaps({
+                          ...formMaps, ditangani_oleh: e.target.value
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* Input periode */}
+                  <div>
+                    <label className="label">Periode</label>
+                    <input
+                      type="text"
+                      className="input input-bordered w-full border-gray-300"
+                      value={formMaps.periode}
+                      onChange={(e) =>
+                        setFormMaps({
+                          ...formMaps, periode: e.target.value
+                        })
+                      }
+                    />
+                  </div>
+
                   {/* Input Category */}
                   <div>
                     <label className="label">Nama Kategori</label>
                     <select
-                      className="border bg-white text-stone-400 text-sm rounded-md px-3 py-2 w-full border-gray-300"
+                      className="select text-sm rounded-md w-full "
                       value={formMaps.category}
                       onChange={(e) =>
                         setFormMaps({ ...formMaps, category: e.target.value })
@@ -812,17 +973,16 @@ const ManajemenKamera = () => {
               ) : actionDialog === "edit_cameras" || !statusDialogCameras ? (
                 <div>
                   <div className="grid grid-cols-1 gap-4">
-
                     {/* Judul Kamera */}
                     <div>
                       <label className="label">Judul Kamera</label>
                       <input
                         type="text"
                         className="input input-bordered w-full"
-                        value={formCameras?.title || ""}
+                        value={formCameras?.name || ""}
                         onChange={(e) =>
                           setFormCameras({
-                            ...formCameras, title: formCameras.title
+                            ...formCameras, name: e.target.value
                           })
                         }
                       />
@@ -832,20 +992,27 @@ const ManajemenKamera = () => {
                     <div>
                       <label className="label">Nama Lokasi</label>
                       <select
-                        className="border bg-white text-stone-400 text-sm rounded-md px-3 py-2 w-full border-gray-300"
-                        value={formMaps.category}
-                        onChange={(e) =>
-                          setFormMaps({ ...formMaps, category: e.target.value })
-                        }
+                        className="text-sm rounded-md px-3 py-2 w-full select"
+                        value={formCameras.ID_Simpang}
+                        onChange={(e) => {
+                          const selectedId = parseInt(e.target.value, 10);
+                          const selectedItem = mergedCameraData.find((item) => item.id === selectedId);
+                          console.log(selectedItem)
+                          setFormCameras({
+                            ...formCameras,
+                            ID_Simpang: selectedId,
+                            location: selectedItem?.name || '',
+                          });
+                        }}
                       >
                         <option value="" disabled>Pilih Kategori</option>
-                        {dataSimpang?.map((item, id) => {
-                          return (
-                            <option key={id} value={item.id} disabled>{item.name}</option>
-                          )
-                        })}
-                        <option value="" disabled>Pilih Kategori</option>
+                        {mergedCameraData?.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
                       </select>
+
                     </div>
 
                     {/* Socket Event */}
@@ -854,10 +1021,10 @@ const ManajemenKamera = () => {
                       <input
                         type="text"
                         className="input input-bordered w-full"
-                        value={formCameras?.socketEvent || ""}
+                        value={formCameras?.socket_event || ""}
                         onChange={(e) =>
                           setFormCameras({
-                            ...formCameras, socketEvent: e.target.value
+                            ...formCameras, socket_event: e.target.value
                           })
                         }
                       />
@@ -876,19 +1043,20 @@ const ManajemenKamera = () => {
                 <button
                   className="btn btn-sm btn-primary"
                   onClick={async () => {
-                    if (!statusDialogCameras) {
-                      if (actionDialog === "edit_cameras") {
-                        updateCameras(formCameras.id, formCameras);
-                      } else {
-                        createCameras(formCameras);
-                      }
+                    if (!statusDialogCameras && actionDialog === "create_cameras") {
+                      createCameras(formCameras);
                     }
-                    else if (statusDialogCameras) {
-                    } else if (actionDialog === "edit_maps") {
+                    else if (actionDialog === "edit_cameras") {
+                      updateCameras(formCameras.id, formCameras);
+                    }
+                    else if (actionDialog === "edit_maps") {
                       updateMaps(formMaps.id, formMaps);
-                    } else {
+                    }
+                    else if (statusDialogCameras && actionDialog === "create_maps") {
                       createMaps(formMaps);
                     }
+                    fetchCameras();
+                    fetchMaps();
                     closeDialog();
                   }}
                 >
@@ -1050,6 +1218,8 @@ const ManajemenKamera = () => {
                           <th rowSpan={2} colSpan={2}>Kamera</th>
                           <th rowSpan={2}>Tautan Socket</th>
                           <th colSpan={2}>Koordinat</th>
+                          <th rowSpan={2}>Thumbnail</th>
+                          <th rowSpan={2}>Resolution</th>
                           <th rowSpan={2}>Status</th>
                           <th rowSpan={2}>Action</th>
                         </tr>
@@ -1067,9 +1237,12 @@ const ManajemenKamera = () => {
                               <tr key={`no-camera-${i}`} className="text-medium font-normal text-left">
                                 <td className="text-center">{i + 1}</td>
                                 <td onClick={() => handleSelectCameras(dataSimpang.id, 'edit_maps', dataSimpang)} className='cursor-pointer'>{dataSimpang.name}</td>
-                                <td colSpan={3} className='text-center'>Tidak ada kamera</td>
-                                <td>{dataSimpang.location?.latitude || '-'}</td>
-                                <td>{dataSimpang.location?.longitude || '-'}</td>
+                                <td colSpan={2} className='text-center'>Tidak ada kamera</td>
+                                <td className='text-center'>{'-'}</td>
+                                <td className='truncate text-wrap'>{dataSimpang.location?.latitude || '-'}</td>
+                                <td className='truncate text-wrap'>{dataSimpang.location?.longitude || '-'}</td>
+                                <td className='text-center'>{'-'}</td>
+                                <td className='text-center'>{'-'}</td>
                                 <td>
                                   <input
                                     type="checkbox"
@@ -1078,7 +1251,14 @@ const ManajemenKamera = () => {
                                     onChange={(e) => handleToggle(i, e.target.checked)}
                                   />
                                 </td>
-                                <td className='text-center'>-</td>
+                                <td className='text-center'>
+                                  <button
+                                    className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                    onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
+                                  >
+                                    <FaTrashCan className="text-red-300 text-lg" />
+                                  </button>
+                                </td>
                               </tr>
                             );
                           }
@@ -1087,10 +1267,38 @@ const ManajemenKamera = () => {
                             <tr key={`cam-${i}-${j}`} className="text-medium font-normal text-left">
                               <td className="text-center">{i + 1}</td>
                               <td onClick={() => handleSelectCameras(dataSimpang.id, 'edit_maps', dataSimpang)} className='cursor-pointer'>{dataSimpang.name}</td>
-                              <td colSpan={2}>{cam.title}</td>
-                              <td>{cam.socketEvent || '-'}</td>
-                              <td>{dataSimpang.location?.latitude || '-'}</td>
-                              <td>{dataSimpang.location?.longitude || '-'}</td>
+                              <td colSpan={2}>{cam.name}</td>
+                              <td>{cam.socket_event || '-'}</td>
+                              <td className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[5px]">
+                                {dataSimpang.location?.latitude || '-'}
+                              </td>
+                              <td className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[5px]">
+                                {dataSimpang.location?.longitude || '-'}
+                              </td>
+
+                              <td className='items-center m-auto text-center'>
+                                {cam.thumbnail_url ? (
+                                  <a href={cam.thumbnail_url} target="_blank" rel="noopener noreferrer">
+                                    {/* <Image
+                                      src={cam.thumbnail_url}
+                                      alt="Thumbnail"
+                                      width={100}
+                                      height={60}
+                                    /> */}
+                                    <img
+                                      src={cam.thumbnail_url}
+                                      alt="Thumbnail"
+                                      width={100}
+                                      height={60}
+                                      className='content-center'
+                                      style={{ objectFit: 'cover' }}
+                                    />
+                                  </a>
+                                ) : (
+                                  '-'
+                                ) || '-'}
+                              </td>
+                              <td className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[3px] text-center">{cam.resolution || '-'}</td>
                               <td>
                                 <input
                                   type="checkbox"
@@ -1131,9 +1339,10 @@ const ManajemenKamera = () => {
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-5 w-full">
                     {filteredBuildings?.map((dataCamera, index) => {
-                      const cameraId = dataCamera?.camera?.id;
+                      const firstCamera = dataCamera?.camera?.[0];
+                      const cameraId = firstCamera?.id;
                       const stream = cameraId ? streamData[cameraId] : null;
-
+                      // console.log(stream)
                       return (
                         <div className="w-full" key={index}>
                           <CCTVStream
