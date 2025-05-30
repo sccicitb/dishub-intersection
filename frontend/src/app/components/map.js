@@ -1,5 +1,6 @@
 "use client";
 
+// import maplibregl from "maplibre-gl";
 import Map, { NavigationControl, Marker } from "@vis.gl/react-maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useState, useRef } from "react";
@@ -9,14 +10,18 @@ import { FaAngleDown } from "react-icons/fa6";
 // import simpang from "@/data/DataSimpang.json";
 import ruangan from "@/data/ruangan.json";
 import { useAuth } from "../context/authContext";
-import { maps } from '@/lib/apiAccess';
-
+import { maps } from '@/lib/apiService';
 
 const MapComponent = ({ title, onClick, sizeHeight }) => {
+  const [mapLib, setMapLib] = useState(null);
   const { setLoading } = useAuth();
   const mapRef = useRef(null);
 
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+  const [cameraOptions, setCameraOptions] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false); // Add map loaded state
+
+  const [theme, setTheme] = useState("light"); // Remove localStorage dependency initially
   const [keymap, setKeymap] = useState("");
   const [bounds, setBounds] = useState(null);
   const [lokasiSimpang, setLokasiSimpang] = useState([]);
@@ -41,20 +46,34 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
   };
 
   useEffect(() => {
+    import("maplibre-gl").then((mod) => {
+      setMapLib(mod.default); // atau `mod` jika default tidak tersedia
+    });
+  }, []);
+
+  // Initialize theme after component mounts
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem("theme") || "light";
+      setTheme(savedTheme);
+      setKeymap(mapStyles[savedTheme]);
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchLocation = async () => {
       try {
-        const res = await maps.getAll();
-        // console.log("Hasil getAll:", res); 
-        const detectedCameras = res.data.buildings
+        const res = await maps.getAllFull();
+        const detectedCameras = res.data.buildings;
         setLokasiSimpang(detectedCameras);
+        console.log(detectedCameras)
       } catch (err) {
         console.error("Failed to fetch cameras:", err);
+        setLokasiSimpang([]); // Set empty array on error
       }
     };
-    // setLokasiSimpang(simpang);
-    fetchLocation();
 
-    setKeymap(mapStyles[theme]);
+    fetchLocation();
   }, []);
 
   useEffect(() => {
@@ -79,20 +98,26 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
       }, {});
       setCategorizedBuildings(grouped);
     }
-  }, [lokasiSimpang])
+  }, [lokasiSimpang]);
 
   useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setTheme(document.documentElement.getAttribute("data-theme") || "light");
-    });
+    if (typeof window !== 'undefined') {
+      const observer = new MutationObserver(() => {
+        const newTheme = document.documentElement.getAttribute("data-theme") || "light";
+        setTheme(newTheme);
+        if (mapLoaded) { // Only update keymap if map is loaded
+          setKeymap(mapStyles[newTheme]);
+        }
+      });
 
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"],
+      });
 
-    return () => observer.disconnect();
-  }, []);
+      return () => observer.disconnect();
+    }
+  }, [mapLoaded]);
 
   useEffect(() => {
     const newBuilding =
@@ -107,15 +132,39 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
     setSimpang("");
   }, [selectedSimpang]);
 
+  const handleMapLoad = () => {
+    setMapLoaded(true);
+    setKeymap(mapStyles[theme]);
+    // Fit bounds after map is fully loaded
+    setTimeout(() => {
+      fitBoundsTosimpang();
+    }, 100);
+  };
+
   const flyToLocation = (latitude, longitude, simpang) => {
-    if (mapRef.current) {
+    if (mapRef.current && mapLoaded) {
       mapRef.current.flyTo({
         center: [longitude, latitude],
         zoom: simpang ? 16 : 15,
         essential: true,
       });
-      onClick?.(simpang);
+      console.log(simpang);
+
+      // Send to parent if only 1 camera
+      if (Array.isArray(simpang?.cameras)) {
+        const { cameras } = simpang;
+
+        // if (cameras.length === 1) {
+          setCameraOptions(cameras);
+          setIsModalOpen(true);
+        // } else if (cameras.length > 1) {
+        //   onClick?.({ ...simpang, camera: cameras[0] });
+        // }
+      } else {
+        onClick?.(simpang);
+      }
     }
+
 
     if (simpang) {
       detailLocation(simpang);
@@ -126,7 +175,7 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
   };
 
   const flyToCategory = (categoryBuildings) => {
-    if (!mapRef.current || !categoryBuildings?.length) return;
+    if (!mapRef.current || !categoryBuildings?.length || !mapLoaded) return;
 
     if (categoryBuildings.length === 1) {
       const [building] = categoryBuildings;
@@ -162,7 +211,7 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
   };
 
   const fitBoundsTosimpang = () => {
-    if (mapRef.current && bounds) {
+    if (mapRef.current && bounds && mapLoaded) {
       mapRef.current.fitBounds(
         [
           [bounds[0], bounds[1]],
@@ -177,47 +226,63 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
 
   const resetView = fitBoundsTosimpang;
 
+  // Don't render map until we have a valid keymap
+  if (!keymap) {
+    return (
+      <div>
+        <div className="w-full">
+          <div style={{ width: "100%", height: sizeHeight ? sizeHeight : "50vh" }} className="relative flex items-center justify-center bg-gray-100">
+            <div>Loading Map...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="p-5 text-xl font-semibold">
         {title || null}
       </div>
       <div className="w-full">
-        <div style={{ width: "100", height: sizeHeight ? sizeHeight : "50vh" }} className="relative">
-          <Map
-            ref={mapRef}
-            mapLib={import("maplibre-gl")}
-            mapStyle={mapStyles[theme]}
-            initialViewState={{
-              longitude: center.longitude,
-              latitude: center.latitude,
-              zoom: 7,
-            }}
-            onLoad={fitBoundsTosimpang}
-          >
-            <NavigationControl position="top-right" />
+        <div style={{ width: "100%", height: sizeHeight ? sizeHeight : "50vh" }} className="relative">
+          {mapLib && keymap && (
+            <Map
+              ref={mapRef}
+              mapLib={mapLib}
+              mapStyle={keymap}
+              initialViewState={{
+                longitude: center.longitude,
+                latitude: center.latitude,
+                zoom: 7,
+              }}
+              onLoad={handleMapLoad}
+            >
+              <NavigationControl position="top-right" />
 
-            {lokasiSimpang?.map((simpang) => (
-              <Marker
-                key={simpang.id}
-                longitude={simpang.location.longitude}
-                latitude={simpang.location.latitude}
-              >
-                <div
-                  onClick={() =>
-                    flyToLocation(
-                      simpang.location.latitude,
-                      simpang.location.longitude,
-                      simpang
-                    )
-                  }
-                  style={{ cursor: "pointer" }}
+              {mapLoaded && lokasiSimpang?.map((simpang) => (
+                <Marker
+                  key={simpang.id}
+                  longitude={simpang.location.longitude}
+                  latitude={simpang.location.latitude}
                 >
-                  <FaMapMarkerAlt size={35} color="brown" />
-                </div>
-              </Marker>
-            ))}
-          </Map>
+                  <div
+                    onClick={() =>
+                      flyToLocation(
+                        simpang.location.latitude,
+                        simpang.location.longitude,
+                        simpang
+                      )
+                    }
+                    style={{ cursor: "pointer" }}
+                  >
+                    <FaMapMarkerAlt size={35} color="brown" />
+                  </div>
+                </Marker>
+              ))}
+            </Map>
+          )}
+
 
           <div className="absolute top-3 left-3 w-[80%] text-sm text-base-800">
             <div className="flex flex-wrap gap-2">
@@ -260,12 +325,46 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
                   )
                 )}
               </Dropdown>
-              
-              <button className="btn btn-md rounded-xl shadow-xs capitalize" onClick={() => fitBoundsTosimpang()}>reset view</button>
+
+              <button
+                className="btn btn-md rounded-xl shadow-xs capitalize"
+                onClick={() => fitBoundsTosimpang()}
+                disabled={!mapLoaded}
+              >
+                reset view
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
+          <div className="bg-white rounded-xl p-5 shadow-lg w-80 max-w-full">
+            <h2 className="text-lg font-semibold mb-4">Pilih Kamera</h2>
+            <div className="space-y-2">
+              {cameraOptions.map((camera) => (
+                <button
+                  key={camera.id}
+                  className="w-full text-left rounded-xl btn btn-md hover:bg-gray-100"
+                  onClick={() => {
+                    onClick?.({ camera });
+                    setIsModalOpen(false);
+                  }}
+                >
+                  {camera.name || `Camera ${camera.id}`}
+                </button>
+              ))}
+            </div>
+            <button
+              className="btn btn-md mt-4 w-full btn-error rounded-xl"
+              onClick={() => setIsModalOpen(false)}
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

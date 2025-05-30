@@ -58,7 +58,7 @@ function SurveiSimpangPage () {
         const vehicleData = Array.isArray(surveyRes?.data?.vehicleData) ? surveyRes.data.vehicleData : [];
 
         setDataCamera(cameraData);
- 
+
         if (cameraData.length > 0 && cameraData[0]?.id) {
           setActiveCamera(cameraData[0]?.id);
         }
@@ -171,23 +171,25 @@ function SurveiSimpangPage () {
   }, [dataCamera]);
 
   const handleClick = (building) => {
-    // Comprehensive validation
-    if (!building ||
+    // Pastikan objek valid dan memiliki properti kamera
+    if (
+      !building ||
       typeof building !== 'object' ||
       !building.camera ||
-      typeof building.camera !== 'object' ||
-      !building.camera.id ||
-      !building.name) {
+      typeof building.camera !== 'object' || // setelah pemilihan kamera, harus objek
+      !building.camera.camera_id
+    ) {
       console.warn("Invalid building or camera data", building);
       return;
     }
-
+    
     try {
-      setActiveTitle("Survei " + building.name);
-      setActiveSimpang(building.name);
-      setActiveCamera(building.camera.id);
+      const title = building.camera.name || "Tanpa Nama";
+      setActiveTitle("Survei " + title);
+      setActiveSimpang(title);
+      setActiveCamera(building.camera.camera_id);
     } catch (error) {
-      console.error('Error in handleClick:', error);
+      console.error("Error in handleClick:", error);
     }
   };
 

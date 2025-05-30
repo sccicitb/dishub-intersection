@@ -22,6 +22,7 @@ export const createRequest = (url, data) => apiRequest('post', url, data)
 
 export const maps = {
   getAll: () => getRequest(`/maps/buildings`),
+  getAllFull: () => getRequest(`/maps/buildings-full`),
   getById: (id) => getRequest(`/simpang/${id}`),
   updateById: (id, data) => updateRequest(`/simpang/${id}`, data),
   createData: (data) => createRequest(`/simpang`, data),
