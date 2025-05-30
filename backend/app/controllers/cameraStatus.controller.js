@@ -35,7 +35,6 @@ exports.createCameraStatusLog = async (req, res) => {
   }
 };
 
-
 // GET /api/cameras/:id/status-log
 exports.getCameraStatusLogs = async (req, res) => {
   const { id } = req.params;
@@ -91,8 +90,6 @@ exports.getLatestCameraStatus = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-
 
 // GET /api/cameras/down-today -> Nice to have, but not required
 exports.getCamerasDownToday = async (req, res) => {

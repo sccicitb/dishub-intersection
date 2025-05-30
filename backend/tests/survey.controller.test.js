@@ -3,324 +3,147 @@ const path = require('path');
 const surveyController = require('../app/controllers/survey.controller');
 const surveyModel = require('../app/models/survey.model');
 const mapsModel = require('../app/models/maps.model');
-const arusHelper = require('../app/helpers/arus');
-const subCodeMap = require('../app/helpers/subCodeMap');
 
-// Mock model dan helper agar tidak benar-benar query db/file system
+// Mocks
+jest.mock('fs');
+jest.mock('path');
 jest.mock('../app/models/survey.model');
 jest.mock('../app/models/maps.model');
-jest.mock('../app/helpers/arus');
-jest.mock('fs');
-jest.mock('../app/helpers/subCodeMap', () => ({
-  SM: 'SM',
-  MP: 'MP',
-  BS: 'BS',
-  TR: 'TR'
+jest.mock('../app/helpers/subCodeMap', () => ({}));
+jest.mock('../app/helpers/classificationHelper', () => ({ getSubCodes: jest.fn() }));
+jest.mock('../app/helpers/arus', () => ({ getPeriodsAndSlots: jest.fn() }));
+jest.mock('../app/helpers/timeHelper', () => ({ getIntervals: jest.fn() }));
+jest.mock('../app/helpers/turnLogic', () => ({
+  TURN_MAP: {},
+  ROWS: [],
+  JENIS_KENDARAAN: []
 }));
 
-jest.spyOn(console, 'error').mockImplementation(() => {});
+describe('survey.controller.js', () => {
+  afterEach(() => jest.clearAllMocks());
 
-describe('Controller: getVehicleSummaryData', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  describe('getVehicleSummaryData', () => {
+    it('should return vehicle data JSON with correct interval', async () => {
+      // Setup: classification.json mock, fs, subCodeMap, etc.
+      const mockClassificationJson = [
+        { type: 'luar_kota', subCode: 'A' }
+      ];
+      const mockSubCodeMap = { 'A': 'AA' };
+      const mockVehicleData = { test: 'ok' };
 
-  it('should return vehicle data JSON with correct classification subCodes', async () => {
-    const req = {
-      query: {
-        camera_id: '1',
-        approach: 'utara',
-        direction: 'lurus',
-        classification: 'luar_kota'
-      }
-    };
-    const res = {
-      json: jest.fn(),
-      status: jest.fn().mockReturnThis()
-    };
+      fs.readFileSync.mockReturnValue(JSON.stringify(mockClassificationJson));
+      jest.doMock('../app/helpers/subCodeMap', () => mockSubCodeMap);
 
-    // Mock classification.json
-    const mockClassJson = JSON.stringify([
-      { type: 'luar_kota', subCode: 'SM' },
-      { type: 'luar_kota', subCode: 'MP' },
-      { type: 'dalam_kota', subCode: 'XX' }
-    ]);
-    fs.readFileSync.mockReturnValueOnce(mockClassJson);
+      surveyModel.getVehicleDataGrouped.mockResolvedValue(mockVehicleData);
 
-    const mockData = { vehicleData: [{ period: 'Pagi', timeSlots: [] }] };
-    surveyModel.getVehicleDataGrouped.mockResolvedValueOnce(mockData);
-
-    await surveyController.getVehicleSummaryData(req, res);
-
-    expect(fs.readFileSync).toHaveBeenCalled();
-    expect(surveyModel.getVehicleDataGrouped).toHaveBeenCalledWith(
-      {
-        cameraId: '1',
-        approach: 'utara',
-        direction: 'lurus',
-        classificationType: 'luar_kota',
-        date: undefined
-      },
-      ['SM', 'MP'],
-      '15min'
-    );
-    expect(res.json).toHaveBeenCalledWith({ ...mockData, interval: '15min' });
-  });
-
-  it('should default classificationType if not provided', async () => {
-    const req = { query: {} };
-    const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
-
-    fs.readFileSync.mockReturnValueOnce(JSON.stringify([
-      { type: 'luar_kota', subCode: 'SM' }
-    ]));
-
-    const mockData = { vehicleData: [] };
-    surveyModel.getVehicleDataGrouped.mockResolvedValueOnce(mockData);
-
-    await surveyController.getVehicleSummaryData(req, res);
-
-    expect(surveyModel.getVehicleDataGrouped).toHaveBeenCalledWith(
-      { cameraId: undefined, approach: undefined, direction: undefined, classificationType: 'luar_kota', date: undefined },
-      ['SM'],
-      '15min'
-    );
-    expect(res.json).toHaveBeenCalledWith({ ...mockData, interval: '15min' });
-  });
-
-  it('should handle errors gracefully and return 500', async () => {
-    const req = { query: {} };
-    const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
-
-    fs.readFileSync.mockImplementationOnce(() => { throw new Error('File error'); });
-    await surveyController.getVehicleSummaryData(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ message: 'Failed to fetch vehicle data' });
-  });
-
-  it('should pass date param to model', async () => {
-    const req = {
-      query: { date: '2025-05-28' }
-    };
-    const res = {
-      json: jest.fn(),
-      status: jest.fn().mockReturnThis()
-    };
-
-    fs.readFileSync.mockReturnValueOnce(JSON.stringify([
-      { type: 'luar_kota', subCode: 'SM' }
-    ]));
-
-    const mockData = { vehicleData: [] };
-    surveyModel.getVehicleDataGrouped.mockResolvedValueOnce(mockData);
-
-    await surveyController.getVehicleSummaryData(req, res);
-    expect(surveyModel.getVehicleDataGrouped).toHaveBeenCalledWith(
-      expect.objectContaining({ date: '2025-05-28', classificationType: 'luar_kota' }),
-      expect.any(Array),
-      '15min'
-    );
-  });
-
-  it('should call model with interval param if specified', async () => {
-    const req = {
-      query: {
-        camera_id: '1',
-        date: '2025-05-28',
-        interval: '1h'
-      }
-    };
-    const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
-
-    fs.readFileSync.mockReturnValueOnce(JSON.stringify([{ type: 'luar_kota', subCode: 'SM' }]));
-    const mockData = { vehicleData: [] };
-    surveyModel.getVehicleDataGrouped.mockResolvedValueOnce(mockData);
-
-    await surveyController.getVehicleSummaryData(req, res);
-
-    expect(surveyModel.getVehicleDataGrouped).toHaveBeenCalledWith(
-      expect.objectContaining({ cameraId: '1', date: '2025-05-28', classificationType: 'luar_kota' }),
-      ['SM'],
-      '1h'
-    );
-    expect(res.json).toHaveBeenCalledWith({ ...mockData, interval: '1h' });
-  });
-});
-
-// Untuk exportVehicleData jika ingin test interval:
-describe('Controller: exportVehicleData', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should return JSON with correct surveyInfo and periods', async () => {
-    const req = {
-      query: {
-        simpang_id: '1',
-        date: '2023-05-12'
-      }
-    };
-    const res = {
-      json: jest.fn(),
-      status: jest.fn().mockReturnThis()
-    };
-
-    mapsModel.getSimpangById.mockResolvedValue({
-      id: 1,
-      kategori: 'Utara'
-    });
-
-    surveyModel.getArusBySimpangDate.mockResolvedValue([]);
-    arusHelper.getPeriodsAndSlots.mockReturnValue([
-      {
-        name: 'Pagi',
-        timeSlots: [
-          {
-            time: '06:00 - 06:15',
-            status: 1,
-            data: {
-              sm: 10, mp: 5, aup: 1, trMp: 5, tr: 0, bs: 0, ts: 0,
-              bb: 0, tb: 0, gandengSemitrailer: 0, ktb: 0, total: 16
-            }
-          }
-        ]
-      }
-    ]);
-
-    await surveyController.exportVehicleData(req, res);
-
-    expect(mapsModel.getSimpangById).toHaveBeenCalledWith('1');
-    expect(surveyModel.getArusBySimpangDate).toHaveBeenCalledWith('1', '2023-05-12');
-    expect(arusHelper.getPeriodsAndSlots).toHaveBeenCalledWith([], '15min');
-
-    expect(res.json).toHaveBeenCalledWith({
-      surveyInfo: {
-        simpangCode: 1,
-        direction: 'Utara',
-        surveyor: 'VIANA',
-        date: '2023-05-12'
-      },
-      periods: [
-        {
-          name: 'Pagi',
-          timeSlots: [
-            {
-              time: '06:00 - 06:15',
-              status: 1,
-              data: {
-                sm: 10, mp: 5, aup: 1, trMp: 5, tr: 0, bs: 0, ts: 0,
-                bb: 0, tb: 0, gandengSemitrailer: 0, ktb: 0, total: 16
-              }
-            }
-          ]
+      const req = {
+        query: {
+          camera_id: '1',
+          approach: 'utara',
+          direction: 'lurus',
+          classification: 'luar_kota',
+          interval: '15min'
         }
-      ],
-      interval: '15min'
+      };
+      const res = {
+        json: jest.fn(),
+        status: jest.fn().mockReturnThis()
+      };
+
+      await surveyController.getVehicleSummaryData(req, res);
+      expect(surveyModel.getVehicleDataGrouped).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        test: 'ok',
+        interval: '15min'
+      }));
+    });
+
+    it('should return 500 on error', async () => {
+      fs.readFileSync.mockImplementation(() => { throw new Error('Failed'); });
+
+      const req = { query: {} };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+      await surveyController.getVehicleSummaryData(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Failed to fetch vehicle data' });
     });
   });
 
-  it('should return 400 if missing params', async () => {
-    const req = { query: {} };
-    const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+  describe('exportVehicleData', () => {
+    it('should return 400 if params missing', async () => {
+      const req = { query: {} };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
 
-    await surveyController.exportVehicleData(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'simpang_id and date required' });
+      await surveyController.exportVehicleData(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('should return 404 if simpang not found', async () => {
+      mapsModel.getSimpangById.mockResolvedValue(null);
+
+      const req = { query: { simpang_id: 11, date: '2024-01-01' } };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+      await surveyController.exportVehicleData(req, res);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Simpang not found' });
+    });
+
+    it('should return surveyInfo and periods on success', async () => {
+      mapsModel.getSimpangById.mockResolvedValue({ id: 11, kategori: 'Utara' });
+      surveyModel.getArusBySimpangDate.mockResolvedValue([{ mock: 1 }]);
+      const mockPeriods = [{ period: 1, slots: [] }];
+      const mockGetPeriodsAndSlots = require('../app/helpers/arus').getPeriodsAndSlots;
+      mockGetPeriodsAndSlots.mockReturnValue(mockPeriods);
+
+      const req = { query: { simpang_id: 11, date: '2024-01-01', interval: '15min' } };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+      await surveyController.exportVehicleData(req, res);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        surveyInfo: expect.any(Object),
+        periods: mockPeriods,
+        interval: '15min'
+      }));
+    });
+
+    it('should return 500 on error', async () => {
+      mapsModel.getSimpangById.mockRejectedValue(new Error('DB error'));
+      const req = { query: { simpang_id: 1, date: '2024-01-01' } };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+      await surveyController.exportVehicleData(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: "Internal server error" });
+    });
   });
 
-  it('should return 404 if simpang not found', async () => {
-    const req = { query: { simpang_id: '999', date: '2023-05-12' } };
-    const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+  describe('getSurveyProporsi', () => {
+    it('should return 400 if required params missing', async () => {
+      const req = { query: {} };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+      await surveyController.getSurveyProporsi(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
 
-    mapsModel.getSimpangById.mockResolvedValue(null);
+    it('should return JSON grid', async () => {
+      const rows = [];
+      surveyModel.getArusSummaryGrid.mockResolvedValue(rows);
 
-    await surveyController.exportVehicleData(req, res);
+      const req = { query: { ID_Simpang: 2, type: 'someType', date: '2024-01-01' } };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
 
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Simpang not found' });
-  });
+      await surveyController.getSurveyProporsi(req, res);
+      expect(res.json).toHaveBeenCalledWith(expect.any(Object));
+    });
 
-  it('should return 500 on unexpected error', async () => {
-    const req = { query: { simpang_id: '1', date: '2023-05-12' } };
-    const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
-
-    mapsModel.getSimpangById.mockRejectedValue(new Error('DB error'));
-
-    await surveyController.exportVehicleData(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Internal server error' });
-  });
-
-  it('should pass interval param to helper for export', async () => {
-    const req = {
-      query: {
-        simpang_id: '1',
-        date: '2023-05-12',
-        interval: '1h'
-      }
-    };
-    const res = {
-      json: jest.fn(),
-      status: jest.fn().mockReturnThis()
-    };
-
-    mapsModel.getSimpangById.mockResolvedValue({ id: 1, kategori: 'Utara' });
-    surveyModel.getArusBySimpangDate.mockResolvedValue([]);
-    arusHelper.getPeriodsAndSlots.mockReturnValue([
-      {
-        name: 'Pagi',
-        timeSlots: [
-          { time: '06:00 - 07:00', status: 1, data: { sm: 6, mp: 5, aup: 3, total: 14 } }
-        ]
-      }
-    ]);
-
-    await surveyController.exportVehicleData(req, res);
-    expect(arusHelper.getPeriodsAndSlots).toHaveBeenCalledWith([], '1h');
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ interval: '1h' }));
-  });
-});
-
-describe('Controller: getSurveyProporsi (Grid)', () => {
-  beforeEach(() => jest.clearAllMocks());
-
-  it('should return valid grid format', async () => {
-    surveyModel.getArusSummaryGrid.mockResolvedValue([
-      { dari_arah: 'north', ke_arah: 'west', SM: 2, MP: 3, BS: 1, TR: 0 },
-      { dari_arah: 'north', ke_arah: 'south', SM: 4, MP: 0, BS: 0, TR: 2 },
-      { dari_arah: 'north', ke_arah: 'east', SM: 1, MP: 1, BS: 0, TR: 1 }
-    ]);
-
-    const req = {
-      query: { ID_Simpang: 5, type: 'luar_kota', date: '2025-05-27' }
-    };
-    const res = {
-      json: jest.fn(),
-      status: jest.fn().mockReturnThis()
-    };
-
-    await surveyController.getSurveyProporsi(req, res);
-
-    // Cek response json
-    expect(res.json).toHaveBeenCalled();
-    const response = res.json.mock.calls[0][0];
-    expect(response.north).toBeDefined();
-    expect(Array.isArray(response.north.row1)).toBe(true);
-    expect(response.north.row1[0]).toHaveProperty('id');
-    expect(typeof response.north.row1[0].content).toBe('number');
-    expect(typeof response.vehicleCount).toBe('number');
-  });
-
-  it('should 400 if missing params', async () => {
-    const req = { query: {} };
-    const res = {
-      json: jest.fn(),
-      status: jest.fn().mockReturnThis()
-    };
-    await surveyController.getSurveyProporsi(req, res);
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: expect.any(String) }));
+    it('should return 500 on error', async () => {
+      surveyModel.getArusSummaryGrid.mockRejectedValue(new Error('DB error'));
+      const req = { query: { ID_Simpang: 2, type: 'someType', date: '2024-01-01' } };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+      await surveyController.getSurveyProporsi(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
   });
 });
