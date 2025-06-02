@@ -1,8 +1,12 @@
 "use client";
-import { useState, useEffect, Suspense, lazy } from 'react';
-import { io } from 'socket.io-client';
 
-import { cameras, maps, survey } from '@/lib/apiService';
+import { useState, useEffect, Suspense, lazy, useRef, useCallback } from 'react';
+import { io } from "socket.io-client";
+import { cameras, survey } from '@/lib/apiService';
+
+const socket = io('https://sxe-data.layanancerdas.id', {
+  autoConnect: false,
+});
 
 const ClasificationTable = lazy(() => import("@/app/components/clasificationTable"));
 const HourVehicleTable = lazy(() => import('@/app/components/HourVehicleTable'));
@@ -12,20 +16,19 @@ const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const MapComponent = lazy(() => import("@/app/components/map"));
 
-
-function SurveiSimpangPage () {
+function SurveiSimpangPage() {
   const [loading, setLoading] = useState(false);
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
-  const [activeInterval, setActiveInterval] = useState('');
+  const [activeInterval, setActiveInterval] = useState("");
   const [activePergerakan, setActivePergerakan] = useState('Semua');
-  const [activeSimpang, setActiveSimpang] = useState("");
-  const [activeCamera, setActiveCamera] = useState('detection1');
   const [activeTitle, setActiveTitle] = useState("Survei ");
   const [vehicleData, setVehicleData] = useState([]);
   const [dataCamera, setDataCamera] = useState([]);
   const [streamData, setStreamData] = useState({});
+  const [activeCamera, setActiveCamera] = useState(0);
+  const [activeSimpang, setActiveSimpang] = useState('');
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -44,147 +47,168 @@ function SurveiSimpangPage () {
   yesterday.setDate(yesterday.getDate() - 1);
   const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
 
+  // Fetch initial camera & vehicle data
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [cameraRes, surveyRes] = await Promise.all([
           cameras.getAll(),
-          // survey.getAll(activeCamera.slice(activeCamera.indexOf('n') + 1), formatDateToYMDForAPI(dateInput)),
           survey.getAll(activeCamera, formatDateToYMDForAPI(dateInput)),
         ]);
 
-        // Safe data extraction dengan fallback
         const cameraData = Array.isArray(cameraRes?.data?.cameras) ? cameraRes.data.cameras : [];
         const vehicleData = Array.isArray(surveyRes?.data?.vehicleData) ? surveyRes.data.vehicleData : [];
 
         setDataCamera(cameraData);
 
         if (cameraData.length > 0 && cameraData[0]?.id) {
-          setActiveCamera(cameraData[0]?.id);
+          setActiveCamera(cameraData[0].id);
+          setActiveSimpang(cameraData[0].name || '');
         }
 
         setVehicleData(vehicleData);
       } catch (err) {
         console.error('Error fetching initial data:', err);
-        // Set default values jika terjadi error
         setDataCamera([]);
         setVehicleData([]);
       }
     };
 
     fetchData();
-  }, []);
+  }, []); // Only once on mount
 
-  const fetchSurvey = async (active, date, interval) => {
-    setLoading(true)
-    try {
-      const res = await survey.getAll(active, date, interval);
-      const datafetch = Array.isArray(res?.data?.vehicleData) ? res.data.vehicleData : [];
-      setVehicleData(datafetch);
-      setLoading(false)
-    } catch (err) {
-      setLoading(false)
-      console.error('Error fetching survey data:', err);
-      setVehicleData([]);
-    }
-  };
-
+  // Debounced fetchSurvey when dependencies change
   useEffect(() => {
-    if (activeCamera) {
-      fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval);
-    }
+    if (!activeCamera) return;
+
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await survey.getAll(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval);
+        const datafetch = Array.isArray(res?.data?.vehicleData) ? res.data.vehicleData : [];
+        setVehicleData(datafetch);
+      } catch (err) {
+        console.error('Error fetching survey data:', err);
+        setVehicleData([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 500); // debounce delay 500ms
+
+    return () => clearTimeout(timer); // cleanup if dependencies change before timeout
   }, [dateInput, activeCamera, activeInterval]);
 
+  // Update streamData and activeSimpang when dataCamera or activeCamera changes
   useEffect(() => {
     const dynamicStreamData = {};
-
-    // Safe iteration dengan proper null checks
     if (Array.isArray(dataCamera) && dataCamera.length > 0) {
-      dataCamera.forEach((item) => {
+      dataCamera.forEach(item => {
         if (item && item.camera && item.camera.id) {
-          dynamicStreamData[item.camera.id] = null;
+          dynamicStreamData[item.camera.id] = streamData[item.camera.id] || null; // preserve existing if any
         }
       });
     }
-
     setStreamData(dynamicStreamData);
 
-    // Safe search dengan proper null checks
     const foundCamera = Array.isArray(dataCamera) && dataCamera.length > 0
       ? dataCamera.find(b => b && b.id === activeCamera)
       : null;
 
-    if (foundCamera && foundCamera && foundCamera.id && foundCamera.name) {
-      setActiveCamera(foundCamera.id);
-      setActiveSimpang(foundCamera.name);
-    } else if (!foundCamera && Array.isArray(dataCamera) && dataCamera.length === 0) {
-      setActiveCamera('');
+    if (foundCamera) {
+      setActiveSimpang(foundCamera.name || '');
+    } else {
       setActiveSimpang('');
     }
   }, [dataCamera, activeCamera]);
 
+  const socketRef = useRef(socket);
+
+  // Connect socket once
   useEffect(() => {
-    let socket = null;
+    if (!socketRef.current.connected) {
+      socketRef.current.connect();
+    }
 
-    try {
-      socket = io('https://sxe-data.layanancerdas.id');
+    const handleConnect = () => console.log("Socket connected");
+    const handleDisconnect = () => console.log("Socket disconnected");
+    const handleError = (err) => console.error("Connection error", err);
 
-      socket.on('connect', () => {
-        console.log('Socket connected');
+    socketRef.current.on("connect", handleConnect);
+    socketRef.current.on("disconnect", handleDisconnect);
+    socketRef.current.on("connect_error", handleError);
+
+    return () => {
+      socketRef.current.off("connect", handleConnect);
+      socketRef.current.off("disconnect", handleDisconnect);
+      socketRef.current.off("connect_error", handleError);
+    };
+  }, []);
+
+  // useCallback untuk handler socket event per kamera
+  // const registerSocketListeners = useCallback(() => {
+  //   if (!Array.isArray(dataCamera)) return;
+
+  //   dataCamera.forEach(building => {
+  //     if (building?.socket_event && building?.id) {
+  //       const handler = (data) => {
+  //         setStreamData(prev => ({
+  //           ...prev,
+  //           [building.id]: data,
+  //         }));
+  //       };
+
+  //       socketRef.current.on(building.socket_event, handler);
+
+  //       // Cleanup for this listener
+  //       return () => {
+  //         socketRef.current.off(building.socket_event, handler);
+  //       };
+  //     }
+  //   });
+  // }, [dataCamera]);
+
+  // Register / cleanup socket listeners whenever dataCamera changes
+  useEffect(() => {
+    const cleanupFns = [];
+
+    if (Array.isArray(dataCamera)) {
+      dataCamera.forEach(building => {
+        if (building?.socket_event && building?.id) {
+          const handler = (data) => {
+            setStreamData(prev => ({
+              ...prev,
+              [building.id]: data,
+            }));
+          };
+
+          socketRef.current.on(building.socket_event, handler);
+
+          cleanupFns.push(() => {
+            socketRef.current.off(building.socket_event, handler);
+          });
+        }
       });
-
-      socket.on('disconnect', () => {
-        console.log('Socket disconnected');
-      });
-
-      socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
-      });
-
-      // Safe socket event registration
-      if (Array.isArray(dataCamera) && dataCamera.length > 0) {
-        dataCamera.forEach((building) => {
-          if (building && building && building.socket_event && building.id) {
-            const event = building.socket_event;
-            socket.on(event, (data) => {
-              setStreamData((prev) => ({
-                ...prev,
-                [building.id]: data,
-              }));
-            });
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error setting up socket connection:', error);
     }
 
     return () => {
-      if (socket) {
-        try {
-          socket.disconnect();
-        } catch (error) {
-          console.error('Error disconnecting socket:', error);
-        }
-      }
+      cleanupFns.forEach(fn => fn());
     };
   }, [dataCamera]);
 
   const handleClick = (building) => {
-    // Pastikan objek valid dan memiliki properti kamera
     if (
       !building ||
       typeof building !== 'object' ||
       !building.camera ||
-      typeof building.camera !== 'object' || // setelah pemilihan kamera, harus objek
+      typeof building.camera !== 'object' ||
       !building.camera.camera_id
     ) {
       console.warn("Invalid building or camera data", building);
       return;
     }
-    
+
     try {
-      const title = building.camera.name || "Tanpa Nama";
+      const title = building.camera.name || "Loading ...";
       setActiveTitle("Survei " + title);
       setActiveSimpang(title);
       setActiveCamera(building.camera.camera_id);
@@ -196,8 +220,9 @@ function SurveiSimpangPage () {
   return (
     <div>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
-        <MapComponent title={activeTitle} onClick={handleClick} />
-
+        {dataCamera.length > 0 && (
+          <MapComponent title={activeTitle} onClick={handleClick} />
+        )}
         <div className="w-[95%] m-auto">
           <div className="lg:grid lg:grid-cols-3 flex flex-col lg:items-center lg:place-items-center gap-5 py-10">
             <RecentVehicle customCSS={'h-[320px]'} />

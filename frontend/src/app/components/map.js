@@ -1,356 +1,286 @@
-"use client";
-
-// import maplibregl from "maplibre-gl";
-import Map, { NavigationControl, Marker } from "@vis.gl/react-maplibre";
+"use client"
+import { useEffect, useState, useRef, useCallback } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useEffect, useState, useRef } from "react";
+import Map, { NavigationControl, Marker } from "@vis.gl/react-maplibre";
 import * as turf from "@turf/turf";
-import { FaMapMarkerAlt } from "react-icons/fa";
-import { FaAngleDown } from "react-icons/fa6";
-// import simpang from "@/data/DataSimpang.json";
+import { FaMapMarkerAlt, FaAngleDown } from "react-icons/fa";
 import ruangan from "@/data/ruangan.json";
 import { useAuth } from "../context/authContext";
 import { maps } from '@/lib/apiService';
 
 const MapComponent = ({ title, onClick, sizeHeight }) => {
-  const [mapLib, setMapLib] = useState(null);
   const { setLoading } = useAuth();
   const mapRef = useRef(null);
 
-  const [cameraOptions, setCameraOptions] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [mapLoaded, setMapLoaded] = useState(false); // Add map loaded state
-
-  const [theme, setTheme] = useState("light"); // Remove localStorage dependency initially
-  const [keymap, setKeymap] = useState("");
+  // Map States
+  const [mapReady, setMapReady] = useState(false);
+  const [theme, setTheme] = useState("light");
   const [bounds, setBounds] = useState(null);
-  const [lokasiSimpang, setLokasiSimpang] = useState([]);
-  const [selectedSimpang, setSelectedSimpang] = useState(null);
-  const [detail, setDetailLocation] = useState(false);
-  const [simpangSelect, setSimpang] = useState(null);
+  
+  // Data States  
+  const [buildings, setBuildings] = useState([]);
   const [categorizedBuildings, setCategorizedBuildings] = useState({});
-  const [currentFloor, setCurrentFloor] = useState(1);
-  const [dataRoom, setDataRoom] = useState([]);
-  const [buildingData, setBuildingData] = useState({ floors: [] });
-  const [isOpen, setIsOpen] = useState(false);
-  const [isOpenItem2, setIsOpenItem2] = useState(false);
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
+  
+  // UI States
+  const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [cameraModal, setCameraModal] = useState({ isOpen: false, cameras: [] });
 
-  const center = {
-    longitude: 110.36394885709416,
-    latitude: -7.806961958513005,
-  };
-
+  // Map Configuration
+  const center = { longitude: 110.36394885709416, latitude: -7.806961958513005 };
   const mapStyles = {
     light: `https://api.maptiler.com/maps/364bea8a-6a0f-47b3-b224-8f0371623426/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`,
     dark: `https://api.maptiler.com/maps/2826b85b-753a-402d-afae-e1f982e73d6d/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`,
   };
 
-  useEffect(() => {
-    import("maplibre-gl").then((mod) => {
-      setMapLib(mod.default); // atau `mod` jika default tidak tersedia
-    });
-  }, []);
-
-  // Initialize theme after component mounts
+  // Initialize theme
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem("theme") || "light";
       setTheme(savedTheme);
-      setKeymap(mapStyles[savedTheme]);
     }
   }, []);
 
+  // Fetch buildings data
   useEffect(() => {
-    const fetchLocation = async () => {
+    const fetchBuildings = async () => {
       try {
         const res = await maps.getAllFull();
-        const detectedCameras = res.data.buildings;
-        setLokasiSimpang(detectedCameras);
-        console.log(detectedCameras)
+        const buildingsData = res.data.buildings || [];
+        setBuildings(buildingsData);
+        
+        // Calculate bounds
+        if (buildingsData.length > 0) {
+          const coordinates = buildingsData.map(b => [b.location.longitude, b.location.latitude]);
+          const featureCollection = turf.featureCollection(coordinates.map(coord => turf.point(coord)));
+          setBounds(turf.bbox(featureCollection));
+        }
+        
+        // Categorize buildings
+        const grouped = buildingsData.reduce((acc, building) => {
+          const category = building.category || "Lainnya";
+          if (!acc[category]) acc[category] = [];
+          acc[category].push(building);
+          return acc;
+        }, {});
+        setCategorizedBuildings(grouped);
+        
       } catch (err) {
-        console.error("Failed to fetch cameras:", err);
-        setLokasiSimpang([]); // Set empty array on error
+        console.error("Failed to fetch buildings:", err);
+        setBuildings([]);
       }
     };
-
-    fetchLocation();
+    fetchBuildings();
   }, []);
 
+  // Watch theme changes
   useEffect(() => {
-    const initialBuildings = lokasiSimpang || [];
+    if (typeof window === 'undefined') return;
 
-    if (initialBuildings.length > 0) {
-      const coordinates = initialBuildings.map((g) => [
-        g.location.longitude,
-        g.location.latitude,
-      ]);
-
-      const featureCollection = turf.featureCollection(
-        coordinates.map((coord) => turf.point(coord))
-      );
-      setBounds(turf.bbox(featureCollection));
-
-      const grouped = initialBuildings.reduce((acc, building) => {
-        const category = building.category || "Lainnya";
-        if (!acc[category]) acc[category] = [];
-        acc[category].push(building);
-        return acc;
-      }, {});
-      setCategorizedBuildings(grouped);
-    }
-  }, [lokasiSimpang]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const observer = new MutationObserver(() => {
-        const newTheme = document.documentElement.getAttribute("data-theme") || "light";
+    const observer = new MutationObserver(() => {
+      const newTheme = document.documentElement.getAttribute("data-theme") || "light";
+      if (newTheme !== theme) {
         setTheme(newTheme);
-        if (mapLoaded) { // Only update keymap if map is loaded
-          setKeymap(mapStyles[newTheme]);
-        }
-      });
-
-      observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ["data-theme"],
-      });
-
-      return () => observer.disconnect();
-    }
-  }, [mapLoaded]);
-
-  useEffect(() => {
-    const newBuilding =
-      ruangan.find((b) => b.building === simpangSelect) || { floors: [] };
-    setBuildingData(newBuilding);
-    const firstFloor = newBuilding.floors?.[0] || { rooms: [] };
-    setDataRoom(firstFloor.rooms || []);
-    setCurrentFloor(1);
-  }, [simpangSelect]);
-
-  useEffect(() => {
-    setSimpang("");
-  }, [selectedSimpang]);
-
-  const handleMapLoad = () => {
-    setMapLoaded(true);
-    setKeymap(mapStyles[theme]);
-    // Fit bounds after map is fully loaded
-    setTimeout(() => {
-      fitBoundsTosimpang();
-    }, 100);
-  };
-
-  const flyToLocation = (latitude, longitude, simpang) => {
-    if (mapRef.current && mapLoaded) {
-      mapRef.current.flyTo({
-        center: [longitude, latitude],
-        zoom: simpang ? 16 : 15,
-        essential: true,
-      });
-      console.log(simpang);
-
-      // Send to parent if only 1 camera
-      if (Array.isArray(simpang?.cameras)) {
-        const { cameras } = simpang;
-
-        // if (cameras.length === 1) {
-          setCameraOptions(cameras);
-          setIsModalOpen(true);
-        // } else if (cameras.length > 1) {
-        //   onClick?.({ ...simpang, camera: cameras[0] });
-        // }
-      } else {
-        onClick?.(simpang);
       }
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, [theme]);
+
+  // Map event handlers
+  const handleMapLoad = useCallback((event) => {
+    if (event?.target) {
+      mapRef.current = event.target;
+      setTimeout(() => setMapReady(true), 200);
     }
+  }, []);
 
-
-    if (simpang) {
-      detailLocation(simpang);
-    } else {
-      setSelectedSimpang(null);
-      setSimpang("");
+  // Fit bounds to all buildings
+  const fitBoundsToAll = useCallback(() => {
+    if (!mapRef.current || !bounds || !mapReady) return;
+    
+    try {
+      mapRef.current.fitBounds(
+        [[bounds[0], bounds[1]], [bounds[2], bounds[3]]],
+        { padding: 20, maxZoom: 20 }
+      );
+      setSelectedBuilding(null);
+    } catch (error) {
+      console.error("Error fitting bounds:", error);
     }
-  };
+  }, [bounds, mapReady]);
 
-  const flyToCategory = (categoryBuildings) => {
-    if (!mapRef.current || !categoryBuildings?.length || !mapLoaded) return;
+  // Fit bounds when map is ready
+  useEffect(() => {
+    if (mapReady && bounds) {
+      setTimeout(fitBoundsToAll, 300);
+    }
+  }, [mapReady, bounds, fitBoundsToAll]);
 
-    if (categoryBuildings.length === 1) {
-      const [building] = categoryBuildings;
+  // Fly to specific location
+  const flyToLocation = useCallback((building) => {
+    if (!mapRef.current || !mapReady) return;
+
+    try {
       mapRef.current.flyTo({
         center: [building.location.longitude, building.location.latitude],
         zoom: 16,
         essential: true,
       });
-      detailLocation(building);
-    } else {
-      const coordinates = categoryBuildings.map((b) => [
-        b.location.longitude,
-        b.location.latitude,
-      ]);
-      const featureCollection = turf.featureCollection(
-        coordinates.map((coord) => turf.point(coord))
-      );
-      const bbox = turf.bbox(featureCollection);
-      mapRef.current.fitBounds(
-        [
-          [bbox[0], bbox[1]],
-          [bbox[2], bbox[3]],
-        ],
-        { padding: 100, essential: true }
-      );
-      setSelectedSimpang(null);
-      setSimpang("");
+
+      // Handle cameras
+      if (Array.isArray(building.cameras) && building.cameras.length > 0) {
+        setCameraModal({ isOpen: true, cameras: building.cameras });
+      } else {
+        onClick?.(building);
+      }
+
+      setSelectedBuilding(building);
+    } catch (error) {
+      console.error("Error flying to location:", error);
     }
-  };
+  }, [mapReady, onClick]);
 
-  const detailLocation = (simpang) => {
-    setSelectedSimpang(simpang);
-  };
+  // Fly to category
+  const flyToCategory = useCallback((categoryBuildings) => {
+    if (!mapRef.current || !categoryBuildings?.length || !mapReady) return;
 
-  const fitBoundsTosimpang = () => {
-    if (mapRef.current && bounds && mapLoaded) {
-      mapRef.current.fitBounds(
-        [
-          [bounds[0], bounds[1]],
-          [bounds[2], bounds[3]],
-        ],
-        { padding: 20, maxZoom: 20 }
-      );
+    try {
+      if (categoryBuildings.length === 1) {
+        flyToLocation(categoryBuildings[0]);
+      } else {
+        const coordinates = categoryBuildings.map(b => [b.location.longitude, b.location.latitude]);
+        const featureCollection = turf.featureCollection(coordinates.map(coord => turf.point(coord)));
+        const bbox = turf.bbox(featureCollection);
+        
+        mapRef.current.fitBounds(
+          [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+          { padding: 100, essential: true }
+        );
+        setSelectedBuilding(null);
+      }
+    } catch (error) {
+      console.error("Error flying to category:", error);
     }
-    setSelectedSimpang(null);
-    setSimpang("");
+  }, [mapReady, flyToLocation]);
+
+  // Handle camera selection
+  const handleCameraSelect = (camera) => {
+    onClick?.({ camera });
+    setCameraModal({ isOpen: false, cameras: [] });
   };
 
-  const resetView = fitBoundsTosimpang;
-
-  // Don't render map until we have a valid keymap
-  if (!keymap) {
+  // Show loading if not ready
+  if (!mapStyles[theme]) {
     return (
-      <div>
-        <div className="w-full">
-          <div style={{ width: "100%", height: sizeHeight ? sizeHeight : "50vh" }} className="relative flex items-center justify-center bg-gray-100">
-            <div>Loading Map...</div>
-          </div>
-        </div>
+      <div style={{ width: "100%", height: sizeHeight || "50vh" }} 
+           className="flex items-center justify-center bg-gray-100">
+        Loading Map...
       </div>
     );
   }
 
   return (
     <div>
-      <div className="p-5 text-xl font-semibold">
-        {title || null}
-      </div>
-      <div className="w-full">
-        <div style={{ width: "100%", height: sizeHeight ? sizeHeight : "50vh" }} className="relative">
-          {mapLib && keymap && (
-            <Map
-              ref={mapRef}
-              mapLib={mapLib}
-              mapStyle={keymap}
-              initialViewState={{
-                longitude: center.longitude,
-                latitude: center.latitude,
-                zoom: 7,
-              }}
-              onLoad={handleMapLoad}
+      {title && <div className="p-5 text-xl font-semibold">{title}</div>}
+      
+      <div style={{ width: "100%", height: sizeHeight || "50vh" }} className="relative">
+        {/* Map */}
+        <Map
+          ref={mapRef}
+          mapStyle={mapStyles[theme]}
+          initialViewState={{
+            longitude: center.longitude,
+            latitude: center.latitude,
+            zoom: 7,
+          }}
+          onLoad={handleMapLoad}
+          style={{ width: "100%", height: "100%" }}
+        >
+          <NavigationControl position="top-right" />
+          
+          {/* Building Markers */}
+          {buildings.map((building) => (
+            <Marker
+              key={building.id}
+              longitude={building.location.longitude}
+              latitude={building.location.latitude}
             >
-              <NavigationControl position="top-right" />
+              <div onClick={() => flyToLocation(building)} style={{ cursor: "pointer" }}>
+                <FaMapMarkerAlt size={35} color="brown" />
+              </div>
+            </Marker>
+          ))}
+        </Map>
 
-              {mapLoaded && lokasiSimpang?.map((simpang) => (
-                <Marker
-                  key={simpang.id}
-                  longitude={simpang.location.longitude}
-                  latitude={simpang.location.latitude}
-                >
-                  <div
-                    onClick={() =>
-                      flyToLocation(
-                        simpang.location.latitude,
-                        simpang.location.longitude,
-                        simpang
-                      )
-                    }
-                    style={{ cursor: "pointer" }}
-                  >
-                    <FaMapMarkerAlt size={35} color="brown" />
-                  </div>
-                </Marker>
-              ))}
-            </Map>
-          )}
+        {/* Controls */}
+        <div className="absolute top-3 left-3 w-[80%] text-sm flex flex-wrap gap-2">
+          {/* Buildings Dropdown */}
+          <Dropdown
+            isOpen={isLocationDropdownOpen}
+            onToggle={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
+            label="Pilih Lokasi"
+          >
+            {buildings.map((building) => (
+              <DropdownItem
+                key={building.id}
+                label={building.name}
+                icon={<FaMapMarkerAlt />}
+                onClick={() => {
+                  flyToLocation(building);
+                  setIsLocationDropdownOpen(false);
+                }}
+              />
+            ))}
+          </Dropdown>
 
+          {/* Categories Dropdown */}
+          <Dropdown
+            isOpen={isCategoryDropdownOpen}
+            onToggle={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+            label="Pilih Kategori"
+          >
+            {Object.entries(categorizedBuildings).map(([category, categoryBuildings]) => (
+              <DropdownItem
+                key={category}
+                label={category}
+                onClick={() => {
+                  flyToCategory(categoryBuildings);
+                  setIsCategoryDropdownOpen(false);
+                }}
+                bold
+              />
+            ))}
+          </Dropdown>
 
-          <div className="absolute top-3 left-3 w-[80%] text-sm text-base-800">
-            <div className="flex flex-wrap gap-2">
-              {/* Dropdown Pilih Kamera */}
-              <Dropdown
-                isOpen={isOpen}
-                toggleOpen={() => setIsOpen(!isOpen)}
-                label="Pilih Kamera"
-              >
-                {lokasiSimpang?.map((item) => (
-                  <DropdownItem
-                    key={item.id}
-                    label={item.name}
-                    icon={<FaMapMarkerAlt />}
-                    onClick={() =>
-                      flyToLocation(
-                        item.location.latitude,
-                        item.location.longitude,
-                        item
-                      )
-                    }
-                  />
-                ))}
-              </Dropdown>
-
-              {/* Dropdown Pilih Lokasi */}
-              <Dropdown
-                isOpen={isOpenItem2}
-                toggleOpen={() => setIsOpenItem2(!isOpenItem2)}
-                label="Pilih Lokasi"
-              >
-                {Object.entries(categorizedBuildings).map(
-                  ([category, buildings]) => (
-                    <DropdownItem
-                      key={category}
-                      label={category}
-                      onClick={() => flyToCategory(buildings)}
-                      bold
-                    />
-                  )
-                )}
-              </Dropdown>
-
-              <button
-                className="btn btn-md rounded-xl shadow-xs capitalize"
-                onClick={() => fitBoundsTosimpang()}
-                disabled={!mapLoaded}
-              >
-                reset view
-              </button>
-            </div>
-          </div>
+          {/* Reset Button */}
+          <button
+            className="btn btn-md rounded-xl shadow-xs capitalize"
+            onClick={fitBoundsToAll}
+            disabled={!mapReady}
+          >
+            Reset View
+          </button>
         </div>
       </div>
 
-      {isModalOpen && (
+      {/* Camera Selection Modal */}
+      {cameraModal.isOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
           <div className="bg-white rounded-xl p-5 shadow-lg w-80 max-w-full">
             <h2 className="text-lg font-semibold mb-4">Pilih Kamera</h2>
             <div className="space-y-2">
-              {cameraOptions.map((camera) => (
+              {cameraModal.cameras.map((camera) => (
                 <button
                   key={camera.id}
                   className="w-full text-left rounded-xl btn btn-md hover:bg-gray-100"
-                  onClick={() => {
-                    onClick?.({ camera });
-                    setIsModalOpen(false);
-                  }}
+                  onClick={() => handleCameraSelect(camera)}
                 >
                   {camera.name || `Camera ${camera.id}`}
                 </button>
@@ -358,7 +288,7 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
             </div>
             <button
               className="btn btn-md mt-4 w-full btn-error rounded-xl"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => setCameraModal({ isOpen: false, cameras: [] })}
             >
               Batal
             </button>
@@ -369,38 +299,34 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
   );
 };
 
-// Dropdown Components
-const Dropdown = ({ isOpen, toggleOpen, label, children }) => (
+// Simplified Dropdown Components
+const Dropdown = ({ isOpen, onToggle, label, children }) => (
   <div className="relative">
     <div
-      className="rounded-xl text-md w-fit shadow-xs bg-base-100/90 flex justify-end p-1"
-      onClick={toggleOpen}
+      className="rounded-xl text-md w-fit shadow-xs bg-base-100/90 flex justify-end p-1 cursor-pointer"
+      onClick={onToggle}
     >
-      <button className="btn btn-sm btn-ghost text-sm bg-transparent border-none hover:shadow-none">
-        <div className="w-fit px-2 flex items-center gap-3 font-semibold">
-          {label}
-          <FaAngleDown className={`${isOpen ? "rotate-180" : ""} text-neutral-600`} />
-        </div>
+      <button className="btn btn-sm btn-ghost text-sm bg-transparent border-none hover:shadow-none flex items-center gap-3 font-semibold">
+        {label}
+        <FaAngleDown className={`${isOpen ? "rotate-180" : ""} text-neutral-600`} />
       </button>
     </div>
     {isOpen && (
       <div className="absolute left-0 top-12 mt-2 w-64 rounded-xl shadow-xs bg-base-100/90 z-10">
-        <div className="py-1 flex flex-col">{children}</div>
+        <div className="py-2">{children}</div>
       </div>
     )}
   </div>
 );
 
-const DropdownItem = ({ label, onClick, icon, bold = false }) => (
-  <div
-    className={`w-fit py-2 px-5 m-2 rounded-xl cursor-pointer hover:bg-base-200 ${bold ? "font-bold text-md bg-base-200" : "font-semibold text-md"
-      }`}
+const DropdownItem = ({ label, icon, onClick, bold }) => (
+  <button
     onClick={onClick}
+    className={`btn btn-ghost btn-block justify-start rounded-none ${bold ? "font-bold" : "font-normal"}`}
   >
-    <div className="flex items-center gap-3">
-      {icon} {label}
-    </div>
-  </div>
+    {icon && <span className="mr-3">{icon}</span>}
+    {label}
+  </button>
 );
 
 export default MapComponent;

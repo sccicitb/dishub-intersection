@@ -703,8 +703,37 @@ const ManajemenKamera = () => {
   // useEffect(() => console.log(formMaps), [formMaps])
 
   const closeDialog = () => {
-    setActionDialog("")
+    setActionDialog("");
     setShowDialog(false);
+    setFormCameras({
+      id: "",
+      name: "",
+      url: "",
+      thumbnail_url: "",
+      location: "",
+      resolution: "",
+      status: 0,
+      socket_event: "",
+      ID_Simpang: 0
+    })
+    setFormMaps({
+      id: 0,
+      name: "",
+      category: "",
+      model_detection: false,
+      location: {
+        latitude: "",
+        longitude: "",
+      },
+      socket_event: "",
+      name: "",
+      kategori: "",
+      kota: "",
+      ukuran_kota: "",
+      tanggal: "",
+      periode: "",
+      ditangani_oleh: ""
+    })
   };
 
   // Filter search for cameras
