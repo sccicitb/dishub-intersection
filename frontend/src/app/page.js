@@ -469,44 +469,6 @@ export default function Home () {
       </Suspense>
       <div className="w-[90%]">
         <div className="w-full bg-blue-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
-        <div className="flex flex-wrap gap-2 mt-8 justify-start">
-          <button
-            onClick={() => handleFilterSection2('day')}
-            className={`px-3 py-1.5 rounded-md ${activeFilterSection2 === 'day'
-              ? 'bg-blue-950 text-white'
-              : 'bg-base-300 hover:bg-blue-200'
-              }`}
-          >
-            Hari Ini
-          </button>
-          <button
-            onClick={() => handleFilterSection2('month')}
-            className={`px-3 py-1.5 rounded-md ${activeFilterSection2 === 'month'
-              ? 'bg-blue-950 text-white'
-              : 'bg-base-300 hover:bg-blue-200'
-              }`}
-          >
-            Bulan Ini
-          </button>
-          <button
-            onClick={() => handleFilterSection2('year')}
-            className={`px-3 py-1.5 rounded-md ${activeFilterSection2 === 'year'
-              ? 'bg-blue-950 text-white'
-              : 'bg-base-300 hover:bg-blue-200'
-              }`}
-          >
-            Tahun Ini
-          </button>
-          <button
-            onClick={() => handleFilterSection2('period')}
-            className={`px-3 py-1.5 rounded-md ${activeFilterSection2 === 'period'
-              ? 'bg-blue-950 text-white'
-              : 'bg-base-300 hover:bg-blue-200'
-              }`}
-          >
-            Periode Ini
-          </button>
-        </div>
         {/* <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-5 py-5">
           <div className="cols-1 bg-base-200/90 min-h-80 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200 gap-5 flex flex-col">
             <div className="w-full h-80 bg-gray-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl"></div>

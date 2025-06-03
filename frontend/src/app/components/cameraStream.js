@@ -13,6 +13,78 @@ const CameraStream = () => {
   const [dataCameras, setDataCameras] = useState([]);
   const [cameraLogs, setCameraLogs] = useState({});
 
+  // Utility functions
+  const formatDateToInput = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const filterLogsByDate = (logs, targetDate) => {
+    if (!Array.isArray(logs) || !targetDate) return [];
+
+    // Format target date ke YYYY-MM-DD
+    const targetDateStr = new Date(targetDate).toISOString().split('T')[0];
+
+    return logs.filter(log => {
+      if (!log.recorded_at) return false;
+
+      // Ambil tanggal dari recorded_at
+      const logDateStr = new Date(log.recorded_at).toISOString().split('T')[0];
+      return logDateStr === targetDateStr;
+    });
+  };
+
+  const getLogCamera = async (cameraId, filterDate = null) => {
+    if (!cameraId) return;
+
+    try {
+      const res = await logCamera.getById(cameraId);
+      const logs = Array.isArray(res?.data?.logs) ? res.data.logs : [];
+
+      // Filter logs berdasarkan tanggal jika filterDate disediakan
+      const filteredLogs = filterDate ? filterLogsByDate(logs, filterDate) : logs;
+
+      // Filter hanya status mati (status = 0) jika diperlukan
+      const offlineLogs = filteredLogs.filter(log => log.status === 0);
+
+      setCameraLogs(prev => ({
+        ...prev,
+        [cameraId]: {
+          all: filteredLogs,           // Semua log untuk tanggal tersebut
+          offline: offlineLogs,        // Hanya log dengan status mati
+          raw: logs                    // Data mentah tanpa filter
+        }
+      }));
+
+      return {
+        all: filteredLogs,
+        offline: offlineLogs,
+        raw: logs
+      };
+    } catch (err) {
+      console.error("Error fetching camera logs:", err);
+      setCameraLogs(prev => ({
+        ...prev,
+        [cameraId]: {
+          all: [],
+          offline: [],
+          raw: []
+        }
+      }));
+    }
+  };
+
+  const [dateInput, setDateInput] = useState(() => formatDateToInput(new Date()));
+
+  useEffect(() => {
+    if (activeCamera && dateInput) {
+      getLogCamera(activeCamera, dateInput);
+    }
+  }, [activeCamera, dateInput])
 
   useEffect(() => {
     const fetchCameras = async () => {
@@ -58,51 +130,63 @@ const CameraStream = () => {
     };
   }, [dataCameras]);
 
-  const getLogcamera = async (id) => {
-    try {
-      const res = await logCamera.getById(id);
-      // console.log(JSON.stringify(res))
-      // Asumsikan hasilnya dalam format array objek seperti: { start: ..., end: ..., status: ... }
-      let logs = Array.isArray(res.data.logs) ? res.data.logs : []; 
-      // const logs = res.data || [];
-      
-      setCameraLogs(prev => ({
-        ...prev,
-        [id]: logs
-      }));
-      // console.log("Logs untuk kamera ID", id, logs);
-    } catch (err) {
-      console.error("Gagal fetch data: ", err);
-    }
-  };
+  // const getLogcamera = async (id) => {
+  //   try {
+  //     const res = await logCamera.getById(id);
+  //     // console.log(JSON.stringify(res))
+  //     // Asumsikan hasilnya dalam format array objek seperti: { start: ..., end: ..., status: ... }
+  //     let logs = Array.isArray(res.data.logs) ? res.data.logs : [];
+  //     // const logs = res.data || [];
+
+  //     setCameraLogs(prev => ({
+  //       ...prev,
+  //       [id]: logs
+  //     }));
+  //     // console.log("Logs untuk kamera ID", id, logs);
+  //   } catch (err) {
+  //     console.error("Gagal fetch data: ", err);
+  //   }
+  // };
 
   useEffect(() => {
     if (dataCameras.length > 0) {
       dataCameras.forEach(cam => {
         if (cam?.id) {
-          getLogcamera(cam.id);
+          getLogCamera(cam.id, dateInput);
         }
       });
     }
-  }, [dataCameras]);
+  }, [dataCameras, dateInput]);
 
-  useEffect(()=>{
-      console.log("Logs untuk kamera ID", cameraLogs);
-  },[cameraLogs])
+  useEffect(() => {
+    console.log("Logs untuk kamera ID", cameraLogs);
+  }, [cameraLogs])
+
+  useEffect(() => {
+    const today = new Date();
+    setDateInput(formatDateToInput(today));
+  }, []);
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-5">
-      {dataCameras.map((cam) => (
-        <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
-          <CCTVStream
-            data={streamData[cam.id]}
-            title={`CCTV ${cam.name}`}
-            large
-            onClick={() => setActiveCamera(cam.camera.id)}
-          />
-          <CameraStatusTimeline cameraStatusData={cameraLogs[cam.id] || []} />
-        </div>
-      ))}
+      {dataCameras.map((cam) => {
+        // console.log(cam.id + " :" + cameraLogs[cam.id])
+        console.log(dateInput)
+        return (
+          <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
+            <CCTVStream
+              data={streamData[cam.id]}
+              title={`CCTV ${cam.name}`}
+              large
+              onClick={() => setActiveCamera(cam.camera.id)}
+            />
+            <CameraStatusTimeline
+              cameraStatusData={cameraLogs[cam.id]?.all || []}
+              selectedDate={dateInput} />
+          </div>
+        )
+      })}
     </div>
   );
 };

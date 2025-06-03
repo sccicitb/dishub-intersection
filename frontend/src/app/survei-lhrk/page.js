@@ -21,6 +21,7 @@ function SurveiLhrkPage () {
   const [activePergerakan, setActivePergerakan] = useState('Semua');
   const [activeSimpang, setActiveSimpang] = useState("");
   const [vehicleData, setVehicleData] = useState([]);
+  const [activeSimpangId, setActiveSimpangId] = useState(0)
   const [activeCamera, setActiveCamera] = useState('detection1');
   const [activeTitle, setActiveTitle] = useState("Survei LHRK")
 
@@ -93,10 +94,13 @@ function SurveiLhrkPage () {
   //   }
   // }, []);
 
+  function handleClickSimpang (loc) {
+    setActiveSimpangId(loc.id)
+  }
   return (
     <div>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
-        <MapComponent title={activeTitle} onClick={handleClick} />
+        <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
         <div className="w-[95%] m-auto">
           <div className="xl:grid xl:grid-cols-2 items-center place-items-center lg:gap-5 py-10">
             <SurveyInfoTable />
