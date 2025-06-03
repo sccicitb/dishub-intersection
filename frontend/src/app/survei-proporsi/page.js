@@ -423,9 +423,6 @@ function SurveiProporsi () {
             {/* <CameraStatusTimeline
               cameraStatusData={cameraLogs[activeCamera] || []}
             /> */}
-            {
-              console.log(dateInput)
-            }
             <CameraStatusTimeline
               cameraStatusData={cameraLogs[activeCamera]?.all || []}
               selectedDate={dateInput}
