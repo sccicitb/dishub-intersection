@@ -30,9 +30,28 @@ const getStatusPerHour = (dataArray) => {
   return statusPerHour;
 };
 
-const CameraStatusTimeline = ({ cameraStatusData = [] }) => {
-  const statusPerHour = getStatusPerHour(cameraStatusData);
+const filterLogsByDate = (logs, targetDate) => {
+  if (!Array.isArray(logs) || !targetDate) return [];
 
+  // Format target date ke YYYY-MM-DD
+  const targetDateStr = new Date(targetDate).toISOString().split('T')[0];
+
+  return logs.filter(log => {
+    if (!log.recorded_at) return false;
+
+    // Ambil tanggal dari recorded_at
+    const logDateStr = new Date(log.recorded_at).toISOString().split('T')[0];
+    return logDateStr === targetDateStr;
+  });
+};
+
+const CameraStatusTimeline = ({ cameraStatusData = [], selectedDate = null }) => {
+  // Filter data berdasarkan tanggal yang dipilih jika belum difilter
+  const filteredData = selectedDate
+    ? filterLogsByDate(cameraStatusData, selectedDate)
+    : cameraStatusData;
+
+  const statusPerHour = getStatusPerHour(filteredData);
   // Buat array jam dari 0 sampai 23
   const hours = Array.from({ length: 24 }, (_, i) =>
     i.toString().padStart(2, "0")
@@ -55,7 +74,7 @@ const CameraStatusTimeline = ({ cameraStatusData = [] }) => {
               key={hour}
               title={`${hour}:00 - Status: ${status !== undefined ? status : "Tidak ada data"}`}
               className={`${bgColor} w-6 h-6 flex-1 cursor-default`}
-              // className={`${bgColor} w-6 h-6 rounded-sm cursor-default`}
+            // className={`${bgColor} w-6 h-6 rounded-sm cursor-default`}
             />
           );
         })}

@@ -17,20 +17,21 @@ const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const CameraStatusTimeline = lazy(() => import('@/app/components/cameraStatusTime'))
 const MapComponent = lazy(() => import("@/app/components/map"));
 
-function SurveiProporsi() {
+function SurveiProporsi () {
   // Loading and UI states
   const [loading, setLoading] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
-  
+
   // Filter states
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
-  
+
   // Camera and location states Date and category states
   const [activeCamera, setActiveCamera] = useState(null);
   const [activeSimpang, setActiveSimpang] = useState('');
+  const [activeSimpangId, setActiveSimpangId] = useState(1);
   const [activeTitle, setActiveTitle] = useState("Survei ");
   const [dataCamera, setDataCamera] = useState([]);
   const [streamData, setStreamData] = useState({});
@@ -74,9 +75,9 @@ function SurveiProporsi() {
         setLoading(true);
         const res = await cameras.getAll();
         const cameraData = Array.isArray(res?.data?.cameras) ? res.data.cameras : [];
-        
+
         setDataCamera(cameraData);
-        
+
         // Set first camera as active if available
         if (cameraData.length > 0 && cameraData[0]?.id) {
           setActiveCamera(cameraData[0].id);
@@ -122,7 +123,7 @@ function SurveiProporsi() {
       dataCamera.forEach((camera) => {
         if (camera?.id) {
           dynamicStreamData[camera.id] = null;
-          
+
           if (camera.socket_event) {
             socket.on(camera.socket_event, (data) => {
               setStreamData((prev) => ({
@@ -133,7 +134,7 @@ function SurveiProporsi() {
           }
         }
       });
-      
+
       setStreamData(dynamicStreamData);
 
     } catch (error) {
@@ -155,7 +156,7 @@ function SurveiProporsi() {
   // Fetch survey data
   const fetchSurveyProporsi = async (cameraId, category, date) => {
     if (!cameraId || !category || !date) return;
-    
+
     setLoading(true);
     try {
       const res = await survey.getProporsi(cameraId, category, date);
@@ -170,28 +171,96 @@ function SurveiProporsi() {
   };
 
   // Fetch camera logs
-  const getLogCamera = async (cameraId) => {
+  // const getLogCamera = async (cameraId) => {
+  //   if (!cameraId) return;
+
+  //   try {
+  //     const res = await logCamera.getById(cameraId);
+  //     const logs = Array.isArray(res?.data?.logs) ? res.data.logs : [];
+  //     setCameraLogs(prev => ({
+  //       ...prev,
+  //       [cameraId]: logs
+  //     }));
+  //   } catch (err) {
+  //     console.error("Error fetching camera logs:", err);
+  //   }
+  // };
+
+  const filterLogsByDate = (logs, targetDate) => {
+    if (!Array.isArray(logs) || !targetDate) return [];
+
+    // Format target date ke YYYY-MM-DD
+    const targetDateStr = new Date(targetDate).toISOString().split('T')[0];
+
+    return logs.filter(log => {
+      if (!log.recorded_at) return false;
+
+      // Ambil tanggal dari recorded_at
+      const logDateStr = new Date(log.recorded_at).toISOString().split('T')[0];
+      return logDateStr === targetDateStr;
+    });
+  };
+
+  const getLogCamera = async (cameraId, filterDate = null) => {
     if (!cameraId) return;
-    
+
     try {
       const res = await logCamera.getById(cameraId);
       const logs = Array.isArray(res?.data?.logs) ? res.data.logs : [];
+
+      // Filter logs berdasarkan tanggal jika filterDate disediakan
+      const filteredLogs = filterDate ? filterLogsByDate(logs, filterDate) : logs;
+
+      // Filter hanya status mati (status = 0) jika diperlukan
+      const offlineLogs = filteredLogs.filter(log => log.status === 0);
+
       setCameraLogs(prev => ({
         ...prev,
-        [cameraId]: logs
+        [cameraId]: {
+          all: filteredLogs,           // Semua log untuk tanggal tersebut
+          offline: offlineLogs,        // Hanya log dengan status mati
+          raw: logs                    // Data mentah tanpa filter
+        }
       }));
+
+      return {
+        all: filteredLogs,
+        offline: offlineLogs,
+        raw: logs
+      };
     } catch (err) {
       console.error("Error fetching camera logs:", err);
+      setCameraLogs(prev => ({
+        ...prev,
+        [cameraId]: {
+          all: [],
+          offline: [],
+          raw: []
+        }
+      }));
     }
   };
 
   // Fetch data when dependencies change
+  // useEffect(() => {
+  //   if (activeCamera && selectedCategory && dateInput) {
+  //     fetchSurveyProporsi(activeCamera, selectedCategory, formatDateToYMDForAPI(dateInput));
+  //     getLogCamera(activeCamera);
+  //   }
+  // }, [activeCamera, selectedCategory, dateInput]);
+
   useEffect(() => {
     if (activeCamera && selectedCategory && dateInput) {
       fetchSurveyProporsi(activeCamera, selectedCategory, formatDateToYMDForAPI(dateInput));
-      getLogCamera(activeCamera);
+      // Pass dateInput untuk filter tanggal
+      getLogCamera(activeCamera, dateInput);
     }
   }, [activeCamera, selectedCategory, dateInput]);
+
+  const handleClickSimpang = (loc) => {
+    console.log(loc.id)
+    setActiveSimpangId(loc.id)
+  }
 
   // Handle map click
   const handleMapClick = (building) => {
@@ -232,10 +301,11 @@ function SurveiProporsi() {
     <div className="min-h-screen">
       <Suspense fallback={<LoadingFallback message="Loading Map..." />}>
         {dataCamera.length > 0 ? (
-          <MapComponent 
-            title="Survei Proporsi" 
+          <MapComponent
+            title="Survei Proporsi"
             onClick={handleMapClick}
             sizeHeight="50vh"
+            onClickSimpang={handleClickSimpang}
           />
         ) : (
           <LoadingFallback message="Loading camera data..." />
@@ -248,7 +318,7 @@ function SurveiProporsi() {
           <Suspense fallback={<LoadingFallback />}>
             <RecentVehicle customCSS="h-[320px]" />
           </Suspense>
-          
+
           <div className="lg:col-span-2 h-fit items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
             <div className="w-[60%]">
               <Suspense fallback={<LoadingFallback message="Loading stream..." />}>
@@ -280,7 +350,7 @@ function SurveiProporsi() {
               ))}
             </select>
           </div>
-          
+
           <div className="form-control w-full flex flex-col gap-2">
             <label className="label">
               <span className="label-text font-medium">Pilih Tanggal:</span>
@@ -304,41 +374,41 @@ function SurveiProporsi() {
                 {/* North */}
                 <div className="flex justify-center">
                   <div></div>
-                  <GridVertical 
-                    position={true} 
-                    data={intersectionData?.north || {}} 
-                    category 
+                  <GridVertical
+                    position={true}
+                    data={intersectionData?.north || {}}
+                    category
                   />
                   <div></div>
                 </div>
 
                 {/* West - Center - East */}
                 <div className="flex justify-center">
-                  <GridHorizontal 
-                    position={true} 
-                    data={intersectionData?.west || {}} 
-                    category 
+                  <GridHorizontal
+                    position={true}
+                    data={intersectionData?.west || {}}
+                    category
                   />
                   <div className="w-40 text-center items-center flex font-medium text-sm bg-stone-400">
                     <div className="m-auto">
-                      Jumlah<br />Kendaraan <br /> 
+                      Jumlah<br />Kendaraan <br />
                       {intersectionData?.vehicleCount || "0"}
                     </div>
                   </div>
-                  <GridHorizontal 
-                    position={false} 
-                    data={intersectionData?.east || {}} 
-                    category 
+                  <GridHorizontal
+                    position={false}
+                    data={intersectionData?.east || {}}
+                    category
                   />
                 </div>
 
                 {/* South */}
                 <div className="flex justify-center">
                   <div></div>
-                  <GridVertical 
-                    position={false} 
-                    data={intersectionData?.south || {}} 
-                    category 
+                  <GridVertical
+                    position={false}
+                    data={intersectionData?.south || {}}
+                    category
                   />
                   <div></div>
                 </div>
@@ -350,8 +420,12 @@ function SurveiProporsi() {
         {/* Camera Status Timeline */}
         <div className="w-[85%] mx-auto mb-8">
           <Suspense fallback={<LoadingFallback />}>
-            <CameraStatusTimeline 
-              cameraStatusData={cameraLogs[activeCamera] || []} 
+            {/* <CameraStatusTimeline
+              cameraStatusData={cameraLogs[activeCamera] || []}
+            /> */}
+            <CameraStatusTimeline
+              cameraStatusData={cameraLogs[activeCamera]?.all || []}
+              selectedDate={dateInput}
             />
           </Suspense>
         </div>

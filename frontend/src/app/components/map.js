@@ -6,9 +6,9 @@ import * as turf from "@turf/turf";
 import { FaMapMarkerAlt, FaAngleDown } from "react-icons/fa";
 import ruangan from "@/data/ruangan.json";
 import { useAuth } from "../context/authContext";
-import { maps } from '@/lib/apiService';
+import { maps, cameras } from '@/lib/apiService';
 
-const MapComponent = ({ title, onClick, sizeHeight }) => {
+const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
   const { setLoading } = useAuth();
   const mapRef = useRef(null);
 
@@ -16,16 +16,17 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
   const [mapReady, setMapReady] = useState(false);
   const [theme, setTheme] = useState("light");
   const [bounds, setBounds] = useState(null);
-  
+
   // Data States  
   const [buildings, setBuildings] = useState([]);
   const [categorizedBuildings, setCategorizedBuildings] = useState({});
   const [selectedBuilding, setSelectedBuilding] = useState(null);
-  
+
   // UI States
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [cameraModal, setCameraModal] = useState({ isOpen: false, cameras: [] });
+  const [camerasData, setCamerasData] = useState([]);
 
   // Map Configuration
   const center = { longitude: 110.36394885709416, latitude: -7.806961958513005 };
@@ -42,37 +43,82 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
     }
   }, []);
 
-  // Fetch buildings data
+
   useEffect(() => {
-    const fetchBuildings = async () => {
+    const fetchData = async () => {
       try {
-        const res = await maps.getAllFull();
-        const buildingsData = res.data.buildings || [];
-        setBuildings(buildingsData);
-        
-        // Calculate bounds
-        if (buildingsData.length > 0) {
-          const coordinates = buildingsData.map(b => [b.location.longitude, b.location.latitude]);
-          const featureCollection = turf.featureCollection(coordinates.map(coord => turf.point(coord)));
-          setBounds(turf.bbox(featureCollection));
-        }
-        
-        // Categorize buildings
-        const grouped = buildingsData.reduce((acc, building) => {
-          const category = building.category || "Lainnya";
-          if (!acc[category]) acc[category] = [];
-          acc[category].push(building);
-          return acc;
-        }, {});
-        setCategorizedBuildings(grouped);
-        
+        setLoading(true);
+
+        const camerasRes = await cameras.getAll();
+        const data = camerasRes.data.cameras || [];
+        setCamerasData(data);
+
+        const buildingsRes = await maps.getAllFull();
+        const buildingsData = buildingsRes.data.buildings || [];
+
+        const filteredBuildings = filterBuildingsByActiveCameras(buildingsData, data);
+
+        setBuildings(filteredBuildings);
+        setupMapData(filteredBuildings);
+
+
       } catch (err) {
-        console.error("Failed to fetch buildings:", err);
+        console.error("Failed to fetch data:", err);
         setBuildings([]);
+        setCamerasData([]);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchBuildings();
+
+    fetchData();
   }, []);
+
+  // Helper function to filter buildings by active cameras
+  const filterBuildingsByActiveCameras = (buildings, camerasData) => {
+    const activeCameraIds = new Set();
+    console.log(camerasData)
+
+    camerasData.forEach(camera => {
+      if (camera.status === 1) {
+        activeCameraIds.add(Number(camera.id)); 
+      }
+    });
+
+    console.log(activeCameraIds)
+    return buildings
+      .filter(building => {
+        // Check if building has cameras
+        if (!building.cameras || !Array.isArray(building.cameras)) {
+          return false;
+        }
+        // Check if at least one camera is active
+        return building.cameras.some(camera => activeCameraIds.has(camera.camera_id));
+      })
+      .map(building => ({
+        ...building,
+        cameras: building.cameras.filter(camera => activeCameraIds.has(camera.camera_id))
+      }));
+  };
+
+  // Helper function to setup map bounds and categories
+  const setupMapData = (buildings) => {
+    if (buildings.length > 0) {
+      // Calculate bounds
+      const coordinates = buildings.map(b => [b.location.longitude, b.location.latitude]);
+      const featureCollection = turf.featureCollection(coordinates.map(coord => turf.point(coord)));
+      setBounds(turf.bbox(featureCollection));
+
+      // Categorize buildings
+      const grouped = buildings.reduce((acc, building) => {
+        const category = building.category || "Lainnya";
+        if (!acc[category]) acc[category] = [];
+        acc[category].push(building);
+        return acc;
+      }, {});
+      setCategorizedBuildings(grouped);
+    }
+  };
 
   // Watch theme changes
   useEffect(() => {
@@ -104,7 +150,7 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
   // Fit bounds to all buildings
   const fitBoundsToAll = useCallback(() => {
     if (!mapRef.current || !bounds || !mapReady) return;
-    
+
     try {
       mapRef.current.fitBounds(
         [[bounds[0], bounds[1]], [bounds[2], bounds[3]]],
@@ -133,7 +179,8 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
         zoom: 16,
         essential: true,
       });
-
+      console.log(building)
+      onClickSimpang(building)
       // Handle cameras
       if (Array.isArray(building.cameras) && building.cameras.length > 0) {
         setCameraModal({ isOpen: true, cameras: building.cameras });
@@ -158,7 +205,7 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
         const coordinates = categoryBuildings.map(b => [b.location.longitude, b.location.latitude]);
         const featureCollection = turf.featureCollection(coordinates.map(coord => turf.point(coord)));
         const bbox = turf.bbox(featureCollection);
-        
+
         mapRef.current.fitBounds(
           [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
           { padding: 100, essential: true }
@@ -179,17 +226,20 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
   // Show loading if not ready
   if (!mapStyles[theme]) {
     return (
-      <div style={{ width: "100%", height: sizeHeight || "50vh" }} 
-           className="flex items-center justify-center bg-gray-100">
+      <div style={{ width: "100%", height: sizeHeight || "50vh" }}
+        className="flex items-center justify-center bg-gray-100">
         Loading Map...
       </div>
     );
   }
 
+  useEffect(() => {
+    console.log(buildings)
+  }, [buildings])
   return (
     <div>
       {title && <div className="p-5 text-xl font-semibold">{title}</div>}
-      
+
       <div style={{ width: "100%", height: sizeHeight || "50vh" }} className="relative">
         {/* Map */}
         <Map
@@ -204,7 +254,7 @@ const MapComponent = ({ title, onClick, sizeHeight }) => {
           style={{ width: "100%", height: "100%" }}
         >
           <NavigationControl position="top-right" />
-          
+
           {/* Building Markers */}
           {buildings.map((building) => (
             <Marker
