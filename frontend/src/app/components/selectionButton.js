@@ -32,7 +32,7 @@ export default function SelectionButtons ({ interval, exportPdf, arahPergerakan,
     <div className="p-4 mx-auto space-y-6 w-full lg:w-[90%]">
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Pilih Surveyor</h3>
-        <div className="join w-full gap-5 flex overflow-x-auto">
+        <div className="join w-full gap-5 flex overflow-x-auto p-2">
           {surveyorOptions.map((option) => (
             <button
               key={option}
@@ -48,7 +48,7 @@ export default function SelectionButtons ({ interval, exportPdf, arahPergerakan,
       {interval && (
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Pilih Interval</h3>
-          <div className="join w-full gap-5 flex overflow-x-auto">
+          <div className="join w-full gap-5 flex overflow-x-auto p-2">
             {intervalOptions.map((option, id) => (
               <button
                 key={id}
@@ -64,7 +64,7 @@ export default function SelectionButtons ({ interval, exportPdf, arahPergerakan,
 
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Pilih Pendekatan Simpang</h3>
-        <div className="join w-full gap-5 flex overflow-x-auto">
+        <div className="join w-full gap-5 flex overflow-x-auto p-2">
           {pendekatanOptions.map((option) => (
             <button
               key={option}
@@ -80,7 +80,7 @@ export default function SelectionButtons ({ interval, exportPdf, arahPergerakan,
       {arahPergerakan && (
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Pilih Arah Pergerakan</h3>
-          <div className="join w-full gap-5 flex overflow-x-auto">
+          <div className="join w-full gap-5 flex overflow-x-auto p-2">
             {pergerakanOptions.map((option) => (
               <button
                 key={option}
@@ -96,7 +96,7 @@ export default function SelectionButtons ({ interval, exportPdf, arahPergerakan,
       
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Pilih Jenis Klasifikasi</h3>
-        <div className="join w-full gap-5 flex overflow-x-auto">
+        <div className="join w-full gap-5 flex overflow-x-auto p-2">
           {classificationOptions.map((option) => (
             <button
               key={option}
@@ -112,7 +112,7 @@ export default function SelectionButtons ({ interval, exportPdf, arahPergerakan,
         {exportPdf && (
 
           <div className='space-y-2'>
-            <div className="w-full gap-5 flex overflow-x-auto join">
+            <div className="w-full gap-5 flex overflow-x-auto join p-1.5">
               {/* <ExportButton vehicleData={dataTable} fileName='Data_Kendaraan_perjam'/> */}
               <SurveyLalulintasExport vehicleData={vehicleData} activeClassification={activeClassification}/>
             </div>

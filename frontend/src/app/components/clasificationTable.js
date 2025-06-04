@@ -42,7 +42,7 @@ const VehicleClassificationTable = ({ typeClass, customSize }) => {
       setSelectedType("dalam_kota")
     } else if (typeClass === "Tipikal") {
       setSelectedType("tipikal")
-    } 
+    }
   }, [typeClass])
 
   // Filter data by selected type
@@ -80,7 +80,7 @@ const VehicleClassificationTable = ({ typeClass, customSize }) => {
         <table className="min-w-full border border-base-300">
           <thead>
             <tr className={theme === 'light' ? 'bg-green-50 text-black' : 'bg-base-200 text-white'}>
-              <th className={`border border-base-300 px-4 py-2 font-medium capitalize ${textSize}`} colSpan={20}>{selectedType.replace(/_/g, ' ')}</th>
+              <th className={`border border-base-300 px-4 py-2 font-medium capitalize text-center align-middle ${textSize}`} colSpan={20}>{selectedType.replace(/_/g, ' ')}</th>
             </tr>
           </thead>
           <tbody>
@@ -88,8 +88,9 @@ const VehicleClassificationTable = ({ typeClass, customSize }) => {
               Object.entries(groupedData).flatMap(([mainCode, items]) =>
                 items.map((vehicle, index) => (
                   <tr key={`${mainCode}-${index}`} className={theme === 'light' ? 'bg-green-50 text-black' : 'bg-base-200 text-white'}>
-                    {index === 0 && (
+                    {!customSize && index === 0 ? (
                       <>
+
                         <td
                           className={`border border-base-300 px-4 py-2 text-center align-middle font-medium ${textSize}`}
                           rowSpan={items.length}
@@ -97,13 +98,26 @@ const VehicleClassificationTable = ({ typeClass, customSize }) => {
                           {vehicle.mainCode}
                         </td>
                         <td
-                          className={`border border-base-300 px-4 py-2 align-middle ${textSize}`}
+                          className={`border border-base-300 px-4 py-2 align-middle ${textSize} text-center`}
                           rowSpan={items.length}
                         >
                           {vehicle.mainCategory}
                         </td>
                       </>
-                    )}
+                    ) : customSize ? (
+                      <>
+                        <td
+                          className={`border border-base-300 px-4 py-2 text-center align-middle font-medium ${textSize}`}
+                        >
+                          {index === 0 ? vehicle.mainCode : null}
+                        </td>
+                        <td
+                          className={`border border-base-300 px-4 py-2 align-middle ${textSize} text-center`}
+                        >
+                          {index === 0 ? vehicle.mainCategory : null}
+                        </td>
+                      </>
+                    ) : <></>}
                     <td className={`border border-base-300 px-4 py-2 text-center ${textSize}`}>
                       {vehicle.subCode} <br /> {vehicle.subCategory}
                     </td>

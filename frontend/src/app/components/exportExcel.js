@@ -26,14 +26,14 @@ export const exportVehicleDataToExcel = (vehicleData, fileName, classification) 
     console.log(classificationOptions[1]);
     headers = [
       ['Periode', 'Status Camera', 'Waktu', 'Kendaraan Bermotor (Lih. kend/jam)', '', '', '', '', '', '', '', '', 'Kend. Tak Bermotor'],
-      ['', '', 'Interval', 'SM', 'MP', '', '', 'KS', '', '', '', '', '', 'KTB'],
+      ['', '', 'Interval', 'SM', 'MP', '', '', 'KS', '', '', '', '', 'KTB'],
       ['', '', '', '', 'MP', 'AUP', 'TR', 'BS', 'TS', 'BB', 'TB', 'Gandeng / Semitrailer', '']
     ];
   } else if (classification === classificationOptions[2]) {
     console.log(classificationOptions[2]);
     headers = [
       ['Periode', 'Status Camera', 'Waktu', 'Kendaraan Bermotor (Lih. kend/jam)', '', '', '', '', '', '', '', '', 'Kend. Tak Bermotor'],
-      ['', '', 'Interval', 'SM', '', 'MP', '', 'Bus', '', '', 'Truk', '', '', 'KTB'],
+      ['', '', 'Interval', 'SM', 'MP', '', '', 'Bus', '', 'Truk', '', '', 'KTB'],
       ['', '', '', '', 'MP', 'AUP', 'TR', 'BS', 'BB', 'TS', 'TB', 'Gandeng / Semitrailer', '']
     ];
   }
@@ -44,9 +44,9 @@ export const exportVehicleDataToExcel = (vehicleData, fileName, classification) 
       { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, // Periode
       { s: { r: 0, c: 1 }, e: { r: 2, c: 1 } }, // Status Camera
       { s: { r: 0, c: 2 }, e: { r: 2, c: 2 } }, // Waktu
-      { s: { r: 0, c: 3 }, e: { r: 0, c: 10 } }, // Kendaraan Bermotor header
-      { s: { r: 0, c: 11 }, e: { r: 0, c: 13 } }, // Kend. Tak Bermotor header
-      { s: { r: 0, c: 14 }, e: { r: 2, c: 14 } }, // Total
+      { s: { r: 0, c: 3 }, e: { r: 0, c: 11 } }, // Kendaraan Bermotor header
+      { s: { r: 0, c: 12 }, e: { r: 0, c: 12 } }, // Kend. Tak Bermotor header
+      // { s: { r: 0, c: 14 }, e: { r: 2, c: 14 } }, // Total
       { s: { r: 1, c: 4 }, e: { r: 1, c: 6 } }, // MP
       { s: { r: 1, c: 3 }, e: { r: 2, c: 3 } }, // SM
       { s: { r: 1, c: 7 }, e: { r: 2, c: 7 } }, // TR
@@ -59,48 +59,30 @@ export const exportVehicleDataToExcel = (vehicleData, fileName, classification) 
     ]
   } else if (classification === classificationOptions[1]) {
     merges = [
-
       { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, // Periode
       { s: { r: 0, c: 1 }, e: { r: 2, c: 1 } }, // Status Camera
       { s: { r: 0, c: 2 }, e: { r: 2, c: 2 } }, // Waktu
-      { s: { r: 0, c: 3 }, e: { r: 0, c: 12 } }, // Kendaraan Bermotor header
-      { s: { r: 0, c: 13 }, e: { r: 0, c: 13 } }, // Kend. Tak Bermotor header
-      { s: { r: 1, c: 2 }, e: { r: 2, c: 3 } }, // Interval
-      { s: { r: 1, c: 4 }, e: { r: 2, c: 4 } }, // SM
-      { s: { r: 1, c: 5 }, e: { r: 1, c: 7 } }, // MP
-      { s: { r: 1, c: 8 }, e: { r: 1, c: 9 } }, // Bus
-      { s: { r: 1, c: 10 }, e: { r: 1, c: 12 } }, // Truk
-      { s: { r: 1, c: 13 }, e: { r: 1, c: 13 } }, // KTB
-      { s: { r: 2, c: 5 }, e: { r: 2, c: 5 } }, // MP
-      { s: { r: 2, c: 6 }, e: { r: 2, c: 6 } }, // AUP
-      { s: { r: 2, c: 7 }, e: { r: 2, c: 7 } }, // TR
-      { s: { r: 2, c: 8 }, e: { r: 2, c: 8 } }, // BS
-      { s: { r: 2, c: 9 }, e: { r: 2, c: 9 } }, // BB
-      { s: { r: 2, c: 10 }, e: { r: 2, c: 10 } }, // TS
-      { s: { r: 2, c: 11 }, e: { r: 2, c: 11 } }, // TB
-      { s: { r: 2, c: 12 }, e: { r: 2, c: 12 } }, // Gandeng/Semitrailer
+      { s: { r: 0, c: 3 }, e: { r: 0, c: 11 } }, // Kendaraan Bermotor header
+      { s: { r: 1, c: 12 }, e: { r: 2, c: 12 } }, // KTB
+      { s: { r: 1, c: 3 }, e: { r: 2, c: 3 } }, // SM
+      { s: { r: 1, c: 4 }, e: { r: 1, c: 6 } }, // MP (row 1, col 4-6)
+      { s: { r: 1, c: 7 }, e: { r: 1, c: 11 } }, // KS
+      // Row 2 sub-headers untuk MP
+      // { s: { r: 2, c: 4 }, e: { r: 2, c: 4 } }, // MP (tidak perlu merge, single cell)
+      // { s: { r: 2, c: 5 }, e: { r: 2, c: 5 } }, // AUP (tidak perlu merge, single cell)
+      // { s: { r: 2, c: 6 }, e: { r: 2, c: 6 } }, // TR (tidak perlu merge, single cell)
     ]
   } else if (classification === classificationOptions[2]) {
     merges = [
       { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, // Periode
       { s: { r: 0, c: 1 }, e: { r: 2, c: 1 } }, // Status Camera
       { s: { r: 0, c: 2 }, e: { r: 2, c: 2 } }, // Waktu
-      { s: { r: 0, c: 3 }, e: { r: 0, c: 12 } }, // Kendaraan Bermotor header
-      { s: { r: 0, c: 13 }, e: { r: 0, c: 13 } }, // Kend. Tak Bermotor header
-      { s: { r: 1, c: 2 }, e: { r: 2, c: 3 } }, // Interval
-      { s: { r: 1, c: 4 }, e: { r: 2, c: 4 } }, // SM
-      { s: { r: 1, c: 5 }, e: { r: 1, c: 7 } }, // MP
-      { s: { r: 1, c: 8 }, e: { r: 1, c: 9 } }, // Bus
-      { s: { r: 1, c: 10 }, e: { r: 1, c: 12 } }, // Truk
-      { s: { r: 1, c: 13 }, e: { r: 1, c: 13 } }, // KTB
-      { s: { r: 2, c: 5 }, e: { r: 2, c: 5 } }, // MP
-      { s: { r: 2, c: 6 }, e: { r: 2, c: 6 } }, // AUP
-      { s: { r: 2, c: 7 }, e: { r: 2, c: 7 } }, // TR
-      { s: { r: 2, c: 8 }, e: { r: 2, c: 8 } }, // BS
-      { s: { r: 2, c: 9 }, e: { r: 2, c: 9 } }, // BB
-      { s: { r: 2, c: 10 }, e: { r: 2, c: 10 } }, // TS
-      { s: { r: 2, c: 11 }, e: { r: 2, c: 11 } }, // TB
-      { s: { r: 2, c: 12 }, e: { r: 2, c: 12 } }, // Gandeng/Semitrailer
+      { s: { r: 0, c: 3 }, e: { r: 0, c: 11 } }, // Kendaraan Bermotor header
+      { s: { r: 1, c: 12 }, e: { r: 2, c: 12 } }, // KTB
+      { s: { r: 1, c: 3 }, e: { r: 2, c: 3 } }, // SM
+      { s: { r: 1, c: 4 }, e: { r: 1, c: 6 } }, // MP (row 1, col 4-6)
+      { s: { r: 1, c: 7 }, e: { r: 1, c: 8 } }, // BUS
+      { s: { r: 1, c: 9 }, e: { r: 1, c: 11 } }, // Truk
     ]
   } else {
     merges = []
@@ -213,7 +195,7 @@ export const exportVehicleDataToExcel = (vehicleData, fileName, classification) 
 
     // Menambahkan baris pemisah setelah periode "Siang" (index 2)
     if (periodIndex === 2) {
-      const dividerRow = Array(15).fill('');
+      const dividerRow = Array(12).fill('');
       dividerRow[0] = 'Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)';
 
       XLSX.utils.sheet_add_aoa(worksheet, [dividerRow], { origin: `A${rowIndex + 1}` });
@@ -221,7 +203,7 @@ export const exportVehicleDataToExcel = (vehicleData, fileName, classification) 
       // Menambahkan merger dan styling untuk baris pemisah
       merges.push({
         s: { r: rowIndex, c: 0 },
-        e: { r: rowIndex, c: 14 }
+        e: { r: rowIndex, c: 12 }
       });
 
       // Styling untuk baris pemisah

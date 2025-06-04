@@ -1,4 +1,5 @@
 "use client"
+
 import React, { useRef } from 'react';
 import { FaFilePdf } from 'react-icons/fa6';
 import Image from 'next/image';
@@ -9,6 +10,95 @@ import ClasificationTable from "@/app/components/clasificationTable";
 
 const ExportSurveyTable = ({ vehicleData, activeClassification }) => {
   const tableRef = useRef(null);
+
+  const exportToPdfAdvanced = async () => {
+    if (tableRef.current) {
+      try {
+        const A4_WIDTH = 210;
+        const A4_HEIGHT = 297;
+        const MARGIN = 15;
+        const HEADER_HEIGHT = 25;
+
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = A4_WIDTH - (MARGIN * 2);
+        const pageHeight = A4_HEIGHT - (MARGIN * 2) - HEADER_HEIGHT;
+
+        // Dapatkan semua elemen tabel yang bisa dipisah
+        const tableElements = tableRef.current.querySelectorAll('table, .table-section, .page-break');
+
+        let currentPage = 0;
+        let currentY = 0;
+
+        const drawHeader = (pageNumber) => {
+          pdf.setFillColor(248, 249, 250);
+          pdf.rect(MARGIN, MARGIN, pageWidth, HEADER_HEIGHT, 'F');
+          pdf.setDrawColor(200, 200, 200);
+          pdf.rect(MARGIN, MARGIN, pageWidth, HEADER_HEIGHT);
+
+          pdf.setFontSize(10);
+          pdf.setTextColor(60, 60, 60);
+          pdf.text('Survey Lalu Lintas Simpang Apill', MARGIN + 5, MARGIN + 8);
+
+          pdf.setFontSize(8);
+          const date = new Date().toLocaleDateString();
+          const simpangCode = vehicleData?.surveyInfo?.simpangCode || '-';
+          const direction = vehicleData?.surveyInfo?.direction || '-';
+
+          pdf.text(`Tanggal: ${date}`, MARGIN + 5, MARGIN + 15);
+          pdf.text(`Kode Simpang: ${simpangCode}`, MARGIN + 5, MARGIN + 20);
+          pdf.text(`Arah: ${direction}`, MARGIN + 80, MARGIN + 15);
+          pdf.text(`Halaman: ${pageNumber}`, MARGIN + 80, MARGIN + 20);
+        };
+
+        // Gambar header halaman pertama
+        drawHeader(currentPage);
+
+        // Capture dan proses setiap elemen
+        for (let element of tableElements) {
+          const canvas = await html2canvas(element, {
+            scale: 3,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+          });
+
+          const imgData = canvas.toDataURL('image/png');
+          const imgProps = pdf.getImageProperties(imgData);
+          const imgWidth = pageWidth;
+          const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+          // Cek apakah elemen muat di halaman saat ini
+          if (currentY + imgHeight > pageHeight) {
+            // Pindah ke halaman baru
+            pdf.addPage();
+            currentPage++;
+            currentY = 0;
+            drawHeader(currentPage);
+          }
+
+          const contentStartY = MARGIN + HEADER_HEIGHT + 5;
+          pdf.addImage(
+            imgData,
+            'PNG',
+            MARGIN,
+            contentStartY + currentY,
+            imgWidth,
+            imgHeight
+          );
+
+          currentY += imgHeight + 5; // Tambahkan sedikit spacing
+        }
+
+        const fileName = `SurveyLalulintas_${vehicleData?.surveyInfo?.simpangCode || 'Unknown'}_${new Date().toISOString().split('T')[0]}.pdf`;
+        pdf.save(fileName);
+
+      } catch (error) {
+        console.error('Error exporting PDF:', error);
+        alert('Terjadi kesalahan saat mengexport PDF. Silakan coba lagi.');
+      }
+    }
+  };
 
   const exportToPdf = async () => {
     if (tableRef.current) {
@@ -27,7 +117,7 @@ const ExportSurveyTable = ({ vehicleData, activeClassification }) => {
 
         // Capture canvas
         const canvas = await html2canvas(tableRef.current, {
-          scale: 2,
+          scale: 4,
           useCORS: true,
           allowTaint: true,
           logging: false,
@@ -78,101 +168,6 @@ const ExportSurveyTable = ({ vehicleData, activeClassification }) => {
     }
   };
 
-  const clasificationData = [
-    // SM group
-    {
-      mainCode: "SM",
-      mainCategory: "Sepeda Motor",
-      isMainRow: true,
-      subCode: "SM",
-      subCategory: "(Sepeda Motor)",
-      description: "Kendaraan Bermotor dengan 2 atau 3 Roda (Sepeda Motor, Skuter, Becak/Gerobak Motor)"
-    },
-    // MP group
-    {
-      mainCode: "MP",
-      mainCategory: "Mobil Penumpang (Kendaraan Ringan)",
-      isMainRow: true,
-      subCode: "MP",
-      subCategory: "(Mobil Pribadi)",
-      description: "Kendaraan Penumpang dengan 4 (2 baris) s.d. 7 (3 baris) tempat duduk (Jeep, Sedan, Minibus, Taksi)"
-    },
-    {
-      mainCode: "MP",
-      mainCategory: "",
-      isMainRow: false,
-      subCode: "AUP",
-      subCategory: "(Angkutan Umum Penumpang)",
-      description: "Kendaraan Penumpang maksimal 15 tempat duduk (Angkot, Angkudes, Mikrobus/Van)"
-    },
-    {
-      mainCode: "MP",
-      mainCategory: "",
-      isMainRow: false,
-      subCode: "TR",
-      subCategory: "(Truk Ringan)",
-      description: "Mobil Bak Terbuka dan Bak Tertutup, Mobil Hantaran (Pickup, Box, Blind Van)"
-    },
-    // KS group
-    {
-      mainCode: "KS",
-      mainCategory: "Kendaraan Sedang",
-      isMainRow: true,
-      subCode: "BS",
-      subCategory: "(Bus Sedang)",
-      description: "Kendaraan Penumpang dengan tempat duduk antara 16 s.d. 26 kursi (Bus Engkel, Bus Antar Jemput, Bus Kota, AKDP)"
-    },
-    {
-      mainCode: "KS",
-      mainCategory: "",
-      isMainRow: false,
-      subCode: "TS",
-      subCategory: "(Truk Sedang)",
-      description: "Truk 2 Sumbu dengan 4 atau 6 roda jarak gandar 3,5 s.d. 5 m"
-    },
-    {
-      mainCode: "KS",
-      mainCategory: "",
-      isMainRow: false,
-      subCode: "BB",
-      subCategory: "(Bus Besar)",
-      description: "Bus 2 atau 3 Sumbu dengan jarak gandar 5 s.d. 6 m (Bus AKAP, Bus Wisata, Bus Tingkat)"
-    },
-    {
-      mainCode: "KS",
-      mainCategory: "",
-      isMainRow: false,
-      subCode: "TB",
-      subCategory: "(Truk Berat)",
-      description: "Truk 2 Sumbu dengan 6 roda jarak gandar 5 s.d. 6 m, Truk 3 Sumbu atau lebih (Truk Trintin, Tronton, Trinton)"
-    },
-    {
-      mainCode: "KS",
-      mainCategory: "",
-      isMainRow: false,
-      subCode: "Gandeng/Semitrailer",
-      subCategory: "",
-      description: "Truk Gandeng, Truk Semitrailer"
-    },
-    // KTB group
-    {
-      mainCode: "KTB",
-      mainCategory: "Kendaraan Tidak Bermotor",
-      isMainRow: true,
-      subCode: "KTB",
-      subCategory: "(Kendaraan Tidak Bermotor)",
-      description: "Sepeda, Becak, Gerobak Dorong/Tarik, Kendaraan ditarik Hewan (Pedati, Delman, Andong)"
-    }
-  ];
-
-  const groupedData = clasificationData.reduce((acc, vehicle) => {
-    if (!acc[vehicle.mainCode]) {
-      acc[vehicle.mainCode] = [];
-    }
-    acc[vehicle.mainCode].push(vehicle);
-    return acc;
-  }, {});
-
   return (
     <div className="relative w-[100%] m-auto">
       <button
@@ -182,6 +177,14 @@ const ExportSurveyTable = ({ vehicleData, activeClassification }) => {
         <FaFilePdf />
         Export PDF
       </button>
+
+      {/* <button
+        onClick={exportToPdfAdvanced}
+        className="btn btn-md flex-1 bg-blue-500 rounded-lg text-white flex items-center justify-center gap-2"
+      >
+        <FaFilePdf />
+        Export PDF (Advanced)
+      </button> */}
 
       <div
         ref={tableRef}

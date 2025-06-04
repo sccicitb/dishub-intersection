@@ -8,7 +8,7 @@ import YearVehicleTable from '@/app/components/YearVehicletable';
 import dataTableRaw from '@/data/DataTableYear.json';
 import { maps, survey } from '@/lib/apiService';
 
-const VehicleTable = ({ activeCamera, activeInterval }) => {
+const VehicleTable = ({ activeCamera, activeInterval, activeClassification }) => {
   const [activeTab, setActiveTab] = useState('hour');
   const [vehicleData, setVehicleData] = useState([]);
 
@@ -94,7 +94,7 @@ const VehicleTable = ({ activeCamera, activeInterval }) => {
 
       {activeTab === 'hour' && (
         <div className="rounded-lg">
-          <HourVehicleTable vehicleData={vehicleData} />
+          <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} />
         </div>
       )}
 
