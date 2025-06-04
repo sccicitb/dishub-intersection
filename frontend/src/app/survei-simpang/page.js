@@ -105,7 +105,7 @@ function SurveiSimpangPage () {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await survey.getAll(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval);
+        const res = await survey.getAll(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval, activePendekatan.toLowerCase());
         const datafetch = Array.isArray(res?.data?.vehicleData) ? res.data.vehicleData : [];
         setVehicleData(datafetch);
       } catch (err) {
@@ -117,7 +117,7 @@ function SurveiSimpangPage () {
     }, 500); // debounce delay 500ms
 
     return () => clearTimeout(timer)
-  }, [dateInput, activeCamera, activeInterval]);
+  }, [dateInput, activeCamera, activeInterval, activePendekatan]);
 
 
   // Debounced fetchSurvey when dependencies change

@@ -8,9 +8,10 @@ import YearVehicleTable from '@/app/components/YearVehicletable';
 import dataTableRaw from '@/data/DataTableYear.json';
 import { maps, survey } from '@/lib/apiService';
 
-const VehicleTable = ({ activeCamera, activeInterval, activeClassification }) => {
+const VehicleTable = ({ activeCamera, activeInterval, activeClassification, activePendekatan }) => {
   const [activeTab, setActiveTab] = useState('hour');
   const [vehicleData, setVehicleData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -30,27 +31,30 @@ const VehicleTable = ({ activeCamera, activeInterval, activeClassification }) =>
 
   const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
 
-  const fetchSurvey = async (active, date, activeInterval) => {
+  const fetchSurvey = async (active, date, activeInterval, approach) => {
     try {
-      const res = await survey.getAll(active, date, activeInterval);
+      setLoading(true);
+      const res = await survey.getAll(active, date, activeInterval, approach);
       const datafetch = res?.data?.vehicleData || [];
       setVehicleData(datafetch);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     if (activeCamera) {
-      fetchSurvey(activeCamera.slice(activeCamera), formatDateToYMDForAPI(dateInput));
+      fetchSurvey(activeCamera.slice(activeCamera), formatDateToYMDForAPI(dateInput), activePendekatan.toLowerCase());
     }
   }, []);
 
   useEffect(() => {
     if (activeCamera) {
-      fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval);
+      fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval, activePendekatan.toLowerCase());
     }
-  }, [dateInput, activeCamera, activeInterval]);
+  }, [dateInput, activeCamera, activeInterval, activePendekatan]);
 
   return (
     <div className="mx-auto">
@@ -94,7 +98,9 @@ const VehicleTable = ({ activeCamera, activeInterval, activeClassification }) =>
 
       {activeTab === 'hour' && (
         <div className="rounded-lg">
-          <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} />
+          {loading ? (<div className='my-5'>Loading...</div>) : (
+            <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} />
+          )}
         </div>
       )}
 

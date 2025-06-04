@@ -130,9 +130,9 @@ function SurveiLhrkPage () {
             />
           </div> */}
           {loading ? (<div className='my-5'>Loading...</div>) : (
-            <VehicleTable activeCamera={activeCamera} activeInterval={activeInterval} activeClassification={activeClassification} />
+            <VehicleTable activeCamera={activeCamera} activeInterval={activeInterval} activeClassification={activeClassification} activePendekatan={activePendekatan} />
           )}
-          <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval} />
+          <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval}/>
         </div>
       </Suspense>
     </div>

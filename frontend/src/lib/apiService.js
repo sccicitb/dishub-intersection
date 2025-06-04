@@ -57,6 +57,6 @@ export const logCamera = {
 }
 
 export const survey = {
-  getAll: (camera_id, date, interval) => getRequest(`/surveys/data-summary?camera_id=${camera_id}&date=${date}${interval ? '&interval=' + interval + '' : ''}`),
+  getAll: (camera_id, date, interval, approach) => getRequest(`/surveys/data-summary?camera_id=${camera_id}&date=${date}${interval ? '&interval=' + interval + '' : ''}${approach ? '&approach=' + approach : ''}`),
   getProporsi: (simpang_id, type, date) => getRequest(`/survey-proporsi?ID_Simpang=${simpang_id}${type ? '&type=' + type + '' : ''}&date=${date}`)
 }
