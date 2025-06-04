@@ -256,7 +256,7 @@ function SurveiSimpangPage () {
 
     try {
       console.log(building)
-      const title = building.camera.name || "Loading ...";
+      const title = building.camera.name || "Simpang";
       setActiveTitle("Survei " + title);
       setActiveSimpang(title);
       setActiveCamera(building.camera.camera_id);
@@ -322,7 +322,7 @@ function SurveiSimpangPage () {
 
           {loading ? (<div>Loading...</div>) :
             Array.isArray(vehicleData) && vehicleData.length > 0 && (
-              <HourVehicleTable statusHour={true} vehicleData={vehicleData} />
+              <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false}/>
             )}
           <ClasificationTable typeClass={activeClassification} />
         </div>

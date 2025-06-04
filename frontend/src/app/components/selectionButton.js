@@ -114,7 +114,7 @@ export default function SelectionButtons ({ interval, exportPdf, arahPergerakan,
           <div className='space-y-2'>
             <div className="w-full gap-5 flex overflow-x-auto join">
               {/* <ExportButton vehicleData={dataTable} fileName='Data_Kendaraan_perjam'/> */}
-              <SurveyLalulintasExport vehicleData={vehicleData} />
+              <SurveyLalulintasExport vehicleData={vehicleData} activeClassification={activeClassification}/>
             </div>
           </div>
         )}

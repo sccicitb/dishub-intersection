@@ -1,10 +1,14 @@
 "use client"
 import { useState, useEffect } from 'react';
 
-const VehicleClassificationTable = ({ typeClass }) => {
+const VehicleClassificationTable = ({ typeClass, customSize }) => {
   const [classificationData, setClassificationData] = useState([]);
   const [selectedType, setSelectedType] = useState('luar_kota');
   const [theme, setTheme] = useState('light');
+
+  // Dynamic text size based on customSize prop
+  const textSize = customSize ? 'text-xs' : 'text-sm';
+  const headerTextSize = customSize ? 'text-sm' : 'text-xl';
 
   useEffect(() => {
     // In a real implementation, you'd import from a file
@@ -56,7 +60,7 @@ const VehicleClassificationTable = ({ typeClass }) => {
   return (
     <div className="w-full p-4 my-2">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Klasifikasi Kendaraan</h2>
+        <h2 className={`${headerTextSize} font-semibold`}>Klasifikasi Kendaraan</h2>
 
         {/* <div className="mt-2 sm:mt-0">
           <label className="mr-2 font-medium">Pilih Tipe Klasifikasi:</label>
@@ -76,7 +80,7 @@ const VehicleClassificationTable = ({ typeClass }) => {
         <table className="min-w-full border border-base-300">
           <thead>
             <tr className={theme === 'light' ? 'bg-green-50 text-black' : 'bg-base-200 text-white'}>
-              <th className="border border-base-300 px-4 py-2 font-medium capitalize" colSpan={20}>{selectedType.replace(/_/g, ' ')}</th>
+              <th className={`border border-base-300 px-4 py-2 font-medium capitalize ${textSize}`} colSpan={20}>{selectedType.replace(/_/g, ' ')}</th>
             </tr>
           </thead>
           <tbody>
@@ -87,23 +91,23 @@ const VehicleClassificationTable = ({ typeClass }) => {
                     {index === 0 && (
                       <>
                         <td
-                          className="border border-base-300 px-4 py-2 text-center align-middle font-medium"
+                          className={`border border-base-300 px-4 py-2 text-center align-middle font-medium ${textSize}`}
                           rowSpan={items.length}
                         >
                           {vehicle.mainCode}
                         </td>
                         <td
-                          className="border border-base-300 px-4 py-2 align-middle"
+                          className={`border border-base-300 px-4 py-2 align-middle ${textSize}`}
                           rowSpan={items.length}
                         >
                           {vehicle.mainCategory}
                         </td>
                       </>
                     )}
-                    <td className="border border-base-300 px-4 py-2 text-center">
+                    <td className={`border border-base-300 px-4 py-2 text-center ${textSize}`}>
                       {vehicle.subCode} <br /> {vehicle.subCategory}
                     </td>
-                    <td className="border border-base-300 px-4 py-2">
+                    <td className={`border border-base-300 px-4 py-2 ${textSize}`}>
                       {vehicle.description}
                     </td>
                   </tr>
@@ -111,7 +115,7 @@ const VehicleClassificationTable = ({ typeClass }) => {
               )
             ) : (
               <tr>
-                <td colSpan="4" className="border border-base-300 px-4 py-2 text-center">
+                <td colSpan="4" className={`border border-base-300 px-4 py-2 text-center ${textSize}`}>
                   {classificationData?.length > 0 ? 'Tidak ada data untuk tipe yang dipilih' : 'Memuat data...'}
                 </td>
               </tr>
