@@ -310,7 +310,7 @@ function SurveiSimpangPage () {
             </div>
           </div>
 
-          <div className="w-full flex justify-end mb-4">
+          <div className="w-full flex justify-end items-center mb-4">
             <label className="mr-2 font-medium">Pilih Tanggal:</label>
             <input
               type="date"

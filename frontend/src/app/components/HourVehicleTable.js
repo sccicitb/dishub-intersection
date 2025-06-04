@@ -192,7 +192,7 @@ const HourVehicleTable = ({ statusHour, vehicleData, classification, customSize,
         rows.push(
           <tr key={`divider-${periodIndex}`}>
             <td
-              colSpan={14}
+              colSpan={15}
               className={pdf ? '' : `border border-base-300 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
               style={pdf ? pdfDividerStyle : {}}
             >
@@ -327,7 +327,7 @@ const HourVehicleTable = ({ statusHour, vehicleData, classification, customSize,
         rows.push(
           <tr key={`divider-${periodIndex}`}>
             <td
-              colSpan={13}
+              colSpan={14}
               className={pdf ? '' : `border border-base-300 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
               style={pdf ? pdfDividerStyle : {}}
             >
