@@ -5,56 +5,86 @@ import HourVehicleTable from '@/app/components/HourVehicleTable';
 import MonthlyVehicleTable from '@/app/components/monthlyTable';
 import DaysVehicleTable from '@/app/components/DaysVehicleTable';
 import YearVehicleTable from '@/app/components/YearVehicletable';
-import dataTableRaw from '@/data/DataTableYear.json';
-import { maps, survey } from '@/lib/apiService';
+import { survey } from '@/lib/apiService';
 
-const VehicleTable = ({ activeCamera, activeInterval, activeClassification, activePendekatan }) => {
-  const [activeTab, setActiveTab] = useState('hour');
+const classificationMap = {
+  "PKJI 2023 Luar Kota": "luar_kota",
+  "PKJI 2023 Dalam Kota": "dalam_kota",
+  "PKJI 2023 Tipikal": "tipikal",
+};
+
+const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePergerakan, activeClassification }) => {
+  // const initialMonth = new Date().toISOString().slice(0, 7); // format: 'YYYY-MM'
+  const today = new Date().toISOString().split('T')[0];
+  const year = today.split('-')[0];
+  const month = today.split('-')[1];
+
+  const [activeTab, setActiveTab] = useState('hourly');
   const [vehicleData, setVehicleData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(month);
+  const [selectedYear, setSelectedYear] = useState(year);
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
 
   const formatDateToInput = (date) => {
     if (!date) return "";
     const d = new Date(date);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
-  const formatDateToYMDForAPI = (dateStr) => {
-    return dateStr.replace(/-/g, '/');
-  };
+  const formatDateToAPI = (dateStr) => dateStr.replace(/-/g, '/');
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
   const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
 
-  const fetchSurvey = async (active, date, activeInterval, approach) => {
+  const fetchSurvey = async () => {
+    if (!activeCamera) return;
+
+    const classificationParam = classificationMap[activeClassification] || activeClassification?.toLowerCase().replace(/\s+/g, '_');
+    const params = {
+      camera_id: activeCamera,
+      date: formatDateToAPI(dateInput),
+      interval: activeInterval || '',
+      approach: activePendekatan?.toLowerCase() || '',
+      direction: activePergerakan || '',
+      classification: classificationParam,
+      reportType: activeTab,
+      month: selectedMonth,
+      year: selectedYear,
+      startDate: startDate,
+      endDate: endDate,
+    };
+
     try {
       setLoading(true);
-      const res = await survey.getAll(active, date, activeInterval, approach);
-      const datafetch = res?.data?.vehicleData || [];
-      setVehicleData(datafetch);
+      const res = await survey.getAll(
+        params.camera_id,
+        params.date,
+        params.interval,
+        params.approach,
+        params.classification,
+        params.reportType,
+        params.direction,
+        params.month,
+        params.year,
+        params.startDate,
+        params.endDate,
+      );
+      setVehicleData(res?.data?.vehicleData || res?.data || []);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (activeCamera) {
-      fetchSurvey(activeCamera.slice(activeCamera), formatDateToYMDForAPI(dateInput), activePendekatan.toLowerCase());
-    }
-  }, []);
 
   useEffect(() => {
-    if (activeCamera) {
-      fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval, activePendekatan.toLowerCase());
-    }
-  }, [dateInput, activeCamera, activeInterval, activePendekatan]);
+    fetchSurvey();
+  }, [activeCamera, activeInterval, activePendekatan, activePergerakan, activeClassification, dateInput, activeTab, startDate, endDate, selectedMonth, selectedYear]);
 
   return (
     <div className="mx-auto">
@@ -70,57 +100,63 @@ const VehicleTable = ({ activeCamera, activeInterval, activeClassification, acti
             onChange={(e) => setDateInput(e.target.value)}
           />
         </div>
-        <button
-          className={`btn tab ${activeTab === 'hour' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
-          onClick={() => setActiveTab('hour')}
-        >
-          Data Harian Per Hari
-        </button>
-        <button
-          className={`btn tab ${activeTab === 'monthly' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
-          onClick={() => setActiveTab('monthly')}
-        >
-          Data Bulanan
-        </button>
-        <button
-          className={`btn tab ${activeTab === 'days' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
-          onClick={() => setActiveTab('days')}
-        >
-          Data Harian
-        </button>
-        <button
-          className={`btn tab ${activeTab === 'years' ? 'tab-active bg-[#314385]/80 border-none text-white ' : ''}`}
-          onClick={() => setActiveTab('years')}
-        >
-          Data Tahunan
-        </button>
+        {['hourly', 'monthly', 'dailyMonth', 'dailyRange', 'yearly'].map((tab) => (
+          <button
+            key={tab}
+            className={`btn tab ${activeTab === tab ? 'tab-active bg-[#314385]/80 border-none text-white' : ''}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {{
+              hourly: 'Data Harian Per Hari',
+              monthly: 'Data Bulanan',
+              dailyMonth: 'Data Tahunan dan Bulanan',
+              dailyRange: 'Data Harian',
+              yearly: 'Data Tahunan'
+            }[tab]}
+          </button>
+        ))}
       </div>
 
-      {activeTab === 'hour' && (
-        <div className="rounded-lg">
-          {loading ? (<div className='my-5'>Loading...</div>) : (
-            <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} />
-          )}
-        </div>
-      )}
+      <div className="rounded-lg">
+        {/* {loading ? (
+          <div className='my-5'>Loading...</div>
+        ) : ( */}
+        {/* <> */}
+        {activeTab === 'hourly' && <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} />}
+        {activeTab === 'monthly' && <MonthlyVehicleTable />}
+        {activeTab === 'dailyMonth' &&
+          <DaysVehicleTable
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            startDate={startDate}
+            endDate={endDate}
+            monthlyData={vehicleData}
+            setSelectedMonth={setSelectedMonth}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            setSelectedYear={setSelectedYear}
+            type={activeTab}
+          />
+        }
 
-      {activeTab === 'monthly' && (
-        <div className="rounded-lg">
-          <MonthlyVehicleTable />
-        </div>
-      )}
-
-      {activeTab === 'days' && (
-        <div className="rounded-lg">
-          <DaysVehicleTable />
-        </div>
-      )}
-
-      {activeTab === 'years' && (
-        <div className="rounded-lg">
-          <YearVehicleTable />
-        </div>
-      )}
+        {activeTab === 'dailyRange' &&
+          <DaysVehicleTable
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            startDate={startDate}
+            endDate={endDate}
+            monthlyData={vehicleData}
+            setSelectedMonth={setSelectedMonth}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            setSelectedYear={setSelectedYear}
+            type={activeTab}
+          />
+        }
+        {activeTab === 'yearly' && <YearVehicleTable />}
+        {/* </> */}
+        {/* )} */}
+      </div>
     </div>
   );
 };

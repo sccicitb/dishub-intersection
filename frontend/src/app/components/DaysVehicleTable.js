@@ -1,42 +1,109 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
-import monthlyData from '@/data/DataTableDaysMonth.json';
+// import monthlyData from '@/data/DataTableDaysMonth.json';
 
-const DaysVehicleTable = () => {
-  const initialMonth = monthlyData.dailyData?.[0]?.month || '';
-  const initialStartDate = monthlyData.dailyData?.[0]?.days?.[0]?.date || '';
-  const initialEndDate = monthlyData.dailyData?.[0]?.days?.slice(-1)[0]?.date || '';
-
-  const [selectedMonth, setSelectedMonth] = useState(initialMonth);
-  const [startDate, setStartDate] = useState(initialStartDate);
-  const [endDate, setEndDate] = useState(initialEndDate);
+const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEndDate, selectedYear: parentSelectedYear, selectedMonth: parentSelectedMonth, setSelectedMonth: setParentSelectedMonth,
+  setSelectedYear: setParentSelectedYear,
+  type,
+}) => {
 
   const [isDateRangeMode, setIsDateRangeMode] = useState(false);
   const [vehicleData, setVehicleData] = useState({
     dailyData: [],
     lhrkData: []
   });
+  const [vehicleDataMonth, setVehicleDataMonth] = useState({
+    dailyData: [],
+    lhrkData: []
+  });
+
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedMonthNumber, setSelectedMonthNumber] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // In a real application, you might fetch this data from an API
-    // For now, we'll use the static JSON data
-    setVehicleData(monthlyData);
-    
-    // Set the first month as default if available
-    if (monthlyData.dailyData && monthlyData.dailyData.length > 0) {
-      setSelectedMonth(monthlyData.dailyData[0].month);
-      
-      // Set default date range to the first month's full range
-      if (monthlyData.dailyData[0].days && monthlyData.dailyData[0].days.length > 0) {
-        const days = monthlyData.dailyData[0].days;
-        setStartDate(days[0].date);
-        setEndDate(days[days.length - 1].date);
+    if (!monthlyData) return;
+
+
+    if (type === "dailyMonth" && monthlyData?.dailyData?.length > 0) {
+      setVehicleDataMonth(monthlyData)
+      setSelectedYear(parentSelectedYear);
+      setSelectedMonthNumber(parseInt(parentSelectedMonth))
+      const firstMonthData = monthlyData.dailyData[0];
+      const monthName = firstMonthData.month;
+      const year = firstMonthData.year;
+
+      setSelectedMonth(monthName);
+      setSelectedYear(year);
+
+      if (firstMonthData.days && firstMonthData.days.length > 0) {
+        setStartDate(firstMonthData.days[0].date);
+        setEndDate(firstMonthData.days[firstMonthData.days.length - 1].date);
+      }
+    } else if (type === "dailyRange" && monthlyData?.dailyData?.length > 0) {
+      setVehicleData(monthlyData);
+      const allDays = getAllDaysFromData(monthlyData.dailyData);
+      if (allDays.length > 0) {
+        const sortedDays = allDays.sort((a, b) => new Date(a.date) - new Date(b.date));
+        if (!startDate) setStartDate(sortedDays[0].date);
+        if (!endDate) setEndDate(sortedDays[sortedDays.length - 1].date);
       }
     }
-    
+
     setLoading(false);
-  }, []);
+  }, [monthlyData, type, setStartDate, setEndDate, setParentSelectedMonth, setParentSelectedYear]);
+
+  const getAllDaysFromData = (dailyData) => {
+    return dailyData.flatMap(month => month.days || []);
+  };
+
+  const getMonthName = (monthStr) => {
+    const date = new Date(Number(monthStr) - 1); // JS month: 0-based
+    return date.toLocaleString('id-ID', { month: 'long' });
+  };
+
+  useEffect(() => {
+    if (!selectedMonth || !vehicleData.dailyData) return;
+    console.log(selectedMonth)
+    const monthData = vehicleData.dailyData.find((m) => m.month === selectedMonth);
+    if (monthData && monthData.days?.length > 0) {
+      setStartDate(monthData.days[0].date);
+      setEndDate(monthData.days[monthData.days.length - 1].date);
+    }
+  }, [selectedMonth, vehicleData, setStartDate, setEndDate]);
+
+  // Saat user ganti tahun
+  const handleYearChange = (e) => {
+    let newYear = e.target.value;
+
+    if (newYear.length > 4) return;
+    if (newYear && !/^\d*$/.test(newYear)) return;
+
+    setSelectedYear(newYear);
+    setParentSelectedYear(newYear);
+  };
+
+  // Saat user ganti bulan
+  const handleMonthChange = (e) => {
+    let monthNum = e.target.value;
+
+    // Batasi angka 1-12 dan angka saja
+    if (monthNum.length > 2) return;
+    if (monthNum && !/^\d*$/.test(monthNum)) return;
+
+    if (monthNum.length === 1 && monthNum !== "0") monthNum = "0" + monthNum; // leading zero
+
+    // Pastikan bulan valid (01-12)
+    if (monthNum !== "" && (parseInt(monthNum) < 1 || parseInt(monthNum) > 12)) return;
+
+    setSelectedMonthNumber(monthNum);
+    setSelectedMonth(monthNum);
+    setParentSelectedMonth(monthNum);
+  };
 
   if (loading) {
     return <div className="flex justify-center p-8">
@@ -50,20 +117,6 @@ const DaysVehicleTable = () => {
     </div>;
   }
 
-  // Handle month selection
-  const handleMonthChange = (e) => {
-    const newMonth = e.target.value;
-    setSelectedMonth(newMonth);
-    
-    // When month changes, update date range to cover the full month
-    const monthData = vehicleData.dailyData?.find(month => month.month === newMonth);
-    if (monthData && monthData.days && monthData.days.length > 0) {
-      setStartDate(monthData.days[0].date);
-      setEndDate(monthData.days[monthData.days.length - 1].date);
-    }
-  };
-
-  // Handle date range change
   const handleStartDateChange = (e) => {
     setStartDate(e.target.value);
   };
@@ -72,26 +125,21 @@ const DaysVehicleTable = () => {
     setEndDate(e.target.value);
   };
 
-  // Toggle between month and date range selection
-  const toggleDateRangeMode = () => {
-    setIsDateRangeMode(!isDateRangeMode);
-  };
-
-  // Get all days data from all months
   const getAllDaysData = () => {
-    return vehicleData.dailyData?.flatMap(month => month.days) || [];
+    return vehicleData.dailyData || [];
   };
 
   // Get days data based on selection (month or date range)
   const getDaysData = () => {
-    if (isDateRangeMode && startDate && endDate) {
+    if (type === "dailyRange" && startDate && endDate) {
       const allDays = getAllDaysData();
       return allDays.filter(day => {
         const date = new Date(day.date);
         return date >= new Date(startDate) && date <= new Date(endDate);
       }).sort((a, b) => new Date(a.date) - new Date(b.date));
     } else {
-      const monthData = vehicleData.dailyData?.find(month => month.month === selectedMonth);
+      console.log(getMonthName(selectedMonthNumber))
+      const monthData = vehicleDataMonth.dailyData?.find(month => month.month === selectedMonth);
       return monthData ? monthData.days : [];
     }
   };
@@ -99,9 +147,9 @@ const DaysVehicleTable = () => {
   // Format date to display nicely
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', { 
-      day: 'numeric', 
-      month: 'long', 
+    return date.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
       year: 'numeric',
       weekday: 'long'
     });
@@ -109,9 +157,9 @@ const DaysVehicleTable = () => {
 
   const formatDateNoDays = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', { 
-      day: 'numeric', 
-      month: 'numeric', 
+    return date.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'numeric',
       year: 'numeric',
     });
   };
@@ -126,29 +174,29 @@ const DaysVehicleTable = () => {
   const getWorkdayIndicator = (dateString) => {
     return isWeekend(dateString) ? 'Akhir Pekan' : 'Hari Kerja';
   };
-  
+
   const getWeekOfMonth = (dateString) => {
     const date = new Date(dateString);
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    
+
     const daysSinceFirstDayOfMonth = Math.floor((date - firstDay) / (24 * 60 * 60 * 1000));
-    
+
     return Math.floor(daysSinceFirstDayOfMonth / 7) + 1;
   };
-  
+
   const getWeekAndDayInfo = (dateString) => {
     const weekNumber = getWeekOfMonth(dateString);
     const workdayType = getWorkdayIndicator(dateString);
-    
+
     return `P(${weekNumber}) - ${workdayType}`;
   };
-  
+
   // Generate rows for daily data
   const generateDailyRows = () => {
     const daysData = getDaysData();
     let rows = [];
 
-    
+
     if (!daysData || daysData.length === 0) {
       return (
         <tr>
@@ -161,21 +209,21 @@ const DaysVehicleTable = () => {
 
     daysData.map((day, index) => {
       rows.push(
-      <tr key={`day-${index}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
-        <td className="border border-base-300 text-sm text-center">{getWeekAndDayInfo(day.date)}</td>
-        <td className="border border-base-300 text-sm text-center">{formatDateNoDays(day.date)}</td>
-        <td className="border border-base-300 text-sm text-center">{day.data?.sm || 0}</td>
-        <td className="border border-base-300 text-sm text-center">{day.data?.mp || 0}</td>
-        <td className="border border-base-300 text-sm text-center">{day.data?.aup || 0}</td>
-        <td className="border border-base-300 text-sm text-center">{day.data?.trMp || 0}</td>
-        <td className="border border-base-300 text-sm text-center">{day.data?.bs || 0}</td>
-        <td className="border border-base-300 text-sm text-center">{day.data?.ts || 0}</td>
-        <td className="border border-base-300 text-sm text-center">{day.data?.bb || 0}</td>
-        <td className="border border-base-300 text-sm text-center">{day.data?.tb || 0}</td>
-        <td className="border border-base-300 text-sm text-center">{day.data?.gandengSemitrailer || 0}</td>
-        <td className="border border-base-300 text-sm text-center">{day.data?.ktb || 0}</td>
-        <td className="border border-base-300 text-sm text-center">{day.data?.total || 0}</td>
-      </tr>
+        <tr key={`day-${index}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
+          <td className="border border-base-300 text-sm text-center">{getWeekAndDayInfo(day.date)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatDateNoDays(day.date)}</td>
+          <td className="border border-base-300 text-sm text-center">{day.data?.sm || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{day.data?.mp || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{day.data?.aup || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{day.data?.trMp || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{day.data?.bs || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{day.data?.ts || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{day.data?.bb || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{day.data?.tb || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{day.data?.gandengSemitrailer || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{day.data?.ktb || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{day.data?.total || 0}</td>
+        </tr>
       )
     });
 
@@ -213,13 +261,13 @@ const DaysVehicleTable = () => {
     const daysData = getDaysData();
     const totals = calculateDailyTotal();
     const daysCount = daysData.length || 1;
-    
+
     // Create an object with the averages for each vehicle type
     const averages = {};
     Object.entries(totals).forEach(([key, value]) => {
       averages[key] = Math.round(value / daysCount);
     });
-    
+
     return averages;
   };
 
@@ -227,7 +275,7 @@ const DaysVehicleTable = () => {
   const getDateBoundaries = () => {
     const allDays = getAllDaysData();
     if (allDays.length === 0) return { min: '', max: '' };
-    
+
     const sortedDates = [...allDays].sort((a, b) => new Date(a.date) - new Date(b.date));
     return {
       min: sortedDates[0].date,
@@ -236,31 +284,17 @@ const DaysVehicleTable = () => {
   };
 
   const dateBoundaries = getDateBoundaries();
-  
+
   return (
     <div className="mx-auto p-4">
       <div className="items-center flex mb-4 flex-wrap">
-        <div className="flex items-center mr-4 gap-5">
-          <button 
-            onClick={toggleDateRangeMode} 
-            className={`btn tab ${isDateRangeMode ? 'tab-active bg-[#7585C1]/80 border-none text-white ' : ''}`}
-            >
-            Berdasarkan Bulan
-          </button>
-          <button 
-            onClick={toggleDateRangeMode} 
-            className={`btn tab ${!isDateRangeMode ? 'tab-active bg-[#7585C1]/80 border-none text-white ' : ''}`}
-          >
-            Berdasarkan Rentang Tanggal
-          </button>
-        </div>
-        
-        {isDateRangeMode ? (
+
+        {type === "dailyRange" ? (
           <div className="flex flex-wrap items-center not-lg:my-2 gap-4">
             <div className="flex gap-2 items-center">
               <label htmlFor="start-date" className="mr-2 font-medium">Dari:</label>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 id="start-date"
                 value={startDate}
                 onChange={handleStartDateChange}
@@ -270,8 +304,8 @@ const DaysVehicleTable = () => {
             </div>
             <div className="flex gap-2 items-center">
               <label htmlFor="end-date" className="mr-2 font-medium">Sampai:</label>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 id="end-date"
                 value={endDate}
                 onChange={handleEndDateChange}
@@ -281,24 +315,38 @@ const DaysVehicleTable = () => {
             </div>
           </div>
         ) : (
-          <div className="flex items-center ">
-            <label htmlFor="month-select" className="mr-2 font-medium text-nowrap ">Pilih Bulan:</label>
-            <select 
-              id="month-select" 
-              value={selectedMonth || ''}
+          <div className="flex items-center gap-2">
+            <label htmlFor="year-input" className="mr-2 font-medium text-nowrap">
+              Pilih Tahun:
+            </label>
+            <input
+              type="number"
+              id="year-input"
+              min="2000"
+              max="2100"
+              value={selectedYear || ''}
+              onChange={handleYearChange}
+              className="input input-md w-24"
+              placeholder="YYYY"
+            />
+
+            <label htmlFor="month-input" className="ml-4 mr-2 font-medium text-nowrap">
+              Pilih Bulan:
+            </label>
+            <input
+              type="number"
+              id="month-input"
+              min="1"
+              max="12"
+              value={selectedMonthNumber}
               onChange={handleMonthChange}
-              className="select select-md"
-            >
-              {vehicleData.dailyData?.map((month, index) => (
-                <option key={index} value={month.month}>
-                  {month.month}
-                </option>
-              ))}
-            </select>
+              className="input input-md w-20"
+              placeholder="MM"
+            />
           </div>
         )}
       </div>
-      
+
       <div className="overflow-x-auto">
         <table className="table-auto border-collapse border border-base-300 w-full">
           <thead>
@@ -339,7 +387,7 @@ const DaysVehicleTable = () => {
           </thead>
           <tbody>
             {generateDailyRows()}
-            
+
             {/* Daily average row */}
             {(selectedMonth || (isDateRangeMode && startDate && endDate)) && (
               <tr className="bg-base-200 font-medium">
@@ -354,16 +402,16 @@ const DaysVehicleTable = () => {
           </tbody>
         </table>
       </div>
-      
+
       {/* Display information about the selected period */}
-      {getDaysData().length > 0 && (
+      {/* {getDaysData().length > 0 && (
         <div className="mt-4 text-sm">
           <p>
             Periode data: {formatDateNoDays(getDaysData()[0].date)} - {formatDateNoDays(getDaysData()[getDaysData().length - 1].date)}
           </p>
           <p>Jumlah hari: {getDaysData().length}</p>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
