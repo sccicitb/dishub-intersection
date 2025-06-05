@@ -123,7 +123,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
         ) : ( */}
         {/* <> */}
         {activeTab === 'hourly' && <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} />}
-        {activeTab === 'monthly' && <MonthlyVehicleTable />}
+        {activeTab === 'monthly' && <MonthlyVehicleTable monthlyData={vehicleData} selectedYear={selectedYear} setSelectedYear={setSelectedYear} loading={loading}/>}
         {activeTab === 'dailyMonth' &&
           <DaysVehicleTable
             setStartDate={setStartDate}
@@ -153,7 +153,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
             type={activeTab}
           />
         }
-        {activeTab === 'yearly' && <YearVehicleTable />}
+        {activeTab === 'yearly' && <YearVehicleTable yearlyData={vehicleData} />}
         {/* </> */}
         {/* )} */}
       </div>

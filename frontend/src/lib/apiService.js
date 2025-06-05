@@ -74,6 +74,9 @@ export const survey = {
       params.push(`month=${month}`);
       params.push(`year=${year}`);
     }
+    if (reportType === 'monthly' && year) {
+      params.push(`year=${year}`);
+    }
 
     return getRequest(`/surveys/data-summary?${params.join('&')}`);
   },

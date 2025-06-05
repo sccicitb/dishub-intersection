@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import dataTable from '@/data/DataTableHour.json';
 import { ExportButton } from './exportExcel';
 
-const HourVehicleTable = ({ statusHour, vehicleData, classification, customSize, pdf }) => {
+const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification, customSize, pdf }) => {
   // Style khusus untuk PDF
   const pdfTableStyle = pdf ? {
     borderCollapse: 'collapse',
@@ -49,6 +49,20 @@ const HourVehicleTable = ({ statusHour, vehicleData, classification, customSize,
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formatClassification, setFormatClassification] = useState('');
+  const [vehicleData, setVehicleData] = useState([]);
+
+  useEffect(() => {
+    // Ensure dataVehicle is an array before setting it
+    if (dataVehicle && Array.isArray(dataVehicle)) {
+      setVehicleData(dataVehicle);
+    } else if (dataVehicle) {
+      // If dataVehicle exists but is not an array, wrap it in an array or handle accordingly
+      console.warn('dataVehicle is not an array:', dataVehicle);
+      setVehicleData(Array.isArray(dataVehicle) ? dataVehicle : []);
+    } else {
+      setVehicleData([]);
+    }
+  }, [dataVehicle]);
 
   // Move useEffect to the top level - this should run on every render
   useEffect(() => {
@@ -60,10 +74,13 @@ const HourVehicleTable = ({ statusHour, vehicleData, classification, customSize,
   const textSize = customSize ? 'text-xs' : 'text-sm';
 
   const generateRows = () => {
+    if (!vehicleData || !Array.isArray(vehicleData) || vehicleData.length === 0) {
+      return null;
+    }
     let rows = [];
     let rowCount = 0;
 
-    vehicleData.forEach((periodData, periodIndex) => {
+    vehicleData?.forEach((periodData, periodIndex) => {
       periodData.timeSlots.forEach((slot, timeIndex) => {
         const rowStyle = pdf ? (rowCount % 2 === 0 ? pdfRowEvenStyle : pdfRowOddStyle) : {};
 
@@ -82,7 +99,7 @@ const HourVehicleTable = ({ statusHour, vehicleData, classification, customSize,
                 {periodData.period}
               </td>
             ) : null}
-            
+
             {pdf && (
               <td
                 className={pdf ? '' : `border-r border-t border-b border-base-300 px-2 py-1 ${textSize} font-medium text-center align-middle`}
@@ -91,7 +108,7 @@ const HourVehicleTable = ({ statusHour, vehicleData, classification, customSize,
                 {pdf ? timeIndex === 0 ? periodData.period : '' : timeIndex === 0 ? periodData.period : null}
               </td>
             )}
-            
+
             {statusHour === true ? (
               <td
                 className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center ${slot.status === 1 ? 'bg-green-500' : 'bg-red-500'}`}
@@ -238,7 +255,7 @@ const HourVehicleTable = ({ statusHour, vehicleData, classification, customSize,
                 {pdf ? timeIndex === 0 ? periodData.period : '' : timeIndex === 0 ? periodData.period : null}
               </td>
             )}
-            
+
             {statusHour === true ? (
               <td
                 className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center ${slot.status === 1 ? 'bg-green-500' : 'bg-red-500'}`}

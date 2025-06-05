@@ -1,20 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import yearlyData from '@/data/DataTableYear.json';
+// import yearlyData from '@/data/DataTableYear.json';
 
-const YearlyVehicleTable = () => {
+const YearlyVehicleTable = ({ yearlyData }) => {
   const [vehicleData, setVehicleData] = useState({ yearlyData: [], lhrtData: [] });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    try {
-      setVehicleData(yearlyData);
-      setLoading(false);
-    } catch (err) {
-      setError('Gagal memuat data. Silakan coba lagi nanti.');
-      setLoading(false);
-    }
-  }, []);
+    if (!yearlyData) return null;
+    setVehicleData(yearlyData);
+  }, [yearlyData]);
 
   if (loading) {
     return <div className="flex justify-center p-8">
@@ -30,44 +25,44 @@ const YearlyVehicleTable = () => {
 
   // Generate yearly data rows
   const generateYearlyRows = () => {
-    return vehicleData.yearlyData.map((yearData, index) => (
+    return vehicleData?.yearlyData?.map((yearData, index) => (
       <tr key={`year-${yearData.year}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
         <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.year}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.sm || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.mp || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.aup || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.tr || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.bs || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.ts || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.bb || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.tb || ''}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.sm || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.mp || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.aup || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.tr || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.bs || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.ts || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.bb || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.tb || 0}</td>
         <td className="border border-base-300 px-2 py-1 text-sm text-center">
-          {yearData.data.gandengSemitrailer || ''}
+          {yearData.data.gandengSemitrailer || 0}
         </td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.ktb || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.total || ''}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.ktb || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.total || 0}</td>
       </tr>
     ));
   };
 
   // Generate LHRT data rows
   const generateLHRTRows = () => {
-    return vehicleData.lhrtData.map((lhrtData, index) => (
+    return vehicleData?.lhrtData?.map((lhrtData, index) => (
       <tr key={`lhrt-${lhrtData.period}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
         <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.period}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.sm || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.mp || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.aup || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.tr || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.bs || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.ts || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.bb || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.tb || ''}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.sm || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.mp || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.aup || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.tr || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.bs || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.ts || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.bb || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.tb || 0}</td>
         <td className="border border-base-300 px-2 py-1 text-sm text-center">
-          {lhrtData.data.gandengSemitrailer || ''}
+          {lhrtData.data.gandengSemitrailer || 0}
         </td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.ktb || ''}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.total || ''}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.ktb || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.total || 0}</td>
       </tr>
     ));
   };
@@ -117,14 +112,14 @@ const YearlyVehicleTable = () => {
         <tbody>
           {/* Yearly data rows */}
           {generateYearlyRows()}
-          
+
           {/* Divider row */}
           <tr>
             <td colSpan={12} className="border border-base-300 font-semibold px-2 py-1 text-sm text-center bg-base-200">
               Lalu Lintas Harian Rata-Rata Tahunan (kend/hari)
             </td>
           </tr>
-          
+
           {/* LHRT data rows */}
           {generateLHRTRows()}
         </tbody>
