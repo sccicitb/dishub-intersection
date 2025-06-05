@@ -22,7 +22,10 @@ jobs:
         password: ${{ secrets.VPS_PASSWORD }}
         script: |
           # Load fnm
-          eval "$(fnm env --use-on-cd)"
+          if [ -d "$FNM_PATH" ]; then
+            export PATH="$FNM_PATH:$PATH"
+            eval "`fnm env`"
+          fi
 
           # Navigate to project directory
           cd ${{ env.PROJECT_PATH }}
