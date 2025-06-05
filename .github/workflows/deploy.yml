@@ -21,6 +21,9 @@ jobs:
         username: ${{ secrets.VPS_USERNAME }}
         password: ${{ secrets.VPS_PASSWORD }}
         script: |
+          # Load fnm
+          eval "$(fnm env --use-on-cd)"
+
           # Navigate to project directory
           cd ${{ env.PROJECT_PATH }}
           
