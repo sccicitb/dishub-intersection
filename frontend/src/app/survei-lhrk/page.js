@@ -22,7 +22,7 @@ function SurveiLhrkPage () {
   const [activeSimpang, setActiveSimpang] = useState("");
   const [vehicleData, setVehicleData] = useState([]);
   const [activeSimpangId, setActiveSimpangId] = useState(0)
-  const [activeCamera, setActiveCamera] = useState('detection1');
+  const [activeCamera, setActiveCamera] = useState(1);
   const [activeTitle, setActiveTitle] = useState("Survei LHRK")
 
 
@@ -70,7 +70,6 @@ function SurveiLhrkPage () {
       console.warn("Invalid building or camera data", building);
       return;
     }
-
     try {
       const title = building.camera.name || "Tanpa Nama";
       setActiveTitle("Survei " + title);

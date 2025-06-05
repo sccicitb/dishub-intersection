@@ -1,9 +1,14 @@
 import axios from 'axios';
 
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL
+  ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
+  : 'http://63.250.52.19:9090/api';
+
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL + "/api" || 'http://localhost:8080/api', // Replace with your API base URL this example local backend
-  timeout: 30000,
-}) 
+  baseURL,
+  timeout: 70000,
+});
+
 
 axiosInstance.interceptors.request.use(function (config) {
   const token = localStorage.getItem('auth_token');

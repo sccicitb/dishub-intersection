@@ -20,6 +20,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
   // Data States  
   const [buildings, setBuildings] = useState([]);
   const [categorizedBuildings, setCategorizedBuildings] = useState({});
+  
   const [selectedBuilding, setSelectedBuilding] = useState(null);
 
   // UI States
