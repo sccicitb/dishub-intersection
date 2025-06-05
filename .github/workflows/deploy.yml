@@ -1,0 +1,53 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ staging ] 
+
+env:
+  PROJECT_PATH: /root/dishub-jogja/dishub-intersection  
+  BACKEND_PM2_NAME: dishub-intersection-be-9090
+  FRONTEND_PM2_NAME: dishub-intersection-fe-9091
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        script: |
+          # Load fnm
+          FNM_PATH="/root/.local/share/fnm"
+          export PATH="$FNM_PATH:$PATH"
+          eval "`fnm env`"
+
+          # Navigate to project directory
+          cd ${{ env.PROJECT_PATH }}
+          
+          # Pull latest changes
+          git pull
+          git checkout staging
+          
+          # Deploy Backend
+          cd backend
+          npm install
+          if pm2 list | grep -q "${{ env.BACKEND_PM2_NAME }}"; then
+            pm2 restart ${{ env.BACKEND_PM2_NAME }}
+          else
+            pm2 start server.js --name "${{ env.BACKEND_PM2_NAME }}"
+          fi
+          
+          # Deploy Frontend
+          cd ../frontend
+          npm install
+          npm run build
+          if pm2 list | grep -q "${{ env.FRONTEND_PM2_NAME }}"; then
+            pm2 restart ${{ env.FRONTEND_PM2_NAME }}
+          else
+            pm2 start npm --name "${{ env.FRONTEND_PM2_NAME }}" -- start -- -p 9091
+          fi 

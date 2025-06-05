@@ -106,10 +106,15 @@ const getVehicleSummaryData = async (req, res) => {
       // Param: months= “1,2,3” (bisa string CSV), year=2025
       const monthsCSV = req.query.months;
       const year = parseInt(req.query.year, 10);
-      if (!monthsCSV || !year) {
-        return res.status(400).json({ error: 'months (CSV “1,2,3”) dan year (YYYY) wajib diisi.' });
+
+      if (!year) {
+        return res.status(400).json({ error: 'Parameter year (YYYY) wajib diisi.' });
       }
-      const monthList = monthsCSV.split(',').map(m => parseInt(m.trim(), 10)).filter(m => m >= 1 && m <= 12);
+
+      // Jika months kosong, gunakan default: semua bulan
+      const monthList = monthsCSV
+        ? monthsCSV.split(',').map(m => parseInt(m.trim(), 10)).filter(m => m >= 1 && m <= 12)
+        : [1,2,3,4,5,6,7,8,9,10,11,12];
 
       // Panggil getMonthlySummary untuk tiap bulan di monthList
       const allMonthsData = [];
@@ -121,6 +126,7 @@ const getVehicleSummaryData = async (req, res) => {
         );
         allMonthsData.push(oneMonthData);
       }
+
       // Bentuk JSON final sama seperti DataTableDaysMonth.json:
       // { dailyData: [ { month: 'Januari', … }, { month: 'Februari', … }, … ], lhrkData: […] }
       // “lhrkData” untuk tiap bulan: misal periode LHRK Jan, LHRK Feb:

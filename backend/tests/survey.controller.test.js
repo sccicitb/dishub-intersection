@@ -274,6 +274,33 @@ describe('survey.controller.js', () => {
       });
     });
 
+    it('should default to all months if months param not provided', async () => {
+      const req = {
+        query: {
+          camera_id: '5',
+          date: '2025-06-04',
+          approach: 'semua',
+          direction: 'semua',
+          classification: 'luar_kota',
+          reportType: 'monthly',
+          year: '2025'
+          // no months
+        }
+      };
+      const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+
+      // Mock return 12x panggilan getMonthlySummary
+      const mockMonthData = { month: 'Januari', year: 2025, workDays: 20, days: [], monthlyTotal: {} };
+      surveyModel.getMonthlySummary = jest.fn().mockResolvedValue(mockMonthData);
+
+      await surveyController.getVehicleSummaryData(req, res);
+
+      expect(surveyModel.getMonthlySummary).toHaveBeenCalledTimes(12); // ✅ semua bulan
+      expect(res.json).toHaveBeenCalledWith({
+        dailyData: Array(12).fill(mockMonthData),
+        lhrkData: expect.any(Array)
+      });
+    });
     it('should return 400 if reportType unknown', async () => {
       // rawSubCodes = ['F']
       const mockClassificationJson = [{ type: 'luar_kota', subCode: 'F' }];
