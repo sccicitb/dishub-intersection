@@ -30,7 +30,8 @@ jobs:
           cd ${{ env.PROJECT_PATH }}
           
           # Pull latest changes
-          git pull origin main
+          git pull
+          git checkout staging
           
           # Deploy Backend
           cd backend
