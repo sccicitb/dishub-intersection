@@ -81,7 +81,6 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
     }
   };
 
-
   useEffect(() => {
     fetchSurvey();
   }, [activeCamera, activeInterval, activePendekatan, activePergerakan, activeClassification, dateInput, activeTab, startDate, endDate, selectedMonth, selectedYear]);

@@ -480,7 +480,7 @@ export default function Home () {
           </div>
         </div> */}
         <CameraStream />
-        <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100">
+        <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100 mb-10">
           {/* <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-2 py-10">
             <div>
               <GrafikRoad />
