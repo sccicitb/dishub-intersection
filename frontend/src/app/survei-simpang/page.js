@@ -305,6 +305,7 @@ function SurveiSimpangPage () {
                 activePergerakan={activePergerakan}
                 setActivePergerakan={setActivePergerakan}
                 exportPdf
+                pendekatan
                 interval
               />
             </div>

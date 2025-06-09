@@ -2,7 +2,7 @@
 import { lazy, Suspense } from 'react';
 const SurveyLalulintasExport = lazy(() => import('./exportPdf'));
 
-export default function SelectionButtons ({ interval, exportPdf, arahPergerakan, vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, setActivePergerakan, activeInterval, setActiveInterval }) {
+export default function SelectionButtons ({ pendekatan, interval, exportPdf, arahPergerakan, vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, setActivePergerakan, activeInterval, setActiveInterval, activeDirection, setActiveDirection, direction }) {
 
   // Opsi untuk surveyor
   const surveyorOptions = ['VIANA', 'Manual', 'Semua'];
@@ -13,11 +13,13 @@ export default function SelectionButtons ({ interval, exportPdf, arahPergerakan,
   // Opsi Pendekatan simpang
   const pergerakanOptions = ['Belok Kiri', 'Belok Kanan', 'Lurus', 'Semua'];
 
+  const directionOptions = ['timur', 'selatan', 'utara', 'barat', 'Semua'];
+
   // Opsi Pendekatan simpang
   const intervalOptions = [
     {
       item: '',
-      display: '5 Menit'
+      display: '15 Menit'
     },
     {
       item: '1h',
@@ -62,20 +64,22 @@ export default function SelectionButtons ({ interval, exportPdf, arahPergerakan,
         </div>
       )}
 
-      <div className="space-y-2">
-        <h3 className="text-lg font-medium">Pilih Pendekatan Simpang</h3>
-        <div className="join w-full gap-5 flex overflow-x-auto p-2">
-          {pendekatanOptions.map((option) => (
-            <button
-              key={option}
-              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePendekatan.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
-              onClick={() => setActivePendekatan(option)}
-            >
-              {option}
-            </button>
-          ))}
+      {pendekatan && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-medium">Pilih Pendekatan Simpang</h3>
+          <div className="join w-full gap-5 flex overflow-x-auto p-2">
+            {pendekatanOptions.map((option) => (
+              <button
+                key={option}
+                className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePendekatan.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
+                onClick={() => setActivePendekatan(option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {arahPergerakan && (
         <div className="space-y-2">
@@ -93,7 +97,24 @@ export default function SelectionButtons ({ interval, exportPdf, arahPergerakan,
           </div>
         </div>
       )}
-      
+
+      {direction && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-medium">Pilih Arah Pergerakan</h3>
+          <div className="join w-full gap-5 flex overflow-x-auto p-2">
+            {directionOptions.map((option) => (
+              <button
+                key={option}
+                className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeDirection.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
+                onClick={() => setActiveDirection(option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Pilih Jenis Klasifikasi</h3>
         <div className="join w-full gap-5 flex overflow-x-auto p-2">
@@ -114,7 +135,7 @@ export default function SelectionButtons ({ interval, exportPdf, arahPergerakan,
           <div className='space-y-2'>
             <div className="w-full gap-5 flex overflow-x-auto join p-1.5">
               {/* <ExportButton vehicleData={dataTable} fileName='Data_Kendaraan_perjam'/> */}
-              <SurveyLalulintasExport vehicleData={vehicleData} activeClassification={activeClassification}/>
+              <SurveyLalulintasExport vehicleData={vehicleData} activeClassification={activeClassification} />
             </div>
           </div>
         )}
