@@ -49,8 +49,8 @@ const RainfallChart = ({data}) => {
                 backgroundColor: 'rgba(0, 0, 0, 0.05)',
                 borderWidth: 2,
                 fill: false,
-                tension: 0.4,
-                pointRadius: 2,
+                tension: 0,
+                pointRadius: 3,
                 pointHoverRadius: 3
               });
             }
