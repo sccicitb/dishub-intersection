@@ -60,7 +60,7 @@ const Layout = ({ children }) => {
         {/* Sidebar */}
         <div className="drawer-side z-[40]">
           <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay"></label>
-          <div className="menu bg-[#232f61]/90 not-2xl:rounded-tr-4xl text-base-content font-semibold min-h-full p-0 w-64 gap-4">
+          <div className="menu bg-[#232f61]/90 not-2xl:rounded-tr-4xl text-base-content font-semibold min-h-full p-0 w-56 gap-4">
           <div className="flex justify-center">
           <div className="rounded-tr-4xl bg-neutral-800/90 w-full h-20 p-5">
             <Image
@@ -89,7 +89,7 @@ const Layout = ({ children }) => {
                 return (
                 <li key={index} >
                   <a href={item.url} className={pathname === item.url ? `items-center bg-neutral-800/90 box-shadow rounded-xl text-white py-2` : `rounded-xl py-2 ` + `my-0.5 text-white`}>
-                    {IconComponent && <IconComponent className="inline-block mr-2 text-xl" />}
+                    {IconComponent && <IconComponent className="inline-block mr-2 text-lg" />}
                     {item.name}
                   </a>
                 </li>

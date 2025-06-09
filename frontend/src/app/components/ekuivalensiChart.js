@@ -1,190 +1,145 @@
-import React, { useEffect, useRef, useState } from 'react';
-import * as Chart from 'chart.js';
+import React, { useEffect, useState } from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 
-// Register ALL Chart.js components including LineController
-Chart.Chart.register(
-  Chart.CategoryScale,
-  Chart.LinearScale,
-  Chart.PointElement,
-  Chart.LineElement,
-  Chart.LineController,
-  Chart.Title,
-  Chart.Tooltip,
-  Chart.Legend
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
 );
 
-const RainfallChart = () => {
-  const chartRef = useRef(null);
-  const chartInstance = useRef(null);
+const RainfallChart = ({data}) => {
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load and process data
   useEffect(() => {
-    // Using fallback data since we can't import external JSON files
-    const fallbackData = {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-      datasets: [
-        {
-          label: 'Utara',
-          data: [180, 220, 250, 280, 320, 300, 280, 260, 240, 200, 180, 160],
-          borderColor: '#FFC107',
-          backgroundColor: 'rgba(255, 193, 7, 0.1)',
-          borderWidth: 2,
-          fill: false
-        },
-        {
-          label: 'Timur',
-          data: [160, 180, 200, 240, 280, 320, 340, 320, 280, 240, 200, 170],
-          borderColor: '#17A2B8',
-          backgroundColor: 'rgba(23, 162, 184, 0.1)',
-          borderWidth: 2,
-          fill: false
-        },
-        {
-          label: 'Selatan',
-          data: [200, 240, 280, 300, 280, 260, 240, 220, 200, 180, 160, 140],
-          borderColor: '#28A745',
-          backgroundColor: 'rgba(40, 167, 69, 0.1)',
-          borderWidth: 2,
-          fill: false
-        },
-        {
-          label: 'Barat',
-          data: [140, 160, 180, 200, 220, 240, 260, 280, 300, 280, 240, 200],
-          borderColor: '#DC3545',
-          backgroundColor: 'rgba(220, 53, 69, 0.1)',
-          borderWidth: 2,
-          fill: false
-        },
-        {
-          label: 'Total',
-          data: [680, 800, 910, 1020, 1100, 1120, 1120, 1080, 1020, 900, 780, 670],
-          borderColor: '#6C757D',
-          backgroundColor: 'rgba(108, 117, 125, 0.2)',
-          borderWidth: 3,
-          fill: true
-        }
-      ]
-    };
+    const fetchData = async () => {
+      try {
+        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const directions = ['Utara', 'Timur', 'Selatan', 'Barat'];
+        const colorMap = {
+          Utara: '#FFC107',
+          Timur: '#17A2B8',
+          Selatan: '#28A745',
+          Barat: '#DC3545'
+        };
 
-    const processedData = {
-      labels: fallbackData.labels,
-      datasets: fallbackData.datasets.map(dataset => ({
-        label: dataset.label,
-        data: dataset.data,
-        borderColor: dataset.borderColor,
-        backgroundColor: dataset.backgroundColor,
-        tension: 0.4,
-        pointRadius: 1,
-        borderWidth: dataset.borderWidth || 2,
-        fill: dataset.fill || false,
-      }))
-    };
+        const datasets = [];
 
-    setChartData(processedData);
-    setLoading(false);
-  }, []);
+        data.forEach(entry => {
+          directions.forEach(dir => {
+            if (entry.data[dir]) {
+              datasets.push({
+                label: `${dir} ${entry.type.charAt(0).toUpperCase() + entry.type.slice(1)}`,
+                data: entry.data[dir],
+                borderColor: colorMap[dir],
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4,
+                pointRadius: 2,
+                pointHoverRadius: 3
+              });
+            }
+          });
+        });
 
-  useEffect(() => {
-    if (!chartData || loading || !chartRef.current) {
-      return;
-    }
-
-    const ctx = chartRef.current.getContext('2d');
-
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
-
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        title: {
-          display: true,
-          text: '',
-          font: {
-            size: 16,
-            weight: 'bold',
-          },
-          padding: 20,
-        },
-        legend: {
-          position: 'bottom',
-          labels: {
-            font: {
-              size: 12,
-            },
-          },
-        },
-        tooltip: {
-          mode: 'index',
-          intersect: false,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: 'white',
-          bodyColor: 'white',
-          borderColor: 'rgba(255, 255, 255, 0.1)',
-          borderWidth: 1,
-        },
-      },
-      scales: {
-        x: {
-          display: true,
-          title: {
-            display: true,
-            text: 'Waktu',
-            font: {
-              size: 14,
-            },
-          },
-          grid: {
-            display: false,
-          },
-        },
-        y: {
-          display: true,
-          title: {
-            display: true,
-            text: 'Kend / Jam',
-            font: {
-              size: 14,
-            },
-          },
-          beginAtZero: true,
-          grid: {
-            color: 'rgba(0, 0, 0, 0.1)',
-          },
-        },
-      },
-      interaction: {
-        mode: 'nearest',
-        axis: 'x',
-        intersect: false,
-      },
-    };
-
-    try {
-      chartInstance.current = new Chart.Chart(ctx, {
-        type: 'line',
-        data: chartData,
-        options: options,
-      });
-    } catch (error) {
-      console.error('Error creating chart:', error);
-    }
-
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
+        setChartData({ labels, datasets });
+        setLoading(false);
+      } catch (err) {
+        console.error('Failed to load chart data', err);
+        setLoading(false);
       }
     };
-  }, [chartData, loading]);
 
-  // Calculate averages for display cards
-  const calculateAverage = (data) => {
-    if (!data || !Array.isArray(data) || data.length === 0) return 0;
-    return Math.round(data.reduce((sum, val) => sum + val, 0) / data.length);
+    fetchData();
+  }, []);
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      title: {
+        display: true,
+        text: 'Data Ekuivalensi',
+        font: { size: 14, weight: 'bold' },
+        padding: 10,
+        color: '#333'
+      },
+      legend: {
+        position: 'bottom',
+        labels: {
+          font: { size: 12 },
+          padding: 20,
+          usePointStyle: true,
+          pointStyle: 'circle',
+          boxWidth: 6,
+          boxHeight: 6
+        },
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderWidth: 0,
+        callbacks: {
+          label: context => `${context.dataset.label}: ${context.parsed.y} mm`
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Bulan',
+          font: { size: 14, weight: 'bold' },
+          color: '#666'
+        },
+        grid: { display: false },
+        ticks: { font: { size: 12 }, color: '#666' }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Curah Hujan (mm)',
+          font: { size: 14, weight: 'bold' },
+          color: '#666'
+        },
+        beginAtZero: true,
+        grid: { color: 'rgba(0, 0, 0, 0.1)', drawBorder: false },
+        ticks: {
+          font: { size: 12 },
+          color: '#666',
+          callback: value => value + ' mm'
+        }
+      }
+    },
+    interaction: {
+      mode: 'nearest',
+      axis: 'x',
+      intersect: false
+    },
+    elements: {
+      point: {
+        hoverBackgroundColor: 'white',
+        hoverBorderWidth: 2
+      }
+    }
   };
 
   if (loading) {
@@ -212,16 +167,18 @@ const RainfallChart = () => {
       </div>
     );
   }
+
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="min-w-[600px] lg:max-w-[700px] max-w-6xl mx-auto p-6 rounded-lg">
-        <div className="relative h-96 w-full">
-          <canvas ref={chartRef} className="w-full h-full"></canvas>
+    <div className="w-full overflow-x-auto p-2 rounded-lg">
+      <div className="min-w-[500px] lg:max-w-[800px] max-w-5xl mx-auto">
+        <div className="bg-white px-6 py-2 rounded-lg shadow-sm">
+          <div className="relative h-96 w-full">
+            <Line data={chartData} options={options} />
+          </div>
         </div>
       </div>
     </div>
   );
-
 };
 
 export default RainfallChart;
