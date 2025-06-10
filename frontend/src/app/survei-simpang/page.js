@@ -237,8 +237,12 @@ function SurveiSimpangPage () {
     };
   }, [dataCamera]);
 
-  const handleClickSimpang = (loc) => {
-    console.log(loc.id)
+  function handleClickSimpang (loc) {
+    let name = loc.name
+    if (!name.toLowerCase().includes("simpang")) {
+      name = "Simpang " + name
+    }
+    setActiveTitle("Survei " + name);
     setActiveSimpangId(loc.id)
   }
 
@@ -255,10 +259,12 @@ function SurveiSimpangPage () {
     }
 
     try {
-      console.log(building)
-      const title = building.camera.name || "Simpang";
-      setActiveTitle("Survei " + title);
-      setActiveSimpang(title);
+      // console.log(building)
+      // const title = building.camera.name || "Simpang";
+      // setActiveTitle("Survei " + title);
+      // setActiveSimpang(title);
+
+      setActiveSimpang(building.camera.title);
       setActiveCamera(building.camera.camera_id);
     } catch (error) {
       console.error("Error in handleClick:", error);
@@ -323,7 +329,7 @@ function SurveiSimpangPage () {
 
           {loading ? (<div>Loading...</div>) :
             Array.isArray(vehicleData) && vehicleData.length > 0 && (
-              <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false}/>
+              <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} />
             )}
           <ClasificationTable typeClass={activeClassification} />
         </div>

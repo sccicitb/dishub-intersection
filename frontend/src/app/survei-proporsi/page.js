@@ -257,22 +257,24 @@ function SurveiProporsi () {
     }
   }, [activeCamera, selectedCategory, dateInput]);
 
-  const handleClickSimpang = (loc) => {
-    console.log(loc.id)
+  function handleClickSimpang (loc) {
+    let name = loc.name
+    if(!name.toLowerCase().includes("simpang")) {
+      name = "Simpang " + name
+    }
+    setActiveTitle("Survei " + name);
     setActiveSimpangId(loc.id)
   }
 
   // Handle map click
   const handleMapClick = (building) => {
+    if (!building?.camera?.camera_id) {
+      console.warn("Invalid building or camera data", building);
+      return;
+    }
+    
     try {
-      if (!building?.camera?.camera_id) {
-        console.warn("Invalid building or camera data", building);
-        return;
-      }
-
-      const cameraName = building.camera.name || "Tanpa Nama";
-      setActiveTitle("Survei " + cameraName);
-      setActiveSimpang(cameraName);
+      setActiveSimpang(building.camera.title);
       setActiveCamera(building.camera.camera_id);
     } catch (error) {
       console.error("Error in handleMapClick:", error);
@@ -302,7 +304,7 @@ function SurveiProporsi () {
       <Suspense fallback={<LoadingFallback message="Loading Map..." />}>
         {dataCamera.length > 0 ? (
           <MapComponent
-            title="Survei Proporsi"
+            title={activeTitle}
             onClick={handleMapClick}
             sizeHeight="50vh"
             onClickSimpang={handleClickSimpang}
