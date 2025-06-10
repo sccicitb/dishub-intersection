@@ -15,6 +15,7 @@ const SurveyInfoTable = lazy(() => import("@/app/components/surveyorTable"));
 const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const MapComponent = lazy(() => import("@/app/components/map"));
+const AdaptiveVideoPlayer = lazy(() => import('@/app/components/adaptiveCameraStream'));
 
 function SurveiSimpangPage () {
   const [loading, setLoading] = useState(false);
@@ -65,9 +66,7 @@ function SurveiSimpangPage () {
         const vehicleData = Array.isArray(surveyRes?.data?.vehicleData) ? surveyRes.data.vehicleData : [];
         const mapsData = Array.isArray(mapsRes?.data) ? mapsRes?.data : {};
 
-        // setDataSimpangAll(simpangData);
         setDataCamera(cameraData);
-
 
         if (cameraData.length > 0 && cameraData[0]?.id) {
           setActiveCamera(cameraData[0].id);
@@ -118,7 +117,6 @@ function SurveiSimpangPage () {
 
     return () => clearTimeout(timer)
   }, [dateInput, activeCamera, activeInterval, activePendekatan]);
-
 
   // Debounced fetchSurvey when dependencies change
   useEffect(() => {
@@ -186,48 +184,38 @@ function SurveiSimpangPage () {
     };
   }, []);
 
-  // useCallback untuk handler socket event per kamera
-  // const registerSocketListeners = useCallback(() => {
-  //   if (!Array.isArray(dataCamera)) return;
-
-  //   dataCamera.forEach(building => {
-  //     if (building?.socket_event && building?.id) {
-  //       const handler = (data) => {
-  //         setStreamData(prev => ({
-  //           ...prev,
-  //           [building.id]: data,
-  //         }));
-  //       };
-
-  //       socketRef.current.on(building.socket_event, handler);
-
-  //       // Cleanup for this listener
-  //       return () => {
-  //         socketRef.current.off(building.socket_event, handler);
-  //       };
-  //     }
-  //   });
-  // }, [dataCamera]);
-
-  // Register / cleanup socket listeners whenever dataCamera changes
+  // Register / cleanup socket listeners dengan filter untuk socket_event
   useEffect(() => {
     const cleanupFns = [];
 
     if (Array.isArray(dataCamera)) {
       dataCamera.forEach(building => {
-        if (building?.socket_event && building?.id) {
-          const handler = (data) => {
-            setStreamData(prev => ({
-              ...prev,
-              [building.id]: data,
-            }));
-          };
+        if (building?.socket_event && building.socket_event !== "not_yet_assign") {
 
-          socketRef.current.on(building.socket_event, handler);
+          // Tentukan ID yang akan digunakan untuk socket
+          let socketId;
+          if (building.camera && building.camera.camera_id) {
+            socketId = building.camera.camera_id;
+          } else if (building.camera && building.camera.id) {
+            socketId = building.camera.id;
+          } else if (building.id) {
+            socketId = building.id;
+          }
 
-          cleanupFns.push(() => {
-            socketRef.current.off(building.socket_event, handler);
-          });
+          if (socketId) {
+            const handler = (data) => {
+              setStreamData(prev => ({
+                ...prev,
+                [socketId]: data,
+              }));
+            };
+
+            socketRef.current.on(building.socket_event, handler);
+
+            cleanupFns.push(() => {
+              socketRef.current.off(building.socket_event, handler);
+            });
+          }
         }
       });
     }
@@ -236,6 +224,82 @@ function SurveiSimpangPage () {
       cleanupFns.forEach(fn => fn());
     };
   }, [dataCamera]);
+
+  const fetchVehicleData = async (cameraId, date = dateInput, interval = activeInterval, pendekatan = activePendekatan.toLowerCase()) => {
+    setLoading(true);
+    try {
+      const res = await survey.getAll(cameraId, formatDateToYMDForAPI(date), interval, pendekatan);
+      const datafetch = Array.isArray(res?.data?.vehicleData) ? res.data.vehicleData : [];
+      setVehicleData(datafetch);
+    } catch (err) {
+      console.error('Error fetching survey data:', err);
+      setVehicleData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClick = (building) => {
+    if (!building) {
+      console.warn("Invalid building or camera data", building);
+      return;
+    }
+
+    try {
+      // Flexible access untuk berbagai struktur data
+      let cameraId, cameraTitle;
+
+      if (building.camera && building.camera.camera_id) {
+        // Struktur: building.camera.camera_id
+        cameraId = building.camera.camera_id;
+        cameraTitle = building.camera.title || building.name;
+      } else if (building.camera && building.camera.id) {
+        // Struktur: building.camera.id
+        cameraId = building.camera.id;
+        cameraTitle = building.camera.title || building.name;
+      } else if (building.id) {
+        // Struktur: building.id
+        cameraId = building.id;
+        cameraTitle = building.name || building.title;
+      } else {
+        console.error("Cannot find camera ID in building data:", building);
+        return;
+      }
+
+      console.log("Setting camera:", { cameraId, cameraTitle, building }); // Debug log
+
+      setActiveSimpang(cameraTitle);
+      setActiveCamera(prev => {
+        if (prev !== cameraId) {
+          fetchVehicleData(cameraId);
+        } else {
+          fetchVehicleData(cameraId);
+        }
+        return cameraId;
+      });
+    } catch (error) {
+      console.error("Error in handleClick:", error);
+    }
+  };
+
+  // Helper function untuk mengecek apakah camera menggunakan socket atau tidak
+  const shouldUseSocket = (building) => {
+    return building?.socket_event && building.socket_event !== "not_yet_assign";
+  };
+
+  // Helper function untuk mendapatkan camera data berdasarkan activeCamera
+  const getActiveCameraData = () => {
+    if (!Array.isArray(dataCamera) || dataCamera.length === 0) return null;
+
+    return dataCamera.find(building => {
+      // Cek berbagai kemungkinan struktur data
+      if (building?.camera?.camera_id === activeCamera) return true;
+      if (building?.camera?.id === activeCamera) return true;
+      if (building?.id === activeCamera) return true;
+      return false;
+    });
+  };
+
 
   function handleClickSimpang (loc) {
     let name = loc.name
@@ -246,34 +310,63 @@ function SurveiSimpangPage () {
     setActiveSimpangId(loc.id)
   }
 
-  const handleClick = (building) => {
-    if (
-      !building ||
-      typeof building !== 'object' ||
-      !building.camera ||
-      typeof building.camera !== 'object' ||
-      !building.camera.camera_id
-    ) {
-      console.warn("Invalid building or camera data", building);
-      return;
-    }
-
-    try {
-      // console.log(building)
-      // const title = building.camera.name || "Simpang";
-      // setActiveTitle("Survei " + title);
-      // setActiveSimpang(title);
-
-      setActiveSimpang(building.camera.title);
-      setActiveCamera(building.camera.camera_id);
-    } catch (error) {
-      console.error("Error in handleClick:", error);
-    }
-  };
-
   useEffect(() => {
-    console.log(dataSimpangById)
-  }, [dataSimpangById])
+    getActiveCameraData()
+  }, [activeCamera])
+
+  // Render CCTV Stream Component berdasarkan socket_event
+  const renderCCTVStream = () => {
+    const activeCameraData = getActiveCameraData();
+
+    if (!activeCameraData) {
+      return (
+        <CCTVStream
+          data={null}
+          large
+          title={`CCTV Camera (Loading...)`}
+        />
+      );
+    }
+
+    // Tentukan URL video yang akan digunakan
+    let videoUrl;
+    if (activeCameraData && activeCameraData.url) {
+      videoUrl = activeCameraData.url;
+    } 
+
+    // Tentukan title yang akan digunakan
+    let title;
+    if (activeCameraData && activeCameraData.title) {
+      title = activeCameraData.title;
+    } else if (activeCameraData.name) {
+      title = activeCameraData.name;
+    } else if (activeCameraData.title) {
+      title = activeCameraData.title;
+    } else {
+      title = `Camera ${activeCamera}`;
+    }
+
+    if (activeCameraData.socket_event === "not_yet_assign") {
+      return (
+        <div className="bg-base-200 rounded-lg shadow-md overflow-hidden">
+          <AdaptiveVideoPlayer
+            videoUrl={videoUrl}
+            title={`Video ${title}`}
+            large
+            onClick={() => console.log(`Clicked on ${title}`)}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <CCTVStream
+        data={streamData[activeCamera] || null}
+        large
+        title={`CCTV Camera ${activeCamera} (${activeSimpang})`}
+      />
+    );
+  };
 
   return (
     <div>
@@ -286,11 +379,7 @@ function SurveiSimpangPage () {
             <RecentVehicle customCSS={'h-[320px]'} />
             <div className="lg:col-span-2 h-fit items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
               <div className="w-[60%]">
-                <CCTVStream
-                  data={streamData[activeCamera] || null}
-                  large
-                  title={activeCamera ? `CCTV Camera ${activeCamera} (${activeSimpang})` : `CCTV Camera (Loading...)`}
-                />
+                {renderCCTVStream()}
               </div>
             </div>
           </div>

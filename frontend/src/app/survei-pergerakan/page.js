@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense, lazy } from 'react';
+import VideoStream from '../components/videoStream';
 
 const ClasificationTable = lazy(() => import("@/app/components/clasificationTable"));
 const HourVehicleTable = lazy(() => import('@/app/components/HourVehicleTable'));
@@ -11,6 +12,7 @@ const DirectionTable = lazy(() => import('../components/pergerakanTable'));
 const MapComponent = lazy(() => import("@/app/components/map"));
 
 import { survey } from '@/lib/apiService';
+import AdaptiveVideoPlayer from '../components/adaptiveCameraStream';
 
 const classificationMap = {
   "PKJI 2023 Luar Kota": "luar_kota",
@@ -193,6 +195,9 @@ function MovePage () {
               onChange={(e) => setDateInput(e.target.value)}
             />
           </div>
+          <AdaptiveVideoPlayer
+            videoUrl="https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8"
+          />
           {/* {loading ? (<div className='my-5'>Loading...</div>) : ( */}
           <DirectionTable vehicleData={vehicleData} classification={activeClassification} activePergerakan={activeDirection} activePendekatan={activePendekatan} />
           {/* )} */}
