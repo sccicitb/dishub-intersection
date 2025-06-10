@@ -126,7 +126,8 @@ const ManajemenKamera = () => {
     resolution: "",
     status: 0,
     socket_event: "",
-    ID_Simpang: 0
+    ID_Simpang: 0,
+    socket_status: false
   });
 
   const [formMaps, setFormMaps] = useState({
@@ -261,7 +262,7 @@ const ManajemenKamera = () => {
       location: data.location || "",
       resolution: data.resolution || "",
       status: data.status || "",
-      socket_event: data.socket_event || "",
+      socket_event: data.socket_status ? data.socket_event : "not_yet_assign",
       ID_Simpang: data.ID_Simpang || 0
     };
 
@@ -295,7 +296,7 @@ const ManajemenKamera = () => {
       location: data.location,
       resolution: data.resolution,
       status: data.status,
-      socket_event: data.socket_event,
+      socket_event: data.socket_status ? data.socket_event : "not_yet_assign",
       ID_Simpang: data.ID_Simpang
     };
 
@@ -580,6 +581,7 @@ const ManajemenKamera = () => {
       location: data?.location || "",
       resolution: data?.resolution || "",
       status: checked ? 1 : 0,
+      socket_status: data?.status_event === "not_yet_assign" ? true : false,
       socket_event: data?.socket_event || "",
       ID_Simpang: data?.ID_Simpang || 0
     };
@@ -680,6 +682,7 @@ const ManajemenKamera = () => {
         resolution: data?.resolution || "",
         status: data?.status || 0,
         socket_event: data?.socket_event || "",
+        socket_status: data?.socket_event === "not_yet_assign" ? false : true,
         ID_Simpang: data?.ID_Simpang || 0
       });
 
@@ -1055,23 +1058,67 @@ const ManajemenKamera = () => {
                           </option>
                         ))}
                       </select>
-
                     </div>
 
-                    {/* Socket Event */}
+                    {/* Link Url */}
                     <div>
-                      <label className="label">Socket Event</label>
+                      <label className="label">URL</label>
                       <input
                         type="text"
                         className="input input-bordered w-full"
-                        value={formCameras?.socket_event || ""}
+                        value={formCameras?.url || ""}
                         onChange={(e) =>
                           setFormCameras({
-                            ...formCameras, socket_event: e.target.value
+                            ...formCameras, url: e.target.value
                           })
                         }
                       />
                     </div>
+                    <div className="form-control flex flex-row items-center gap-2 mb-5">
+                      <label className="label">Status Kamera {formCameras.status}</label>
+                      <input
+                        type="checkbox"
+                        className="toggle"
+                        checked={formCameras.status}
+                        onChange={(e) =>
+                          setFormCameras({
+                            ...formCameras,
+                            status: e.target.checked ? 1 : 0
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {/* Socket Event */}
+                  <div>
+                    <div className="flex content-center items-center gap-2 pb-2">
+                      <div className="form-control flex flex-row items-center gap-2">
+                        <input
+                          type="checkbox"
+                          className="toggle"
+                          checked={formCameras.socket_status}
+                          onChange={(e) =>
+                            setFormCameras({
+                              ...formCameras,
+                              socket_status: e.target.checked
+                            })
+                          }
+                        />
+                      </div>
+                      <label className="label">Socket Event</label>
+                    </div>
+                    <input
+                      type="text"
+                      disabled={!formCameras?.socket_status}
+                      className="input input-bordered w-full"
+                      value={formCameras?.socket_event || ""}
+                      onChange={(e) =>
+                        setFormCameras({
+                          ...formCameras, socket_event: e.target.value
+                        })
+                      }
+                    />
                   </div>
                 </div>
               ) : (
@@ -1108,102 +1155,105 @@ const ManajemenKamera = () => {
               </div>
             </div>
           </div>
-        )}
+        )
+        }
 
 
-        {showDialogKalender && (
-          <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-xl shadow-md lg:w-[400px] w-[90%]">
-              <h2 className="text-lg font-semibold mb-4">Tambah Tanggal</h2>
+        {
+          showDialogKalender && (
+            <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white p-6 rounded-xl shadow-md lg:w-[400px] w-[90%]">
+                <h2 className="text-lg font-semibold mb-4">Tambah Tanggal</h2>
 
-              {/* Input Date */}
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Tanggal (yy-mm-dd)</label>
-                <input
-                  type="date"
-                  className="input input-bordered w-full"
-                  value={kalenderForm.rawDate} // harus dalam format yyyy-mm-dd untuk input type="date"
-                  onChange={(e) => {
-                    const raw = e.target.value; // misal: "2025-12-26"
-                    const formattedDate = convertToYYMMDD(raw); // jadi "26-12-25"
-                    setKalenderForm({
-                      ...kalenderForm,
-                      rawDate: raw, // untuk ditampilkan kembali di input
-                      date: formattedDate, // untuk dikirim ke backend
-                    });
-                  }}
-                />
-              </div>
+                {/* Input Date */}
+                <div className="mb-4">
+                  <label className="block mb-1 font-medium">Tanggal (yy-mm-dd)</label>
+                  <input
+                    type="date"
+                    className="input input-bordered w-full"
+                    value={kalenderForm.rawDate} // harus dalam format yyyy-mm-dd untuk input type="date"
+                    onChange={(e) => {
+                      const raw = e.target.value; // misal: "2025-12-26"
+                      const formattedDate = convertToYYMMDD(raw); // jadi "26-12-25"
+                      setKalenderForm({
+                        ...kalenderForm,
+                        rawDate: raw, // untuk ditampilkan kembali di input
+                        date: formattedDate, // untuk dikirim ke backend
+                      });
+                    }}
+                  />
+                </div>
 
-              {/* Input Event Type */}
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Tipe Event</label>
-                <input
-                  type="text"
-                  className="input input-bordered w-full"
-                  placeholder="Libur Nasional"
-                  value={kalenderForm.event_type}
-                  onChange={(e) => setKalenderForm({ ...kalenderForm, event_type: e.target.value })}
-                />
-              </div>
+                {/* Input Event Type */}
+                <div className="mb-4">
+                  <label className="block mb-1 font-medium">Tipe Event</label>
+                  <input
+                    type="text"
+                    className="input input-bordered w-full"
+                    placeholder="Libur Nasional"
+                    value={kalenderForm.event_type}
+                    onChange={(e) => setKalenderForm({ ...kalenderForm, event_type: e.target.value })}
+                  />
+                </div>
 
-              {/* Input Description */}
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">Deskripsi</label>
-                <input
-                  type="text"
-                  className="input input-bordered w-full"
-                  placeholder="Hari Raya Natal"
-                  value={kalenderForm.description}
-                  onChange={(e) => setKalenderForm({ ...kalenderForm, description: e.target.value })}
-                />
-              </div>
+                {/* Input Description */}
+                <div className="mb-4">
+                  <label className="block mb-1 font-medium">Deskripsi</label>
+                  <input
+                    type="text"
+                    className="input input-bordered w-full"
+                    placeholder="Hari Raya Natal"
+                    value={kalenderForm.description}
+                    onChange={(e) => setKalenderForm({ ...kalenderForm, description: e.target.value })}
+                  />
+                </div>
 
-              {/* Buttons */}
-              <div className="flex justify-end gap-2">
-                <button className="btn btn-sm" onClick={() => {
-                  setShowDialogKalender(false);
-                  setKalenderForm({ date: "", event_type: "", description: "" });
-                }}>
-                  Batal
-                </button>
-                <button className="btn btn-sm bg-[#314385] text-white" onClick={async () => {
-                  // Validasi sederhana
-                  if (!kalenderForm.date || !kalenderForm.event_type) {
-                    alert("Tanggal dan Tipe Event wajib diisi!");
-                    return;
-                  }
+                {/* Buttons */}
+                <div className="flex justify-end gap-2">
+                  <button className="btn btn-sm" onClick={() => {
+                    setShowDialogKalender(false);
+                    setKalenderForm({ date: "", event_type: "", description: "" });
+                  }}>
+                    Batal
+                  </button>
+                  <button className="btn btn-sm bg-[#314385] text-white" onClick={async () => {
+                    // Validasi sederhana
+                    if (!kalenderForm.date || !kalenderForm.event_type) {
+                      alert("Tanggal dan Tipe Event wajib diisi!");
+                      return;
+                    }
 
-                  if (!statusDialogKalender) {
-                    await updateCalendar({
-                      id: kalenderForm.id,
-                      tanggal: kalenderForm.rawDate,
-                      events: kalenderForm.event_type,
-                      deskripsi: kalenderForm.description
-                    })
-                  } else {
-                    // Kirim ke API
-                    await createCalendar({
-                      tanggal: kalenderForm.rawDate,
-                      events: kalenderForm.event_type,
-                      deskripsi: kalenderForm.description
-                    });
-                  }
+                    if (!statusDialogKalender) {
+                      await updateCalendar({
+                        id: kalenderForm.id,
+                        tanggal: kalenderForm.rawDate,
+                        events: kalenderForm.event_type,
+                        deskripsi: kalenderForm.description
+                      })
+                    } else {
+                      // Kirim ke API
+                      await createCalendar({
+                        tanggal: kalenderForm.rawDate,
+                        events: kalenderForm.event_type,
+                        deskripsi: kalenderForm.description
+                      });
+                    }
 
-                  // Tutup dialog dan reset form
-                  setShowDialogKalender(false);
-                  setStatusDialogKalender(false)
-                  setKalenderForm({ id: 0, date: "", rawDate: "", event_type: "", description: "" });
+                    // Tutup dialog dan reset form
+                    setShowDialogKalender(false);
+                    setStatusDialogKalender(false)
+                    setKalenderForm({ id: 0, date: "", rawDate: "", event_type: "", description: "" });
 
-                  // Refresh data kalender
-                  fetchCalendar(currentPage, itemsPerPage);
-                }}>
-                  Simpan
-                </button>
+                    // Refresh data kalender
+                    fetchCalendar(currentPage, itemsPerPage);
+                  }}>
+                    Simpan
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
 
         {/* Main Content Grid */}
@@ -1590,8 +1640,8 @@ const ManajemenKamera = () => {
             </div>
           </div>
         </div>
-      </Suspense>
-    </div>
+      </Suspense >
+    </div >
   );
 };
 
