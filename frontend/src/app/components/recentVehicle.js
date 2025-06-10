@@ -1,122 +1,48 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FixedSizeList as List } from "react-window";
 
-export default function RecentVehicle ({customCSS}) {
+
+const Row = ({ index, style, data }) => {
+  const event = data[index];
+  return (
+    <div style={style} className="flex gap-2 items-center content-center">
+      <div className="w-1/3">
+        {event.image && (
+          <img
+            src={event.image}
+            alt="Event snapshot"
+            className="w-full h-24 object-cover"
+          />
+        ) || (
+            <div className="w-full h-24 bg-black/90 text-white flex items-center justify-center">
+              No image
+            </div>
+          )}
+
+      </div>
+      <div className="w-1/3 p-2">
+        <div className="font-medium">{event.channel}</div>
+        <div className="text-sm">{event.time}</div>
+        <div className="text-sm">{event.triggerName}</div>
+      </div>
+      <div className="w-1/3 p-2">
+        <div className="font-medium">{event.type}</div>
+        <div className="text-sm">{event.origin}</div>
+        <div className="text-sm">{event.objectId}</div>
+      </div>
+    </div>
+  );
+};
+
+export default function RecentVehicle ({ customCSS, hg }) {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const recentEvents = [
-    {
-      id: 1,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    },
-    {
-      id: 2,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    },
-    {
-      id: 3,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    },
-    {
-      id: 4,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    },
-    {
-      id: 5,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    },
-    {
-      id: 6,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    },
-    {
-      id: 7,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    },
-    {
-      id: 8,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    },
-    {
-      id: 9,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    },
-    {
-      id: 10,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    },
-    {
-      id: 11,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    },
-    {
-      id: 12,
-      channel: "Patuk",
-      time: "04/02/2025 11:08:23",
-      triggerName: "Exit",
-      type: "Crossed line",
-      origin: "Vehicle car",
-      objectId: "500"
-    }
-  ];
+  const [dataVehicle, setDataVehicle] = useState([]);
+
   const fetchVehicles = async () => {
     try {
       setLoading(true);
@@ -137,6 +63,7 @@ export default function RecentVehicle ({customCSS}) {
   };
 
   useEffect(() => {
+    import("@/data/DataHistory.json").then((data) => setDataVehicle(data.default || []))
     // fetchVehicles();
   }, []);
 
@@ -165,35 +92,44 @@ export default function RecentVehicle ({customCSS}) {
         </button>
       </div>
 
-      <div className={`pr-2  ${customCSS}  overflow-y-auto`}>
-        {recentEvents.map(event => (
-          <div key={event.id} className="flex flex-row gap-4 h-fit">
-            <div className="w-1/3">
-              {event.image && (
-                <img
-                  src={event.image}
-                  alt="Event snapshot"
-                  className="w-full h-24 object-cover"
-                />
-              ) || (
-                  <div className="w-full h-24 bg-black/90 text-white flex items-center justify-center">
-                    No image
-                  </div>
-                )}
-
-            </div>
-            <div className="w-1/3 p-2">
-              <div className="font-medium">{event.channel}</div>
-              <div className="text-sm">{event.time}</div>
-              <div className="text-sm">{event.triggerName}</div>
-            </div>
-            <div className="w-1/3 p-2">
-              <div className="font-medium">{event.type}</div>
-              <div className="text-sm">{event.origin}</div>
-              <div className="text-sm">{event.objectId}</div>
-            </div>
-          </div>
-        ))}
+      <div className={`pr-2 overflow-y-auto`}>
+        <List
+          height={hg ? hg : 300} // tinggi container
+          itemCount={Array.isArray(dataVehicle) ? dataVehicle.length : 0}
+          itemSize={100} // tinggi tiap item (px)
+          width={"100%"}
+          itemData={dataVehicle}
+        >
+          {Row}
+        </List>
       </div>
-    </div>)
+      {/* {dataVehicle?.map(event => (
+        <div key={event.id} className="flex flex-row gap-4 h-fit">
+          <div className="w-1/3">
+            {event.image && (
+              <img
+                src={event.image}
+                alt="Event snapshot"
+                className="w-full h-24 object-cover"
+              />
+            ) || (
+                <div className="w-full h-24 bg-black/90 text-white flex items-center justify-center">
+                  No image
+                </div>
+              )}
+
+          </div>
+          <div className="w-1/3 p-2">
+            <div className="font-medium">{event.channel}</div>
+            <div className="text-sm">{event.time}</div>
+            <div className="text-sm">{event.triggerName}</div>
+          </div>
+          <div className="w-1/3 p-2">
+            <div className="font-medium">{event.type}</div>
+            <div className="text-sm">{event.origin}</div>
+            <div className="text-sm">{event.objectId}</div>
+          </div>
+        </div>
+      ))} */}
+    </div >)
 }

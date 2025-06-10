@@ -71,15 +71,14 @@ function SurveiLhrkPage () {
       return;
     }
     try {
-      const title = building.camera.name || "Tanpa Nama";
-      setActiveTitle("Survei " + title);
+      console.log(building)
+      const title = building.title || "Tanpa Nama";
       setActiveSimpang(title);
       setActiveCamera(building.camera.camera_id);
     } catch (error) {
       console.error("Error in handleClick:", error);
     }
   };
-
 
   // useEffect(() => {
   //   if (activeCamera) {
@@ -94,6 +93,11 @@ function SurveiLhrkPage () {
   // }, []);
 
   function handleClickSimpang (loc) {
+    let name = loc.name
+    if(!name.toLowerCase().includes("simpang")) {
+      name = "Simpang " + name
+    }
+    setActiveTitle("Survei " + name);
     setActiveSimpangId(loc.id)
   }
   return (
@@ -129,9 +133,9 @@ function SurveiLhrkPage () {
             />
           </div> */}
           {loading ? (<div className='my-5'>Loading...</div>) : (
-            <VehicleTable activeCamera={activeCamera} activeInterval={activeInterval} activePendekatan={activePendekatan} activePergerakan={activePergerakan} activeClassification={activeClassification}/>
+            <VehicleTable activeCamera={activeCamera} activeInterval={activeInterval} activePendekatan={activePendekatan} activePergerakan={activePergerakan} activeClassification={activeClassification} />
           )}
-          <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval}/>
+          <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval} />
         </div>
       </Suspense>
     </div>
