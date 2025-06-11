@@ -33,5 +33,10 @@
     "name": "Survei Kinerja",
     "url": "/survei-kinerja",
     "icon": "RiProgress6Line"
+  },
+  {
+    "name": "Form SA-I",
+    "url": "/form-sa-i",
+    "icon": "RiProgress6Line"
   }
 ]
