@@ -195,9 +195,9 @@ function MovePage () {
               onChange={(e) => setDateInput(e.target.value)}
             />
           </div>
-          <AdaptiveVideoPlayer
+          {/* <AdaptiveVideoPlayer
             videoUrl="https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8"
-          />
+          /> */}
           {/* {loading ? (<div className='my-5'>Loading...</div>) : ( */}
           <DirectionTable vehicleData={vehicleData} classification={activeClassification} activePergerakan={activeDirection} activePendekatan={activePendekatan} />
           {/* )} */}
