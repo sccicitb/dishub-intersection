@@ -31,6 +31,7 @@ function SurveiSimpangPage () {
   const [activeCamera, setActiveCamera] = useState(0);
   const [activeSimpang, setActiveSimpang] = useState('');
   const [activeSimpangId, setActiveSimpangId] = useState(1);
+  const [camStandard, setCamStandard] = useState(0)
   const [dataSimpangById, setDataSimpangById] = useState({});
 
   const formatDateToInput = (date) => {
@@ -97,9 +98,29 @@ function SurveiSimpangPage () {
     fetchData();
   }, []); // Only once on mount
 
+  // Helper function untuk mendapatkan camera data berdasarkan activeCamera
+  const getActiveCameraData = () => {
+    if (!Array.isArray(dataCamera) || dataCamera.length === 0) return null;
+
+    return dataCamera.find(building => {
+      // Cek berbagai kemungkinan struktur data
+      if (building?.camera?.camera_id === activeCamera) return true;
+      if (building?.camera?.id === activeCamera) return true;
+      if (building?.id === activeCamera) return true;
+      return false;
+    });
+  };
+
   // Debounced fetchSurvey when dependencies change
   useEffect(() => {
     if (!activeCamera) return;
+    const activeCameraData = getActiveCameraData();
+    camStandard
+    if (activeCameraData?.socket_event === "not_yet_assign") {
+      // Jika not_yet_assign, jangan fetch survey data
+      setVehicleData([]);
+      return;
+    }
 
     const timer = setTimeout(async () => {
       setLoading(true);
@@ -113,12 +134,11 @@ function SurveiSimpangPage () {
       } finally {
         setLoading(false);
       }
-    }, 500); // debounce delay 500ms
+    }, 900);
 
     return () => clearTimeout(timer)
   }, [dateInput, activeCamera, activeInterval, activePendekatan]);
 
-  // Debounced fetchSurvey when dependencies change
   useEffect(() => {
     if (!activeSimpangId) return;
 
@@ -239,44 +259,57 @@ function SurveiSimpangPage () {
     }
   };
 
+  // Helper function untuk mendapatkan camera data berdasarkan activeCamera
+  // const getActiveCameraData = () => {
+  //   if (!Array.isArray(dataCamera) || dataCamera.length === 0) return null;
+
+  //   return dataCamera.find(building => {
+  //     // Cek berbagai kemungkinan struktur data
+  //     if (building?.camera?.camera_id === activeCamera) return true;
+  //     if (building?.camera?.id === activeCamera) return true;
+  //     if (building?.id === activeCamera) return true;
+  //     return false;
+  //   });
+  // };
+
   const handleClick = (building) => {
     if (!building) {
-      console.warn("Invalid building or camera data", building);
+      console.warn("Invalid building:", building);
       return;
     }
 
     try {
-      // Flexible access untuk berbagai struktur data
-      let cameraId, cameraTitle;
+      let cameraId, cameraTitle, socketEvent;
 
+      // Handle different data structures
       if (building.camera && building.camera.camera_id) {
-        // Struktur: building.camera.camera_id
         cameraId = building.camera.camera_id;
-        cameraTitle = building.camera.title || building.name;
-      } else if (building.camera && building.camera.id) {
-        // Struktur: building.camera.id
-        cameraId = building.camera.id;
-        cameraTitle = building.camera.title || building.name;
+        cameraTitle = building.camera.title || building.title || building.name;
+        socketEvent = building.camera.socketEvent || building.socket_event;
+      } else if (building.camera_id) {
+        cameraId = building.camera_id;
+        cameraTitle = building.title || building.name;
+        socketEvent = building.socket_event;
       } else if (building.id) {
-        // Struktur: building.id
         cameraId = building.id;
         cameraTitle = building.name || building.title;
+        socketEvent = building.socket_event;
       } else {
         console.error("Cannot find camera ID in building data:", building);
         return;
       }
 
-      console.log("Setting camera:", { cameraId, cameraTitle, building }); // Debug log
+      console.log("Setting camera:", { cameraId, cameraTitle, socketEvent, building });
 
-      setActiveSimpang(cameraTitle);
-      setActiveCamera(prev => {
-        if (prev !== cameraId) {
-          fetchVehicleData(cameraId);
-        } else {
-          fetchVehicleData(cameraId);
-        }
-        return cameraId;
-      });
+      
+      // Cek apakah camera yang dipilih adalah "not_yet_assign"
+      if (socketEvent === "not_yet_assign") {
+        setCamStandard(cameraId);
+        setVehicleData([]);
+      } else {
+        setActiveSimpang(cameraTitle);
+        fetchVehicleData(cameraId);
+      }
     } catch (error) {
       console.error("Error in handleClick:", error);
     }
@@ -286,20 +319,6 @@ function SurveiSimpangPage () {
   const shouldUseSocket = (building) => {
     return building?.socket_event && building.socket_event !== "not_yet_assign";
   };
-
-  // Helper function untuk mendapatkan camera data berdasarkan activeCamera
-  const getActiveCameraData = () => {
-    if (!Array.isArray(dataCamera) || dataCamera.length === 0) return null;
-
-    return dataCamera.find(building => {
-      // Cek berbagai kemungkinan struktur data
-      if (building?.camera?.camera_id === activeCamera) return true;
-      if (building?.camera?.id === activeCamera) return true;
-      if (building?.id === activeCamera) return true;
-      return false;
-    });
-  };
-
 
   function handleClickSimpang (loc) {
     let name = loc.name
@@ -317,7 +336,7 @@ function SurveiSimpangPage () {
   // Render CCTV Stream Component berdasarkan socket_event
   const renderCCTVStream = () => {
     const activeCameraData = getActiveCameraData();
-
+    console.log(activeCameraData)
     if (!activeCameraData) {
       return (
         <CCTVStream
@@ -328,33 +347,21 @@ function SurveiSimpangPage () {
       );
     }
 
-    // Tentukan URL video yang akan digunakan
-    let videoUrl;
-    if (activeCameraData && activeCameraData.url) {
-      videoUrl = activeCameraData.url;
-    } 
-
-    // Tentukan title yang akan digunakan
-    let title;
-    if (activeCameraData && activeCameraData.title) {
-      title = activeCameraData.title;
-    } else if (activeCameraData.name) {
-      title = activeCameraData.name;
-    } else if (activeCameraData.title) {
-      title = activeCameraData.title;
-    } else {
-      title = `Camera ${activeCamera}`;
-    }
-
     if (activeCameraData.socket_event === "not_yet_assign") {
       return (
         <div className="bg-base-200 rounded-lg shadow-md overflow-hidden">
           <AdaptiveVideoPlayer
-            videoUrl={videoUrl}
+            videoUrl={activeCameraData.url}
+            title={`Video`}
+            large
+            onClick={() => console.log(`Clicked on`)}
+          />
+          {/* <AdaptiveVideoPlayer
+            videoUrl={"https://cctvjss.jogjakota.go.id/atcs/ATCS_Kleringan_Abu_Bakar_Ali.stream/chunklist_w616721554.m3u8"}
             title={`Video ${title}`}
             large
             onClick={() => console.log(`Clicked on ${title}`)}
-          />
+          /> */}
         </div>
       );
     }

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Hls from "hls.js";
 
-export default function AdaptiveVideoPlayer ({ videoUrl, title }) {
+export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
   const [status, setStatus] = useState("initializing");
   const [logs, setLogs] = useState([]);
   const [detectedFormat, setDetectedFormat] = useState(null);
@@ -359,8 +359,8 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title }) {
   };
 
   return (
-    <div className="rounded-lg bg-black text-white">
-      <div className="flex items-center gap-2 p-2 m-1">
+    <div className=" bg-black text-white py-1.5">
+      <div className="flex items-center gap-1 p-2 m-1 text-xs">
         <div className="w-full flex justify-between">
           <span className="font-semibold">{title}</span>
           <div className="flex items-center gap-2">
@@ -368,17 +368,17 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title }) {
             <span className="font-semibold">Status: {status}</span>
           </div>
         </div>
-        {playerType && (
+        {/* {playerType && (
           <span className="ml-4 px-2 py-2 bg-gray-800 text-xs rounded">
             {getPlayerTypeDisplay()}
           </span>
-        )}
+        )} */}
       </div>
 
       <div className="">
         <video
           ref={videoRef}
-          className="w-full h-auto min-h-96 bg-black"
+          className={`w-full h-auto ${large ? 'min-h-96' : 'min-h-52'} bg-black`}
           controls
           muted
           playsInline

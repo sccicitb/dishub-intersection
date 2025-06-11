@@ -132,24 +132,6 @@ const CameraStream = () => {
     };
   }, [dataCameras]);
 
-  // const getLogcamera = async (id) => {
-  //   try {
-  //     const res = await logCamera.getById(id);
-  //     // console.log(JSON.stringify(res))
-  //     // Asumsikan hasilnya dalam format array objek seperti: { start: ..., end: ..., status: ... }
-  //     let logs = Array.isArray(res.data.logs) ? res.data.logs : [];
-  //     // const logs = res.data || [];
-
-  //     setCameraLogs(prev => ({
-  //       ...prev,
-  //       [id]: logs
-  //     }));
-  //     // console.log("Logs untuk kamera ID", id, logs);
-  //   } catch (err) {
-  //     console.error("Gagal fetch data: ", err);
-  //   }
-  // };
-
   useEffect(() => {
     if (dataCameras.length > 0) {
       dataCameras.forEach(cam => {
@@ -173,9 +155,10 @@ const CameraStream = () => {
   const cctvStreamCameras = dataCameras.filter(cam => cam.socket_event !== "not_yet_assign");
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-5">
-      {/* Video Streams - untuk kamera dengan socket_event = "not_yet_assign" */}
-      {/* {videoStreamCameras.map((cam) => {
+    <div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-5">
+        {/* Video Streams - untuk kamera dengan socket_event = "not_yet_assign" */}
+        {/* {videoStreamCameras.map((cam) => {
       console.log(cam.url) 
       return(
         <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
@@ -192,37 +175,41 @@ const CameraStream = () => {
           </div>
         </div>
       )})} */}
-      {videoStreamCameras.map((cam) => {
-        return (
-          <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
-            <AdaptiveVideoPlayer
-              videoUrl={cam.url}
-              title={`Video ${cam.name}`}
-              large
-              onClick={() => console.log(`Clicked on ${cam.name}`)}
-            />
-          </div>
-        )
-      })}
+        {videoStreamCameras.map((cam) => {
+          return (
+            <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
+              <AdaptiveVideoPlayer
+                videoUrl={cam.url}
+                title={`Video ${cam.name}`}
+                large
+                onClick={() => console.log(`Clicked on ${cam.name}`)}
+              />
+            </div>
+          )
+        })}
+      </div>
+              <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100 my-2" />
 
-      {/* CCTV Streams - untuk kamera dengan socket_event selain "not_yet_assign" */}
-      {cctvStreamCameras.map((cam) => {
-        // console.log(dateInput);
-        return (
-          <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
-            <CCTVStream
-              data={streamData[cam.id]}
-              title={`CCTV ${cam.name}`}
-              large
-              onClick={() => setActiveCamera(cam.camera?.id || cam.id)}
-            />
-            <CameraStatusTimeline
-              cameraStatusData={cameraLogs[cam.id]?.all || []}
-              selectedDate={dateInput}
-            />
-          </div>
-        );
-      })}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-5">
+        {/* CCTV Streams - untuk kamera dengan socket_event selain "not_yet_assign" */}
+        {cctvStreamCameras.map((cam) => {
+          // console.log(dateInput);
+          return (
+            <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
+              <CCTVStream
+                data={streamData[cam.id]}
+                title={`CCTV ${cam.name}`}
+                large
+                onClick={() => setActiveCamera(cam.camera?.id || cam.id)}
+              />
+              <CameraStatusTimeline
+                cameraStatusData={cameraLogs[cam.id]?.all || []}
+                selectedDate={dateInput}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

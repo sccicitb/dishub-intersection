@@ -49,29 +49,27 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
   const [distanceLine, setDistanceLine] = useState(null);
   const [distanceLabel, setDistanceLabel] = useState(null);
 
+  const didFetch = useRef(false);
+
   useEffect(() => {
+    if (didFetch.current) return;
+    didFetch.current = true;
+
     const fetchData = async () => {
       try {
         setLoading(true);
-
         const camerasRes = await cameras.getAll();
         const data = camerasRes.data.cameras || [];
         setCamerasData(data);
-
         const buildingsRes = await maps.getAllFull();
         const buildingsData = buildingsRes.data.buildings || [];
-
-        const filteredBuildings = filterBuildingsByActiveCameras(buildingsData, data);
-
-        setBuildings(filteredBuildings);
-        setupMapData(filteredBuildings);
-
-
+        const filtered = filterBuildingsByActiveCameras(buildingsData, data);
+        setBuildings(filtered);
+        setupMapData(filtered);
       } catch (err) {
         console.error("Failed to fetch data:", err);
         setBuildings([]);
         setCamerasData([]);
-        setLoading(false);
       } finally {
         setLoading(false);
       }
@@ -80,7 +78,8 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
     fetchData();
   }, []);
 
-  useEffect(()=> {
+
+  useEffect(() => {
     console.log(buildings)
   }, [buildings])
 
@@ -229,7 +228,9 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
 
   // Handle camera selection
   const handleCameraSelect = (camera) => {
-    onClick?.({ camera });
+    // if (camera.filter((data) => data.socketEvent === "not_yet_assign" ? console.log(camera) :onClick?.({ camera }) ))
+    // if (camera.socketEvent === "not_yet_assign" ? console.log(camera) : onClick?.({ camera }))
+    onClick?.({ camera })
     setCameraModal({ isOpen: false, cameras: [] });
   };
 
@@ -262,37 +263,37 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
           }}
           onLoad={handleMapLoad}
           style={{ width: "100%", height: "100%" }}
-          // onClick={(e) => {
-          //   const { lng, lat } = e.lngLat;
+        // onClick={(e) => {
+        //   const { lng, lat } = e.lngLat;
 
-          //   const newPoints = [...measurePoints, [lng, lat]];
-          //   setMeasurePoints(newPoints);
+        //   const newPoints = [...measurePoints, [lng, lat]];
+        //   setMeasurePoints(newPoints);
 
-          //   if (newPoints.length === 2) {
-          //     const from = turf.point(newPoints[0]);
-          //     const to = turf.point(newPoints[1]);
-          //     const distance = turf.distance(from, to, { units: 'kilometers' });
-          //     alert(`Jarak: ${distance.toFixed(2)} km`);
-          //     // Simpan garis untuk nanti digambar
-          //     const line = {
-          //       type: "Feature",
-          //       geometry: {
-          //         type: "LineString",
-          //         coordinates: newPoints,
-          //       }
-          //     };
-          //     const midpoint = turf.midpoint(from, to);
-          //     midpoint.properties = {
-          //       distance: `${distance.toFixed(2)} km`,
-          //     };
-          //     setDistanceLine(line);
-          //     setDistanceLabel(midpoint);
-          //     // Reset agar bisa klik ulang nanti
-          //     setTimeout(() => {
-          //       setMeasurePoints([]);
-          //     }, 1000);
-          //   }
-          // }}
+        //   if (newPoints.length === 2) {
+        //     const from = turf.point(newPoints[0]);
+        //     const to = turf.point(newPoints[1]);
+        //     const distance = turf.distance(from, to, { units: 'kilometers' });
+        //     alert(`Jarak: ${distance.toFixed(2)} km`);
+        //     // Simpan garis untuk nanti digambar
+        //     const line = {
+        //       type: "Feature",
+        //       geometry: {
+        //         type: "LineString",
+        //         coordinates: newPoints,
+        //       }
+        //     };
+        //     const midpoint = turf.midpoint(from, to);
+        //     midpoint.properties = {
+        //       distance: `${distance.toFixed(2)} km`,
+        //     };
+        //     setDistanceLine(line);
+        //     setDistanceLabel(midpoint);
+        //     // Reset agar bisa klik ulang nanti
+        //     setTimeout(() => {
+        //       setMeasurePoints([]);
+        //     }, 1000);
+        //   }
+        // }}
         >
           <NavigationControl position="top-right" />
 
@@ -403,32 +404,42 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
       </div>
 
       {/* Camera Selection Modal */}
-      {
-        cameraModal.isOpen && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
-            <div className="bg-white rounded-xl p-5 shadow-lg w-80 max-w-full">
-              <h2 className="text-lg font-semibold mb-4">Pilih Kamera</h2>
-              <div className="space-y-2">
-                {cameraModal.cameras.filter((data) => data.socketEvent !== "not_yet_assign").map((camera) => (
-                  <button
-                    key={camera.id}
-                    className="w-full text-left rounded-xl btn btn-md hover:bg-gray-100"
-                    onClick={() => handleCameraSelect(camera)}
-                  >
-                    {camera.name || `Camera ${camera.id}`}
-                  </button>
-                ))}
-              </div>
-              <button
-                className="btn btn-md mt-4 w-full btn-error rounded-xl"
-                onClick={() => setCameraModal({ isOpen: false, cameras: [] })}
-              >
-                Batal
-              </button>
+      {cameraModal.isOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
+          <div className="bg-white rounded-xl p-5 shadow-lg w-80 max-w-full">
+            <h2 className="text-lg font-semibold mb-4">Pilih Kamera</h2>
+            <div className="space-y-2">
+              {cameraModal.cameras.map((camera) => (
+                <button
+                  key={camera.camera_id}
+                  disabled={camera.socketEvent === "not_yet_assign"}
+                  className={`w-full text-left rounded-xl btn btn-md hover:bg-gray-100 ${camera.socketEvent === "not_yet_assign"
+                      ? "border-orange-100 bg-orange-50"
+                      : "border-green-300 bg-green-50"
+                    }`}
+                  onClick={() => handleCameraSelect(camera)}
+                >
+                  <div className="flex flex-col items-center">
+                    <span>{camera.name || `Camera ${camera.camera_id}`}</span>
+                    <small className={`${camera.socketEvent === "not_yet_assign"
+                        ? "text-orange-300"
+                        : "text-green-600"
+                      }`}>
+                      {camera.socketEvent === "not_yet_assign" ? "Video Stream" : "Live Stream + Model Detection"}
+                    </small>
+                  </div>
+                </button>
+              ))}
             </div>
+            <button
+              className="btn btn-md mt-4 w-full btn-error rounded-xl"
+              onClick={() => setCameraModal({ isOpen: false, cameras: [] })}
+            >
+              Batal
+            </button>
           </div>
-        )
-      }
+        </div>
+      )}
     </div >
   );
 };
