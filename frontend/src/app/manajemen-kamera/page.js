@@ -680,7 +680,7 @@ const ManajemenKamera = () => {
       });
       let videoStream;
 
-      videoStream = mergedCameraData.flatMap(b => b.camera || []).filter(cam => cam.socket_event === "not_yet_assign" && cam.status == 1);
+      videoStream = mergedCameraData.flatMap(b => b.camera || []).filter(cam => cam.socket_event === "not_yet_assign").filter(cam => cam.status === 1);
       setVideoStream(videoStream)
       console.log(videoStream)
     };
@@ -1090,7 +1090,7 @@ const ManajemenKamera = () => {
                           });
                         }}
                       >
-                        <option value="" disabled>Pilih Kategori</option>
+                        <option value="" selected>Pilih Kategori</option>
                         {mergedCameraData?.map((item) => (
                           <option key={item.id} value={item.id}>
                             {item.name}
@@ -1196,8 +1196,6 @@ const ManajemenKamera = () => {
           </div>
         )
         }
-
-
         {
           showDialogKalender && (
             <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
