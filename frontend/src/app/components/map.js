@@ -353,7 +353,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
         </Map>
 
         {/* Controls */}
-        <div className="absolute top-3 left-3 w-[80%] text-sm flex flex-wrap gap-2">
+        <div className="absolute top-3 left-3 w-[80%] text-xs flex flex-wrap gap-2">
           {/* Buildings Dropdown */}
           <Dropdown
             isOpen={isLocationDropdownOpen}
@@ -394,7 +394,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
 
           {/* Reset Button */}
           <button
-            className="btn btn-md rounded-xl shadow-xs capitalize"
+            className="btn btn-sm text-xs rounded-xl shadow-xs capitalize"
             onClick={fitBoundsToAll}
             disabled={!mapReady}
           >
@@ -407,13 +407,13 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
       {cameraModal.isOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
           <div className="bg-white rounded-xl p-5 shadow-lg w-80 max-w-full">
-            <h2 className="text-lg font-semibold mb-4">Pilih Kamera</h2>
+            <h2 className="text-xs font-semibold mb-4">Pilih Kamera</h2>
             <div className="space-y-2">
               {cameraModal.cameras.map((camera) => (
                 <button
                   key={camera.camera_id}
                   disabled={camera.socketEvent === "not_yet_assign"}
-                  className={`w-full text-left rounded-xl btn btn-md hover:bg-gray-100 ${camera.socketEvent === "not_yet_assign"
+                  className={`w-full text-left rounded-xl btn btn-sm hover:bg-gray-100 ${camera.socketEvent === "not_yet_assign"
                       ? "border-orange-100 bg-orange-50"
                       : "border-green-300 bg-green-50"
                     }`}
@@ -432,7 +432,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
               ))}
             </div>
             <button
-              className="btn btn-md mt-4 w-full btn-error rounded-xl"
+              className="btn btn-sm mt-4 w-full btn-error rounded-xl"
               onClick={() => setCameraModal({ isOpen: false, cameras: [] })}
             >
               Batal
@@ -448,10 +448,10 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
 const Dropdown = ({ isOpen, onToggle, label, children }) => (
   <div className="relative">
     <div
-      className="rounded-xl text-md w-fit shadow-xs bg-base-100/90 flex justify-end p-1 cursor-pointer"
+      className="rounded-xl text-xs w-fit shadow-xs bg-base-100/90 flex justify-end p-1 cursor-pointer"
       onClick={onToggle}
     >
-      <button className="btn btn-sm btn-ghost text-sm bg-transparent border-none hover:shadow-none flex items-center gap-3 font-semibold">
+      <button className="btn btn-xs btn-ghost text-xs bg-transparent border-none hover:shadow-none flex items-center gap-3 font-semibold">
         {label}
         <FaAngleDown className={`${isOpen ? "rotate-180" : ""} text-neutral-600`} />
       </button>
@@ -467,7 +467,7 @@ const Dropdown = ({ isOpen, onToggle, label, children }) => (
 const DropdownItem = ({ label, icon, onClick, bold }) => (
   <button
     onClick={onClick}
-    className={`btn btn-ghost btn-block justify-start rounded-none ${bold ? "font-bold" : "font-normal"}`}
+    className={`btn btn-ghost text-xs btn-sm btn-block justify-start rounded-none ${bold ? "font-semibold" : "font-normal"}`}
   >
     {icon && <span className="mr-3">{icon}</span>}
     {label}
