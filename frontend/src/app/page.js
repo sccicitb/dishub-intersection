@@ -385,9 +385,9 @@ export default function Home () {
   if (!isClient) return null;
 
   return (
-    <div className="p-4 text-base-700 flex flex-col items-center gap-8 overflow-y-hidden">
+    <div className="p-4 text-base-700 flex flex-col items-center gap-8 overflow-y-hidden text-[13px]">
       <Suspense fallback={<div>Loading Charts...</div>}>
-        <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
+        <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
         <div className="w-[90%]">
           <div className="flex flex-wrap gap-2 mb-8 justify-start">
             <button
@@ -468,14 +468,14 @@ export default function Home () {
         )}
       </Suspense>
       <div className="w-[90%]">
-        <div className="w-full bg-blue-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
+        <div className="w-full bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
         {/* <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-5 py-5">
           <div className="cols-1 bg-base-200/90 min-h-80 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200 gap-5 flex flex-col">
-            <div className="w-full h-80 bg-gray-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl"></div>
+            <div className="w-full h-80 bg-gray-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl"></div>
             <CameraStatusTimeline cameraStatusData={cameraStatusData}/>
           </div>
           <div className="cols-1 bg-base-200/90 min-h-80 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200 gap-5 flex flex-col">
-            <div className="w-full h-80 bg-gray-950/90 text-center p-1.5 text-sm font-semibold text-white rounded-2xl"></div>
+            <div className="w-full h-80 bg-gray-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl"></div>
             <CameraStatusTimeline cameraStatusData={cameraStatusData}/>
           </div>
         </div> */}

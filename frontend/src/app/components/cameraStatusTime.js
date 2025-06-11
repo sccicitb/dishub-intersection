@@ -59,7 +59,7 @@ const CameraStatusTimeline = ({ cameraStatusData = [], selectedDate = null }) =>
 
   return (
     <div className="p-4">
-      <h2 className="text-lg font-semibold mb-3">Timeline Status Kamera per Jam (WIB)</h2>
+      <h2 className="text-[14px] font-semibold mb-3">Timeline Status Kamera per Jam (WIB)</h2>
       {/* <div className="flex space-x-1"> */}
       <div className="flex w-full">
         {hours.map((hour) => {
@@ -73,13 +73,13 @@ const CameraStatusTimeline = ({ cameraStatusData = [], selectedDate = null }) =>
             <div
               key={hour}
               title={`${hour}:00 - Status: ${status !== undefined ? status : "Tidak ada data"}`}
-              className={`${bgColor} w-6 h-6 flex-1 cursor-default`}
+              className={`${bgColor} w-5 h-5 flex-1 cursor-default`}
             // className={`${bgColor} w-6 h-6 rounded-sm cursor-default`}
             />
           );
         })}
       </div>
-      <div className="flex justify-between text-xs mt-1 text-gray-600 font-mono">
+      <div className="flex justify-between text-[11px] mt-1 text-gray-600 font-mono">
         <span>00:00</span>
         <span>06:00</span>
         <span>12:00</span>

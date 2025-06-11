@@ -13,6 +13,7 @@ const MapComponent = lazy(() => import("@/app/components/map"));
 
 import { survey } from '@/lib/apiService';
 import AdaptiveVideoPlayer from '../components/adaptiveCameraStream';
+import BlobVideoPlayer from '../components/blobVideoPlayer';
 
 const classificationMap = {
   "PKJI 2023 Luar Kota": "luar_kota",
@@ -195,9 +196,11 @@ function MovePage () {
               onChange={(e) => setDateInput(e.target.value)}
             />
           </div>
-          <AdaptiveVideoPlayer
+          {/* <video class="stream p-1 m-0" id="playerElement235" autoplay="autoplay" src="blob:"></video> */}
+          <BlobVideoPlayer videoUrl={"https://cctv.jogjakota.go.id/018fb07d-f034-4325-b53e-ea0127d59bc5"}/>
+          {/* <AdaptiveVideoPlayer
             videoUrl="https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8"
-          />
+          /> */}
           {/* {loading ? (<div className='my-5'>Loading...</div>) : ( */}
           <DirectionTable vehicleData={vehicleData} classification={activeClassification} activePergerakan={activeDirection} activePendekatan={activePendekatan} />
           {/* )} */}

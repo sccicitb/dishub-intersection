@@ -192,11 +192,11 @@ export default function SimpleVideoTest({ videoUrl }) {
         </div>
       </div>
 
-      <div className="mt-3 text-sm text-gray-600">
+      {/* <div className="mt-3 text-sm text-gray-600">
         <p><strong>URL:</strong> {videoUrl}</p>
         <p><strong>HLS.js Support:</strong> {Hls.isSupported() ? "Yes" : "No"}</p>
         <p><strong>Native HLS:</strong> {document.createElement('video').canPlayType('application/vnd.apple.mpegurl') ? "Yes" : "No"}</p>
-      </div>
+      </div> */}
     </div>
   );
 }

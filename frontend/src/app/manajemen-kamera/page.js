@@ -11,6 +11,7 @@ import { FaRegEye, FaRegEyeSlash, FaPencil, FaTrashCan } from "react-icons/fa6";
 import { FiDownload } from "react-icons/fi";
 import { IoIosAdd } from "react-icons/io";
 import { calendar, cameras, maps } from "@/lib/apiService"
+import AdaptiveVideoPlayer from '../components/adaptiveCameraStream';
 import { IoChevronBackSharp, IoChevronForwardSharp } from "react-icons/io5";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -41,30 +42,51 @@ export function LayoutKamera ({ cols = 1, J = 2, bc = 0, rows = 0, Clicked = (t)
   );
 }
 
-export const CameraPosition = ({ layout, streamData }) => {
+export const CameraPosition = ({ layout, streamData, urlData }) => {
   const streams = Object.values(streamData).filter(Boolean);
+  const urls = Object.values(urlData).filter(Boolean);
 
   const { cols = 1, J = 2, bc = 0, rows = 0 } = layout;
 
   const totalSlots = bc + J;
 
   return (
-    <div className={`grid ${cols ? 'grid-cols-' + cols : ''} gap-2 py-5 min-h-[800px]`}>
-      {streams.slice(0, totalSlots).map((stream, i) => {
-        const isLarge = i < bc;
-        return (
-          <div
-            key={`stream-${i}`}
-            className={`${isLarge ? 'col-span-2' : ''} ${isLarge && rows ? `row-span-${rows}` : ''}`}
-          >
-            <CCTVStream
-              data={stream}
-              customLarge={isLarge ? 'min-h-[470px] h-full' : undefined}
-              title={`CCTV Camera ${i + 1}`}
-            />
-          </div>
-        );
-      })}
+    <div>
+      <div className={`grid ${cols ? 'grid-cols-' + cols : ''} gap-2 py-5 min-h-[800px]`}>
+        {streams.slice(0, totalSlots).map((stream, i) => {
+          const isLarge = i < bc;
+          return (
+            <div
+              key={`stream-${i}`}
+              className={`${isLarge ? 'col-span-2' : ''} ${isLarge && rows ? `row-span-${rows}` : ''}`}
+            >
+              <CCTVStream
+                data={stream}
+                customLarge={isLarge ? 'min-h-[470px] h-full' : undefined}
+                title={`CCTV Camera ${i + 1}`}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <div className={`grid ${cols ? 'grid-cols-' + cols : ''} gap-2 py-5 min-h-[800px]`}>
+        {urls.slice(0, totalSlots).map((item, i) => {
+          const isLarge = i < bc;
+          return (
+            <div
+              key={`item-${i}`}
+              className={`${isLarge ? 'col-span-2' : ''} ${isLarge && rows ? `row-span-${rows}` : ''}`}
+            >
+              <AdaptiveVideoPlayer
+                videoUrl={item.url}
+                title={`Video ${item.name}`}
+                large
+                onClick={() => console.log(`Clicked on ${item.name}`)}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -152,6 +174,7 @@ const ManajemenKamera = () => {
   const [statusDialogKalender, setStatusDialogKalender] = useState(false)
   const [statusDialogCameras, setStatusDialogCameras] = useState(false)
   const [mergedCameraData, setMergedCameraData] = useState([]);
+  const [videoStream, setVideoStream] = useState({})
 
   // Fetch API Calendar, Maps, Cameras
 
@@ -548,13 +571,22 @@ const ManajemenKamera = () => {
       });
 
       setMergedCameraData(result);
+      let videoStream;
+
+      videoStream = result?.filter(cam => cam.socket_event === "not_yet_assign")
+      setVideoStream(videoStream)
+      console.log(videoStream)
     };
+
 
     if (dataSimpang.length) {
       combineData();
     }
   }, [dataSimpang, dataCameras]);
 
+  useEffect(() => {
+    console.log(mergedCameraData)
+  }, [mergedCameraData])
 
   // useEffect(() => {
   //   console.log(mergedCameraData)
@@ -618,7 +650,6 @@ const ManajemenKamera = () => {
     };
   }, []);
 
-  // Socket listeners for camera streams
   useEffect(() => {
     const socket = io('https://sxe-data.layanancerdas.id');
 
@@ -647,6 +678,11 @@ const ManajemenKamera = () => {
           }
         });
       });
+      let videoStream;
+
+      videoStream = mergedCameraData.flatMap(b => b.camera || []).filter(cam => cam.socket_event === "not_yet_assign" && cam.status == 1);
+      setVideoStream(videoStream)
+      console.log(videoStream)
     };
   }, [mergedCameraData]);
 
@@ -758,6 +794,8 @@ const ManajemenKamera = () => {
     buildings.name.toLowerCase().includes(inputValue.toLowerCase())
   );
 
+  const filteredCameras = mergedCameraData.flatMap(b => b.camera || []).filter(cam => cam.socket_event === "not_yet_assign").filter((i) => i.name.toLowerCase().includes(inputValue.toLowerCase()));
+
   // Calendar pagination logic - Fixed
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -846,6 +884,7 @@ const ManajemenKamera = () => {
     const shortYear = year.slice(-2); // Ambil 2 digit terakhir
     return `${shortYear}-${month}-${day}`;
   };
+
 
   return (
     <div className='w-[95%] py-10 mx-auto'>
@@ -1288,7 +1327,9 @@ const ManajemenKamera = () => {
             </div>
 
             <div className='overflow-y-auto lg:max-h-[490px]'>
-              <CameraPosition layout={layout} streamData={streamData} />
+              {mergedCameraData.length > 0 && (
+                <CameraPosition layout={layout} streamData={streamData} urlData={videoStream} />
+              )}
             </div>
 
             <CameraActive
@@ -1455,25 +1496,51 @@ const ManajemenKamera = () => {
                     </table>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-5 w-full">
-                    {filteredBuildings?.map((dataCamera, index) => {
-                      const firstCamera = dataCamera?.camera?.[0];
-                      const cameraId = firstCamera?.id;
-                      const stream = cameraId ? streamData[cameraId] : null;
-                      // console.log(stream)
-                      return (
-                        <div className="w-full" key={index}>
-                          <CCTVStream
-                            heightCamera
-                            customLarge={'h-[90px]'}
-                            data={stream}
-                            title={dataCamera?.name || `CCTV Camera ${index + 1}`}
-                            onClick={() => handleClickCamera(dataCamera)}
-                          />
-                        </div>
-                      );
-                    })}
-
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 mt-5 w-full">
+                    {
+                      filteredBuildings?.map((dataCamera, index) => {
+                        const firstCamera = dataCamera?.camera?.[0];
+                        const cameraId = firstCamera?.id;
+                        const stream = cameraId ? streamData[cameraId] : null;
+                        console.log(dataCamera.camera)
+                        return (
+                          <div className="w-full relative bg-black" key={index}>
+                            <CCTVStream
+                              heightCamera
+                              customLarge={'h-[90px]'}
+                              data={stream}
+                              title={dataCamera?.name || `CCTV Camera ${index + 1}`}
+                              onClick={() => handleClickCamera(dataCamera)}
+                            />
+                             <input
+                              type="checkbox"
+                              className={`toggle absolute bg-white/50 bottom-2.5 right-2 ${firstCamera?.status ? 'toggle-success' : 'toggle-error'} toggle-xs`}
+                              checked={firstCamera?.status}
+                              onChange={(e) => handleToggle(firstCamera.id, dataCamera, e.target.checked)}
+                            />
+                          </div>
+                        );
+                      })
+                    }
+                    {
+                      filteredCameras?.map((item, i) => {
+                        return (
+                          <div className="w-full relative bg-black" key={i}>
+                            <AdaptiveVideoPlayer
+                              videoUrl={item.url}
+                              title={`Video ${item.name}`}
+                              onClick={() => console.log(`Clicked on ${item.name}`)}
+                            />
+                            <input
+                              type="checkbox"
+                              className={`toggle absolute bg-white/50 bottom-2.5 right-2 ${item.status ? 'toggle-success' : 'toggle-error'} toggle-xs`}
+                              checked={item.status}
+                              onChange={(e) => handleToggle(item.id, item, e.target.checked)}
+                            />
+                          </div>
+                        );
+                      })
+                    }
                   </div>
                 )}
               </div>
