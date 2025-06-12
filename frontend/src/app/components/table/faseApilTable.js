@@ -174,19 +174,17 @@ const TrafficTable = () => {
                   {/* Fase 1-4 */}
                   {phases.map((phase) => (
                     <td key={phase} className="border border-black p-2 text-center">
-                      <div className="space-y-2">
+                      <div>
+                        <Checkbox
+                          checked={directionData.arah.bkijt}
+                          onChange={() => { }}
+                        />
+                      </div>
+                      <div className="">
                         <Checkbox
                           checked={directionData.fase[phase]}
                           onChange={(e) => handleDataChange(direction, 'fase', phase, e.target.checked)}
                         />
-                        {direction === 'timur' && (
-                          <div>
-                            <Checkbox
-                              checked={phase === 'fase_4'}
-                              onChange={() => { }}
-                            />
-                          </div>
-                        )}
                       </div>
                     </td>
                   ))}

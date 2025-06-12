@@ -6,7 +6,7 @@ const  SimpangTrafficKinerja = lazy (() => import("@/app/components/simpangTraff
 const TrafficKinerjaTable = lazy(() => import("@/app/components/trafficSurveyTable"));
 const EkuivalensiChart = lazy(() => import("@/app/components/ekuivalensiChart"))
 
-const KinerjaPage = () => {
+const FormSAIIPage = () => {
   const [dataChart, setDataChart] = useState([]);
   const [dataTerlindung, setDataTerlindung] = useState([]);
   const [dataTerlawan, setDataTerlawan] = useState([]);
@@ -31,4 +31,4 @@ const KinerjaPage = () => {
     </div>
   )
 }
-export default KinerjaPage;
+export default FormSAIIPage;
