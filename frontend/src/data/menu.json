@@ -30,13 +30,13 @@
     "icon": "RiCamera3Line"
   },
   {
-    "name": "Survei Kinerja",
-    "url": "/survei-kinerja",
+    "name": "Form SA-I",
+    "url": "/form-sa-i",
     "icon": "RiProgress6Line"
   },
   {
-    "name": "Form SA-I",
-    "url": "/form-sa-i",
+    "name": "Form SA-II",
+    "url": "/form-sa-ii",
     "icon": "RiProgress6Line"
   }
 ]

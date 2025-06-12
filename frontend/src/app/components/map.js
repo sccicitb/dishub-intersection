@@ -7,8 +7,9 @@ import { FaMapMarkerAlt, FaAngleDown } from "react-icons/fa";
 import ruangan from "@/data/ruangan.json";
 import { useAuth } from "../context/authContext";
 import { maps, cameras } from '@/lib/apiService';
+import { FaRulerHorizontal } from "react-icons/fa";
 
-const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
+const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false }) => {
   const { setLoading } = useAuth();
   const mapRef = useRef(null);
 
@@ -16,6 +17,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
   const [mapReady, setMapReady] = useState(false);
   const [theme, setTheme] = useState("light");
   const [bounds, setBounds] = useState(null);
+  const [rulerStatus, setRulerStatus] = useState(false);
 
   // Data States  
   const [buildings, setBuildings] = useState([]);
@@ -32,6 +34,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
   // Map Configuration
   const center = { longitude: 110.36394885709416, latitude: -7.806961958513005 };
   const mapStyles = {
+    form_sa: `https://api.maptiler.com/maps/satellite/style.json?key=MIHFairYWh2jhZGEMMk7`,
     light: `https://api.maptiler.com/maps/364bea8a-6a0f-47b3-b224-8f0371623426/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`,
     dark: `https://api.maptiler.com/maps/2826b85b-753a-402d-afae-e1f982e73d6d/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`,
   };
@@ -46,8 +49,8 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
 
   // ruller
   const [measurePoints, setMeasurePoints] = useState([]);
-  const [distanceLine, setDistanceLine] = useState(null);
-  const [distanceLabel, setDistanceLabel] = useState(null);
+  const [distanceLine, setDistanceLine] = useState([]);
+  const [distanceLabel, setDistanceLabel] = useState([]);
 
   const didFetch = useRef(false);
 
@@ -163,7 +166,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
     try {
       mapRef.current.fitBounds(
         [[bounds[0], bounds[1]], [bounds[2], bounds[3]]],
-        { padding: 20, maxZoom: 20 }
+        { padding: 70, maxZoom: 20 }
       );
       setSelectedBuilding(null);
     } catch (error) {
@@ -174,12 +177,17 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
   // Fit bounds when map is ready
   useEffect(() => {
     if (mapReady && bounds) {
-      setTimeout(fitBoundsToAll, 300);
+      if (!form) {
+        setTimeout(fitBoundsToAll, 300);
+      } else {
+        // buildings?.forEach((data) => flyToLocation(data))
+        flyToLocation(buildings[1], true);
+      }
     }
   }, [mapReady, bounds, fitBoundsToAll]);
 
   // Fly to specific location
-  const flyToLocation = useCallback((building) => {
+  const flyToLocation = useCallback((building, fState = false) => {
     if (!mapRef.current || !mapReady) return;
 
     try {
@@ -189,12 +197,12 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
         essential: true,
       });
       console.log(building)
-      onClickSimpang(building)
+      !fState && onClickSimpang(building)
       // Handle cameras
       if (Array.isArray(building.cameras) && building.cameras.length > 0) {
-        setCameraModal({ isOpen: true, cameras: building.cameras });
+        !fState && setCameraModal({ isOpen: true, cameras: building.cameras });
       } else {
-        onClick?.(building);
+        !fState && onClick?.(building);
       }
 
       setSelectedBuilding(building);
@@ -247,6 +255,8 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
   useEffect(() => {
     console.log(buildings)
   }, [buildings])
+
+  const [lines, setLines] = useState([]);
   return (
     <div>
       {title && <div className="p-5 text-xl font-semibold">{title}</div>}
@@ -255,7 +265,9 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
         {/* Map */}
         <Map
           ref={mapRef}
-          mapStyle={mapStyles[theme]}
+          antialias={true}
+          projection="globe"
+          mapStyle={mapStyles[form ? "form_sa" : theme]}
           initialViewState={{
             longitude: center.longitude,
             latitude: center.latitude,
@@ -263,42 +275,57 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
           }}
           onLoad={handleMapLoad}
           style={{ width: "100%", height: "100%" }}
-        // onClick={(e) => {
-        //   const { lng, lat } = e.lngLat;
+          onClick={(e) => {
+            if (!form || !rulerStatus) return;
 
-        //   const newPoints = [...measurePoints, [lng, lat]];
-        //   setMeasurePoints(newPoints);
+            const { lng, lat } = e.lngLat;
 
-        //   if (newPoints.length === 2) {
-        //     const from = turf.point(newPoints[0]);
-        //     const to = turf.point(newPoints[1]);
-        //     const distance = turf.distance(from, to, { units: 'kilometers' });
-        //     alert(`Jarak: ${distance.toFixed(2)} km`);
-        //     // Simpan garis untuk nanti digambar
-        //     const line = {
-        //       type: "Feature",
-        //       geometry: {
-        //         type: "LineString",
-        //         coordinates: newPoints,
-        //       }
-        //     };
-        //     const midpoint = turf.midpoint(from, to);
-        //     midpoint.properties = {
-        //       distance: `${distance.toFixed(2)} km`,
-        //     };
-        //     setDistanceLine(line);
-        //     setDistanceLabel(midpoint);
-        //     // Reset agar bisa klik ulang nanti
-        //     setTimeout(() => {
-        //       setMeasurePoints([]);
-        //     }, 1000);
-        //   }
-        // }}
+            const newPoints = [...measurePoints, [lng, lat]];
+            setMeasurePoints(newPoints);
+
+            if (newPoints.length === 2) {
+              const from = turf.point(newPoints[0]);
+              const to = turf.point(newPoints[1]);
+              const distance = turf.distance(from, to, { units: 'kilometers' });
+              alert(`Jarak: ${distance.toFixed(2)} km`);
+              // Simpan garis untuk nanti digambar
+              const line = {
+                id: crypto.randomUUID(),
+                label: lines.length + 1,
+                feature: {
+                  type: "Feature",
+                  geometry: {
+                    type: "LineString",
+                    coordinates: newPoints,
+                  }
+                }
+              };
+              const midpoint = turf.midpoint(from, to);
+              midpoint.properties = {
+                distance: `Garis ${line.label} ${distance.toFixed(2)} km`,
+                id: line.id
+              };
+
+              // midpoint.properties = {
+              //   id: Date.now(), // atau ID unik lainnya
+              //   distance: `ID: ${Date.now()} - ${distance.toFixed(2)} km`, // gabungkan teks
+              // };
+
+              // setDistanceLine(line);
+              // setDistanceLabel(midpoint);
+              setLines(prev => [...prev, line])
+              setDistanceLine(prev => [...prev, line]);
+              setDistanceLabel(prev => [...prev, midpoint]);
+              // Reset agar bisa klik ulang nanti
+              setTimeout(() => {
+                setMeasurePoints([]);
+              }, 1000);
+            }
+          }}
         >
           <NavigationControl position="top-right" />
-
-          {/* ruller
-          {distanceLine && (
+          {/* ruller */}
+          {/* {distanceLine && (
             <Source id="measure-line" type="geojson" data={distanceLine}>
               <Layer
                 id="measure-line-layer"
@@ -310,6 +337,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
               />
             </Source>
           )}
+
           {distanceLabel && (
             <Source id="measure-label" type="geojson" data={distanceLabel}>
               <Layer
@@ -328,13 +356,45 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
                 }}
               />
             </Source>
-          )}
+          )} */}
+          {distanceLine.map(({ id, feature }) => (
+            <Source key={id} id={`line-${id}`} type="geojson" data={feature}>
+              <Layer
+                id={`line-layer-${id}`}
+                type="line"
+                paint={{
+                  "line-color": "#FF0000",
+                  "line-width": 3
+                }}
+              />
+            </Source>
+          ))}
+
+          {distanceLabel.map((label) => (
+            <Source key={label.properties.id} id={`label-${label.properties.id}`} type="geojson" data={label}>
+              <Layer
+                id={`label-layer-${label.properties.id}`}
+                type="symbol"
+                layout={{
+                  "text-field": ["get", "distance"],
+                  "text-size": 14,
+                  "text-offset": [0, 1.5],
+                  "text-anchor": "top",
+                }}
+                paint={{
+                  "text-color": "#000000",
+                  "text-halo-color": "#ffffff",
+                  "text-halo-width": 1.5,
+                }}
+              />
+            </Source>
+          ))}
 
           {measurePoints.map(([lng, lat], index) => (
             <Marker key={index} longitude={lng} latitude={lat}>
               <div className="bg-red-500 w-3 h-3 rounded-full border border-white" />
             </Marker>
-          ))} */}
+          ))}
 
           {/* Building Markers */}
           {
@@ -352,7 +412,24 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
           }
         </Map>
 
-        {/* Controls */}
+        <div className={`absolute top-20 left-3 z-10 items-center`}>
+          <div className="flex-col flex gap-2">
+            {distanceLine.map(({ id, label }) => (
+              <button
+                key={id}
+                className="btn btn-xs text-xs border-transparent bg-red-50/80 text-red-600 w-fit relative shadow-none"
+                onClick={() => {
+                  setDistanceLine(prev => prev.filter(line => line.id !== id));
+                  setDistanceLabel(prev => prev.filter(label => label.properties.id !== id));
+                }}
+              >
+                Hapus Garis {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Controls */}/
         <div className="absolute top-3 left-3 w-[80%] text-xs flex flex-wrap gap-2">
           {/* Buildings Dropdown */}
           <Dropdown
@@ -400,6 +477,12 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
           >
             Reset View
           </button>
+          <button
+            className={`btn btn-sm text-xs rounded-xl shadow-xs capitalize ${rulerStatus ? "bg-[#232f61]/60 border-transparent" : ""}`}
+            onClick={() => setRulerStatus(!rulerStatus)}
+          >
+            <FaRulerHorizontal className={`text-xl  ${rulerStatus ? "text-gray-50" : "text-[#232f61]/90"}`} />
+          </button>
         </div>
       </div>
 
@@ -414,16 +497,16 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang }) => {
                   key={camera.camera_id}
                   disabled={camera.socketEvent === "not_yet_assign"}
                   className={`w-full text-left rounded-xl btn btn-sm hover:bg-gray-100 ${camera.socketEvent === "not_yet_assign"
-                      ? "border-orange-100 bg-orange-50"
-                      : "border-green-300 bg-green-50"
+                    ? "border-orange-100 bg-orange-50"
+                    : "border-green-300 bg-green-50"
                     }`}
                   onClick={() => handleCameraSelect(camera)}
                 >
                   <div className="flex flex-col items-center">
                     <span>{camera.name || `Camera ${camera.camera_id}`}</span>
                     <small className={`${camera.socketEvent === "not_yet_assign"
-                        ? "text-orange-300"
-                        : "text-green-600"
+                      ? "text-orange-300"
+                      : "text-green-600"
                       }`}>
                       {camera.socketEvent === "not_yet_assign" ? "Video Stream" : "Live Stream + Model Detection"}
                     </small>

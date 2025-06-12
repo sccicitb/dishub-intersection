@@ -3,8 +3,8 @@
   "data": {
     "utara": {
       "tipe_pendekat": {
-        "terlindung": 1,
-        "terlawan": 0
+        "terlindung": true,
+        "terlawan": false
       },
       "arah": {
         "bki": true,
@@ -22,8 +22,8 @@
     },
     "selatan": {
       "tipe_pendekat": {
-        "terlindung": 1,
-        "terlawan": 0
+        "terlindung": true,
+        "terlawan": false
       },
       "arah": {
         "bki": true,
@@ -41,8 +41,8 @@
     },
     "timur": {
       "tipe_pendekat": {
-        "terlindung": 1,
-        "terlawan": 0
+        "terlindung": true,
+        "terlawan": false
       },
       "arah": {
         "bki": true,
@@ -60,8 +60,8 @@
     },
     "barat": {
       "tipe_pendekat": {
-        "terlindung": 1,
-        "terlawan": 1
+        "terlindung": true,
+        "terlawan": false
       },
       "arah": {
         "bki": true,
