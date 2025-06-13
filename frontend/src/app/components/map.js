@@ -34,7 +34,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
   // Map Configuration
   const center = { longitude: 110.36394885709416, latitude: -7.806961958513005 };
   const mapStyles = {
-    form_sa: `https://api.maptiler.com/maps/satellite/style.json?key=MIHFairYWh2jhZGEMMk7`,
+    form_sa: `https://api.maptiler.com/maps/01976835-819f-7aa0-bb27-a92dce2b1815/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`,
     light: `https://api.maptiler.com/maps/364bea8a-6a0f-47b3-b224-8f0371623426/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`,
     dark: `https://api.maptiler.com/maps/2826b85b-753a-402d-afae-e1f982e73d6d/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_API_KEY}`,
   };
