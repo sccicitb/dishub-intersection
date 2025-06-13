@@ -31,9 +31,9 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
   const classificationOptions = ['PKJI 2023 Luar Kota', 'PKJI 2023 Dalam Kota', 'Tipikal'];
 
   return (
-    <div className="p-4 mx-auto space-y-6 w-full lg:w-[90%]">
-      <div className="space-y-2">
-        <h3 className="text-lg font-medium">Pilih Surveyor</h3>
+    <div className="mx-auto space-y-1 w-full h-fit lg:w-[90%]">
+      <div className="space-y-1">
+        <h3 className="text-[14px] font-medium">Pilih Surveyor</h3>
         <div className="join w-full gap-5 flex overflow-x-auto p-2">
           {surveyorOptions.map((option) => (
             <button
@@ -48,8 +48,8 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
       </div>
 
       {interval && (
-        <div className="space-y-2">
-          <h3 className="text-lg font-medium">Pilih Interval</h3>
+        <div className="space-y-1">
+          <h3 className="text-[14px] font-medium">Pilih Interval</h3>
           <div className="join w-full gap-5 flex overflow-x-auto p-2">
             {intervalOptions.map((option, id) => (
               <button
@@ -65,8 +65,8 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
       )}
 
       {pendekatan && (
-        <div className="space-y-2">
-          <h3 className="text-lg font-medium">Pilih Pendekatan Simpang</h3>
+        <div className="space-y-1">
+          <h3 className="text-[14px] font-medium">Pilih Pendekatan Simpang</h3>
           <div className="join w-full gap-5 flex overflow-x-auto p-2">
             {pendekatanOptions.map((option) => (
               <button
@@ -82,8 +82,8 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
       )}
 
       {arahPergerakan && (
-        <div className="space-y-2">
-          <h3 className="text-lg font-medium">Pilih Arah Pergerakan</h3>
+        <div className="space-y-1">
+          <h3 className="text-[14px] font-medium">Pilih Arah Pergerakan</h3>
           <div className="join w-full gap-5 flex overflow-x-auto p-2">
             {pergerakanOptions.map((option) => (
               <button
@@ -99,8 +99,8 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
       )}
 
       {direction && (
-        <div className="space-y-2">
-          <h3 className="text-lg font-medium">Pilih Arah Pergerakan</h3>
+        <div className="space-y-1">
+          <h3 className="text-[14px] font-medium">Pilih Arah Pergerakan</h3>
           <div className="join w-full gap-5 flex overflow-x-auto p-2">
             {directionOptions.map((option) => (
               <button
@@ -115,8 +115,8 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
         </div>
       )}
 
-      <div className="space-y-2">
-        <h3 className="text-lg font-medium">Pilih Jenis Klasifikasi</h3>
+      <div className="space-y-1">
+        <h3 className="text-[14px] font-medium">Pilih Jenis Klasifikasi</h3>
         <div className="join w-full gap-5 flex overflow-x-auto p-2">
           {classificationOptions.map((option) => (
             <button
@@ -132,8 +132,8 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
       <Suspense fallback={<div className='w-full'>Loading...</div>}>
         {exportPdf && (
 
-          <div className='space-y-2'>
-            <div className="w-full gap-5 flex overflow-x-auto join p-1.5">
+          <div className='space-y-1'>
+            <div className="w-full flex overflow-x-auto join pt-2 px-2">
               {/* <ExportButton vehicleData={dataTable} fileName='Data_Kendaraan_perjam'/> */}
               <SurveyLalulintasExport vehicleData={vehicleData} activeClassification={activeClassification} />
             </div>

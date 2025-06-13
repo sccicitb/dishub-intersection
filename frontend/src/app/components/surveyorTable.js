@@ -2,6 +2,7 @@
 import React from 'react';
 
 const SurveyInfoTable = () => {
+
   // Data survei
   const surveyData = [
     { label: 'Cuaca', value: 'Cerah berawan' },
@@ -34,8 +35,8 @@ const SurveyInfoTable = () => {
             <tbody>
               {surveyData.map((item, index) => (
                 <tr key={index}>
-                  <td className="bg-[#232f61]/90 font-semibold text-white whitespace-normal p-1">{item.label}</td>
-                  <td className=' whitespace-normal p-1'>{item.value}</td>
+                  <td className="bg-[#232f61]/90 font-semibold text-white whitespace-normal">{item.label}</td>
+                  <td className=' whitespace-normal'>{item.value}</td>
                 </tr>
               ))}
             </tbody>

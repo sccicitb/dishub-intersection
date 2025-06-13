@@ -429,7 +429,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
           </div>
         </div>
 
-        {/* Controls */}/
+        {/* Controls */}
         <div className="absolute top-3 left-3 w-[80%] text-xs flex flex-wrap gap-2">
           {/* Buildings Dropdown */}
           <Dropdown
