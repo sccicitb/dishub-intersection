@@ -15,6 +15,7 @@ import AdaptiveVideoPlayer from '../components/adaptiveCameraStream';
 import { IoChevronBackSharp, IoChevronForwardSharp } from "react-icons/io5";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import DialogFCamera from '../components/dialog/dialogFCamera';
 
 
 const RecentVehicle = lazy(() => import('../components/recentVehicle'));
@@ -239,6 +240,8 @@ const ManajemenKamera = () => {
 
   //# Fetch Create Camera (Maps)
   const createMaps = async (data) => {
+    const today = new Date();
+    const dateNow = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
     const push = {
       model_detection: data.model_detection || false,
       latitude: data.latitude,
@@ -250,7 +253,7 @@ const ManajemenKamera = () => {
       kategori: data.category,
       kota: data.kota,
       ukuran_kota: data.ukuran_kota,
-      tanggal: data.tanggal,
+      tanggal: dateNow,
       periode: data.periode,
       ditangani_oleh: data.ditangani_oleh
     };
@@ -885,6 +888,29 @@ const ManajemenKamera = () => {
     return `${shortYear}-${month}-${day}`;
   };
 
+  const handleSave = async () => {
+    try {
+      if (!statusDialogCameras && actionDialog === "create_cameras") {
+        await createCameras(formCameras);
+      }
+      else if (actionDialog === "edit_cameras") {
+        await updateCameras(formCameras.id, formCameras);
+      }
+      else if (actionDialog === "edit_maps") {
+        await updateMaps(formMaps.id, formMaps);
+      }
+      else if (statusDialogCameras && actionDialog === "create_maps") {
+        await createMaps(formMaps);
+      }
+
+      // Refresh data
+      await fetchCameras();
+      await fetchMaps();
+      closeDialog();
+    } catch (error) {
+      console.error("Error saving:", error);
+    }
+  };
 
   return (
     <div className='w-[95%] py-10 mx-auto'>
@@ -893,309 +919,20 @@ const ManajemenKamera = () => {
 
         {/* Add Camera Dialog */}
         {showDialog && (
-          <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-md shadow-md w-[300px] space-y-4">
-              <h2 className="text-lg font-semibold capitalize">
-                {actionDialog ? `${actionDialog.replaceAll('_', ' ')}` : `${actionDialog.replaceAll('_', ' ')}` + `${statusDialogCameras ? 'Tambah Maps' : 'Tambah Kamera'}`}
-              </h2>
-              {actionDialog === "edit_maps" || statusDialogCameras ? (
-                <div className='flex flex-col gap-3'>
-                  {/* Input Location Title */}
-                  <div>
-                    <label className="label">Nama Kota</label>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full border-gray-300"
-                      value={formMaps.kota}
-                      onChange={(e) =>
-                        setFormMaps({
-                          ...formMaps, kota: e.target.value
-                        })
-                      }
-                    />
-                  </div>
+          <DialogFCamera
+            showDialog={showDialog}
+            actionDialog={actionDialog}
+            statusDialogCameras={statusDialogCameras}
+            formMaps={formMaps}
+            formCameras={formCameras}
+            mergedCameraData={mergedCameraData}
+            onFormMapsChange={setFormMaps}
+            onFormCamerasChange={setFormCameras}
+            onSave={handleSave}
+            onClose={closeDialog}
+          />
+        )}
 
-                  {/* Input  */}
-                  <div>
-                    <label className="label">Nama Lokasi</label>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full border-gray-300"
-                      value={formMaps.name}
-                      onChange={(e) =>
-                        setFormMaps({
-                          ...formMaps, name: e.target.value
-                        })
-                      }
-                    />
-                  </div>
-
-                  {/* Input Location Title */}
-                  <div>
-                    <label className="label">Ukuran Kota</label>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full border-gray-300"
-                      value={formMaps.ukuran_kota}
-                      onChange={(e) =>
-                        setFormMaps({
-                          ...formMaps, ukuran_kota: e.target.value
-                        })
-                      }
-                    />
-                  </div>
-
-                  {/* Input date create */}
-                  <div>
-                    <label className="label">Pilih Tanggal:</label>
-                    <input
-                      type="date"
-                      className="border rounded px-2 py-1 w-full border-gray-300"
-                      value={formMaps.tanggal}
-                      onChange={(e) => setFormMaps({ ...formMaps, tanggal: e.target.value })}
-                    />
-                  </div>
-
-                  {/* Input Location Title */}
-                  <div>
-                    <label className="label">Ditangani</label>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full border-gray-300"
-                      value={formMaps.ditangani_oleh}
-                      onChange={(e) =>
-                        setFormMaps({
-                          ...formMaps, ditangani_oleh: e.target.value
-                        })
-                      }
-                    />
-                  </div>
-
-                  {/* Input periode */}
-                  <div>
-                    <label className="label">Periode</label>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full border-gray-300"
-                      value={formMaps.periode}
-                      onChange={(e) =>
-                        setFormMaps({
-                          ...formMaps, periode: e.target.value
-                        })
-                      }
-                    />
-                  </div>
-
-                  {/* Input Category */}
-                  <div>
-                    <label className="label">Nama Kategori</label>
-                    <select
-                      className="select text-sm rounded-md w-full "
-                      value={formMaps.category}
-                      onChange={(e) =>
-                        setFormMaps({ ...formMaps, category: e.target.value })
-                      }
-                    >
-                      <option value="" disabled>Pilih Kategori</option>
-                      <option value="timur">Timur</option>
-                      <option value="barat">Barat</option>
-                      <option value="utara">Utara</option>
-                      <option value="selatan">Selatan</option>
-                    </select>
-                  </div>
-
-                  {/* Input Latitude */}
-                  <div>
-                    <label className="label">Latitude</label>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full border-gray-300"
-                      value={formMaps.location.latitude}
-                      onChange={(e) =>
-                        setFormMaps({
-                          ...formMaps,
-                          location: { ...formMaps.location, latitude: e.target.value }
-                        })
-                      }
-                    />
-                  </div>
-
-                  {/* Input Longitude */}
-                  <div>
-                    <label className="label">Longitude</label>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full border-gray-300"
-                      placeholder="Longitude"
-                      value={formMaps.location.longitude}
-                      onChange={(e) =>
-                        setFormMaps({
-                          ...formMaps,
-                          location: { ...formMaps.location, longitude: e.target.value }
-                        })
-                      }
-                    />
-                  </div>
-
-                  {/* Toggle Model Detection */}
-                  <div>
-                    <label className="label">Model {formMaps.model_detection ? "Aktif" : "Non-Aktif"}</label>
-                    <div className="form-control flex flex-row items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="toggle"
-                        checked={formMaps.model_detection}
-                        onChange={(e) =>
-                          setFormMaps({
-                            ...formMaps,
-                            model_detection: e.target.checked
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : actionDialog === "edit_cameras" || !statusDialogCameras ? (
-                <div>
-                  <div className="grid grid-cols-1 gap-4">
-                    {/* Judul Kamera */}
-                    <div>
-                      <label className="label">Judul Kamera</label>
-                      <input
-                        type="text"
-                        className="input input-bordered w-full"
-                        value={formCameras?.name || ""}
-                        onChange={(e) =>
-                          setFormCameras({
-                            ...formCameras, name: e.target.value
-                          })
-                        }
-                      />
-                    </div>
-
-                    {/* Name Location */}
-                    <div>
-                      <label className="label">Nama Lokasi</label>
-                      <select
-                        className="text-sm rounded-md px-3 py-2 w-full select"
-                        value={formCameras.ID_Simpang}
-                        onChange={(e) => {
-                          const selectedId = parseInt(e.target.value, 10);
-                          const selectedItem = mergedCameraData.find((item) => item.id === selectedId);
-                          console.log(selectedItem)
-                          setFormCameras({
-                            ...formCameras,
-                            ID_Simpang: selectedId,
-                            location: selectedItem?.name || '',
-                          });
-                        }}
-                      >
-                        <option value="" selected>Pilih Kategori</option>
-                        {mergedCameraData?.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Link Url */}
-                    <div>
-                      <label className="label">URL</label>
-                      <input
-                        type="text"
-                        className="input input-bordered w-full"
-                        value={formCameras?.url || ""}
-                        onChange={(e) =>
-                          setFormCameras({
-                            ...formCameras, url: e.target.value
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="form-control flex flex-row items-center gap-2 mb-5">
-                      <label className="label">Status Kamera {formCameras.status}</label>
-                      <input
-                        type="checkbox"
-                        className="toggle"
-                        checked={formCameras.status}
-                        onChange={(e) =>
-                          setFormCameras({
-                            ...formCameras,
-                            status: e.target.checked ? 1 : 0
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {/* Socket Event */}
-                  <div>
-                    <div className="flex content-center items-center gap-2 pb-2">
-                      <div className="form-control flex flex-row items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="toggle"
-                          checked={formCameras.socket_status}
-                          onChange={(e) =>
-                            setFormCameras({
-                              ...formCameras,
-                              socket_status: e.target.checked
-                            })
-                          }
-                        />
-                      </div>
-                      <label className="label">Socket Event</label>
-                    </div>
-                    <input
-                      type="text"
-                      disabled={!formCameras?.socket_status}
-                      className="input input-bordered w-full"
-                      value={formCameras?.socket_event || ""}
-                      onChange={(e) =>
-                        setFormCameras({
-                          ...formCameras, socket_event: e.target.value
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div></div>
-              )}
-
-              {/* Tombol Aksi */}
-              <div className="flex justify-end gap-2 pt-2">
-                <button className="btn btn-sm" onClick={closeDialog}>
-                  Batal
-                </button>
-                <button
-                  className="btn btn-sm btn-primary"
-                  onClick={async () => {
-                    if (!statusDialogCameras && actionDialog === "create_cameras") {
-                      createCameras(formCameras);
-                    }
-                    else if (actionDialog === "edit_cameras") {
-                      updateCameras(formCameras.id, formCameras);
-                    }
-                    else if (actionDialog === "edit_maps") {
-                      updateMaps(formMaps.id, formMaps);
-                    }
-                    else if (statusDialogCameras && actionDialog === "create_maps") {
-                      createMaps(formMaps);
-                    }
-                    fetchCameras();
-                    fetchMaps();
-                    closeDialog();
-                  }}
-                >
-                  Simpan
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-        }
         {
           showDialogKalender && (
             <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
@@ -1510,7 +1247,7 @@ const ManajemenKamera = () => {
                               title={dataCamera?.name || `CCTV Camera ${index + 1}`}
                               onClick={() => handleClickCamera(dataCamera)}
                             />
-                             <input
+                            <input
                               type="checkbox"
                               className={`toggle absolute bg-white/50 bottom-2.5 right-2 ${firstCamera?.status ? 'toggle-success' : 'toggle-error'} toggle-xs`}
                               checked={firstCamera?.status}
