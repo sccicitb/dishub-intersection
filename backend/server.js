@@ -7,10 +7,41 @@ checkCameraStatus(); // jalanin cron saat server start
 const app = express();
 
 var corsOptions = {
-  origin: "*"
+  origin: [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "*"  // Allow all origins for development
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type", 
+    "Authorization", 
+    "x-requested-with",
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Headers",
+    "Access-Control-Allow-Methods"
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 };
 
 app.use(cors(corsOptions));
+
+// Additional CORS middleware for preflight requests
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 // parse requests of content-type - application/json
 app.use(express.json()); /* bodyParser.json() is deprecated */

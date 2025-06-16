@@ -45,6 +45,7 @@ export default function Home () {
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('day');
   const [activeFilterSection2, setActiveFilterSection2] = useState('day');
+  const [periodDisplayText, setPeriodDisplayText] = useState('');
 
   // Vehicle data objects
   const incomingVehicles = {
@@ -124,8 +125,64 @@ export default function Home () {
   //   format: 'unit'
   // };
 
+  // Function to generate period display text
+  const getPeriodDisplayText = (filter) => {
+    const now = new Date();
+    const options = { timeZone: 'Asia/Jakarta' };
+    
+    switch (filter) {
+      case 'day':
+        return now.toLocaleDateString('id-ID', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          ...options 
+        });
+        
+      case 'week':
+        // Get Monday of current week
+        const currentDay = now.getDay();
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
+        
+        // Get Sunday of current week
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        
+        const mondayStr = monday.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', ...options });
+        const sundayStr = sunday.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', ...options });
+        
+        return `${mondayStr} - ${sundayStr}`;
+        
+      case 'month':
+        return now.toLocaleDateString('id-ID', { 
+          month: 'long', 
+          year: 'numeric',
+          ...options 
+        });
+        
+      case 'quarter':
+        const quarter = Math.floor(now.getMonth() / 3) + 1;
+        const quarterMonths = {
+          1: 'Januari - Maret',
+          2: 'April - Juni', 
+          3: 'Juli - September',
+          4: 'Oktober - Desember'
+        };
+        return `Q${quarter} ${quarterMonths[quarter]} ${now.getFullYear()}`;
+        
+      case 'year':
+        return now.getFullYear().toString();
+        
+      default:
+        return '';
+    }
+  };
+
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
+    setPeriodDisplayText(getPeriodDisplayText(filter));
   };
 
   const handleFilterSection2 = (filter) => {
@@ -137,9 +194,9 @@ export default function Home () {
       setIsLoading(true);
       try {
         const [vehicleResponse, arahResponse, typeResponse] = await Promise.all([
-          vehicles.getAll(),
-          vehicles.getByArah(),
-          vehicles.getByTipe()
+          vehicles.getAll(activeFilter),
+          vehicles.getByArah(activeFilter),
+          vehicles.getByTipe(activeFilter)
         ]);
         processVehicleData(vehicleResponse);
         processArahData(arahResponse);
@@ -380,6 +437,8 @@ export default function Home () {
 
   useEffect(() => {
     setIsClient(true);
+    // Initialize period display text
+    setPeriodDisplayText(getPeriodDisplayText(activeFilter));
   }, [])
 
   if (!isClient) return null;
@@ -389,7 +448,9 @@ export default function Home () {
       <Suspense fallback={<div>Loading Charts...</div>}>
         <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
         <div className="w-[90%]">
-          <div className="flex flex-wrap gap-2 mb-8 justify-start">
+          {/* Filter buttons and Period display on same row */}
+          <div className="flex flex-wrap items-center gap-4 mb-8">
+            {/* Filter buttons */}
             <button
               onClick={() => handleFilterChange('day')}
               className={`px-3 py-1.5 rounded-md ${activeFilter === 'day'
@@ -398,6 +459,15 @@ export default function Home () {
                 }`}
             >
               Hari Ini
+            </button>
+            <button
+              onClick={() => handleFilterChange('week')}
+              className={`px-3 py-1.5 rounded-md ${activeFilter === 'week'
+                ? 'bg-blue-950 text-white'
+                : 'bg-base-300 hover:bg-blue-200'
+                }`}
+            >
+              Minggu Ini
             </button>
             <button
               onClick={() => handleFilterChange('month')}
@@ -409,6 +479,15 @@ export default function Home () {
               Bulan Ini
             </button>
             <button
+              onClick={() => handleFilterChange('quarter')}
+              className={`px-3 py-1.5 rounded-md ${activeFilter === 'quarter'
+                ? 'bg-blue-950 text-white'
+                : 'bg-base-300 hover:bg-blue-200'
+                }`}
+            >
+              Quarter Ini
+            </button>
+            <button
               onClick={() => handleFilterChange('year')}
               className={`px-3 py-1.5 rounded-md ${activeFilter === 'year'
                 ? 'bg-blue-950 text-white'
@@ -417,16 +496,15 @@ export default function Home () {
             >
               Tahun Ini
             </button>
-            <button
-              onClick={() => handleFilterChange('period')}
-              className={`px-3 py-1.5 rounded-md ${activeFilter === 'period'
-                ? 'bg-blue-950 text-white'
-                : 'bg-base-300 hover:bg-blue-200'
-                }`}
-            >
-              Periode Ini
-            </button>
+            
+            {/* Period Display - appears after filter buttons */}
+            {periodDisplayText && (
+              <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap">
+                📅 Periode: {periodDisplayText}
+              </div>
+            )}
           </div>
+          
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="font-medium">Loading chart data...</div>

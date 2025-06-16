@@ -20,6 +20,36 @@ const Vehicle = function (data) {
   this.updated_at = data.updated_at;
 };
 
+// Helper function to get WHERE clause based on filter type
+const getDateFilterClause = (filter) => {
+  switch (filter) {
+    case 'day':
+    case 'harian':
+      return "DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+      
+    case 'week':
+    case 'minggu':
+      // This week (Monday to Sunday)
+      return "WEEK(CONVERT_TZ(waktu, '+00:00', '+07:00'), 1) = WEEK(CONVERT_TZ(NOW(), '+00:00', '+07:00'), 1) AND YEAR(CONVERT_TZ(waktu, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+      
+    case 'month':
+    case 'bulanan':
+      return "MONTH(CONVERT_TZ(waktu, '+00:00', '+07:00')) = MONTH(CONVERT_TZ(NOW(), '+00:00', '+07:00')) AND YEAR(CONVERT_TZ(waktu, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+      
+    case 'quarter':
+    case 'kuartal':
+      // This quarter (Q1: Jan-Mar, Q2: Apr-Jun, Q3: Jul-Sep, Q4: Oct-Dec)
+      return "QUARTER(CONVERT_TZ(waktu, '+00:00', '+07:00')) = QUARTER(CONVERT_TZ(NOW(), '+00:00', '+07:00')) AND YEAR(CONVERT_TZ(waktu, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+      
+    case 'year':
+    case 'tahunan':
+      return "YEAR(CONVERT_TZ(waktu, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+      
+    default:
+      return "DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+  }
+};
+
 Vehicle.getAll = async (result) => {
   try {
     const [rows] = await db.query('SELECT * FROM arus ORDER BY waktu DESC LIMIT 10');
@@ -30,9 +60,10 @@ Vehicle.getAll = async (result) => {
   }
 };
 
-// Add new chart method
-Vehicle.getChartMasukKeluar = async (result) => {
+// Updated: Add filter parameter to chart method
+Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
   try {
+    const dateFilter = getDateFilterClause(filter);
     const [rows] = await db.query(`
       SELECT
         SUM(
@@ -55,8 +86,7 @@ Vehicle.getChartMasukKeluar = async (result) => {
           END
         ) AS total_OUT
       FROM arus
-      WHERE DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'));
-
+      WHERE ${dateFilter};
     `);
     result(null, rows);
   } catch (err) {
@@ -65,9 +95,10 @@ Vehicle.getChartMasukKeluar = async (result) => {
   }
 };
 
-// Add group by tipe kendaraan
-Vehicle.getGroupTipeKendaraan = async (result) => {
+// Updated: Add filter parameter to group by tipe kendaraan
+Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
   try {
+    const dateFilter = getDateFilterClause(filter);
     const [rows] = await db.query(`
       SELECT
         SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB,
@@ -93,10 +124,9 @@ Vehicle.getGroupTipeKendaraan = async (result) => {
         ) AS total_OUT
 
       FROM arus
-      WHERE DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+      WHERE ${dateFilter}
       GROUP BY SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB
       ORDER BY total_IN DESC;
-
     `);
     result(null, rows);
   } catch (err) {
@@ -105,9 +135,10 @@ Vehicle.getGroupTipeKendaraan = async (result) => {
   }
 };
 
-// Add group by arah mata angin
-Vehicle.getMasukKeluarByArah = async (result) => {
+// Updated: Add filter parameter to group by arah mata angin
+Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
   try {
+    const dateFilter = getDateFilterClause(filter);
     const [rows] = await db.query(`
       SELECT arah, SUM(total_IN) AS total_IN, SUM(total_OUT) AS total_OUT
         FROM (
@@ -122,7 +153,7 @@ Vehicle.getMasukKeluarByArah = async (result) => {
             1 AS total_IN,
             0 AS total_OUT
           FROM arus
-          WHERE DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+          WHERE ${dateFilter}
             AND (
               (ID_Simpang = 5 AND dari_arah = 'north') OR
               (ID_Simpang = 2 AND dari_arah = 'east') OR
@@ -143,7 +174,7 @@ Vehicle.getMasukKeluarByArah = async (result) => {
             0 AS total_IN,
             1 AS total_OUT
           FROM arus
-          WHERE DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+          WHERE ${dateFilter}
             AND (
               (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) OR
               (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) OR
@@ -153,8 +184,6 @@ Vehicle.getMasukKeluarByArah = async (result) => {
         ) AS arah_rekap
         GROUP BY arah
         ORDER BY arah;
-
-
     `);
     result(null, rows);
   } catch (err) {
@@ -163,9 +192,10 @@ Vehicle.getMasukKeluarByArah = async (result) => {
   }
 };
 
-// Add rata-rata kendaraan per jam
-Vehicle.getRataPerJam = async (result) => {
+// Updated: Add filter parameter to rata-rata kendaraan per jam
+Vehicle.getRataPerJam = async (result, filter = 'day') => {
   try {
+    const dateFilter = getDateFilterClause(filter);
     const [rows] = await db.query(`
       SELECT
         HOUR(CONVERT_TZ(waktu, '+00:00', '+07:00')) AS jam,
@@ -191,7 +221,7 @@ Vehicle.getRataPerJam = async (result) => {
         ) AS total_OUT
 
       FROM arus
-      WHERE DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+      WHERE ${dateFilter}
       GROUP BY jam
       ORDER BY jam;
     `);
@@ -202,9 +232,10 @@ Vehicle.getRataPerJam = async (result) => {
   }
 };
 
-// Add rata-rata kendaraan per 15 menit
-Vehicle.getRataPer15Menit = async (result) => {
+// Updated: Add filter parameter to rata-rata kendaraan per 15 menit
+Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
   try {
+    const dateFilter = getDateFilterClause(filter);
     const [rows] = await db.query(`
       SELECT
         DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) AS tanggal,
@@ -232,11 +263,10 @@ Vehicle.getRataPer15Menit = async (result) => {
         ) AS total_OUT
 
       FROM arus
-      WHERE DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))
+      WHERE ${dateFilter}
 
       GROUP BY tanggal, jam, menit
       ORDER BY tanggal, jam, menit;
-
     `);
     result(null, rows);
   } catch (err) {
