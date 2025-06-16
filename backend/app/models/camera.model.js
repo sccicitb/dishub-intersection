@@ -29,13 +29,14 @@ const createCamera = async ({
   resolution,
   status,
   socket_event,
-  ID_Simpang
+  ID_Simpang,
+  detail
 }) => {
   const [result] = await db.query(
     `INSERT INTO cameras 
-      (name, url, thumbnail_url, location, resolution, status, socket_event, ID_Simpang)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [name, url, thumbnail_url, location, resolution, status, socket_event, ID_Simpang]
+      (name, url, thumbnail_url, location, resolution, status, socket_event, ID_Simpang, detail)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [name, url, thumbnail_url, location, resolution, status, socket_event, ID_Simpang, detail]
   );
   return result.insertId;
 };
@@ -48,14 +49,15 @@ const updateCamera = async (id, {
   resolution,
   status,
   socket_event,
-  ID_Simpang
+  ID_Simpang,
+  detail
 }) => {
   const [result] = await db.query(
     `UPDATE cameras SET 
       name = ?, url = ?, thumbnail_url = ?, location = ?, resolution = ?, 
-      status = ?, socket_event = ?, ID_Simpang = ?
+      status = ?, socket_event = ?, ID_Simpang = ?, detail = ?
      WHERE id = ?`,
-    [name, url, thumbnail_url, location, resolution, status, socket_event, ID_Simpang, id]
+    [name, url, thumbnail_url, location, resolution, status, socket_event, ID_Simpang, detail, id]
   );
   return result;
 };

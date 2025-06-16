@@ -41,7 +41,8 @@ exports.createCamera = async (req, res) => {
       resolution,
       status,
       socket_event,
-      ID_Simpang
+      ID_Simpang,
+      detail
     } = req.body;
 
     if (
@@ -59,7 +60,8 @@ exports.createCamera = async (req, res) => {
       resolution,
       status,
       socket_event,
-      ID_Simpang
+      ID_Simpang,
+      detail
     });
 
     const newCamera = await getCameraById(newId);
@@ -81,7 +83,8 @@ exports.updateCamera = async (req, res) => {
       resolution,
       status,
       socket_event,
-      ID_Simpang
+      ID_Simpang,
+      detail
     } = req.body;
 
     if (
@@ -99,7 +102,8 @@ exports.updateCamera = async (req, res) => {
       resolution,
       status,
       socket_event,
-      ID_Simpang
+      ID_Simpang,
+      detail
     });
 
     if (result.affectedRows === 0) {
