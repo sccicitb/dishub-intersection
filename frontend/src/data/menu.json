@@ -43,5 +43,10 @@
     "name": "Form SA-III",
     "url": "/form-sa-iii",
     "icon": "RiProgress6Line"
+  },
+  {
+    "name": "Form SA-IV",
+    "url": "/form-sa-iv",
+    "icon": "RiProgress6Line"
   }
 ]
