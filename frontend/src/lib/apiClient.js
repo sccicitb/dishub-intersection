@@ -2,11 +2,16 @@ import axios from 'axios';
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL
   ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
-  : 'http://63.250.52.19:9090/api';
+  : 'http://localhost:8080/api';
 
 const axiosInstance = axios.create({
   baseURL,
   timeout: 70000,
+  withCredentials: false, // Set to false to avoid CORS preflight issues
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  }
 });
 
 

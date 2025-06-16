@@ -26,6 +26,8 @@ exports.findAll = (req, res) => {
 };
 
 exports.getChartMasukKeluar = (req, res) => {
+  const filter = req.query.filter || 'day'; // Get filter from query params
+  
   Vehicle.getChartMasukKeluar((err, data) => {
     if (err) {
       return res.status(500).send({
@@ -48,10 +50,12 @@ exports.getChartMasukKeluar = (req, res) => {
       status: "ok",
       data: enriched,
     });
-  });
+  }, filter);
 };
 
 exports.getGroupTipeKendaraan = (req, res) => {
+  const filter = req.query.filter || 'day'; // Get filter from query params
+  
   Vehicle.getGroupTipeKendaraan((err, data) => {
     if (err) {
       res.status(500).send({
@@ -64,10 +68,12 @@ exports.getGroupTipeKendaraan = (req, res) => {
         data: data,
       });
     }
-  });
+  }, filter);
 };
 
 exports.getMasukKeluarByArah = (req, res) => {
+  const filter = req.query.filter || 'day'; // Get filter from query params
+  
   Vehicle.getMasukKeluarByArah((err, data) => {
     if (err) {
       res.status(500).send({
@@ -80,10 +86,12 @@ exports.getMasukKeluarByArah = (req, res) => {
         data: data,
       });
     }
-  });
+  }, filter);
 };
 
 exports.getRataPerJam = (req, res) => {
+  const filter = req.query.filter || 'day'; // Get filter from query params
+  
   Vehicle.getRataPerJam((err, data) => {
     if (err) {
       res.status(500).send({
@@ -96,10 +104,12 @@ exports.getRataPerJam = (req, res) => {
         data: data,
       });
     }
-  });
+  }, filter);
 };
 
 exports.getRataPer15Menit = (req, res) => {
+  const filter = req.query.filter || 'day'; // Get filter from query params
+  
   Vehicle.getRataPer15Menit((err, data) => {
     if (err) {
       res.status(500).send({
@@ -112,7 +122,7 @@ exports.getRataPer15Menit = (req, res) => {
         data: data,
       });
     }
-  });
+  }, filter);
 };
 
 

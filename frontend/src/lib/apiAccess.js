@@ -7,11 +7,11 @@ export const authAPI = {
 }
 
 export const vehicles = {
-  getAll: () => getRequest("/vehicles/getChartMasukKeluar"),
-  getByArah: () => getRequest("/vehicles/getMasukKeluarByArah"),
-  getByJam: () => getRequest("/vehicles/getRataPerJam"),
-  getByMinute: () => getRequest("/vehicles/getRataPer15Menit"),
-  getByTipe: () => getRequest("/vehicles/getGroupTipeKendaraan"),
+  getAll: (filter = 'day') => getRequest(`/vehicles/getChartMasukKeluar?filter=${filter}`),
+  getByArah: (filter = 'day') => getRequest(`/vehicles/getMasukKeluarByArah?filter=${filter}`),
+  getByJam: (filter = 'day') => getRequest(`/vehicles/getRataPerJam?filter=${filter}`),
+  getByMinute: (filter = 'day') => getRequest(`/vehicles/getRataPer15Menit?filter=${filter}`),
+  getByTipe: (filter = 'day') => getRequest(`/vehicles/getGroupTipeKendaraan?filter=${filter}`),
 }
 
 export const maps = {
