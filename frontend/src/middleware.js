@@ -9,8 +9,8 @@ export function middleware(req) {
     return NextResponse.next();
   }
 
-  const protectedRoutes = ["/", "/cctvTest", "/survei-proporsi", "/manajemen-kamera", "/survei-pergerakan", "/survei-simpang", "/survei-lhrk", "/trainning-export", "/form-sa-ii", "/form-sa-i"];
-  const validRoutes = ["/", "/auth", "/not-found", "/cctvTest", "/simpang", "/manajemen-kamera","/survei-pergerakan", "/survei-simpang", "/survei-lhrk", "/survei-proporsi", "/trainning-export", "/form-sa-ii", "/form-sa-i"];
+  const protectedRoutes = ["/", "/cctvTest", "/survei-proporsi", "/manajemen-kamera", "/survei-pergerakan", "/survei-simpang", "/survei-lhrk", "/trainning-export", "/form-sa-ii", "/form-sa-i", "/form-sa-iii"];
+  const validRoutes = ["/", "/auth", "/not-found", "/cctvTest", "/simpang", "/manajemen-kamera","/survei-pergerakan", "/survei-simpang", "/survei-lhrk", "/survei-proporsi", "/trainning-export", "/form-sa-ii", "/form-sa-i", "/form-sa-iii"];
   const isRouteValid = (path) => validRoutes.includes(path);
   //  || path.startsWith("/camera/");
   // Jika halaman bukan valid route, redirect ke not-found
