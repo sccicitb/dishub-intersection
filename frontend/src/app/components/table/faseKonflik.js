@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import Image from 'next/image';
 
-export default function VehicleDataTable() {
+export default function VehicleDataTable () {
   const [tableData, setTableData] = useState([
     {
       fase: 2,
@@ -154,16 +155,16 @@ export default function VehicleDataTable() {
   return (
     <div className="p-6 bg-base-100 min-h-screen">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-base-content mb-2">
+        <h2 className="text-[20px] text-base-content mb-2">
           Tabel Data Kendaraan
-        </h1>
+        </h2>
         <p className="text-sm text-base-content/70">
           Input data kendaraan berdasarkan fase, kode pendekat, dan parameter lainnya
         </p>
       </div>
 
       <div className="overflow-x-auto shadow-lg">
-        <table className="table table-xs table-zebra w-full border border-base-300">
+        <table className="table table-xs w-full border border-base-300">
           <thead>
             <tr className="bg-gray-300">
               <th rowSpan="3" className="text-center border border-base-300 min-w-16">
@@ -408,6 +409,48 @@ export default function VehicleDataTable() {
                 </tr>
               ))
             ))}
+            <tr>
+              <td colSpan={8} className='text-xs text-gray-600 align-text-top border-1 border-gray-100'>
+                <strong>Catatan:</strong><br /> Dari fase 3 ke 4 tidak memerlukan WMS karena arus dari barat tetap berjalan
+              </td>
+              <td colSpan={3} className='text-xs text-gray-600 align-text-top'>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>V<sub>KDT</sub></td>
+                      <td className='text-nowrap'>= m/det (Kendaraan Bermotor)</td>
+                    </tr>
+                    <tr>
+                      <td className='align-text-top'>V<sub>KBR</sub></td>
+                      <td className='text-nowrap'>
+                        <ul>
+                          <li>= 10 m/det (Kendaraan Bermotor)</li>
+                          <li>= 3 m/det (Kendaraan tidak bermotor misalnya sepeda)</li>
+                          <li>= 1,2 m/det (pejalan kaki)</li>
+                        </ul>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className='align-text-top'>V<sub>KBR</sub></td>
+                      <td className='text-nowrap'>
+                        <ul>
+                          <li>= 5 m/det (MP atau KS)</li>
+                          <li>= 2 m/det (SM atau KTB)</li>
+                        </ul>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+              <td colSpan={5} className='border-1 border-gray-100'>
+                <Image
+                  src="/image/Picture1.png"
+                  alt=""
+                  width={300}
+                  height={200}
+                  className='m-auto'
+                /></td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -470,7 +513,7 @@ export default function VehicleDataTable() {
         </button>
       </div>
 
-      <div className="mt-6 p-4 bg-base-200 rounded-lg">
+      {/* <div className="mt-6 p-4 bg-base-200 rounded-lg">
         <h3 className="font-semibold mb-2">Keterangan:</h3>
         <div className="text-sm space-y-1">
           <p>• L<sub>bkr</sub>: Lintasan Kendaraan Berangkat</p>
@@ -481,7 +524,7 @@ export default function VehicleDataTable() {
           <p>• V<sub>dkt</sub>: Kecepatan Datang</p>
           <p>• V<sub>pk</sub>: Kecepatan Pejalan Kaki</p>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
