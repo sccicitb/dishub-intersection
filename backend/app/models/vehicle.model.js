@@ -70,9 +70,8 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 7 AND dari_arah = 'east') THEN 1
+            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
             WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
-            WHEN (ID_Simpang = 2 AND dari_arah = 'south') THEN 1
             ELSE 0
           END
         ) AS total_IN,
@@ -81,9 +80,8 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 7 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
+            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 2 AND ke_arah = 'south' AND dari_arah IN ('east', 'north', 'west')) THEN 1
             ELSE 0
           END
         ) AS total_OUT
@@ -109,9 +107,8 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 7 AND dari_arah = 'east') THEN 1
+            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
             WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
-            WHEN (ID_Simpang = 2 AND dari_arah = 'south') THEN 1
             ELSE 0
           END
         ) AS total_IN,
@@ -120,9 +117,8 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 7 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
+            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 2 AND ke_arah = 'south' AND dari_arah IN ('east', 'north', 'west')) THEN 1
             ELSE 0
           END
         ) AS total_OUT
@@ -144,61 +140,50 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
     const [rows] = await db.query(`
-      SELECT 
-        d.arah, 
-        COALESCE(SUM(data.total_IN), 0) AS total_IN, 
-        COALESCE(SUM(data.total_OUT), 0) AS total_OUT
-      FROM (
-        SELECT 'east' as arah
-        UNION ALL SELECT 'north' as arah
-        UNION ALL SELECT 'south' as arah  
-        UNION ALL SELECT 'west' as arah
-      ) d
-      LEFT JOIN (
-        SELECT
-          CASE
-            WHEN ID_Simpang = 5 AND dari_arah = 'north' THEN 'north'
-            WHEN ID_Simpang = 2 AND dari_arah = 'east' THEN 'east'
-            WHEN ID_Simpang = 7 AND dari_arah = 'east' THEN 'east'
-            WHEN ID_Simpang = 3 AND dari_arah = 'west' THEN 'west'
-            WHEN ID_Simpang = 2 AND dari_arah = 'south' THEN 'south'
-          END AS arah,
-          1 AS total_IN,
-          0 AS total_OUT
-        FROM arus
-        WHERE ${dateFilter}
-          AND (
-            (ID_Simpang = 5 AND dari_arah = 'north') OR
-            (ID_Simpang = 2 AND dari_arah = 'east') OR
-            (ID_Simpang = 7 AND dari_arah = 'east') OR
-            (ID_Simpang = 3 AND dari_arah = 'west') OR
-            (ID_Simpang = 2 AND dari_arah = 'south')
-          )
+      SELECT arah, SUM(total_IN) AS total_IN, SUM(total_OUT) AS total_OUT
+        FROM (
+          -- IN berdasarkan aturan logika
+          SELECT
+            CASE
+              WHEN ID_Simpang = 5 AND dari_arah = 'north' THEN 'north'
+              WHEN ID_Simpang = 2 AND dari_arah = 'east' THEN 'east'
+              WHEN ID_Simpang = 4 AND dari_arah = 'east' THEN 'east'
+              WHEN ID_Simpang = 3 AND dari_arah = 'west' THEN 'west'
+            END AS arah,
+            1 AS total_IN,
+            0 AS total_OUT
+          FROM arus
+          WHERE ${dateFilter}
+            AND (
+              (ID_Simpang = 5 AND dari_arah = 'north') OR
+              (ID_Simpang = 2 AND dari_arah = 'east') OR
+              (ID_Simpang = 4 AND dari_arah = 'east') OR
+              (ID_Simpang = 3 AND dari_arah = 'west')
+            )
 
-        UNION ALL
+          UNION ALL
 
-        SELECT
-          CASE
-            WHEN ID_Simpang = 5 AND ke_arah = 'north' THEN 'north'
-            WHEN ID_Simpang = 2 AND ke_arah = 'east' THEN 'east'
-            WHEN ID_Simpang = 7 AND ke_arah = 'east' THEN 'east'
-            WHEN ID_Simpang = 3 AND ke_arah = 'west' THEN 'west'
-            WHEN ID_Simpang = 2 AND ke_arah = 'south' THEN 'south'
-          END AS arah,
-          0 AS total_IN,
-          1 AS total_OUT
-        FROM arus
-        WHERE ${dateFilter}
-          AND (
-            (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) OR
-            (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) OR
-            (ID_Simpang = 7 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) OR
-            (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) OR
-            (ID_Simpang = 2 AND ke_arah = 'south' AND dari_arah IN ('east', 'north', 'west'))
-          )
-      ) data ON d.arah = data.arah
-      GROUP BY d.arah
-      ORDER BY d.arah;
+          -- OUT berdasarkan aturan logika
+          SELECT
+            CASE
+              WHEN ID_Simpang = 5 AND ke_arah = 'north' THEN 'north'
+              WHEN ID_Simpang = 2 AND ke_arah = 'east' THEN 'east'
+              WHEN ID_Simpang = 4 AND ke_arah = 'east' THEN 'east'
+              WHEN ID_Simpang = 3 AND ke_arah = 'west' THEN 'west'
+            END AS arah,
+            0 AS total_IN,
+            1 AS total_OUT
+          FROM arus
+          WHERE ${dateFilter}
+            AND (
+              (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) OR
+              (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) OR
+              (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) OR
+              (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north'))
+            )
+        ) AS arah_rekap
+        GROUP BY arah
+        ORDER BY arah;
     `);
     result(null, rows);
   } catch (err) {
@@ -219,9 +204,8 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 7 AND dari_arah = 'east') THEN 1
+            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
             WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
-            WHEN (ID_Simpang = 2 AND dari_arah = 'south') THEN 1
             ELSE 0
           END
         ) AS total_IN,
@@ -230,9 +214,8 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 7 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
+            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 2 AND ke_arah = 'south' AND dari_arah IN ('east', 'north', 'west')) THEN 1
             ELSE 0
           END
         ) AS total_OUT
@@ -263,9 +246,8 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 7 AND dari_arah = 'east') THEN 1
+            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
             WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
-            WHEN (ID_Simpang = 2 AND dari_arah = 'south') THEN 1
             ELSE 0
           END
         ) AS total_IN,
@@ -274,9 +256,8 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 7 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
+            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 2 AND ke_arah = 'south' AND dari_arah IN ('east', 'north', 'west')) THEN 1
             ELSE 0
           END
         ) AS total_OUT
