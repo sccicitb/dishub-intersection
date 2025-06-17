@@ -33,10 +33,14 @@ const Layout = ({ children }) => {
 
   if (!mounted) return null;
 
-  if (!token || pathname === "/auth" || pathname === "/not-found") {
+  // if (!token || pathname === "/auth" || pathname === "/not-found") {
+  //   return <div>{children}</div>;
+  // }
+
+  if (!token && pathname !== "/dashboard/mobility" || pathname === "/auth" || pathname === "/not-found") {
     return <div>{children}</div>;
   }
-
+  
   return (
     <div className="h-screen flex flex-col">
       {/* <ClockBar /> */}
