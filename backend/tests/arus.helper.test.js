@@ -76,8 +76,8 @@ describe('countArus', () => {
   it('should count totalIN and totalOUT', () => {
     const simpangMap = { 1: 'tempel', 2: 'prambanan' };
     const data = [
-      { ID_Simpang: 1, dari_arah: 'utara', ke_arah: 'barat' }, // IN (tempel)
-      { ID_Simpang: 1, dari_arah: 'selatan', ke_arah: 'utara' }, // OUT (tempel)
+      { ID_Simpang: 5, dari_arah: 'utara', ke_arah: 'barat' }, // IN (tempel)
+      { ID_Simpang: 5, dari_arah: 'selatan', ke_arah: 'utara' }, // OUT (tempel)
       { ID_Simpang: 2, dari_arah: 'timur', ke_arah: 'utara' }, // IN (prambanan)
       { ID_Simpang: 2, dari_arah: 'barat', ke_arah: 'timur' } // OUT (prambanan)
     ];
