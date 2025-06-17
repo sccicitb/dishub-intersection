@@ -110,102 +110,142 @@ const SurveyFormSAHeader = () => {
   );
 
   return (
-    <div className="w-full mx-auto p-6">
+    <div className="w-[98%] mx-auto p-6 bg-gray-50 shadow-sm rounded-lg">
 
-      <div className="space-y-6 grid grid-cols-3 gap-2">
-        {/* Tanggal */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tanggal *
-          </label>
-          <input
-            type="date"
-            value={formData.tanggal}
-            onChange={(e) => handleInputChange('tanggal', e.target.value)}
-            className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
-            required
-          />
+      <div className='grid grid-cols-1 lg:grid-cols-2 lg:space-x-10 w-full space-y-10'>
+        <div className="space-y-6 grid grid-cols-3 gap-2">
+          {/* Tanggal */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tanggal *
+            </label>
+            <input
+              type="date"
+              value={formData.tanggal}
+              onChange={(e) => handleInputChange('tanggal', e.target.value)}
+              className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
+              required
+            />
+          </div>
+
+
+          {/* Perihal */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Perihal
+            </label>
+            <textarea
+              value={formData.perihal}
+              onChange={(e) => handleInputChange('perihal', e.target.value)}
+              rows={3}
+              className="w-full px-3 input input-sm py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent resize-vertical min-h-[33px]"
+            />
+          </div>
+
+          {/* Periode */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Periode
+            </label>
+            <input
+              type="text"
+              value={formData.periode}
+              onChange={(e) => handleInputChange('periode', e.target.value)}
+              className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Kabupaten/Kota */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kabupaten/Kota *
+            </label>
+            <input
+              type="text"
+              value={formData.kabupatenKota}
+              onChange={(e) => handleInputChange('kabupatenKota', e.target.value)}
+              placeholder="Contoh: Sleman"
+              className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
+              required
+            />
+          </div>
+
+          {/* Lokasi */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Lokasi *
+            </label>
+            <input
+              type="text"
+              value={formData.lokasi}
+              onChange={(e) => handleInputChange('lokasi', e.target.value)}
+              placeholder="Contoh: Simpang Condongcatur"
+              className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
+              required
+            />
+          </div>
+
+          {/* Ruas Jalan Mayor */}
+          {renderArrayInput('ruasJalanMayor', 'Ruas Jalan Mayor', 'Jl. Padjajaran (T,B)')}
+
+          {/* Ruas Jalan Minor */}
+          {renderArrayInput('ruasJalanMinor', 'Ruas Jalan Minor', 'Jl. Anggajaya (U), Jl. Affandi (S)')}
+
+          {/* Ukuran Kota */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ukuran Kota
+            </label>
+            <input
+              type="text"
+              value={formData.ukuranKota}
+              onChange={(e) => handleInputChange('ukuranKota', e.target.value)}
+              placeholder="Contoh: 8,3 juta jiwa"
+              className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
+            />
+          </div>
+
         </div>
-
-
-        {/* Perihal */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Perihal
-          </label>
-          <textarea
-            value={formData.perihal}
-            onChange={(e) => handleInputChange('perihal', e.target.value)}
-            rows={3}
-            className="w-full px-3 input input-sm py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent resize-vertical min-h-[33px]"
-          />
+        <div className="overflow-x-autos">
+          <table className="w-full border border-gray-300 table table-sm">
+            <tbody className='font-normal'>
+              <tr>
+                <td className='border border-gray-300 w-1/2'>Tanggal</td>
+                <td className='border border-gray-300'>{formData.tanggal}</td>
+              </tr>
+              <tr>
+                <td className='border border-gray-300'>Kabupaten/Kota</td>
+                <td className='border border-gray-300'>{formData.kabupatenKota}</td>
+              </tr>
+              <tr>
+                <td className='border border-gray-300'>Lokasi</td>
+                <td className='border border-gray-300'>{formData.lokasi}</td>
+              </tr>
+              <tr>
+                <td className='border border-gray-300'>Ruas Jalan Mayor</td>
+                <td className='border border-gray-300'>{formData.ruasJalanMayor}</td>
+              </tr>
+              <tr>
+                <td className='border border-gray-300'>Ruas Jalan Minor</td>
+                <td className='border border-gray-300'>{formData.ruasJalanMinor}</td>
+              </tr>
+              <tr>
+                <td className='border border-gray-300'>Ukuran Kota</td>
+                <td className='border border-gray-300'>{formData.ukuranKota}</td>
+              </tr>
+              <tr>
+                <td className='border border-gray-300'>Perihal</td>
+                <td className='border border-gray-300'>{formData.perihal}</td>
+              </tr>
+              <tr>
+                <td className='border border-gray-300'>Periode</td>
+                <td className='border border-gray-300'>{formData.periode}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        {/* Periode */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Periode
-          </label>
-          <input
-            type="text"
-            value={formData.periode}
-            onChange={(e) => handleInputChange('periode', e.target.value)}
-            className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
-
-        {/* Kabupaten/Kota */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Kabupaten/Kota *
-          </label>
-          <input
-            type="text"
-            value={formData.kabupatenKota}
-            onChange={(e) => handleInputChange('kabupatenKota', e.target.value)}
-            placeholder="Contoh: Sleman"
-            className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
-            required
-          />
-        </div>
-
-        {/* Lokasi */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Lokasi *
-          </label>
-          <input
-            type="text"
-            value={formData.lokasi}
-            onChange={(e) => handleInputChange('lokasi', e.target.value)}
-            placeholder="Contoh: Simpang Condongcatur"
-            className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
-            required
-          />
-        </div>
-
-        {/* Ruas Jalan Mayor */}
-        {renderArrayInput('ruasJalanMayor', 'Ruas Jalan Mayor', 'Jl. Padjajaran (T,B)')}
-
-        {/* Ruas Jalan Minor */}
-        {renderArrayInput('ruasJalanMinor', 'Ruas Jalan Minor', 'Jl. Anggajaya (U), Jl. Affandi (S)')}
-
-        {/* Ukuran Kota */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Ukuran Kota
-          </label>
-          <input
-            type="text"
-            value={formData.ukuranKota}
-            onChange={(e) => handleInputChange('ukuranKota', e.target.value)}
-            placeholder="Contoh: 8,3 juta jiwa"
-            className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
-          />
-        </div>
-
       </div>
-      <div className="rounded-md">
+      <div className="rounded-md mt-5">
         <button
           type="button"
           onClick={handleSubmit}
@@ -214,6 +254,7 @@ const SurveyFormSAHeader = () => {
           <span>Simpan Data</span>
         </button>
       </div>
+
     </div>
   );
 };

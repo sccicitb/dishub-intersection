@@ -5,12 +5,12 @@ import Map, { NavigationControl, Marker, Source, Layer } from "@vis.gl/react-map
 import * as turf from "@turf/turf";
 import { FaMapMarkerAlt, FaAngleDown } from "react-icons/fa";
 import ruangan from "@/data/ruangan.json";
-import { useAuth } from "../context/authContext";
+// import { useAuth } from "../context/authContext";
 import { maps, cameras } from '@/lib/apiService';
 import { FaRulerHorizontal } from "react-icons/fa";
 
 const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false }) => {
-  const { setLoading } = useAuth();
+  // const { setLoading } = useAuth();
   const mapRef = useRef(null);
 
   // Map States
@@ -60,7 +60,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
 
     const fetchData = async () => {
       try {
-        setLoading(true);
+        // setLoading(true);
         const camerasRes = await cameras.getAll();
         const data = camerasRes.data.cameras || [];
         setCamerasData(data);
@@ -74,7 +74,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
         setBuildings([]);
         setCamerasData([]);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 

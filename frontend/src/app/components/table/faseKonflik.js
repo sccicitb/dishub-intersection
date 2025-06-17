@@ -163,79 +163,79 @@ export default function VehicleDataTable () {
         </p>
       </div>
 
-      <div className="overflow-x-auto shadow-lg">
+      <div className="overflow-x-auto">
         <table className="table table-xs w-full border border-base-300">
           <thead>
             <tr className="bg-gray-300">
-              <th rowSpan="3" className="text-center border border-base-300 min-w-16">
+              <th rowSpan="3" className="text-center border border-base-300 min-w-10 font-semibold">
                 Fase
               </th>
-              <th rowSpan="3" className="text-center border border-base-300 min-w-20">
-                Kode Pendekat
+              <th rowSpan="3" className="text-center border border-base-300 min-w-5 font-semibold">
+                Kode <br/> Pendekat
               </th>
-              <th rowSpan="3" className="text-center border border-base-300 min-w-32">
+              <th rowSpan="3" className="text-center border border-base-300 min-w-14 font-semibold">
                 Jarak
               </th>
-              <th colSpan="4" className="text-center border border-base-300">
+              <th colSpan="4" className="text-center border border-base-300 font-semibold">
                 Kode Pendekat
               </th>
-              <th colSpan="3" className="text-center border border-base-300">
+              <th colSpan="3" className="text-center border border-base-300 font-semibold">
                 Kecepatan (m/detik)
               </th>
-              <th rowSpan="2" className="text-center border border-base-300 min-w-20">
-                Waktu Tempuh
+              <th rowSpan="2" className="text-center border border-base-300 min-w-10 font-semibold">
+                Waktu <br/>Tempuh
               </th>
-              <th rowSpan="2" className="text-center border border-base-300 min-w-16">
+              <th rowSpan="2" className="text-center border border-base-300 min-w-10 font-semibold">
                 W<sub>MS</sub>
               </th>
-              <th rowSpan="2" className="text-center border border-base-300 min-w-20">
-                W<sub>MS</sub> Disesuaikan
+              <th rowSpan="2" className="text-center border border-base-300 min-w-10 font-semibold">
+                W<sub>MS</sub> <br/> Disesuaikan
               </th>
-              <th rowSpan="2" className="text-center border border-base-300 min-w-16">
+              <th rowSpan="2" className="text-center border border-base-300 min-w-10 font-semibold">
                 W<sub>K</sub>
               </th>
-              <th rowSpan="2" className="text-center border border-base-300 min-w-16">
+              <th rowSpan="2" className="text-center border border-base-300 min-w-10 font-semibold">
                 W<sub>AH</sub>
               </th>
-              <th rowSpan="2" className="text-center border border-base-300 min-w-16">
+              <th rowSpan="2" className="text-center border border-base-300 min-w-10 font-semibold">
                 W<sub>HH</sub>
               </th>
             </tr>
             <tr className="bg-gray-300">
-              <th className="text-center border border-base-300 min-w-12">U</th>
-              <th className="text-center border border-base-300 min-w-12">S</th>
-              <th className="text-center border border-base-300 min-w-12">T</th>
-              <th className="text-center border border-base-300 min-w-12">B</th>
-              <th className="text-center border border-base-300 min-w-20">
+              <th className="text-center border border-base-300 min-w-10 font-semibold">U</th>
+              <th className="text-center border border-base-300 min-w-10 font-semibold">S</th>
+              <th className="text-center border border-base-300 min-w-10 font-semibold">T</th>
+              <th className="text-center border border-base-300 min-w-10 font-semibold">B</th>
+              <th className="text-center border border-base-300 min-w-10 font-semibold">
                 Berangkat
               </th>
-              <th className="text-center border border-base-300 min-w-20">
+              <th className="text-center border border-base-300 min-w-10 font-semibold">
                 Datang
               </th>
-              <th className="text-center border border-base-300 min-w-20">
+              <th className="text-center border border-base-300 min-w-10 font-semibold">
                 Pejalan Kaki
               </th>
             </tr>
             <tr className="bg-gray-300 text-xs">
-              <th className="text-center border border-base-300">(m)</th>
-              <th className="text-center border border-base-300">(detik)</th>
-              <th className="text-center border border-base-300">(detik)</th>
-              <th className="text-center border border-base-300">(detik)</th>
-              <th className="text-center border border-base-300">(detik)</th>
-              <th className="text-center border border-base-300">
+              <th className="text-center border border-base-300 font-semibold">(m)</th>
+              <th className="text-center border border-base-300 font-semibold">(detik)</th>
+              <th className="text-center border border-base-300 font-semibold">(detik)</th>
+              <th className="text-center border border-base-300 font-semibold">(detik)</th>
+              <th className="text-center border border-base-300 font-semibold">(detik)</th>
+              <th className="text-center border border-base-300 font-semibold">
                 V<sub>bkr</sub>
               </th>
-              <th className="text-center border border-base-300">
+              <th className="text-center border border-base-300 font-semibold">
                 V<sub>dkt</sub>
               </th>
-              <th className="text-center border border-base-300">
+              <th className="text-center border border-base-300 font-semibold">
                 V<sub>pk</sub>
               </th>
-              <th className="text-center border border-base-300">(detik)</th>
-              <th className="text-center border border-base-300">(detik)</th>
-              <th className="text-center border border-base-300">(detik)</th>
-              <th className="text-center border border-base-300">(detik)</th>
-              <th className="text-center border border-base-300">(detik/siklus)</th>
+              <th className="text-center border border-base-300 font-semibold">(detik)</th>
+              <th className="text-center border border-base-300 font-semibold">(detik)</th>
+              <th className="text-center border border-base-300 font-semibold">(detik)</th>
+              <th className="text-center border border-base-300 font-semibold">(detik)</th>
+              <th className="text-center border border-base-300 font-semibold">(detik/siklus)</th>
             </tr>
           </thead>
           <tbody>
@@ -251,14 +251,14 @@ export default function VehicleDataTable () {
                     <td rowSpan="4" className="text-center border border-base-300 align-middle">
                       <input
                         type="text"
-                        className="input input-xs input-bordered w-full text-center font-semibold"
+                        className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full text-center font-semibold"
                         value={row.kode}
                         onChange={(e) => handleKodeChange(rowIndex, e.target.value)}
                       />
                       {/* {row.kode} */}
                     </td>
                   )}
-                  <td className="border border-base-300 p-2">
+                  <td className="border border-base-300">
                     <div className="text-xs text-base-content/70">
                       {jarakType.label}<sub>{jarakType.sub}</sub>
                     </div>
@@ -267,7 +267,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="0.1"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].pendekat.u}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'pendekat', 'u', e.target.value)
@@ -278,7 +278,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="0.1"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].pendekat.s}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'pendekat', 's', e.target.value)
@@ -289,7 +289,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="0.1"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].pendekat.t}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'pendekat', 't', e.target.value)
@@ -300,7 +300,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="0.1"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].pendekat.b}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'pendekat', 'b', e.target.value)
@@ -311,7 +311,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="0.1"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].kecepatan.berangkat}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'berangkat', e.target.value)
@@ -322,7 +322,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="0.1"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].kecepatan.datang}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'datang', e.target.value)
@@ -333,7 +333,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="0.1"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].kecepatan.pejalanKaki}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'pejalanKaki', e.target.value)
@@ -344,7 +344,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="0.01"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].waktuTempuh}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'waktuTempuh', null, e.target.value)
@@ -355,7 +355,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="0.01"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].wws}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'wws', null, e.target.value)
@@ -366,7 +366,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="1"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].wusDisarankan}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'wusDisarankan', null, e.target.value)
@@ -377,7 +377,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="1"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].wk}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'wk', null, e.target.value)
@@ -388,7 +388,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="1"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].wAll}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'wAll', null, e.target.value)
@@ -399,7 +399,7 @@ export default function VehicleDataTable () {
                     <input
                       type="number"
                       step="1"
-                      className="input input-xs input-bordered w-full min-w-18 text-center"
+                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
                       value={row.jarak[jarakType.key].wHijau}
                       onChange={(e) =>
                         handleInputChange(rowIndex, jarakType.key, 'wHijau', null, e.target.value)
