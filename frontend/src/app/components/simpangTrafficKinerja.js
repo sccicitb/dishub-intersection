@@ -45,15 +45,15 @@ const SimpangTrafficKinerja = () => {
   const directionData = getDirectionData();
 
   return (
-    <div className="p-2">
+    <div className="p-4">
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading...</div>}>
         <div className="mb-4">
-          <div className="form-control w-full flex flex-col gap-2 md:w-1/2">
+          <div className="form-control w-full flex flex-col gap-2 md:w-1/4">
             <label className="label">
               <span className="label-text font-medium">Kategori</span>
             </label>
             <select
-              className="select select-bordered"
+              className="select select-bordered focus:ring-0 focus:outline-0 select-sm"
               value={selectedCategory}
               onChange={handleCategoryChange}
             >

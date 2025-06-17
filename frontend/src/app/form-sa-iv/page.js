@@ -41,7 +41,7 @@ const FaseIVPage = () => {
 
   return (
     <div>
-      <div className="w-full p-4 text-xl">
+      <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
       <SurveyFormSAHeader />

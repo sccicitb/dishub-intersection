@@ -87,7 +87,7 @@ export default function Auth() {
 
         <form
           onSubmit={handleSubmit}
-          className="p-6 bg-white/90 shadow-md backdrop-blur-2xl rounded-3xl w-96 gap-2 flex flex-col pt-5 pb-5 z-10"
+          className="p-6 bg-white/90 shadow-md backdrop-blur-2xl rounded-2xl w-96 gap-2 flex flex-col pt-5 pb-5 z-10"
         >
           <div className="text-left gap-2 flex flex-col">
             <div className="flex items-center w-full justify-between">
