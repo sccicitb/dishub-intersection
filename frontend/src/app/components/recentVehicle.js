@@ -7,7 +7,7 @@ import { FixedSizeList as List } from "react-window";
 const Row = ({ index, style, data }) => {
   const event = data[index];
   return (
-    <div style={style} className="flex gap-2 items-center content-center">
+    <div style={style} className="flex gap-1 items-center content-center">
       <div className="w-1/3">
         {event.image && (
           <img
@@ -16,7 +16,7 @@ const Row = ({ index, style, data }) => {
             className="w-full h-24 object-cover"
           />
         ) || (
-            <div className="w-full h-24 bg-black/90 text-white flex items-center justify-center">
+            <div className="w-full h-20 bg-black/90 text-white flex items-center justify-center">
               No image
             </div>
           )}
@@ -24,13 +24,13 @@ const Row = ({ index, style, data }) => {
       </div>
       <div className="w-1/3 p-2">
         <div className="font-medium">{event.channel}</div>
-        <div className="text-sm">{event.time}</div>
-        <div className="text-sm">{event.triggerName}</div>
+        <div className="text-xs">{event.time}</div>
+        <div className="text-xs">{event.triggerName}</div>
       </div>
       <div className="w-1/3 p-2">
         <div className="font-medium">{event.type}</div>
-        <div className="text-sm">{event.origin}</div>
-        <div className="text-sm">{event.objectId}</div>
+        <div className="text-xs">{event.origin}</div>
+        <div className="text-xs">{event.objectId}</div>
       </div>
     </div>
   );
@@ -68,35 +68,35 @@ export default function RecentVehicle ({ customCSS, hg }) {
   }, []);
 
   return (
-    <div className="bg-[#314385]/10 h-full p-4 rounded-xl text-sm xl:max-w-3xl">
+    <div className="bg-[#314385]/10 h-full p-4 rounded-xl text-xs xl:max-w-3xl">
 
       <div className="grid grid-cols-3 gap-2">
         {/* <button className="btn bg-[#314385]/90 text-white">Snapshot</button> */}
-        <div title="snapshot" className="bg-[#314385]/90 text-white p-3 font-semibold rounded-xl inline-block text-center content-center">Snapshot</div>
-        <div title="Channel Time Trigger Name" className="bg-[#314385]/90 text-white p-3 font-semibold rounded-xl inline-block text-center content-center truncate">Channel Time Trigger Name</div>
-        <div title="Type Origin Object ID" className="bg-[#314385]/90 text-white p-3 font-semibold rounded-xl inline-block text-center content-center truncate">Type Origin Object ID</div>
+        <div title="snapshot" className="bg-[#314385]/90 text-white p-2 font-semibold rounded-xl inline-block text-center content-center">Snapshot</div>
+        <div title="Channel Time Trigger Name" className="bg-[#314385]/90 text-white p-2 font-semibold rounded-xl inline-block text-center content-center truncate">Channel Time Trigger Name</div>
+        <div title="Type Origin Object ID" className="bg-[#314385]/90 text-white p-2 font-semibold rounded-xl inline-block text-center content-center truncate">Type Origin Object ID</div>
       </div>
       <div className="flex gap-2 my-2 items-center">
         <div className="relative flex-1">
           <input
             type="text"
             placeholder="Search recent events"
-            className="w-full border rounded-md input input-md bg-transparent"
+            className="w-full border rounded-md input input-sm bg-transparent"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           {/* <Search className="absolute right-3 top-2 text-gray-400" size={20} /> */}
         </div>
-        <button className="bg-gray-800 text-white btn btn-md rounded-md">
+        <button className="bg-gray-800 text-white btn btn-sm rounded-md">
           Clear
         </button>
       </div>
 
       <div className={`pr-2 overflow-y-auto`}>
         <List
-          height={hg ? hg : 300} // tinggi container
+          height={hg ? hg : 350} // tinggi container
           itemCount={Array.isArray(dataVehicle) ? dataVehicle.length : 0}
-          itemSize={100} // tinggi tiap item (px)
+          itemSize={80} // tinggi tiap item (px)
           width={"100%"}
           itemData={dataVehicle}
         >
@@ -121,13 +121,13 @@ export default function RecentVehicle ({ customCSS, hg }) {
           </div>
           <div className="w-1/3 p-2">
             <div className="font-medium">{event.channel}</div>
-            <div className="text-sm">{event.time}</div>
-            <div className="text-sm">{event.triggerName}</div>
+            <div className="text-xs">{event.time}</div>
+            <div className="text-xs">{event.triggerName}</div>
           </div>
           <div className="w-1/3 p-2">
             <div className="font-medium">{event.type}</div>
-            <div className="text-sm">{event.origin}</div>
-            <div className="text-sm">{event.objectId}</div>
+            <div className="text-xs">{event.origin}</div>
+            <div className="text-xs">{event.objectId}</div>
           </div>
         </div>
       ))} */}

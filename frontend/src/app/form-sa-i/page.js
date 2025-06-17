@@ -41,7 +41,7 @@ const FormSAIPage = () => {
   return (
     <div>
       <div>
-        <div className="w-56 px-3">
+        {/* <div className="w-56 px-3">
           <fieldset className="fieldset">
             <legend className="fieldset-legend">Lokasi</legend>
             <select
@@ -57,9 +57,9 @@ const FormSAIPage = () => {
               }
             </select>
           </fieldset>
-        </div>
+        </div> */}
       </div>
-      <div className="w-full p-4 text-xl">
+      <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
       <SurveyFormSAHeader />
