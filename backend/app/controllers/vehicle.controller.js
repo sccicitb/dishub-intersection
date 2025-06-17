@@ -3,10 +3,11 @@ const Vehicle = require("../models/vehicle.model.js");
 const { getArusStatus, countArus } = require("../helpers/arus");
 
 const simpangMap = {
-  5: 'tempel',
-  2: 'prambanan',
-  4: 'piyungan',
-  3: 'glagah',
+  2: 'prambanan',    // handles east AND south directions
+  3: 'glagah',       // handles west direction  
+  5: 'tempel',       // handles north direction
+  7: 'piyungan',     // handles east direction
+  // Note: ID_Simpang = 1 (Simpang Utara) is inactive - no cameras, no data
 };
 
 exports.findAll = (req, res) => {
