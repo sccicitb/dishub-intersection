@@ -22,7 +22,7 @@ const TrafficSurveyTable = () => {
       // Render rows for each direction
       directionData.rows.forEach((row, rowIndex) => {
         rows.push(
-          <tr key={`${dirIndex}-${rowIndex}`} className="border-b border-gray-300">
+          <tr key={`${dirIndex}-${rowIndex}`} className=" border-gray-300">
             {/* Direction column (only for first row of each direction) */}
             {rowIndex === 0 && (
               <td
@@ -34,7 +34,7 @@ const TrafficSurveyTable = () => {
             )}
 
             {/* Type column */}
-            <td className="border-r border-gray-300 px-2 py-1 text-sm font-medium bg-blue-50">
+            <td className="border-r border-gray-300 px-2 py-1 text-xs bg-blue-50">
               {row.type}
             </td>
 
@@ -100,51 +100,51 @@ const TrafficSurveyTable = () => {
 
       // Add subtotal row
       rows.push(
-        <tr key={`subtotal-${dirIndex}`} className="bg-gray-100 font-semibold border-b-2 border-gray-400">
-          <td className="border-r border-gray-300 px-2 py-1 text-sm font-bold">
+        <tr key={`subtotal-${dirIndex}`} className="bg-gray-100 font-semibold border-gray-400">
+          <td className="border-r border-gray-300 px-2 py-1 text-xs">
             Total
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.mp.terlindung}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.mp.terlindung}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.mp.terlawan}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.ks.terlindung}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.ks.terlindung}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.ks.terlawan}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.sm.terlindung}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.sm.smpTerlindung}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.sm.smpTerlawan}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.total.terlindung}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.total.smpTerlindung}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.total.smpTerlawan}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold"></td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-bold">
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold"></td>
+          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.ktb}
           </td>
-          <td className="px-1 py-1 text-xs text-center font-bold bg-gray-200">
+          <td className="px-1 py-1 text-xs text-center font-semibold bg-gray-200">
             {directionData.subtotal.rktb}
           </td>
         </tr>
@@ -156,126 +156,126 @@ const TrafficSurveyTable = () => {
 
   return (
     <div className="w-full p-4 overflow-x-auto">
-      <div className="bg-white rounded-lg shadow-lg">
-        <div className="p-4 bg-gray-50 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Survey Lalu Lintas Harian</h2>
-          <p className="text-sm text-gray-600 mt-1">Data kendaraan berdasarkan arah pergerakan</p>
+      <div className="p-2">
+        <div className="py-4">
+          <h2 className="text-[20px] font-normal text-gray-800">Form SA-II</h2>
+          <p className="text-xs text-gray-600 mt-1">Data kendaraan berdasarkan arah pergerakan</p>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-400 text-xs table table-xs">
+          <table className="w-full border border-gray-400 text-xs table table-xs">
             <thead className="text-center">
               {/* Header Row 1 */}
               <tr className="bg-gray-200 ">
-                <th rowSpan={6} className="border border-gray-400 px-2 py-3 text-sm font-bold min-w-[60px]">
+                <th rowSpan={6} className="border border-gray-400 px-2 py-3 text-xs font-semibold min-w-[60px]">
                   Kode Pendekat
                 </th>
-                <th rowSpan={6} className="border border-gray-400 px-2 py-3 text-sm font-bold min-w-[80px]">
+                <th rowSpan={6} className="border border-gray-400 px-2 py-3 text-xs font-semibold min-w-[80px]">
                   Arah
                 </th>
-                <th colSpan={13} className="border border-gray-400 px-2 py-2 text-sm font-bold bg-blue-100">
+                <th colSpan={13} className="border border-gray-400 px-2 py-2 text-xs font-semibold bg-gray-200">
                   KENDARAAN BERMOTOR
                 </th>
-                <th colSpan={2} className="border border-gray-400 px-2 py-2 text-sm font-bold bg-green-100">
+                <th colSpan={2} className="border border-gray-400 px-2 py-2 text-xs font-semibold bg-gray-200">
                   KEND. TAK BERMOTOR
                 </th>
               </tr>
 
               {/* Header Row 2 */}
               <tr className="bg-gray-200">
-                <th colSpan={3} className="border border-gray-400 px-1 py-2 text-xs font-bold">
+                <th colSpan={3} className="border border-gray-400 px-1 py-2 text-xs font-semibold">
                   Mobil Penumpang (MP)
                 </th>
-                <th colSpan={3} className="border border-gray-400 px-1 py-2 text-xs font-bold">
+                <th colSpan={3} className="border border-gray-400 px-1 py-2 text-xs font-semibold">
                   Kendaraan Sedang (KS)
                 </th>
-                <th colSpan={3} className="border border-gray-400 px-1 py-2 text-xs font-bold">
+                <th colSpan={3} className="border border-gray-400 px-1 py-2 text-xs font-semibold">
                   Sepeda Motor (SM)
                 </th>
-                <th colSpan={3} rowSpan={3} className="border border-gray-400 px-1 py-2 text-xs font-bold">
+                <th colSpan={3} rowSpan={3} className="border border-gray-400 px-1 py-2 text-xs font-semibold">
                   Total Kendaraan Bermotor
                 </th>
-                <th rowSpan={5} className="border border-gray-400 px-1 py-1 text-xs font-bold">
+                <th rowSpan={5} className="border border-gray-400 px-1 py-1 text-xs font-semibold">
                   Rasio Belok Kendaraan
                 </th>
-                <th rowSpan={5} className="border border-gray-400 px-1 py-2 text-xs font-bold">
+                <th rowSpan={5} className="border border-gray-400 px-1 py-2 text-xs font-semibold">
                   KTB
                 </th>
-                <th rowSpan={5} className="border border-gray-400 px-1 py-2 text-xs font-bold">
+                <th rowSpan={5} className="border border-gray-400 px-1 py-2 text-xs font-semibold">
                   RKTB
                 </th>
               </tr>
 
               {/* Header Row 3 */}
               <tr className="bg-gray-200 text-center">
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={2}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={2}>
                   EMP<sub>terlindung</sub>
                 </th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={1}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={1}>
                   1
                 </th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={2}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={2}>
                   EMP<sub>terlindung</sub>
                 </th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={1}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={1}>
                   1,3
                 </th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={2}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={2}>
                   EMP<sub>terlindung</sub>
                 </th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={1}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={1}>
                   1,5
                 </th>
               </tr>
 
               {/* Header Row 4 */}
               <tr className="bg-gray-200 text-center">
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={2}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={2}>
                   EMP<sub>terlindung</sub>
                 </th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={1}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={1}>
                   1
                 </th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={2}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={2}>
                   EMP<sub>terlindung</sub>
                 </th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={1}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={1}>
                   1,3
                 </th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={2}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={2}>
                   EMP<sub>terlindung</sub>
                 </th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" colSpan={1}>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={1}>
                   1,5
                 </th>
               </tr>
 
               {/* Column Headers */}
-              <tr className="bg-gray-300">
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" rowSpan={2}>kend/jam</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">terlindung</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">terlawan</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" rowSpan={2}>kend/jam</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">terlindung</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">terlawan</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" rowSpan={2}>kend/jam</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">terlindung</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">terlawan</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold" rowSpan={2}>kend/jam</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">terlindung</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">terlawan</th>
+              <tr className="bg-gray-200">
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" rowSpan={2}>kend/jam</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">terlindung</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">terlawan</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" rowSpan={2}>kend/jam</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">terlindung</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">terlawan</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" rowSpan={2}>kend/jam</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">terlindung</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">terlawan</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" rowSpan={2}>kend/jam</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">terlindung</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">terlawan</th>
               </tr>
 
                 {/* Column Headers */}
-              <tr className="bg-gray-300">
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">SMP/jam</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">SMP/jam</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">SMP/jam</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">SMP/jam</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">SMP/jam</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">SMP/jam</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">SMP/jam</th>
-                <th className="border border-gray-400 px-1 py-1 text-xs font-bold">SMP/jam</th>
+              <tr className="bg-gray-200">
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">SMP/jam</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">SMP/jam</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">SMP/jam</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">SMP/jam</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">SMP/jam</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">SMP/jam</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">SMP/jam</th>
+                <th className="border border-gray-400 px-1 py-1 text-xs font-semibold">SMP/jam</th>
               </tr>
 
               {/* Row Numbers */}
@@ -304,23 +304,6 @@ const TrafficSurveyTable = () => {
               {renderTableRows()}
             </tbody>
           </table>
-        </div>
-
-        <div className="p-4 bg-gray-50 border-t">
-          <div className="flex flex-wrap gap-4 text-xs text-gray-600">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-100 border"></div>
-              <span>Kendaraan Bermotor</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-100 border"></div>
-              <span>Kendaraan Tak Bermotor</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-50 border"></div>
-              <span>Data Utama</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

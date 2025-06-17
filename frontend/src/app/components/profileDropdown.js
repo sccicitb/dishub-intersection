@@ -45,16 +45,16 @@ export default function NavbarUserDropdown() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-fit rounded-md shadow-lg bg-base-100 z-50">
           <div role="menu" aria-orientation="vertical">
-            <div className=" text-sm border-b border-base-300 p-4">
+            <div className=" text-xs border-b border-base-300 p-4">
               <p className="font-medium">Admin User</p>
-              <p className="text-sm text-gray-500">viana@dishub.jogjaprov.go.id</p>
+              <p className="text-xs text-gray-500">viana@dishub.jogjaprov.go.id</p>
             </div>
             
             <div className="flex flex-col p-1">
               <ThemeToggle classCustom=" rounded-none "/>
             
             {/*             
-            <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <Link href="/profile" className="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100">
               Profile
             </Link> */}
             {/* <hr className="border-t border-gray-200" /> */}
