@@ -70,7 +70,7 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 7 AND dari_arah = 'east') THEN 1
+            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
             WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'south') THEN 1
             ELSE 0
@@ -81,7 +81,7 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 7 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
+            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'south' AND dari_arah IN ('east', 'north', 'west')) THEN 1
             ELSE 0
@@ -109,7 +109,7 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 7 AND dari_arah = 'east') THEN 1
+            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
             WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'south') THEN 1
             ELSE 0
@@ -120,7 +120,7 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 7 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
+            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'south' AND dari_arah IN ('east', 'north', 'west')) THEN 1
             ELSE 0
@@ -159,7 +159,7 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
           CASE
             WHEN ID_Simpang = 5 AND dari_arah = 'north' THEN 'north'
             WHEN ID_Simpang = 2 AND dari_arah = 'east' THEN 'east'
-            WHEN ID_Simpang = 7 AND dari_arah = 'east' THEN 'east'
+            WHEN ID_Simpang = 4 AND dari_arah = 'east' THEN 'east'
             WHEN ID_Simpang = 3 AND dari_arah = 'west' THEN 'west'
             WHEN ID_Simpang = 2 AND dari_arah = 'south' THEN 'south'
           END AS arah,
@@ -170,7 +170,7 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
           AND (
             (ID_Simpang = 5 AND dari_arah = 'north') OR
             (ID_Simpang = 2 AND dari_arah = 'east') OR
-            (ID_Simpang = 7 AND dari_arah = 'east') OR
+            (ID_Simpang = 4 AND dari_arah = 'east') OR
             (ID_Simpang = 3 AND dari_arah = 'west') OR
             (ID_Simpang = 2 AND dari_arah = 'south')
           )
@@ -181,7 +181,7 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
           CASE
             WHEN ID_Simpang = 5 AND ke_arah = 'north' THEN 'north'
             WHEN ID_Simpang = 2 AND ke_arah = 'east' THEN 'east'
-            WHEN ID_Simpang = 7 AND ke_arah = 'east' THEN 'east'
+            WHEN ID_Simpang = 4 AND ke_arah = 'east' THEN 'east'
             WHEN ID_Simpang = 3 AND ke_arah = 'west' THEN 'west'
             WHEN ID_Simpang = 2 AND ke_arah = 'south' THEN 'south'
           END AS arah,
@@ -192,7 +192,7 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
           AND (
             (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) OR
             (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) OR
-            (ID_Simpang = 7 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) OR
+            (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) OR
             (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) OR
             (ID_Simpang = 2 AND ke_arah = 'south' AND dari_arah IN ('east', 'north', 'west'))
           )
@@ -219,7 +219,7 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 7 AND dari_arah = 'east') THEN 1
+            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
             WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'south') THEN 1
             ELSE 0
@@ -230,7 +230,7 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 7 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
+            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'south' AND dari_arah IN ('east', 'north', 'west')) THEN 1
             ELSE 0
@@ -263,7 +263,7 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 7 AND dari_arah = 'east') THEN 1
+            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
             WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
             WHEN (ID_Simpang = 2 AND dari_arah = 'south') THEN 1
             ELSE 0
@@ -274,7 +274,7 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
           CASE
             WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 7 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
+            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
             WHEN (ID_Simpang = 2 AND ke_arah = 'south' AND dari_arah IN ('east', 'north', 'west')) THEN 1
             ELSE 0
