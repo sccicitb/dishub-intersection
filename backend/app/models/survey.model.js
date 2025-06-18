@@ -165,9 +165,11 @@ async function getDailySummaryByDateRange(filters, includedSubCodes, startDate, 
 
   // Tambahkan kolom total dan mapping alias
   return rows.map(row => ({
-    date: row.date,
-    ...mapRowToAlias(row, includedSubCodes)
-  }));
+  date: row.date instanceof Date
+    ? row.date.toISOString().slice(0, 10)  // ✅ format 'YYYY-MM-DD'
+    : row.date,
+  ...mapRowToAlias(row, includedSubCodes)
+}));
 }
 
 /**
