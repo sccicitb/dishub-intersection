@@ -1035,7 +1035,7 @@ const ManajemenKamera = () => {
         <div className={`grid ${fullSize ? 'grid-cols-1' : 'xl:grid-cols-3 grid-cols-1'} h-fit gap-4`}>
           {/* Camera Management Section */}
           <div className={`w-full ${fullSize ? 'col-span-1' : 'xl:col-span-2'} bg-[#314385]/10 rounded-xl p-4 h-full flex flex-col gap-5`}>
-            <h3 className='text-lg font-medium mb-2'>Select Layout</h3>
+            {/* <h3 className='text-lg font-medium mb-2'>Select Layout</h3>
             <div className='w-full overflow-x-auto'>
               <div className="flex gap-2 min-w-max">
                 <div className={isMobile ? 'opacity-50 pointer-events-none' : ''}>
@@ -1066,7 +1066,7 @@ const ManajemenKamera = () => {
               {mergedCameraData.length > 0 && (
                 <CameraPosition layout={layout} streamData={streamData} urlData={videoStream} />
               )}
-            </div>
+            </div> */}
 
             <CameraActive
               onOptionChange={handleCameraSelect}
@@ -1237,7 +1237,7 @@ const ManajemenKamera = () => {
                     </table>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 mt-5 w-full">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-5 w-full">
                     {
                       filteredBuildings?.map((dataCamera, index) => {
                         const firstCamera = dataCamera?.camera?.[0];
@@ -1290,7 +1290,7 @@ const ManajemenKamera = () => {
 
           {/* Recent Vehicle Section */}
           {!fullSize && (
-            <RecentVehicle customCSS={'h-[500px] xl:h-[1000px] max-h-full'} />
+            <RecentVehicle hg={400} />
           )}
         </div>
 
