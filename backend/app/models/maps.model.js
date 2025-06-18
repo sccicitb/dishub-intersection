@@ -1,4 +1,4 @@
-// app/models/maps.model.jsa
+// app/models/maps.model.js
 const db = require('../config/db');
 
 // Sudah ada
