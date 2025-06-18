@@ -23,6 +23,7 @@ function SurveiLhrkPage () {
   const [vehicleData, setVehicleData] = useState([]);
   const [activeSimpangId, setActiveSimpangId] = useState(0)
   const [activeCamera, setActiveCamera] = useState(1);
+  const [activeSID, setActiveSID] = useState(1);
   const [activeTitle, setActiveTitle] = useState("Survei LHRK")
 
 
@@ -94,10 +95,11 @@ function SurveiLhrkPage () {
 
   function handleClickSimpang (loc) {
     let name = loc.name
-    if(!name.toLowerCase().includes("simpang")) {
+    if (!name.toLowerCase().includes("simpang")) {
       name = "Simpang " + name
     }
     setActiveTitle("Survei " + name);
+    setActiveSID(loc.id)
     setActiveSimpangId(loc.id)
   }
   return (
@@ -133,7 +135,7 @@ function SurveiLhrkPage () {
             />
           </div> */}
           {loading ? (<div className='my-5'>Loading...</div>) : (
-            <VehicleTable activeCamera={activeCamera} activeInterval={activeInterval} activePendekatan={activePendekatan} activePergerakan={activePergerakan} activeClassification={activeClassification} />
+            <VehicleTable activeCamera={activeSID} activeInterval={activeInterval} activePendekatan={activePendekatan} activePergerakan={activePergerakan} activeClassification={activeClassification} />
           )}
           <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval} />
         </div>

@@ -89,16 +89,18 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
     <div className="mx-auto">
       <h2 className="text-xl font-bold mb-4">Data Pemantauan Kendaraan</h2>
 
-      <div className="tabs tabs-boxed mb-4 gap-4 flex">
-        <div className="flex gap-5 items-center">
-          <label className="mr-2 font-medium">Pilih Tanggal:</label>
-          <input
-            type="date"
-            className="border rounded px-2 py-1"
-            value={dateInput}
-            onChange={(e) => setDateInput(e.target.value)}
-          />
-        </div>
+      <div className="tabs tabs-boxed mb-4 space-x-5 flex px-5">
+        {activeTab === 'hourly' && (
+          <div className="flex gap-5 items-center w-fit">
+            <label className="mr-2 font-medium">Pilih Tanggal:</label>
+            <input
+              type="date"
+              className="border rounded px-2 py-1"
+              value={dateInput}
+              onChange={(e) => setDateInput(e.target.value)}
+            />
+          </div>
+        )}
         {['hourly', 'monthly', 'dailyMonth', 'dailyRange', 'yearly'].map((tab) => (
           <button
             key={tab}
@@ -108,7 +110,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
             {{
               hourly: 'Data Harian Per Hari',
               monthly: 'Data Bulanan',
-              dailyMonth: 'Data Tahunan dan Bulanan',
+              dailyMonth: 'Data Harian per Bulan',
               dailyRange: 'Data Harian',
               yearly: 'Data Tahunan'
             }[tab]}
@@ -117,12 +119,22 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
       </div>
 
       <div className="rounded-lg">
-        {/* {loading ? (
-          <div className='my-5'>Loading...</div>
-        ) : ( */}
-        {/* <> */}
-        {activeTab === 'hourly' && <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} />}
-        {activeTab === 'monthly' && <MonthlyVehicleTable monthlyData={vehicleData} selectedYear={selectedYear} setSelectedYear={setSelectedYear} loading={loading}/>}
+        {!loading ? (
+          <>
+            {activeTab === 'hourly' && (
+              <HourVehicleTable
+                statusHour={true}
+                vehicleData={vehicleData}
+                classification={activeClassification}
+                pdf={false}
+              />
+            )}
+          </>
+        ) : (
+          <div className="m-5">Loading data...</div>
+        )}
+
+        {activeTab === 'monthly' && <MonthlyVehicleTable monthlyData={vehicleData} selectedYear={selectedYear} setSelectedYear={setSelectedYear} loading={loading} />}
         {activeTab === 'dailyMonth' &&
           <DaysVehicleTable
             setStartDate={setStartDate}
@@ -152,7 +164,9 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
             type={activeTab}
           />
         }
-        {activeTab === 'yearly' && <YearVehicleTable yearlyData={vehicleData} />}
+        {activeTab === 'yearly' && <YearVehicleTable yearlyData={vehicleData}
+          setStartDate={setStartDate} startDate={startDate}
+        />}
         {/* </> */}
         {/* )} */}
       </div>

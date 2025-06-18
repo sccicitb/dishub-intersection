@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
 // import yearlyData from '@/data/DataTableYear.json';
 
-const YearlyVehicleTable = ({ yearlyData }) => {
+const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
   const [vehicleData, setVehicleData] = useState({ yearlyData: [], lhrtData: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!yearlyData) return null;
+    if (!yearlyData) return;
     setVehicleData(yearlyData);
   }, [yearlyData]);
+
+  // Handle date change
+  const handleDateChange = (e) => {
+    const selectedDate = e.target.value;
+    if (setStartDate) {
+      setStartDate(selectedDate);
+    }
+  };
+
+  // Get current date in YYYY-MM-DD format
+  const getCurrentDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
 
   if (loading) {
     return <div className="flex justify-center p-8">
@@ -69,6 +83,19 @@ const YearlyVehicleTable = ({ yearlyData }) => {
 
   return (
     <div className="mx-auto p-4 overflow-x-auto">
+      <div className="flex flex-col w-fit mb-2">
+        <label htmlFor="startDate" className="text-sm font-medium text-gray-700 mb-2">
+          Pilih Tanggal Mulai:
+        </label>
+        <input
+          type="date"
+          id="startDate"
+          value={startDate || getCurrentDate()}
+          onChange={handleDateChange}
+          className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
+          max={getCurrentDate()}
+        />
+      </div>
       <table className="table-auto border-collapse border border-base-300 w-full">
         <thead>
           <tr className="bg-base-300">
