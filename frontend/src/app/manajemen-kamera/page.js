@@ -708,6 +708,7 @@ const ManajemenKamera = () => {
 
 
   const handleSelectCameras = (id, select, data) => {
+    console.log(data)
     if (!select) return console.error("select tidak diketahui")
     setActionDialog(select)
 
@@ -1210,14 +1211,19 @@ const ManajemenKamera = () => {
                               <td>
                                 <div className="flex gap-2 justify-center">
                                   <button
-                                    className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                    onClick={() => handleSelectCameras(cam.id, 'edit_cameras', cam)}
+                                    className={`p-1 hover:bg-transparent focus:outline-none cursor-pointer`}
+                                    onClick={() => {
+                                      handleSelectCameras(cam.id, 'edit_cameras', cam)
+                                    }}
                                   >
                                     <FaPencil className="text-green-300 text-lg" />
                                   </button>
                                   <button
-                                    className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                    onClick={() => handleSelectCameras(cam.id, 'delete_cameras')}
+                                    className={`p-1 hover:bg-transparent focus:outline-none ${cam.socket_event === "not_yet_assign" ? "cursor-pointer" : "btn-disabled cursor-not-allowed"}`}
+                                    onClick={() => {
+                                      if (cam.socket_event !== "not_yet_assign") return;
+                                      handleSelectCameras(cam.id, 'delete_cameras')
+                                    }}
                                   >
                                     <FaTrashCan className="text-red-300 text-lg" />
                                   </button>
