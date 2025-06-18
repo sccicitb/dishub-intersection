@@ -28,14 +28,14 @@ function mapRowToAlias(row, includedSubCodes) {
   return data;
 }
 
-const getVehicleDataGrouped = async ({ cameraId, approach, direction, date }, includedSubCodes, interval = '15min') => {
+const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, includedSubCodes, interval = '15min') => {
   let query = `SELECT waktu, ${includedSubCodes.join(', ')} FROM arus WHERE waktu IS NOT NULL`;
   const params = [];
 
   // Filter kamera, pendekatan, arah
-  if (cameraId) {
+  if (simpangId) {
     query += ` AND ID_Simpang = ?`;
-    params.push(cameraId);
+    params.push(simpangId);
   }
   if (approach && approach.toLowerCase() !== 'semua') {
     query += ` AND dari_arah = ?`;
@@ -130,7 +130,7 @@ const getArusSummaryGrid = async (ID_Simpang, jenisKendaraanDB, queryDate) => {
 
 /**
  * 1. Ambil agregasi per hari berdasarkan rentang tanggal.
- *    filters: { cameraId, approach, direction }
+ *    filters: { simpangId, approach, direction }
  *    includedSubCodes: array of column‐names di DB (misal ['SM','MP','AUP', …])
  *    startDate, endDate: 'YYYY-MM-DD'
  *
@@ -147,9 +147,9 @@ async function getDailySummaryByDateRange(filters, includedSubCodes, startDate, 
              WHERE waktu BETWEEN ? AND ?`;
   const params = [`${startDate} 00:00:00`, `${endDate} 23:59:59`];
 
-  if (filters.cameraId) {
+  if (filters.simpangId) {
     sql += ` AND ID_Simpang = ?`;
-    params.push(filters.cameraId);
+    params.push(filters.simpangId);
   }
   if (filters.approach && filters.approach.toLowerCase() !== 'semua') {
     sql += ` AND dari_arah = ?`;
@@ -259,9 +259,9 @@ async function getYearlySummary(startDateObj, filters, includedSubCodes, numYear
     const sumFields = includedSubCodes.map(code => `SUM(\`${code}\`) AS \`${code}\``).join(', ');
     let sql = `SELECT ${sumFields} FROM arus WHERE waktu >= ? AND waktu < ?`;
     const params = [startSql, endSql];
-    if (filters.cameraId) {
+    if (filters.simpangId) {
       sql += ` AND ID_Simpang = ?`;
-      params.push(filters.cameraId);
+      params.push(filters.simpangId);
     }
     if (filters.approach && filters.approach.toLowerCase() !== 'semua') {
       sql += ` AND dari_arah = ?`;
