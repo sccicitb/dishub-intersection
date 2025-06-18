@@ -1077,7 +1077,7 @@ const ManajemenKamera = () => {
             >
               <div className="h-[40vh] overflow-y-auto my-5">
                 {optionCamera === "peta" ? (
-                  <MapComponent sizeHeight={"35vh"} />
+                  <MapComponent sizeHeight={"35vh"} onClick={() => { }} onClickSimpang={() => { }} />
                 ) : optionCamera === "daftar" ? (
                   <div className="overflow-x-auto w-full bg-base-200 mt-5">
                     <table className="table">
