@@ -2,18 +2,32 @@
 const fs = require('fs');
 const path = require('path');
 const subCodeMap = require('../helpers/subCodeMap');
+const JENIS_KENDARAAN = Object.values(subCodeMap);
 const { getPeriodsAndSlots } = require('../helpers/arus');
 const { getSubCodes } = require('../helpers/classificationHelper');
 const { getIntervals } = require('../helpers/timeHelper');
 const surveyModel = require('../models/survey.model');
 const mapsModel = require('../models/maps.model');
 
+const ROWS = [
+  { row: 'row1', turn: 'left' },
+  { row: 'row2', turn: 'straight' },
+  { row: 'row3', turn: 'right' }
+];
+
+const TURN_MAP = {
+  north: { left: 'west', straight: 'south', right: 'east' },
+  south: { left: 'east', straight: 'north', right: 'west' },
+  east:  { left: 'north', straight: 'west', right: 'south' },
+  west:  { left: 'south', straight: 'east', right: 'north' }
+};
+
 /**
  * GET /api/surveys/data-summary
  * Query string:
  *   - reportType: 'hourly' (default existing), 
  *                 'dailyRange', 'dailyMonth', 'monthly', 'yearly'
- *   - camera_id, approach, direction, classification (seperti semula)
+ *   - simpang_id, approach, direction, classification (seperti semula)
  *   - interval: '15min' | '1h' (bila reportType=hourly)
  *   - startDate, endDate        (bila dailyRange)
  *   - month, year               (bila dailyMonth atau monthly)
@@ -24,7 +38,7 @@ const getVehicleSummaryData = async (req, res) => {
   try {
     // --- 1. Baca filter dasar ---
     const filters = {
-      cameraId: req.query.camera_id,
+      simpangId: req.query.simpang_id,
       approach: req.query.approach,
       direction: req.query.direction,
       classificationType: req.query.classification || 'luar_kota'
@@ -50,7 +64,7 @@ const getVehicleSummaryData = async (req, res) => {
 
       // Panggil model lama
       const data = await surveyModel.getVehicleDataGrouped(
-        { cameraId: filters.cameraId, approach: filters.approach, direction: filters.direction, date }, 
+        { simpangId: filters.simpangId, approach: filters.approach, direction: filters.direction, date }, 
         includedSubCodes, 
         interval
       );
@@ -67,7 +81,7 @@ const getVehicleSummaryData = async (req, res) => {
       }
       // Panggil helper baru:
       const dailyRows = await surveyModel.getDailySummaryByDateRange(
-        { cameraId: filters.cameraId, approach: filters.approach, direction: filters.direction },
+        { simpangId: filters.simpangId, approach: filters.approach, direction: filters.direction },
         includedSubCodes,
         startDate,
         endDate
@@ -89,7 +103,7 @@ const getVehicleSummaryData = async (req, res) => {
       // Panggil getMonthlySummary untuk satu bulan
       const oneMonthData = await surveyModel.getMonthlySummary(
         month, year,
-        { cameraId: filters.cameraId, approach: filters.approach, direction: filters.direction },
+        { simpangId: filters.simpangId, approach: filters.approach, direction: filters.direction },
         includedSubCodes
       );
       // Sesuai DataTableDaysMonth.json: dailyData berbentuk array, disini hanya satu elemen bulannya
@@ -121,7 +135,7 @@ const getVehicleSummaryData = async (req, res) => {
       for (const m of monthList) {
         const oneMonthData = await surveyModel.getMonthlySummary(
           m, year,
-          { cameraId: filters.cameraId, approach: filters.approach, direction: filters.direction },
+          { simpangId: filters.simpangId, approach: filters.approach, direction: filters.direction },
           includedSubCodes
         );
         allMonthsData.push(oneMonthData);
@@ -167,7 +181,7 @@ const getVehicleSummaryData = async (req, res) => {
       }
       const { yearlyData, lhrtData } = await surveyModel.getYearlySummary(
         startDateObj,
-        { cameraId: filters.cameraId, approach: filters.approach, direction: filters.direction },
+        { simpangId: filters.simpangId, approach: filters.approach, direction: filters.direction },
         includedSubCodes,
         numYears
       );

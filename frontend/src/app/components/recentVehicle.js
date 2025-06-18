@@ -36,7 +36,7 @@ const Row = ({ index, style, data }) => {
   );
 };
 
-export default function RecentVehicle ({ customCSS, hg }) {
+export default function RecentVehicle ({ hg }) {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

@@ -59,7 +59,8 @@ export const logCamera = {
 export const survey = {
   //daillyRange, dailyMonth, monthly, yearly
   getAll: (camera_id, date, interval, approach, classification, reportType, direction, month, year, startDate, endDate) => {
-    let params = [`camera_id=${camera_id}`, `date=${date}`];
+    // let params = [`camera_id=${camera_id}`, `date=${date}`];
+    let params = [`simpang_id=${camera_id}`, `date=${date}`];
 
     if (interval) params.push(`interval=${interval}`);
     if (approach) params.push(`approach=${approach}`);
@@ -76,6 +77,9 @@ export const survey = {
     }
     if (reportType === 'monthly' && year) {
       params.push(`year=${year}`);
+    }
+    if (reportType === 'yearly' && startDate) {
+      params.push(`startDate=${startDate}`);
     }
 
     return getRequest(`/surveys/data-summary?${params.join('&')}`);

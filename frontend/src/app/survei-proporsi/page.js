@@ -250,16 +250,16 @@ function SurveiProporsi () {
   // }, [activeCamera, selectedCategory, dateInput]);
 
   useEffect(() => {
-    if (activeCamera && selectedCategory && dateInput) {
-      fetchSurveyProporsi(activeCamera, selectedCategory, formatDateToYMDForAPI(dateInput));
+    if (activeSimpangId && selectedCategory && dateInput) {
+      fetchSurveyProporsi(activeSimpangId, selectedCategory, formatDateToYMDForAPI(dateInput));
       // Pass dateInput untuk filter tanggal
       getLogCamera(activeCamera, dateInput);
     }
-  }, [activeCamera, selectedCategory, dateInput]);
+  }, [activeSimpangId, activeCamera, selectedCategory, dateInput]);
 
   function handleClickSimpang (loc) {
     let name = loc.name
-    if(!name.toLowerCase().includes("simpang")) {
+    if (!name.toLowerCase().includes("simpang")) {
       name = "Simpang " + name
     }
     setActiveTitle("Survei " + name);
@@ -272,7 +272,7 @@ function SurveiProporsi () {
       console.warn("Invalid building or camera data", building);
       return;
     }
-    
+
     try {
       setActiveSimpang(building.camera.title);
       setActiveCamera(building.camera.camera_id);

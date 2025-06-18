@@ -301,14 +301,15 @@ function SurveiSimpangPage () {
 
       console.log("Setting camera:", { cameraId, cameraTitle, socketEvent, building });
 
-      
+
       // Cek apakah camera yang dipilih adalah "not_yet_assign"
       if (socketEvent === "not_yet_assign") {
         setCamStandard(cameraId);
         setVehicleData([]);
       } else {
+        setActiveCamera(cameraId)
         setActiveSimpang(cameraTitle);
-        fetchVehicleData(cameraId);
+        // fetchVehicleData(cameraId);
       }
     } catch (error) {
       console.error("Error in handleClick:", error);
@@ -326,6 +327,7 @@ function SurveiSimpangPage () {
       name = "Simpang " + name
     }
     setActiveTitle("Survei " + name);
+    fetchVehicleData(loc.id);
     setActiveSimpangId(loc.id)
   }
 

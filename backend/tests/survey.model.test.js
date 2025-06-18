@@ -28,7 +28,7 @@ describe('Unit Test: getVehicleDataGrouped with interval', () => {
       }
     ]);
 
-    const filters = { cameraId: null, approach: null, direction: null, date: '2025-05-26' };
+    const filters = { simpangId: null, approach: null, direction: null, date: '2025-05-26' };
     const includedSubCodes = ['SM', 'MP', 'AUP'];
 
     const result = await surveyModel.getVehicleDataGrouped(filters, includedSubCodes);
@@ -54,7 +54,7 @@ describe('Unit Test: getVehicleDataGrouped with interval', () => {
       }
     ]);
 
-    const filters = { cameraId: 1, approach: 'utara', direction: 'lurus', date: '2025-05-26' };
+    const filters = { simpangId: 1, approach: 'utara', direction: 'lurus', date: '2025-05-26' };
     const includedSubCodes = ['SM', 'MP', 'AUP'];
     const result = await surveyModel.getVehicleDataGrouped(filters, includedSubCodes, '1h');
 
@@ -86,7 +86,7 @@ describe('Unit Test: getVehicleDataGrouped with interval', () => {
     arusHelper.getPeriodsAndSlots.mockReturnValue([]);
 
     const filters = {
-      cameraId: 3,
+      simpangId: 3,
       approach: 'utara',
       direction: 'lurus',
       date: '2025-05-26'
@@ -118,7 +118,7 @@ describe('Unit Test: getVehicleDataGrouped (Time Filtering)', () => {
   it('should filter by date param and query only 1 day', async () => {
     db.query.mockResolvedValueOnce([[]]);
 
-    const filters = { cameraId: null, approach: null, direction: null, date: '2025-04-20' };
+    const filters = { simpangId: null, approach: null, direction: null, date: '2025-04-20' };
     await surveyModel.getVehicleDataGrouped(filters, ['SM', 'MP']);
     const lastCall = db.query.mock.calls[0];
 
@@ -193,7 +193,7 @@ describe('Unit Test: getVehicleDataGrouped (Time Filtering)', () => {
     };
 
     await surveyModel.getVehicleDataGrouped(
-      { cameraId: 3, approach: 'timur', direction: 'lurus' },
+      { simpangId: 3, approach: 'timur', direction: 'lurus' },
       ['SM', 'MP']
     );
     const lastCall = db.query.mock.calls[0];
@@ -245,7 +245,7 @@ describe('Unit Test: getDailySummaryByDateRange', () => {
     ];
     db.query.mockResolvedValueOnce([dbRows]);
 
-    const filters = { cameraId: '10', approach: 'utara', direction: 'lurus' };
+    const filters = { simpangId: '10', approach: 'utara', direction: 'lurus' };
     const includedSubCodes = ['SM', 'MP', 'AUP', 'TR', 'BS', 'TS', 'BB', 'TB', 'GANDEG', 'KTB'];
 
     const result = await surveyModel.getDailySummaryByDateRange(
@@ -297,7 +297,7 @@ describe('Unit Test: getDailySummaryByDateRange', () => {
   it('should return empty array if no rows from DB', async () => {
     db.query.mockResolvedValueOnce([[]]);
     const result = await surveyModel.getDailySummaryByDateRange(
-      { cameraId: null, approach: null, direction: null },
+      { simpangId: null, approach: null, direction: null },
       ['SM', 'MP'],
       '2025-02-01',
       '2025-02-05'
@@ -320,7 +320,7 @@ describe('Unit Test: getDailySummaryByDateRange', () => {
 //     db.query.mockResolvedValueOnce([dbRows]);
 
 //     const includedSubCodes = ['SM', 'MP', 'AUP', 'TR', 'BS', 'TS', 'BB', 'TB', 'GANDEG', 'KTB'];
-//     const filters = { cameraId: '20', approach: 'semua', direction: 'semua' };
+//     const filters = { simpangId: '20', approach: 'semua', direction: 'semua' };
 
 //     const result = await surveyModel.getMonthlySummary(2, 2025, filters, includedSubCodes);
 
@@ -372,7 +372,7 @@ describe('Unit Test: getYearlySummary', () => {
       .mockResolvedValueOnce([[row2028]]);
 
     const includedSubCodes = ['SM', 'MP', 'AUP', 'TR', 'BS', 'TS', 'BB', 'TB', 'GANDEG', 'KTB'];
-    const filters = { cameraId: null, approach: null, direction: null };
+    const filters = { simpangId: null, approach: null, direction: null };
 
     const startDateObj = new Date('2025-02-01');
     const { yearlyData, lhrtData } = await surveyModel.getYearlySummary(startDateObj, filters, includedSubCodes, 4);
