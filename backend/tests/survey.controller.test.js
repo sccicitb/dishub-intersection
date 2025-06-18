@@ -38,7 +38,7 @@ describe('survey.controller.js', () => {
 
       const req = {
         query: {
-          camera_id: '1',
+          simpang_id: '1',
           approach: 'utara',
           direction: 'lurus',
           classification: 'luar_kota',
@@ -54,7 +54,7 @@ describe('survey.controller.js', () => {
 
       expect(surveyModel.getVehicleDataGrouped).toHaveBeenCalledWith(
         {
-          cameraId: '1',
+          simpangId: '1',
           approach: 'utara',
           direction: 'lurus',
           date: undefined
@@ -85,7 +85,7 @@ describe('survey.controller.js', () => {
       const req = {
         query: {
           reportType: 'dailyRange',
-          camera_id: '2',
+          simpang_id: '2',
           approach: 'semua',
           direction: 'semua',
           classification: 'luar_kota',
@@ -102,7 +102,7 @@ describe('survey.controller.js', () => {
 
       expect(surveyModel.getDailySummaryByDateRange).toHaveBeenCalledWith(
         {
-          cameraId: '2',
+          simpangId: '2',
           approach: 'semua',
           direction: 'semua'
         },
@@ -134,7 +134,7 @@ describe('survey.controller.js', () => {
       const req = {
         query: {
           reportType: 'dailyMonth',
-          camera_id: '3',
+          simpang_id: '3',
           approach: 'timur',
           direction: 'barat',
           classification: 'luar_kota',
@@ -153,7 +153,7 @@ describe('survey.controller.js', () => {
         3,
         2025,
         {
-          cameraId: '3',
+          simpangId: '3',
           approach: 'timur',
           direction: 'barat'
         },
@@ -192,7 +192,7 @@ describe('survey.controller.js', () => {
       const req = {
         query: {
           reportType: 'monthly',
-          camera_id: '4',
+          simpang_id: '4',
           approach: 'selatan',
           direction: 'utara',
           classification: 'luar_kota',
@@ -243,7 +243,7 @@ describe('survey.controller.js', () => {
       const req = {
         query: {
           reportType: 'yearly',
-          camera_id: '5',
+          simpang_id: '5',
           approach: 'barat',
           direction: 'timur',
           classification: 'luar_kota',
@@ -261,7 +261,7 @@ describe('survey.controller.js', () => {
       expect(surveyModel.getYearlySummary).toHaveBeenCalledWith(
         new Date('2025-02-03'),
         {
-          cameraId: '5',
+          simpangId: '5',
           approach: 'barat',
           direction: 'timur'
         },
@@ -277,7 +277,7 @@ describe('survey.controller.js', () => {
     it('should default to all months if months param not provided', async () => {
       const req = {
         query: {
-          camera_id: '5',
+          simpang_id: '5',
           date: '2025-06-04',
           approach: 'semua',
           direction: 'semua',
