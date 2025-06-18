@@ -1,4 +1,6 @@
 "use client"
+
+import {v4 as uuidv4} from "uuid";
 import { useEffect, useState, useRef, useCallback } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import Map, { NavigationControl, Marker, Source, Layer } from "@vis.gl/react-maplibre";
@@ -286,11 +288,11 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
             if (newPoints.length === 2) {
               const from = turf.point(newPoints[0]);
               const to = turf.point(newPoints[1]);
-              const distance = turf.distance(from, to, { units: 'kilometers' });
-              alert(`Jarak: ${distance.toFixed(2)} km`);
+              const distance = turf.distance(from, to, { units: 'meters' });
+              alert(`Jarak: ${distance.toFixed(2)} m`);
               // Simpan garis untuk nanti digambar
               const line = {
-                id: crypto.randomUUID(),
+                id: uuidv4(),
                 label: lines.length + 1,
                 feature: {
                   type: "Feature",
@@ -302,7 +304,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
               };
               const midpoint = turf.midpoint(from, to);
               midpoint.properties = {
-                distance: `Garis ${line.label} ${distance.toFixed(2)} km`,
+                distance: `Garis ${line.label} ${distance.toFixed(2)} m`,
                 id: line.id
               };
 
