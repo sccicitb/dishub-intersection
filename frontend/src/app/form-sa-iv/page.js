@@ -8,6 +8,7 @@ const MapComponent = lazy(() => import("@/app/components/map"));
 const SurveyInfoTable = lazy(() => import('@/app/components/surveyorTable'));
 const SurveyFormSAHeader = lazy(() => import('@/app/components/form/formSurveyHeader'))
 const FaseIVTable = lazy(() => import('@/app/components/table/faseIVTable'))
+const FaseIVAnalisaTable = lazy(() => import('@/app/components/table/faseIVAnalisaTable'))
 
 export const Loading = () => { return (<div className="w-full h-full m-auto text-center p-2">Loading ...</div>) }
 
@@ -56,6 +57,7 @@ const FaseIVPage = () => {
       </Suspense> */}
       <Suspense fallback={<Loading />}>
         <FaseIVTable />
+        <FaseIVAnalisaTable />
       </Suspense>
     </div>
   )
