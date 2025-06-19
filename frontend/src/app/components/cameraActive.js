@@ -37,11 +37,11 @@ const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inpu
         <div className="flex flex-col gap-3">
           <div className="w-full flex flex-wrap gap-4 items-center justify-between">
             <h3 className="text-lg font-semibold">Kamera Aktif</h3>
-            <div className="flex gap-2">
-              <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewMaps}><IoIosAdd className="text-xl" />Tambah Maps</button>
-              <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewCamera}><IoIosAdd className="text-xl" />Tambah kamera</button>
-              <label className="input rounded-md bg-[#314385]/10">
-                <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <div className="flex flex-wrap w-full gap-2">
+              <button className="btn btn-sm rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewMaps}><IoIosAdd className="text-xl" />Tambah Maps</button>
+              <button className="btn btn-sm rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewCamera}><IoIosAdd className="text-xl" />Tambah kamera</button>
+              <label className="input input-sm rounded-md bg-[#314385]/10 w-38">
+                <svg className="h-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                   <g
                     strokeLinejoin="round"
                     strokeLinecap="round"
@@ -55,7 +55,7 @@ const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inpu
                 </svg>
                 <input
                   type="search"
-                  className="grow"
+                  className="input input-sm focus:outline-0 focus:ring-0"
                   placeholder="Search"
                   onChange={inputSearch}
                   value={searchValue}
@@ -63,11 +63,11 @@ const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inpu
               </label>
             </div>
           </div>
-          <div className="join w-fit gap-5 flex overflow-x-auto">
+          <div className="join w-fit gap-2 flex flex-wrap overflow-x-auto pt-2">
             {activeOption.map((option) => (
               <button
                 key={option}
-                className={`btn join-item rounded-md flex-1 text-nowrap btn-md w-fit px-5 capitalize ${optionSelect === option
+                className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-5 capitalize ${optionSelect === option
                   ? "bg-[#232f61]/80 text-white"
                   : "bg-[#232f61]/10 text-[#3e55bd] outline-none"
                   }`}
