@@ -38,7 +38,7 @@ export default function CCTVStream ({ data, title, customLarge, large = false, o
         onClick={onClick}
       >
         <div className="bg-black text-white p-3 flex justify-between items-center">
-          <h3 className="font-medium text-nowrap truncate">{title || "CCTV Stream"}</h3>
+          <h3 className="font-normal text-xs text-nowrap truncate">{title || "CCTV Stream"}</h3>
           {!showWaitingScreen && (
             <div className="flex items-center gap-2">
               <span className="text-xs bg-green-500 px-2 py-1 rounded-full truncate text-nowrap">
@@ -68,7 +68,7 @@ export default function CCTVStream ({ data, title, customLarge, large = false, o
                 onError={() => setImageError(true)}
               >
               </img>
-                <div className="absolute top-1/2 w-full text-center ">
+                <div className="absolute top-1/2 w-full text-center text-sm ">
                   Waiting for connection...
                 </div>
               <div className="h-15 bg-black">

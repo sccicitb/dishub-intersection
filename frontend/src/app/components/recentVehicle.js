@@ -92,7 +92,7 @@ export default function RecentVehicle ({ hg }) {
         </button>
       </div>
 
-      <div className={`pr-2 overflow-y-auto`}>
+      <div className={`mt-[5%] overflow-y-auto`}>
         <List
           height={hg ? hg : 350} // tinggi container
           itemCount={Array.isArray(dataVehicle) ? dataVehicle.length : 0}

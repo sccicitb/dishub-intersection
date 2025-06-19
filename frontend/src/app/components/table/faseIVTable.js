@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { useState } from 'react';
 
 export default function FormSAIVTable () {
@@ -169,128 +170,128 @@ export default function FormSAIVTable () {
       <div className="overflow-x-auto">
         <table className="table table-xs w-full border border-base-300">
           <thead>
-            <tr className="bg-gray-300 text-sm">
+            <tr className="bg-gray-200 text-sm">
               <th rowSpan={5} className="text-center border border-base-300">
-                <div className="rotate-[270deg] font-semibold origin-center whitespace-nowrap">
+                <div className="rotate-[270deg] text-xs font-semibold text-gray-900 origin-center whitespace-nowrap">
                   Kode pendekat
                 </div>
               </th>
               <th rowSpan={5} className="text-center border border-base-300">
-                <div className='rotate-[270deg] font-semibold origin-center whitespace-nowrap'>
+                <div className='rotate-[270deg] text-xs font-semibold text-gray-900 origin-center whitespace-nowrap'>
                   Hijau dalam fase ke-
                 </div>
               </th>
-              <th rowSpan={5} className="text-center border border-base-300 min-w-10">
-                <div className='rotate-[270deg] font-semibold origin-center whitespace-nowrap'>
+              <th rowSpan={5} className="text-center border border-base-300">
+                <div className='rotate-[270deg] text-xs font-semibold text-gray-900 origin-center whitespace-nowrap'>
                   Tipe pendekat
                 </div>
               </th>
-              <th colSpan="3" className="text-center font-semibold border border-base-300 min-w-10">
+              <th colSpan="3" className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Rasio kendaraan belok
               </th>
-              <th colSpan={2} className="text-center font-semibold border border-base-300 min-w-10">
+              <th colSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Arus belok kanan
               </th>
-              <th rowSpan={3} className="text-center font-semibold border border-base-300 min-w-10">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Lebar efektif
               </th>
-              <th colSpan={8} className="text-center font-semibold border border-base-300 min-w-10">
+              <th colSpan={8} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Arus jenuh
               </th>
-              <th rowSpan={3} className="text-center font-semibold border border-base-300 min-w-10">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Arus lalu lintas
               </th>
-              <th rowSpan={3} className="text-center font-semibold border border-base-300 min-w-10">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Rasio Arus
               </th>
-              <th rowSpan={3} className="text-center font-semibold border border-base-300 min-w-10">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Rasio Fase
               </th>
-              <th rowSpan={3} className="text-center font-semibold border border-base-300 min-w-10">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Waktu hijau per fase (i)
               </th>
-              <th rowSpan={3} className="text-center font-semibold border border-base-300 min-w-10">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Kapasitas
               </th>
-              <th rowSpan={3} className="text-center font-semibold border border-base-300 min-w-10">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Derajat kejenuhan
               </th>
             </tr>
-            <tr className="bg-gray-300">
-              <th rowSpan={4} className="text-center font-semibold border border-base-300 min-w-10">R<sub>bkijt</sub></th>
-              <th rowSpan={4} className="text-center font-semibold border border-base-300 min-w-10">R<sub>bki</sub></th>
-              <th rowSpan={4} className="text-center font-semibold border border-base-300 min-w-10">R<sub>bka</sub></th>
-              <th rowSpan={3} className="text-center font-semibold border border-base-300 min-w-10">dari arah ditinjau</th>
-              <th rowSpan={3} className="text-center font-semibold border border-base-300 min-w-10">dari arah berlawanan</th>
-              {/* <th className="text-center font-semibold border border-base-300 min-w-10">L<sub>e</sub></th> */}
-              <th rowSpan={2} className="text-center font-semibold border border-base-300 min-w-10">Arus jenuh dasar</th>
-              <th colSpan="6" className="text-center font-semibold border border-base-300 min-w-10">
+            <tr className="bg-gray-200">
+              <th rowSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300">R<sub>bkijt</sub></th>
+              <th rowSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300">R<sub>bki</sub></th>
+              <th rowSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300">R<sub>bka</sub></th>
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">dari arah ditinjau</th>
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">dari arah berlawanan</th>
+              {/* <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">L<sub>e</sub></th> */}
+              <th rowSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300">Arus jenuh dasar</th>
+              <th colSpan="6" className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Faktor-faktor penyesuaian
               </th>
-              <th rowSpan={2} className="text-center font-semibold border border-base-300 min-w-10">
+              <th rowSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
                 Arus jenuh yang disesuaikan
               </th>
             </tr>
-            <tr className="bg-gray-300 text-xs">
-              <th colSpan={4} className="text-center font-semibold border border-base-300 min-w-10">Semua Tipe Pendekat</th>
-              <th colSpan={2} className="text-center font-semibold border border-base-300 min-w-10">Hanya tipe P</th>
+            <tr className="bg-gray-200 text-xs">
+              <th colSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300">Semua Tipe Pendekat</th>
+              <th colSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300">Hanya tipe P</th>
             </tr>
-            <tr className="bg-gray-300 text-xs">
-              <th className="text-center font-semibold border border-base-300 min-w-16">L<sub>E</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">J<sub>O</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">F<sub>HS</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">F<sub>UK</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">F<sub>G</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">F<sub>P</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">F<sub>BKI</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">F<sub>BKA</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">J</th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">q</th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">R<sub>q/j</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">R<sub>F</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">W<sub>Hi</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">C</th>
-              <th className="text-center font-semibold border border-base-300 min-w-16">D<sub>J</sub></th>
+            <tr className="bg-gray-200 text-xs">
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">L<sub>E</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">J<sub>O</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>HS</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>UK</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>G</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>P</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>BKI</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>BKA</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">J</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">q</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">R<sub>q/j</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">R<sub>F</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">W<sub>Hi</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">C</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">D<sub>J</sub></th>
             </tr>
-            <tr className="bg-gray-300 text-xs">
-              <th className="text-center font-semibold border border-base-300 min-w-10">SMP/jam</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">SMP/jam</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">m</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">Gambar<br />SMP/jam</th>
-              <th colSpan={6} className="text-center font-semibold border border-base-300 min-w-10">J = l<sub>s</sub> x F<sub>us</sub> x F<sub>uk</sub> x F<sub>ug</sub> x F<sub>up</sub> x F<sub>bki</sub> x F<sub>bka</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">SMP/jam</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">SMP/jam</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(18)/(17)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(19)/R<sub>ig</sub></th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">detik</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(17)×(21)/S<br />SMP/jam</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(18)/(22)</th>
+            <tr className="bg-gray-200 text-xs">
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">SMP/jam</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">SMP/jam</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">m</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">Gambar<br />SMP/jam</th>
+              <th colSpan={6} className="text-center text-xs font-semibold text-gray-900 border border-base-300">J = l<sub>s</sub> x F<sub>us</sub> x F<sub>uk</sub> x F<sub>ug</sub> x F<sub>up</sub> x F<sub>bki</sub> x F<sub>bka</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">SMP/jam</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">SMP/jam</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(18)/(17)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(19)/R<sub>ig</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">detik</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(17)×(21)/S<br />SMP/jam</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(18)/(22)</th>
 
             </tr>
-            <tr className="bg-gray-300 text-xs">
-              <th className="text-center font-semibold border border-base-300 min-w-10">(1)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(2)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(3)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(4)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(5)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(6)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(7)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(8)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(9)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(10)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(11)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(12)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(13)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(14)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(15)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(16)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(17)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(18)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(19)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(20)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(21)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(22)</th>
-              <th className="text-center font-semibold border border-base-300 min-w-10">(23)</th>
+            <tr className="bg-gray-200 text-xs">
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(1)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(2)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(3)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(4)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(5)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(6)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(7)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(8)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(9)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(10)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(11)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(12)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(13)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(14)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(15)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(16)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(17)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(18)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(19)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(20)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(21)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(22)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(23)</th>
 
 
             </tr>
@@ -298,211 +299,473 @@ export default function FormSAIVTable () {
           <tbody>
             {tableData.map((row, rowIndex) => (
               <tr key={rowIndex} className="hover:bg-base-200">
-                <td className="text-center border border-base-300">
-                  <input
-                    type="text"
-                    className="h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.kodePendekat}
-                    onChange={(e) => handleInputChange(rowIndex, 'kodePendekat', null, e.target.value)}
-                  />
+
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="text"
+                      className="p-0 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center flex-1 "
+                      value={row.kodePendekat}
+                      onChange={(e) => handleInputChange(rowIndex, 'kodePendekat', null, e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="text"
-                    className="h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.tipependekat}
-                    onChange={(e) => handleInputChange(rowIndex, 'tipependekat', null, e.target.value)}
-                  />
+
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="text"
+                      className="p-0 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center flex-1"
+                      value={row.tipependekat}
+                      onChange={(e) => handleInputChange(rowIndex, 'tipependekat', null, e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.rasioKendaraanBelok?.rusun || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'rasioKendaraanBelok', 'rusun', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.rasioKendaraanBelok?.rusun || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'rasioKendaraanBelok', 'rusun', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.rasioKendaraanBelok?.rlk || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'rasioKendaraanBelok', 'rlk', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.rasioKendaraanBelok?.rlk || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'rasioKendaraanBelok', 'rlk', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.rasioKendaraanBelok?.rlka || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'rasioKendaraanBelok', 'rlka', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.rasioKendaraanBelok?.rlka || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'rasioKendaraanBelok', 'rlka', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.arusBelokKanan?.dariArahDitinjau || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'arusBelokKanan', 'dariArahDitinjau', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.arusBelokKanan?.dariArahDitinjau || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'arusBelokKanan', 'dariArahDitinjau', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.arusBelokKanan?.dariArahBerlawanan || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'arusBelokKanan', 'dariArahBerlawanan', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.arusBelokKanan?.dariArahBerlawanan || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'arusBelokKanan', 'dariArahBerlawanan', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.1"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.lebarEfektif?.ls || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'lebarEfektif', 'ls', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.lebarEfektif?.ls || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'lebarEfektif', 'ls', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.arusJenuhDasar || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'arusJenuhDasar', null, e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.arusJenuhDasar || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'arusJenuhDasar', null, e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.faktorPenyesuaian?.fus || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fus', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.faktorPenyesuaian?.fus || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fus', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.faktorPenyesuaian?.fuk || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fuk', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.faktorPenyesuaian?.fuk || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fuk', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.faktorPenyesuaian?.fug || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fug', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.faktorPenyesuaian?.fug || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fug', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.faktorPenyesuaian?.fup || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fup', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.faktorPenyesuaian?.fup || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fup', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.faktorPenyesuaian?.fbki || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fbki', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.faktorPenyesuaian?.fbki || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fbki', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.faktorPenyesuaian?.fbka || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fbka', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.faktorPenyesuaian?.fbka || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'faktorPenyesuaian', 'fbka', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.arusJenuhYangDisesuaikan?.j || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'arusJenuhYangDisesuaikan', 'j', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.arusJenuhYangDisesuaikan?.j || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'arusJenuhYangDisesuaikan', 'j', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.arusJenuhYangDisesuaikan?.q || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'arusJenuhYangDisesuaikan', 'q', e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.arusJenuhYangDisesuaikan?.q || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'arusJenuhYangDisesuaikan', 'q', e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.001"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.arusLaluLintas || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'arusLaluLintas', null, e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.001"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.arusLaluLintas || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'arusLaluLintas', null, e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.001"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.rasioArus || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'rasioArus', null, e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.001"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.rasioArus || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'rasioArus', null, e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.rasioFase || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'rasioFase', null, e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.rasioFase || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'rasioFase', null, e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.waktuHijauPerFase || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'waktuHijauPerFase', null, e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.waktuHijauPerFase || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'waktuHijauPerFase', null, e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.kapasitas || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'kapasitas', null, e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.kapasitas || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'kapasitas', null, e.target.value)}
+                    />
+                  </div>
                 </td>
-                <td className="text-center border border-base-300">
-                  <input
-                    type="number"
-                    step="0.001"
-                    className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none h-full p-1 focus:border-transparent focus:outline-0 focus:ring-0 w-full text-center"
-                    value={row.derajatKejenuhan || ''}
-                    onChange={(e) => handleInputChange(rowIndex, 'derajatKejenuhan', null, e.target.value)}
-                  />
+                <td className="border border-gray-300 p-0">
+                  <div className="flex h-full min-h-[2rem]">
+                    <input
+                      type="number"
+                      step="0.001"
+                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
+                      value={row.derajatKejenuhan || ''}
+                      onChange={(e) => handleInputChange(rowIndex, 'derajatKejenuhan', null, e.target.value)}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}
             <tr>
-              <td colSpan="24" className="border border-base-300 p-2">
-                <div className="flex justify-center">
-                  <div className="bg-yellow-200 px-4 py-2 text-center text-xs">
-                    <span className="font-bold">Catatan:</span> P = <span className="bg-yellow-300 px-1">P</span> &nbsp;&nbsp; O = <span className="bg-orange-300 px-1">O</span>
+              {[...Array(23)].map((_, i) => (
+                <td className="border border-gray-300 p-0" key={i}>
+                  <div className="flex h-full min-h-[2rem] items-center justify-center">
                   </div>
+                </td>
+              ))}
+            </tr>
+            <tr>
+              {[...Array(10)].map((_, i) => (
+                <td className="border border-gray-300 p-0" key={i}>
+                  <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  </div>
+                </td>
+              ))}
+
+              <td className="border border-gray-300 p-0">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  Catatan
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 bg-yellow-200">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  P
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 bg-yellow-200">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  O
+                </div>
+              </td>
+              {[...Array(10)].map((_, i) => (
+                <td className="border border-gray-300 p-0" key={i}>
+                  <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  </div>
+                </td>
+              ))}
+            </tr>
+            <tr>
+              {[...Array(10)].map((_, i) => (
+                <td className="border border-gray-300 p-0" key={i}>
+                  <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  </div>
+                </td>
+              ))}
+
+              <td className="border border-gray-300 p-0 bg-yellow-200">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  Asumsi
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 text-blue-600">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  0,35
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 text-blue-600">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  0,65
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 text-blue-600">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0" colSpan={4} rowSpan={3}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  Pada fase 3, arus terlindung dari Barat "dianggap" 35% tersalurkan, dan sisanya disalurkan dalam fase ke 4 bersamaan dengan arus terlawan
+                </div>
+              </td>
+              {[...Array(5)].map((_, i) => (
+                <td className="border border-gray-300 p-0" key={i}>
+                  <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  </div>
+                </td>
+              ))}
+            </tr>
+            <tr>
+              {[...Array(10)].map((_, i) => (
+                <td className="border border-gray-300 p-0" key={i}>
+                  <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  </div>
+                </td>
+              ))}
+
+              <td className="border border-gray-300 p-0 bg-yellow-200">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  q
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 text-blue-600">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  0,35
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 text-blue-600">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  0,65
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 text-blue-600">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  0,65
+                </div>
+              </td>
+              {[...Array(5)].map((_, i) => (
+                <td className="border border-gray-300 p-0" key={i}>
+                  <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  </div>
+                </td>
+              ))}
+            </tr>
+            <tr>
+              {[...Array(10)].map((_, i) => (
+                <td className="border border-gray-300 p-0" key={i}>
+                  <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  </div>
+                </td>
+              ))}
+
+              <td className="border border-gray-300 p-0 bg-yellow-200">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  <sup>R</sup>q/j
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 text-blue-600">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  0,35
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 text-blue-600">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  0,65
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 text-blue-600">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                </div>
+              </td>
+              {[...Array(5)].map((_, i) => (
+                <td className="border border-gray-300 p-0" key={i}>
+                  <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  </div>
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td className="border border-gray-300 p-0" colSpan={4} rowSpan={2}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  Waktu hilang hijau total, W<sup>HH</sup> =
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0" rowSpan={2}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  14
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0" rowSpan={2}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  detik
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0" colSpan={4}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  Waktu siklus pra penyesuaian, s<sup>bp</sup> =
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  116,66
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  detik
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0" colSpan={3} rowSpan={2}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  <Image src={"/image/Picture2.png"} alt={""} width={100} height={50} />
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 bg-gray-200" rowSpan={2}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center ">
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0" rowSpan={2} colSpan={2}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  Rasio Arus Simpang RAS = Σi (R<sub>q</sub>/J kritis)i =
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0" rowSpan={2}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  0,77
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0 bg-gray-200" rowSpan={2}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center ">
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0" rowSpan={2} colSpan={3}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  W<sub>HI</sub>  =   s  -  W<sub>HH</sub> x R<sub>F</sub>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td className="border border-gray-300 p-0" colSpan={4}>
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  Waktu siklus disesuaikan, s =
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  116,66
+                </div>
+              </td>
+              <td className="border border-gray-300 p-0">
+                <div className="flex h-full min-h-[2rem] items-center justify-center">
+                  detik
                 </div>
               </td>
             </tr>

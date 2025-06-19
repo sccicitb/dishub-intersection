@@ -29,14 +29,14 @@ const DialogFCamera = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-md shadow-md w-[800px] max-h-[90%] overflow-y-auto space-y-4">
+      <div className="bg-white p-6 rounded-md shadow-md w-[90%] lg:w-[800px] max-h-[90%] overflow-y-auto space-y-4">
         <h2 className="text-lg font-semibold capitalize">
           {getDialogTitle()}
         </h2>
 
         {/* Maps Form */}
         {(actionDialog === "edit_maps" || actionDialog === "create_maps") && (
-          <div className='grid grid-cols-3 gap-3'>
+          <div className='grid grid-cols-1 lg:grid-cols-3 gap-3'>
 
             <div>
               <label className="label">Kabupaten/Kota</label>
@@ -285,7 +285,7 @@ const DialogFCamera = ({
         {/* Cameras Form */}
         {(actionDialog === "edit_cameras" || actionDialog === "create_cameras") && (
           <div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-3'>
               {/* Judul Kamera */}
               <div>
                 <label className="label">Judul Kamera</label>
