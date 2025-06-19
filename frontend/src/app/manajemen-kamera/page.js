@@ -1075,20 +1075,20 @@ const ManajemenKamera = () => {
               searchValue={inputValue}
               addNewCamera={handleAddNewCamera}
             >
-              <div className="h-[40vh] overflow-y-auto my-5">
+              <div className="h-[65vh] overflow-y-auto my-2">
                 {optionCamera === "peta" ? (
-                  <MapComponent sizeHeight={"35vh"} onClick={() => { }} onClickSimpang={() => { }} />
+                  <MapComponent sizeHeight={"60vh"} onClick={() => { }} onClickSimpang={() => { }} />
                 ) : optionCamera === "daftar" ? (
                   <div className="overflow-x-auto w-full bg-base-200 mt-5">
-                    <table className="table">
-                      <thead className="bg-stone-900/90 text-white">
+                    <table className="table table-sm">
+                      <thead className="bg-stone-900/90 text-white text-xs">
                         <tr className="text-center">
                           <th rowSpan={2}>No</th>
                           <th rowSpan={2}>Lokasi</th>
                           <th rowSpan={2} colSpan={2}>Kamera</th>
                           <th rowSpan={2}>Tautan Socket</th>
                           <th colSpan={2}>Koordinat</th>
-                          <th rowSpan={2}>Thumbnail</th>
+                          {/* <th rowSpan={2}>Thumbnail</th> */}
                           <th rowSpan={2}>Resolution</th>
                           <th rowSpan={2}>Status</th>
                           <th rowSpan={2}>Action</th>
@@ -1099,14 +1099,53 @@ const ManajemenKamera = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredBuildings?.map((dataSimpang, i) => {
-                          const cameras = Array.isArray(dataSimpang.camera) ? dataSimpang.camera : [];
+                        {(() => {
+                          let rowNumber = 1; // Counter untuk nomor urut
 
-                          if (cameras.length === 0) {
-                            return (
-                              <tr key={`no-camera-${i}`} className="text-medium font-normal text-left">
-                                <td className="text-center">{i + 1}</td>
-                                <td className='cursor-pointer flex items-center gap-2'>
+                          return filteredBuildings?.flatMap((dataSimpang, i) => {
+                            const cameras = Array.isArray(dataSimpang.camera) ? dataSimpang.camera : [];
+
+                            if (cameras.length === 0) {
+                              return (
+                                <tr key={`no-camera-${i}`} className="text-xs font-normal text-left">
+                                  <td className="text-center">{rowNumber++}</td>
+                                  <td className='cursor-pointer flex items-center gap-1'>
+                                    <button
+                                      className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                      onClick={() => handleSelectCameras(dataSimpang.id, 'edit_maps', dataSimpang)}
+                                    >
+                                      <FaPencil className="text-green-300 text-lg" />
+                                    </button>
+                                    <button
+                                      className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                      onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
+                                    >
+                                      <FaTrashCan className="text-red-300 text-lg" />
+                                    </button>
+                                    <div className='text-nowrap'>{dataSimpang.name}</div>
+                                  </td>
+                                  <td colSpan={2} className='text-center'>Tidak ada kamera</td>
+                                  <td className='text-center'>-</td>
+                                  <td className='max-w-5 truncate'>{dataSimpang.location?.latitude || '-'}</td>
+                                  <td className='max-w-5 truncate'>{dataSimpang.location?.longitude || '-'}</td>
+                                  <td className='text-center'>-</td>
+                                  <td className='text-center'>-</td>
+                                  <td className='text-center'>
+                                    <button
+                                      className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                      onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
+                                    >
+                                      <FaTrashCan className="text-red-300 text-lg" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            }
+
+                            return cameras.map((cam, j) => (
+                              <tr key={`cam-${i}-${j}`} className="text-xs font-normal text-left items-center">
+                                <td className="text-center">{rowNumber++}</td>
+                                <td className='cursor-pointer flex items-center gap-1'>
                                   <button
                                     className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
                                     onClick={() => handleSelectCameras(dataSimpang.id, 'edit_maps', dataSimpang)}
@@ -1119,125 +1158,50 @@ const ManajemenKamera = () => {
                                   >
                                     <FaTrashCan className="text-red-300 text-lg" />
                                   </button>
-                                  <div className='text-nowrap'>
-                                    {dataSimpang.name}
+                                  <div className='text-nowrap'>{dataSimpang.name}</div>
+                                </td>
+                                <td colSpan={2} className='text-nowrap'>{cam.name}</td>
+                                <td>{cam.socket_event || '-'}</td>
+                                <td className='max-w-5 truncate'>{dataSimpang.location?.latitude || '-'}</td>
+                                <td className='max-w-5 truncate'>{dataSimpang.location?.longitude || '-'}</td>
+                                <td className="text-center">{cam.resolution || '-'}</td>
+                                <td>
+                                  <input
+                                    type="checkbox"
+                                    className={`toggle ${cam.status ? 'checked:toggle-success' : 'toggle-error'} toggle-sm`}
+                                    checked={cam.status}
+                                    onChange={(e) => handleToggle(cam.id, cam, e.target.checked)}
+                                  />
+                                </td>
+                                <td>
+                                  <div className="flex gap-1 justify-center">
+                                    <button
+                                      className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                      onClick={() => handleSelectCameras(cam.id, 'edit_cameras', cam)}
+                                    >
+                                      <FaPencil className="text-green-300 text-lg" />
+                                    </button>
+                                    <button
+                                      className={`p-1 hover:bg-transparent focus:outline-none ${cam.socket_event === "not_yet_assign" ? "cursor-pointer" : "btn-disabled cursor-not-allowed"}`}
+                                      onClick={() => {
+                                        if (cam.socket_event !== "not_yet_assign") return;
+                                        handleSelectCameras(cam.id, 'delete_cameras');
+                                      }}
+                                    >
+                                      <FaTrashCan className="text-red-300 text-lg" />
+                                    </button>
                                   </div>
                                 </td>
-                                <td colSpan={2} className='text-center'>Tidak ada kamera</td>
-                                <td className='text-center'>{'-'}</td>
-                                <td className='truncate text-wrap'>{dataSimpang.location?.latitude || '-'}</td>
-                                <td className='truncate text-wrap'>{dataSimpang.location?.longitude || '-'}</td>
-                                <td className='text-center'>{'-'}</td>
-                                <td className='text-center'>{'-'}</td>
-                                <td>
-                                  {/* <input
-                                    type="checkbox"
-                                    className={`toggle ${dataSimpang.model_detection ? 'checked:toggle-success' : 'toggle-error'} toggle-sm`}
-                                    checked={dataSimpang.model_detection}
-                                    onChange={(e) => handleToggle(i, e.target.checked)}
-                                  /> */}
-                                </td>
-                                <td className='text-center'>
-                                  <button
-                                    className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                    onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
-                                  >
-                                    <FaTrashCan className="text-red-300 text-lg" />
-                                  </button>
-                                </td>
                               </tr>
-                            );
-                          }
-
-                          return cameras.map((cam, j) => (
-                            <tr key={`cam-${i}-${j}`} className="text-medium font-normal text-left items-center">
-                              <td className="text-center">{i + 1}</td>
-                              <td className='cursor-pointer flex items-center gap-2'>
-                                <button
-                                  className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                  onClick={() => handleSelectCameras(dataSimpang.id, 'edit_maps', dataSimpang)}
-                                >
-                                  <FaPencil className="text-green-300 text-lg" />
-                                </button>
-                                <button
-                                  className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                  onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
-                                >
-                                  <FaTrashCan className="text-red-300 text-lg" />
-                                </button>
-                                <div className='text-nowrap'>
-                                  {dataSimpang.name}
-                                </div>
-                              </td>
-                              <td colSpan={2} className='text-nowrap'>{cam.name}</td>
-                              <td>{cam.socket_event || '-'}</td>
-                              <td className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[5px]">
-                                {dataSimpang.location?.latitude || '-'}
-                              </td>
-                              <td className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[5px]">
-                                {dataSimpang.location?.longitude || '-'}
-                              </td>
-
-                              <td className='items-center m-auto text-center'>
-                                {cam.thumbnail_url ? (
-                                  <a href={cam.thumbnail_url} target="_blank" rel="noopener noreferrer">
-                                    {/* <Image
-                                      src={cam.thumbnail_url}
-                                      alt="Thumbnail"
-                                      width={100}
-                                      height={60}
-                                    /> */}
-                                    <img
-                                      src={cam.thumbnail_url}
-                                      width={30}
-                                      height={30}
-                                      className='content-center'
-                                      style={{ objectFit: 'cover' }}
-                                    />
-                                  </a>
-                                ) : (
-                                  '-'
-                                ) || '-'}
-                              </td>
-                              <td className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[3px] text-center">{cam.resolution || '-'}</td>
-                              <td>
-                                <input
-                                  type="checkbox"
-                                  className={`toggle ${cam.status ? 'checked:toggle-success' : 'toggle-error'} toggle-sm`}
-                                  checked={cam.status}
-                                  onChange={(e) => handleToggle(cam.id, cam, e.target.checked)}
-                                />
-                              </td>
-                              <td>
-                                <div className="flex gap-2 justify-center">
-                                  <button
-                                    className={`p-1 hover:bg-transparent focus:outline-none cursor-pointer`}
-                                    onClick={() => {
-                                      handleSelectCameras(cam.id, 'edit_cameras', cam)
-                                    }}
-                                  >
-                                    <FaPencil className="text-green-300 text-lg" />
-                                  </button>
-                                  <button
-                                    className={`p-1 hover:bg-transparent focus:outline-none ${cam.socket_event === "not_yet_assign" ? "cursor-pointer" : "btn-disabled cursor-not-allowed"}`}
-                                    onClick={() => {
-                                      if (cam.socket_event !== "not_yet_assign") return;
-                                      handleSelectCameras(cam.id, 'delete_cameras')
-                                    }}
-                                  >
-                                    <FaTrashCan className="text-red-300 text-lg" />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ));
-                        })}
+                            ));
+                          });
+                        })()}
                       </tbody>
 
                     </table>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-5 w-full">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-5 w-full">
                     {
                       filteredBuildings?.map((dataCamera, index) => {
                         const firstCamera = dataCamera?.camera?.[0];
@@ -1290,7 +1254,7 @@ const ManajemenKamera = () => {
 
           {/* Recent Vehicle Section */}
           {!fullSize && (
-            <RecentVehicle hg={400} />
+            <RecentVehicle hg={600} />
           )}
         </div>
 
@@ -1333,9 +1297,9 @@ const ManajemenKamera = () => {
 
           {/* Calendar Table */}
           <div className="overflow-x-auto w-full bg-base-200 mt-5">
-            <table className="table">
+            <table className="table table-sm">
               <thead className="bg-stone-900/90 text-white">
-                <tr className="text-center">
+                <tr className="text-center font-normal">
                   <th>No</th>
                   <th>Tanggal</th>
                   <th>Events</th>
@@ -1383,7 +1347,7 @@ const ManajemenKamera = () => {
             {/* Pagination Controls */}
             <div className="flex justify-between items-center mt-4 px-4 pb-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm">Tampilkan:</span>
+                <span className="text-xs">Tampilkan:</span>
                 <select
                   className="select select-sm select-bordered"
                   value={itemsPerPage}
@@ -1393,7 +1357,7 @@ const ManajemenKamera = () => {
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                 </select>
-                <span className="text-sm">data per halaman</span>
+                <span className="text-xs">data per halaman</span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -1441,7 +1405,7 @@ const ManajemenKamera = () => {
                 </button>
               </div>
 
-              <div className="text-sm text-gray-600">
+              <div className="text-xs text-gray-600">
                 Halaman {currentPage} dari {totalPages}
                 {totalItems > 0 && ` (${totalItems} total data)`}
               </div>
