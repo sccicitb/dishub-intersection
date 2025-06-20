@@ -60,15 +60,15 @@ export default function CCTVStream ({ data, title, customLarge, large = false, o
 
         <div className={`flex-grow bg-black relative overflow-hidden max-h-[420px] flex items-center justify-center ${heightCamera ? "h-full" : " min-h-[420px]"} `}>
           {showWaitingScreen ? (
-            <div className="flex items-center justify-center text-white text-sm w-full text-center h-full flex-col relative">
-              <img
+            <div className="flex items-center justify-center text-white text-sm w-full text-center min-w-52 min-h-52 h-full flex-col relative">
+              {/* <img
                 src={"/image/no-camera.jpg"}
                 alt={`CCTV Stream ${id_simpang || title}`}
                 className={`w-full h-full object-contain`}
                 onError={() => setImageError(true)}
               >
-              </img>
-                <div className="absolute top-1/2 w-full text-center text-sm ">
+              </img> */}
+                <div className="absolute top-[40%] w-full text-center text-sm ">
                   Waiting for connection...
                 </div>
               <div className="h-15 bg-black">
