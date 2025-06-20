@@ -797,9 +797,9 @@ const ManajemenKamera = () => {
   };
 
   // Filter search for cameras
-  const filteredBuildings = mergedCameraData
+  const filteredBuildings = mergedCameraData.filter((buildings) => buildings.Nama_Simpang.toLowerCase().includes(inputValue.toLowerCase()));
 
-  const filteredCameras = mergedCameraData
+  const filteredCameras = mergedCameraData.flatMap(b => b.camera || []).filter(cam => cam.socket_event === "not_yet_assign").filter((i) => i.name.toLowerCase().includes(inputValue.toLowerCase()));
   // Calendar pagination logic - Fixed
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -1132,7 +1132,7 @@ const ManajemenKamera = () => {
                                   <td className='flex justify-center gap-1'>
                                     <button
                                       className={`p-1 hover:bg-transparent focus:outline-none btn-disabled cursor-not-allowed`}
-                                      onClick={() => {}}
+                                      onClick={() => { }}
                                     >
                                       <FaPencil className="text-green-300 text-lg" />
                                     </button>

@@ -61,21 +61,15 @@ function SurveiLhrkPage () {
 
   const handleClick = (building) => {
     // Pastikan objek valid dan memiliki properti kamera
-    if (
-      !building ||
-      typeof building !== 'object' ||
-      !building.camera ||
-      typeof building.camera !== 'object' || // setelah pemilihan kamera, harus objek
-      !building.camera.camera_id
-    ) {
+    if (!building) {
       console.warn("Invalid building or camera data", building);
       return;
     }
     try {
       console.log(building)
-      const title = building.title || "Tanpa Nama";
+      const title = building.camera.name || "Tanpa Nama";
       setActiveSimpang(title);
-      setActiveCamera(building.camera.camera_id);
+      setActiveCamera(building.camera.id);
     } catch (error) {
       console.error("Error in handleClick:", error);
     }
@@ -94,7 +88,7 @@ function SurveiLhrkPage () {
   // }, []);
 
   function handleClickSimpang (loc) {
-    let name = loc.name
+    let name = loc.Nama_Simpang
     if (!name.toLowerCase().includes("simpang")) {
       name = "Simpang " + name
     }
