@@ -182,10 +182,12 @@ const ManajemenKamera = () => {
   //# Fetch GET Camera (Maps)
   const fetchMaps = async () => {
     try {
-      const res = await maps.getAll();
-      const location = res.data.buildings;
+      const res = await maps.getAllSimpang();
+      // const location = res.data.buildings;
+      const location = res.data.simpang;
       // console.log(location)
       setDataSimpang(location);
+      console.log(location)
     } catch (err) {
       console.error("Failed to fetch location:", err);
       toast.error("Gagal mengambil data lokasi kamera!", { position: 'top-right' });
@@ -195,8 +197,9 @@ const ManajemenKamera = () => {
   const fetchCameras = async () => {
     try {
       const res = await cameras.getAll();
+      console.log(res.data.cameras)
       const detectedCameras = res.data.cameras;
-      setDataCameras(detectedCameras || []);
+      setDataCameras(detectedCameras);
     } catch (err) {
       if (err.response) {
         if (err.response.status === 404) {
@@ -209,9 +212,7 @@ const ManajemenKamera = () => {
       } else {
         toast.error("Terjadi kesalahan saat menghubungi API kamera.", { position: 'top-right' });
       }
-
       console.error("Failed to fetch cameras:", err);
-      setDataCameras([]);
     }
   };
 
@@ -241,7 +242,7 @@ const ManajemenKamera = () => {
   //# Fetch Create Camera (Maps)
   const createMaps = async (data) => {
     const today = new Date();
-    const dateNow = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+    const dateNow = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const push = {
       model_detection: data.model_detection || false,
       latitude: data.latitude,
@@ -558,6 +559,7 @@ const ManajemenKamera = () => {
     const combineData = () => {
       const result = dataSimpang.map(building => {
         // Ambil semua kamera yang memiliki building.id yang cocok
+        console.log(dataCameras.filter(camera => camera.ID_Simpang == building.id));
         const relatedCameras = dataCameras.filter(camera => camera.ID_Simpang === building.id);
 
         return {
@@ -574,6 +576,7 @@ const ManajemenKamera = () => {
       });
 
       setMergedCameraData(result);
+      console.log(result)
       let videoStream;
 
       videoStream = result?.filter(cam => cam.socket_event === "not_yet_assign")
@@ -582,7 +585,7 @@ const ManajemenKamera = () => {
     };
 
 
-    if (dataSimpang.length) {
+    if (dataSimpang.length && dataCameras.length) {
       combineData();
     }
   }, [dataSimpang, dataCameras]);
@@ -738,7 +741,7 @@ const ManajemenKamera = () => {
         id: id,
         category: dataMapsID.kategori || data.category || "",
         model_detection: dataMapsID.model_detection || data.model_detection || false,
-        name: dataMapsID.name || data.name || "",
+        name: dataMapsID.name || data.Nama_Simpang || "",
         location: {
           latitude: dataMapsID.latitude || data.location || "",
           longitude: dataMapsID.longitude || data.location || ""
@@ -794,12 +797,9 @@ const ManajemenKamera = () => {
   };
 
   // Filter search for cameras
-  const filteredBuildings = mergedCameraData.filter((buildings) =>
-    buildings.name.toLowerCase().includes(inputValue.toLowerCase())
-  );
+  const filteredBuildings = mergedCameraData
 
-  const filteredCameras = mergedCameraData.flatMap(b => b.camera || []).filter(cam => cam.socket_event === "not_yet_assign").filter((i) => i.name.toLowerCase().includes(inputValue.toLowerCase()));
-
+  const filteredCameras = mergedCameraData
   // Calendar pagination logic - Fixed
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -1104,7 +1104,7 @@ const ManajemenKamera = () => {
 
                           return filteredBuildings?.flatMap((dataSimpang, i) => {
                             const cameras = Array.isArray(dataSimpang.camera) ? dataSimpang.camera : [];
-
+                            console.log(dataSimpang)
                             if (cameras.length === 0) {
                               return (
                                 <tr key={`no-camera-${i}`} className="text-xs font-normal text-left">
@@ -1122,15 +1122,20 @@ const ManajemenKamera = () => {
                                     >
                                       <FaTrashCan className="text-red-300 text-lg" />
                                     </button>
-                                    <div className='text-nowrap'>{dataSimpang.name}</div>
+                                    <div className='text-nowrap'>{dataSimpang.Nama_Simpang}</div>
                                   </td>
-                                  <td colSpan={2} className='text-center'>Tidak ada kamera</td>
+                                  <td colSpan={3} className='text-left text-nowrap'>Tidak ada kamera</td>
+                                  <td className='max-w-5 truncate'>{dataSimpang?.latitude || '-'}</td>
+                                  <td className='max-w-5 truncate'>{dataSimpang?.longitude || '-'}</td>
                                   <td className='text-center'>-</td>
-                                  <td className='max-w-5 truncate'>{dataSimpang.location?.latitude || '-'}</td>
-                                  <td className='max-w-5 truncate'>{dataSimpang.location?.longitude || '-'}</td>
                                   <td className='text-center'>-</td>
-                                  <td className='text-center'>-</td>
-                                  <td className='text-center'>
+                                  <td className='flex justify-center gap-1'>
+                                    <button
+                                      className={`p-1 hover:bg-transparent focus:outline-none btn-disabled cursor-not-allowed`}
+                                      onClick={() => {}}
+                                    >
+                                      <FaPencil className="text-green-300 text-lg" />
+                                    </button>
                                     <button
                                       className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
                                       onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
@@ -1158,12 +1163,12 @@ const ManajemenKamera = () => {
                                   >
                                     <FaTrashCan className="text-red-300 text-lg" />
                                   </button>
-                                  <div className='text-nowrap'>{dataSimpang.name}</div>
+                                  <div className='text-nowrap'>{dataSimpang.Nama_Simpang}</div>
                                 </td>
                                 <td colSpan={2} className='text-nowrap'>{cam.name}</td>
                                 <td>{cam.socket_event || '-'}</td>
-                                <td className='max-w-5 truncate'>{dataSimpang.location?.latitude || '-'}</td>
-                                <td className='max-w-5 truncate'>{dataSimpang.location?.longitude || '-'}</td>
+                                <td className='max-w-5 truncate'>{dataSimpang?.latitude || '-'}</td>
+                                <td className='max-w-5 truncate'>{dataSimpang?.longitude || '-'}</td>
                                 <td className="text-center">{cam.resolution || '-'}</td>
                                 <td>
                                   <input
@@ -1366,6 +1371,7 @@ const ManajemenKamera = () => {
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1 || isLoadingCalendar}
                 >
+
                   <IoChevronBackSharp className="text-xl" />
                 </button>
 
