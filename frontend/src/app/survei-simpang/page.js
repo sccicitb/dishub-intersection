@@ -376,16 +376,16 @@ function SurveiSimpangPage () {
           <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
         )}
         <div className="w-[95%] m-auto">
-          <div className="lg:grid lg:grid-cols-3 flex flex-col lg:items-center lg:place-items-center gap-5 py-10">
+          <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
             <RecentVehicle customCSS={'h-[320px]'} />
-            <div className="lg:col-span-2 h-fit items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
-              <div className="w-[60%]">
+            <div className="py-1 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
+              <div className="w-full">
                 {renderCCTVStream()}
               </div>
             </div>
           </div>
 
-          <div className="xl:grid xl:grid-cols-2 items-center place-items-center lg:gap-10 py-10">
+          <div className="lg:flex lg:place-items-center gap-5 py-10 space-y-5 max-lg:flex-col">
             <SurveyInfoTable />
             <div className="w-full justify-end flex flex-col">
               <SelectionButtons
