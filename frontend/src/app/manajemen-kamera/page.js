@@ -288,7 +288,7 @@ const ManajemenKamera = () => {
       thumbnail_url: data.thumbnail_url || "",
       location: data.location || "",
       resolution: data.resolution || "",
-      status: data.status || "",
+      status: data.status || 0,
       socket_event: data.socket_status ? data.socket_event : "not_yet_assign",
       ID_Simpang: data.ID_Simpang || 0
     };
@@ -618,7 +618,7 @@ const ManajemenKamera = () => {
       thumbnail_url: data?.thumbnail_url || "",
       location: data?.location || "",
       resolution: data?.resolution || "",
-      status: checked ? 1 : 0,
+      status: checked ? 1 : 0 || 0,
       socket_status: data?.status_event === "not_yet_assign" ? true : false,
       socket_event: data?.socket_event || "",
       ID_Simpang: data?.ID_Simpang || 0
@@ -723,7 +723,7 @@ const ManajemenKamera = () => {
         thumbnail_url: data?.thumbnail_url || "",
         location: data?.location || "",
         resolution: data?.resolution || "",
-        status: data?.status || 0,
+        status: data.status ? data.status : 0,
         socket_event: data?.socket_event || "",
         socket_status: data?.socket_event === "not_yet_assign" ? false : true,
         ID_Simpang: data?.ID_Simpang || 0

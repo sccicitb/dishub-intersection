@@ -315,7 +315,7 @@ const DialogFCamera = ({
                     onFormCamerasChange({
                       ...formCameras,
                       ID_Simpang: selectedId,
-                      location: selectedItem?.name || '',
+                      location: selectedItem?.Nama_Simpang || '',
                     });
                   }}
                 >
