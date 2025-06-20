@@ -1,6 +1,6 @@
 "use client"
 
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import { useEffect, useState, useRef, useCallback } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import Map, { NavigationControl, Marker, Source, Layer } from "@vis.gl/react-maplibre";
@@ -56,6 +56,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
 
   const didFetch = useRef(false);
 
+
   useEffect(() => {
     if (didFetch.current) return;
     didFetch.current = true;
@@ -66,9 +67,11 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
         const camerasRes = await cameras.getAll();
         const data = camerasRes.data.cameras || [];
         setCamerasData(data);
-        const buildingsRes = await maps.getAllFull();
-        const buildingsData = buildingsRes.data.buildings || [];
-        const filtered = filterBuildingsByActiveCameras(buildingsData, data);
+        const buildingsRes = await maps.getAllSimpang();
+        const buildingsData = buildingsRes.data.simpang || [];
+        // const filtered = filterBuildingsByActiveCameras(buildingsData, data);
+        const filtered = combineData(buildingsData, data);
+        console.log(filtered)
         setBuildings(filtered);
         setupMapData(filtered);
       } catch (err) {
@@ -83,6 +86,19 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
     fetchData();
   }, []);
 
+  const combineData = (buildings, camerasData) => {
+    const result = buildings.filter(b => b.latitude != null && b.longitude != null).map(building => {
+      const relatedCameras = camerasData.filter(camera => camera.ID_Simpang === building.id);
+
+      return {
+        ...building,
+        latitude: building.latitude ? parseFloat(building.latitude) : null,
+        longitude: building.longitude ? parseFloat(building.longitude) : null,
+        cameras: relatedCameras || [],
+      };
+    });
+    return result;
+  };
 
   useEffect(() => {
     console.log(buildings)
@@ -119,13 +135,13 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
   const setupMapData = (buildings) => {
     if (buildings.length > 0) {
       // Calculate bounds
-      const coordinates = buildings.map(b => [b.location.longitude, b.location.latitude]);
+      const coordinates = buildings.map(b => [b.longitude, b.latitude]);
       const featureCollection = turf.featureCollection(coordinates.map(coord => turf.point(coord)));
       setBounds(turf.bbox(featureCollection));
 
       // Categorize buildings
       const grouped = buildings.reduce((acc, building) => {
-        const category = building.category || "Lainnya";
+        const category = building.kategori || "Lainnya";
         if (!acc[category]) acc[category] = [];
         acc[category].push(building);
         return acc;
@@ -194,7 +210,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
 
     try {
       mapRef.current.flyTo({
-        center: [building.location.longitude, building.location.latitude],
+        center: [building.longitude, building.latitude],
         zoom: 16,
         essential: true,
       });
@@ -221,7 +237,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
       if (categoryBuildings.length === 1) {
         flyToLocation(categoryBuildings[0]);
       } else {
-        const coordinates = categoryBuildings.map(b => [b.location.longitude, b.location.latitude]);
+        const coordinates = categoryBuildings.map(b => [b.longitude, b.latitude]);
         const featureCollection = turf.featureCollection(coordinates.map(coord => turf.point(coord)));
         const bbox = turf.bbox(featureCollection);
 
@@ -403,8 +419,8 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
             buildings.map((building) => (
               <Marker
                 key={building.id}
-                longitude={building.location.longitude}
-                latitude={building.location.latitude}
+                longitude={building.longitude}
+                latitude={building.latitude}
               >
                 <div onClick={() => flyToLocation(building)} style={{ cursor: "pointer" }}>
                   <FaMapMarkerAlt size={35} color="brown" />
@@ -442,7 +458,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
             {buildings.map((building) => (
               <DropdownItem
                 key={building.id}
-                label={building.name}
+                label={building.Nama_Simpang}
                 icon={<FaMapMarkerAlt />}
                 onClick={() => {
                   flyToLocation(building);
@@ -496,7 +512,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
             <div className="space-y-2">
               {cameraModal.cameras.map((camera) => (
                 <button
-                  key={camera.camera_id}
+                  key={camera.id}
                   disabled={camera.socketEvent === "not_yet_assign"}
                   className={`w-full text-left rounded-xl btn btn-sm hover:bg-gray-100 ${camera.socketEvent === "not_yet_assign"
                     ? "border-orange-100 bg-orange-50"
@@ -505,7 +521,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
                   onClick={() => handleCameraSelect(camera)}
                 >
                   <div className="flex flex-col items-center">
-                    <span>{camera.name || `Camera ${camera.camera_id}`}</span>
+                    <span>{camera.name || `Camera ${camera.id}`}</span>
                     <small className={`${camera.socketEvent === "not_yet_assign"
                       ? "text-orange-300"
                       : "text-green-600"

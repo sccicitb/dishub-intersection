@@ -315,14 +315,14 @@ const DialogFCamera = ({
                     onFormCamerasChange({
                       ...formCameras,
                       ID_Simpang: selectedId,
-                      location: selectedItem?.name || '',
+                      location: selectedItem?.Nama_Simpang || '',
                     });
                   }}
                 >
                   <option value="" defaultValue>Pilih Kategori</option>
                   {mergedCameraData?.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.name}
+                      {item.Nama_Simpang}
                     </option>
                   ))}
                 </select>
