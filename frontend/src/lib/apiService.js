@@ -24,6 +24,7 @@ export const maps = {
   getAll: () => getRequest(`/maps/buildings`),
   getAllFull: () => getRequest(`/maps/buildings-full`),
   getById: (id) => getRequest(`/simpang/${id}`),
+  getAllSimpang: () => getRequest(`/simpang`),
   updateById: (id, data) => updateRequest(`/simpang/${id}`, data),
   createData: (data) => createRequest(`/simpang`, data),
   deleteById: (id) => deleteRequest(`/simpang/${id}`)

@@ -104,7 +104,6 @@ function SurveiSimpangPage () {
 
     return dataCamera.find(building => {
       // Cek berbagai kemungkinan struktur data
-      if (building?.camera?.camera_id === activeCamera) return true;
       if (building?.camera?.id === activeCamera) return true;
       if (building?.id === activeCamera) return true;
       return false;
@@ -277,23 +276,15 @@ function SurveiSimpangPage () {
       console.warn("Invalid building:", building);
       return;
     }
+    console.log(building)
 
     try {
       let cameraId, cameraTitle, socketEvent;
-
       // Handle different data structures
-      if (building.camera && building.camera.camera_id) {
-        cameraId = building.camera.camera_id;
-        cameraTitle = building.camera.title || building.title || building.name;
-        socketEvent = building.camera.socketEvent || building.socket_event;
-      } else if (building.camera_id) {
-        cameraId = building.camera_id;
-        cameraTitle = building.title || building.name;
-        socketEvent = building.socket_event;
-      } else if (building.id) {
-        cameraId = building.id;
-        cameraTitle = building.name || building.title;
-        socketEvent = building.socket_event;
+      if (building.camera.id) {
+        cameraId = building.camera.id;
+        cameraTitle = building.camera.name || building.camera.title;
+        socketEvent = building.camera.socket_event;
       } else {
         console.error("Cannot find camera ID in building data:", building);
         return;
@@ -322,7 +313,8 @@ function SurveiSimpangPage () {
   };
 
   function handleClickSimpang (loc) {
-    let name = loc.name
+    let name = loc.Nama_Simpang
+    console.log(loc)
     if (!name.toLowerCase().includes("simpang")) {
       name = "Simpang " + name
     }

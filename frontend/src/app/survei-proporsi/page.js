@@ -258,7 +258,7 @@ function SurveiProporsi () {
   }, [activeSimpangId, activeCamera, selectedCategory, dateInput]);
 
   function handleClickSimpang (loc) {
-    let name = loc.name
+    let name = loc.Nama_Simpang
     if (!name.toLowerCase().includes("simpang")) {
       name = "Simpang " + name
     }
@@ -268,14 +268,16 @@ function SurveiProporsi () {
 
   // Handle map click
   const handleMapClick = (building) => {
-    if (!building?.camera?.camera_id) {
+    if (!building) {
       console.warn("Invalid building or camera data", building);
       return;
     }
 
+    console.log(building)
+
     try {
-      setActiveSimpang(building.camera.title);
-      setActiveCamera(building.camera.camera_id);
+      setActiveSimpang(building.camera.name);
+      setActiveCamera(building.camera.id);
     } catch (error) {
       console.error("Error in handleMapClick:", error);
     }

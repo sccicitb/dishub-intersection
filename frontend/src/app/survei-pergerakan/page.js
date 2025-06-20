@@ -141,13 +141,7 @@ function MovePage () {
   }, [activeSimpangId, activeCamera, activeInterval, activePendekatan, activeDirection, dateInput, reportType]);
 
   const handleClick = (building) => {
-    if (
-      !building ||
-      typeof building !== 'object' ||
-      !building.camera ||
-      typeof building.camera !== 'object' ||
-      !building.camera.camera_id
-    ) {
+    if (!building) {
       console.warn("Invalid building or camera data", building);
       return;
     }
