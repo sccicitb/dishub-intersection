@@ -186,112 +186,112 @@ export default function FormSAIVTable () {
                   Tipe pendekat
                 </div>
               </th>
-              <th colSpan="3" className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th colSpan="3" className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Rasio kendaraan belok
               </th>
-              <th colSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th colSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Arus belok kanan
               </th>
-              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Lebar efektif
               </th>
-              <th colSpan={8} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th colSpan={8} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Arus jenuh
               </th>
-              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Arus lalu lintas
               </th>
-              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Rasio Arus
               </th>
-              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Rasio Fase
               </th>
-              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Waktu hijau per fase (i)
               </th>
-              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Kapasitas
               </th>
-              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Derajat kejenuhan
               </th>
             </tr>
             <tr className="bg-gray-200">
-              <th rowSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300">R<sub>bkijt</sub></th>
-              <th rowSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300">R<sub>bki</sub></th>
-              <th rowSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300">R<sub>bka</sub></th>
-              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">dari arah ditinjau</th>
-              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300">dari arah berlawanan</th>
-              {/* <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">L<sub>e</sub></th> */}
-              <th rowSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300">Arus jenuh dasar</th>
-              <th colSpan="6" className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th rowSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">R<sub>bkijt</sub></th>
+              <th rowSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">R<sub>bki</sub></th>
+              <th rowSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">R<sub>bka</sub></th>
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">dari arah ditinjau</th>
+              <th rowSpan={3} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">dari arah berlawanan</th>
+              {/* <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">L<sub>e</sub></th> */}
+              <th rowSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">Arus jenuh dasar</th>
+              <th colSpan="6" className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Faktor-faktor penyesuaian
               </th>
-              <th rowSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300">
+              <th rowSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">
                 Arus jenuh yang disesuaikan
               </th>
             </tr>
             <tr className="bg-gray-200 text-xs">
-              <th colSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300">Semua Tipe Pendekat</th>
-              <th colSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300">Hanya tipe P</th>
+              <th colSpan={4} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">Semua Tipe Pendekat</th>
+              <th colSpan={2} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">Hanya tipe P</th>
             </tr>
             <tr className="bg-gray-200 text-xs">
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">L<sub>E</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">J<sub>O</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>HS</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>UK</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>G</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>P</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>BKI</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">F<sub>BKA</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">J</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">q</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">R<sub>q/j</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">R<sub>F</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">W<sub>Hi</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">C</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 min-w-10">D<sub>J</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">L<sub>E</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">J<sub>O</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">F<sub>HS</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">F<sub>UK</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">F<sub>G</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">F<sub>P</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">F<sub>BKI</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">F<sub>BKA</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">J</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">q</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">R<sub>q/j</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">R<sub>F</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">W<sub>Hi</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">C</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap min-w-10">D<sub>J</sub></th>
             </tr>
             <tr className="bg-gray-200 text-xs">
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">SMP/jam</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">SMP/jam</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">m</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">Gambar<br />SMP/jam</th>
-              <th colSpan={6} className="text-center text-xs font-semibold text-gray-900 border border-base-300">J = l<sub>s</sub> x F<sub>us</sub> x F<sub>uk</sub> x F<sub>ug</sub> x F<sub>up</sub> x F<sub>bki</sub> x F<sub>bka</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">SMP/jam</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">SMP/jam</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(18)/(17)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(19)/R<sub>ig</sub></th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">detik</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(17)×(21)/S<br />SMP/jam</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(18)/(22)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">SMP/jam</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">SMP/jam</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">m</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">Gambar<br />SMP/jam</th>
+              <th colSpan={6} className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">J = l<sub>s</sub> x F<sub>us</sub> x F<sub>uk</sub> x F<sub>ug</sub> x F<sub>up</sub> x F<sub>bki</sub> x F<sub>bka</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">SMP/jam</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">SMP/jam</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(18)/(17)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(19)/R<sub>ig</sub></th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">detik</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(17)×(21)/S<br />SMP/jam</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(18)/(22)</th>
 
             </tr>
             <tr className="bg-gray-200 text-xs">
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(1)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(2)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(3)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(4)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(5)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(6)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(7)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(8)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(9)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(10)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(11)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(12)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(13)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(14)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(15)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(16)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(17)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(18)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(19)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(20)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(21)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(22)</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300">(23)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(1)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(2)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(3)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(4)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(5)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(6)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(7)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(8)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(9)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(10)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(11)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(12)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(13)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(14)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(15)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(16)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(17)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(18)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(19)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(20)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(21)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(22)</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(23)</th>
 
 
             </tr>

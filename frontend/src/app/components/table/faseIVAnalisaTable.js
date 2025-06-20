@@ -62,16 +62,16 @@ export default function TrafficPhaseTable () {
           <thead>
             {/* Header Row 1 */}
             <tr className="bg-gray-200">
-              <th rowSpan={4} className="border border-gray-300 p-2 text-center font-semibold min-w-[80px]">
+              <th rowSpan={4} className="border border-gray-300 p-2 text-center font-semibold min-w-[50px] text-wrap">
                 Kode<br />Pendekat
               </th>
-              <th rowSpan={4} className="border border-gray-300 p-2 text-center font-semibold min-w-[80px]">
+              <th rowSpan={4} className="border border-gray-300 p-2 text-center font-semibold min-w-[50px] text-wrap">
                 Tipe<br />Pendekat
               </th>
-              <th rowSpan={4} className="border border-gray-300 p-2 text-center font-semibold min-w-[100px]">
+              <th rowSpan={4} className="border border-gray-300 p-2 text-center font-semibold min-w-[80px] text-wrap">
                 Arah
               </th>
-              <th rowSpan={4} className="border border-gray-300 p-2 text-center font-semibold min-w-[100px]">
+              <th rowSpan={4} className="border border-gray-300 p-2 text-center font-semibold min-w-[80px] text-wrap">
                 Pemisahan<br />Lurus - RKa
               </th>
               <th colSpan={4} className="border border-gray-300 p-2 text-center font-semibold">
@@ -143,7 +143,7 @@ export default function TrafficPhaseTable () {
                 {/* Kode Pendekat */}
                 <td className="border border-gray-300 text-center ">
                   <div className="flex items-center justify-center p-2">
-                    <input type="checkbox" className="mr-1" defaultChecked />
+                    {/* <input type="checkbox" className="checkbox checkbox-xs mr-1" defaultChecked /> */}
                     <span className="font-semibold">{row.kodePendekat}</span>
                   </div>
                 </td>
@@ -155,18 +155,18 @@ export default function TrafficPhaseTable () {
 
                 {/* Arah */}
                 <td className="border border-gray-300 p-2">
-                  <div className="space-y-1">
+                  <div className="">
                     <div className="flex items-center text-xs">
-                      <input type="checkbox" className="mr-1" />
+                      <input type="checkbox" className="mr-1 mb-0.5 checkbox checkbox-xs" />
                       <span>BKI / BKIJT</span>
                       <input type="checkbox" className="ml-2" defaultChecked={row.pemisahanLurusRka === 1} />
                     </div>
                     <div className="flex items-center text-xs">
-                      <input type="checkbox" className="mr-1" defaultChecked />
+                      <input type="checkbox" className="mr-1 mb-0.5 checkbox checkbox-xs" defaultChecked />
                       <span>Lurus</span>
                     </div>
                     <div className="flex items-center text-xs">
-                      <input type="checkbox" className="mr-1" />
+                      <input type="checkbox" className="mr-1 mb-0.5 checkbox checkbox-xs" />
                       <span>BKa</span>
                     </div>
                   </div>
@@ -174,12 +174,12 @@ export default function TrafficPhaseTable () {
 
                 {/* Pemisahan Lurus - RKa */}
                 <td className="border border-gray-300 text-center p-2">
-                  <input type="checkbox" className="scale-125" defaultChecked={row.pemisahanLurusRka === 1} />
+                  <input type="checkbox" className="checkbox checkbox-xs" defaultChecked={row.pemisahanLurusRka === 1} />
                 </td>
 
                 {/* F1 */}
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -189,7 +189,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -199,7 +199,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -209,7 +209,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -221,7 +221,7 @@ export default function TrafficPhaseTable () {
 
                 {/* F2 */}
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -231,7 +231,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -241,7 +241,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -251,7 +251,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -263,7 +263,7 @@ export default function TrafficPhaseTable () {
 
                 {/* F3 */}
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -273,7 +273,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -283,7 +283,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -293,7 +293,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -305,7 +305,7 @@ export default function TrafficPhaseTable () {
 
                 {/* F4 */}
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -315,7 +315,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -325,7 +325,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -335,7 +335,7 @@ export default function TrafficPhaseTable () {
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -347,7 +347,7 @@ export default function TrafficPhaseTable () {
 
                 {/* WHI */}
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
@@ -359,7 +359,7 @@ export default function TrafficPhaseTable () {
 
                 {/* S */}
                 <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[3rem]">
+                  <div className="flex h-full min-h-[2rem]">
                     <input
                       type="text"
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
