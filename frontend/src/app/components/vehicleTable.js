@@ -89,9 +89,9 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
     <div className="mx-auto">
       <h2 className="text-xl font-bold mb-4">Data Pemantauan Kendaraan</h2>
 
-      <div className="tabs tabs-boxed mb-4 space-x-5 flex px-5">
+      <div className="tabs tabs-boxed mb-4 space-x-2 flex space-y-2 px-5">
         {activeTab === 'hourly' && (
-          <div className="flex gap-5 items-center w-fit">
+          <div className="flex gap-2 items-center w-fit">
             <label className="mr-2 font-medium">Pilih Tanggal:</label>
             <input
               type="date"

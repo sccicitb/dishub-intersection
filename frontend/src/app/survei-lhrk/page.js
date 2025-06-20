@@ -101,7 +101,7 @@ function SurveiLhrkPage () {
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
         <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
         <div className="w-[95%] m-auto">
-          <div className="xl:grid xl:grid-cols-2 items-center place-items-center lg:gap-5 py-10">
+          <div className="flex max-lg:flex-col items-center place-items-center max-lg:space-y-5 py-5">
             <SurveyInfoTable />
             <div className="w-full justify-end flex flex-col">
               <SelectionButtons vehicleData={vehicleData}

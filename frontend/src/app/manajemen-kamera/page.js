@@ -187,7 +187,7 @@ const ManajemenKamera = () => {
       const location = res.data.simpang;
       // console.log(location)
       setDataSimpang(location);
-      console.log(location)
+      // console.log(location)
     } catch (err) {
       console.error("Failed to fetch location:", err);
       toast.error("Gagal mengambil data lokasi kamera!", { position: 'top-right' });
@@ -197,7 +197,7 @@ const ManajemenKamera = () => {
   const fetchCameras = async () => {
     try {
       const res = await cameras.getAll();
-      console.log(res.data.cameras)
+      // console.log(res.data.cameras)
       const detectedCameras = res.data.cameras;
       setDataCameras(detectedCameras);
     } catch (err) {
@@ -559,7 +559,7 @@ const ManajemenKamera = () => {
     const combineData = () => {
       const result = dataSimpang.map(building => {
         // Ambil semua kamera yang memiliki building.id yang cocok
-        console.log(dataCameras.filter(camera => camera.ID_Simpang == building.id));
+        // console.log(dataCameras.filter(camera => camera.ID_Simpang == building.id));
         const relatedCameras = dataCameras.filter(camera => camera.ID_Simpang === building.id);
 
         return {
@@ -576,7 +576,7 @@ const ManajemenKamera = () => {
       });
 
       setMergedCameraData(result);
-      console.log(result)
+      // console.log(result)
       let videoStream;
 
       videoStream = result?.filter(cam => cam.socket_event === "not_yet_assign")
@@ -688,7 +688,7 @@ const ManajemenKamera = () => {
 
       videoStream = mergedCameraData.flatMap(b => b.camera || []).filter(cam => cam.socket_event === "not_yet_assign").filter(cam => cam.status === 1);
       setVideoStream(videoStream)
-      console.log(videoStream)
+      // console.log(videoStream)
     };
   }, [mergedCameraData]);
 
@@ -1208,18 +1208,21 @@ const ManajemenKamera = () => {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-5 w-full">
                     {
-                      filteredBuildings?.map((dataCamera, index) => {
+                      filteredBuildings?.filter(fB => fB.camera?.some(d => d.socket_event !== "not_yet_assign")).map((dataCamera, index) => {
                         const firstCamera = dataCamera?.camera?.[0];
                         const cameraId = firstCamera?.id;
                         const stream = cameraId ? streamData[cameraId] : null;
-                        console.log(dataCamera.camera)
                         return (
                           <div className="w-full relative bg-black" key={index}>
                             <CCTVStream
                               heightCamera
                               customLarge={'h-[90px]'}
                               data={stream}
-                              title={dataCamera?.name || `CCTV Camera ${index + 1}`}
+                              title={
+                                (firstCamera?.name && dataCamera?.Nama_Simpang)
+                                  ? `${firstCamera.name} - ${dataCamera.Nama_Simpang}`
+                                  : `CCTV Camera ${index + 1}`
+                              }
                               onClick={() => handleClickCamera(dataCamera)}
                             />
                             <input
@@ -1233,23 +1236,26 @@ const ManajemenKamera = () => {
                       })
                     }
                     {
-                      filteredCameras?.map((item, i) => {
-                        return (
-                          <div className="w-full relative bg-black" key={i}>
-                            <AdaptiveVideoPlayer
-                              videoUrl={item.url}
-                              title={`Video ${item.name}`}
-                              onClick={() => console.log(`Clicked on ${item.name}`)}
-                            />
-                            <input
-                              type="checkbox"
-                              className={`toggle absolute bg-white/50 bottom-2.5 right-2 ${item.status ? 'toggle-success' : 'toggle-error'} toggle-xs`}
-                              checked={item.status}
-                              onChange={(e) => handleToggle(item.id, item, e.target.checked)}
-                            />
-                          </div>
-                        );
-                      })
+                      filteredBuildings
+                        ?.flatMap(b => b.camera || [])
+                        .filter(d => d.socket_event === "not_yet_assign")
+                        .map((item, i) => {
+                          return (
+                            <div className="w-full relative bg-black" key={i}>
+                              <AdaptiveVideoPlayer
+                                videoUrl={item.url}
+                                title={`Video ${item.name}`}
+                                onClick={() => console.log(`Clicked on ${item.name}`)}
+                              />
+                              <input
+                                type="checkbox"
+                                className={`toggle absolute bg-white/50 bottom-2.5 right-2 ${item.status ? 'toggle-success' : 'toggle-error'} toggle-xs`}
+                                checked={item.status}
+                                onChange={(e) => handleToggle(item.id, item, e.target.checked)}
+                              />
+                            </div>
+                          );
+                        })
                     }
                   </div>
                 )}

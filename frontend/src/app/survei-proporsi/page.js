@@ -318,17 +318,17 @@ function SurveiProporsi () {
 
       <div className="w-[95%] m-auto">
         {/* Main Content Section */}
-        <div className="lg:grid lg:grid-cols-3 flex flex-col lg:items-center lg:place-items-center gap-5 py-10">
+        <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
           <Suspense fallback={<LoadingFallback />}>
-            <RecentVehicle customCSS="h-[320px]" />
+            <RecentVehicle hg={340} />
           </Suspense>
 
-          <div className="lg:col-span-2 h-fit items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
-            <div className="w-[60%]">
+          <div className="py-1 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
+            <div className="w-full">
               <Suspense fallback={<LoadingFallback message="Loading stream..." />}>
                 <CCTVStream
-                  heightCamera
                   data={streamData[activeCamera] || null}
+                  large
                   title={activeCamera ? `CCTV Camera ${activeCamera} (${activeSimpang})` : "CCTV Camera (Loading...)"}
                 />
               </Suspense>
