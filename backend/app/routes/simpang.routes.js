@@ -4,6 +4,7 @@ const simpangController = require('../controllers/simpang.controller');
 module.exports = function(app) {
   app.get('/api/simpang', simpangController.getAllSimpang);        // List semua simpang
   app.get('/api/simpang/:id', simpangController.getSimpangById);   // Detail simpang
+  app.get('/api/simpang/:id/detail', simpangController.getSimpangDetail); // Detail simpang with cameras
   app.post('/api/simpang', simpangController.createSimpang);       // Tambah simpang
   app.put('/api/simpang/:id', simpangController.updateSimpang);    // Edit simpang
   app.delete('/api/simpang/:id', simpangController.deleteSimpangById); // Hapus simpang
