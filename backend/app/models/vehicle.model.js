@@ -50,6 +50,23 @@ const getDateFilterClause = (filter) => {
   }
 };
 
+/**
+ * Helper function to get valid simpang IDs from database
+ * Uses simpang table if available, otherwise falls back to known IDs
+ */
+const getValidSimpangIds = async () => {
+  try {
+    // Try to get simpang IDs from simpang table
+    const [simpangRows] = await db.query('SELECT DISTINCT id FROM simpang WHERE id IN (SELECT DISTINCT ID_Simpang FROM arus) ORDER BY id');
+    return simpangRows.map(row => row.id);
+  } catch (error) {
+    // Fallback to known simpang IDs if simpang table doesn't exist or has issues
+    console.warn('Using fallback simpang IDs:', error.message);
+    const [arusRows] = await db.query('SELECT DISTINCT ID_Simpang FROM arus ORDER BY ID_Simpang');
+    return arusRows.map(row => row.ID_Simpang);
+  }
+};
+
 Vehicle.getAll = async (result) => {
   try {
     const [rows] = await db.query('SELECT * FROM arus ORDER BY waktu DESC LIMIT 10');
@@ -60,33 +77,19 @@ Vehicle.getAll = async (result) => {
   }
 };
 
-// Updated: Add filter parameter to chart method
+// DYNAMIC: Use dynamic queries with simpang table validation for 100% coverage
 Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
+    const validSimpangIds = await getValidSimpangIds();
+    
     const [rows] = await db.query(`
       SELECT
-        SUM(
-          CASE
-            WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
-            WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
-            ELSE 0
-          END
-        ) AS total_IN,
-
-        SUM(
-          CASE
-            WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
-            WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
-            ELSE 0
-          END
-        ) AS total_OUT
+        COUNT(CASE WHEN dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_IN,
+        COUNT(CASE WHEN ke_arah IN ('east', 'west', 'north', 'south') AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_OUT
       FROM arus
-      WHERE ${dateFilter};
+      WHERE ${dateFilter}
+        AND ID_Simpang IN (${validSimpangIds.join(', ')});
     `);
     result(null, rows);
   } catch (err) {
@@ -95,36 +98,20 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
   }
 };
 
-// Updated: Add filter parameter to group by tipe kendaraan
+// DYNAMIC: Use dynamic queries with simpang table validation for 100% coverage
 Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
+    const validSimpangIds = await getValidSimpangIds();
+    
     const [rows] = await db.query(`
       SELECT
         SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB,
-
-        SUM(
-          CASE
-            WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
-            WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
-            ELSE 0
-          END
-        ) AS total_IN,
-
-        SUM(
-          CASE
-            WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
-            WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
-            ELSE 0
-          END
-        ) AS total_OUT
-
+        COUNT(CASE WHEN dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_IN,
+        COUNT(CASE WHEN ke_arah IN ('east', 'west', 'north', 'south') AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
+        AND ID_Simpang IN (${validSimpangIds.join(', ')})
       GROUP BY SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB
       ORDER BY total_IN DESC;
     `);
@@ -135,10 +122,12 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
   }
 };
 
-// Updated: Add filter parameter to group by arah mata angin
+// DYNAMIC: Use dynamic queries with simpang table validation for 100% coverage
 Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
+    const validSimpangIds = await getValidSimpangIds();
+    
     const [rows] = await db.query(`
       SELECT 
         d.arah, 
@@ -152,46 +141,25 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
       ) d
       LEFT JOIN (
         SELECT
-          CASE
-            WHEN ID_Simpang = 5 AND dari_arah = 'north' THEN 'north'
-            WHEN ID_Simpang = 2 AND dari_arah = 'east' THEN 'east'
-            WHEN ID_Simpang = 4 AND dari_arah = 'east' THEN 'east'
-            WHEN ID_Simpang = 3 AND dari_arah = 'west' THEN 'west'
-            WHEN ID_Simpang = 2 AND dari_arah = 'south' THEN 'south'
-          END AS arah,
+          dari_arah AS arah,
           1 AS total_IN,
           0 AS total_OUT
         FROM arus
         WHERE ${dateFilter}
-          AND (
-            (ID_Simpang = 5 AND dari_arah = 'north') OR
-            (ID_Simpang = 2 AND dari_arah = 'east') OR
-            (ID_Simpang = 4 AND dari_arah = 'east') OR
-            (ID_Simpang = 3 AND dari_arah = 'west') OR
-            (ID_Simpang = 2 AND dari_arah = 'south')
-          )
+          AND ID_Simpang IN (${validSimpangIds.join(', ')})
+          AND dari_arah IN ('east', 'west', 'north', 'south')
 
         UNION ALL
 
         SELECT
-          CASE
-            WHEN ID_Simpang = 5 AND ke_arah = 'north' THEN 'north'
-            WHEN ID_Simpang = 2 AND ke_arah = 'east' THEN 'east'
-            WHEN ID_Simpang = 4 AND ke_arah = 'east' THEN 'east'
-            WHEN ID_Simpang = 3 AND ke_arah = 'west' THEN 'west'
-            WHEN ID_Simpang = 2 AND ke_arah = 'south' THEN 'south'
-          END AS arah,
+          ke_arah AS arah,
           0 AS total_IN,
           1 AS total_OUT
         FROM arus
         WHERE ${dateFilter}
-          AND (
-            (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) OR
-            (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) OR
-            (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) OR
-            (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) OR
-            (ID_Simpang = 2 AND ke_arah = 'south' AND dari_arah IN ('east', 'north', 'west'))
-          )
+          AND ID_Simpang IN (${validSimpangIds.join(', ')})
+          AND ke_arah IN ('east', 'west', 'north', 'south')
+          AND dari_arah IN ('east', 'west', 'north', 'south')
       ) data ON d.arah = data.arah
       GROUP BY d.arah
       ORDER BY d.arah;
@@ -203,36 +171,20 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
   }
 };
 
-// Updated: Add filter parameter to rata-rata kendaraan per jam
+// DYNAMIC: Use dynamic queries with simpang table validation for 100% coverage
 Vehicle.getRataPerJam = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
+    const validSimpangIds = await getValidSimpangIds();
+    
     const [rows] = await db.query(`
       SELECT
         HOUR(CONVERT_TZ(waktu, '+00:00', '+07:00')) AS jam,
-
-        SUM(
-          CASE
-            WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
-            WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
-            ELSE 0
-          END
-        ) AS total_IN,
-
-        SUM(
-          CASE
-            WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
-            WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
-            ELSE 0
-          END
-        ) AS total_OUT
-
+        COUNT(CASE WHEN dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_IN,
+        COUNT(CASE WHEN ke_arah IN ('east', 'west', 'north', 'south') AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
+        AND ID_Simpang IN (${validSimpangIds.join(', ')})
       GROUP BY jam
       ORDER BY jam;
     `);
@@ -243,39 +195,22 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
   }
 };
 
-// Updated: Add filter parameter to rata-rata kendaraan per 15 menit
+// DYNAMIC: Use dynamic queries with simpang table validation for 100% coverage
 Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
+    const validSimpangIds = await getValidSimpangIds();
+    
     const [rows] = await db.query(`
       SELECT
         DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) AS tanggal,
         HOUR(CONVERT_TZ(waktu, '+00:00', '+07:00')) AS jam,
         FLOOR(MINUTE(CONVERT_TZ(waktu, '+00:00', '+07:00')) / 15) * 15 AS menit,
-
-        SUM(
-          CASE
-            WHEN (ID_Simpang = 5 AND dari_arah = 'north') THEN 1
-            WHEN (ID_Simpang = 2 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 4 AND dari_arah = 'east') THEN 1
-            WHEN (ID_Simpang = 3 AND dari_arah = 'west') THEN 1
-            ELSE 0
-          END
-        ) AS total_IN,
-
-        SUM(
-          CASE
-            WHEN (ID_Simpang = 5 AND ke_arah = 'north' AND dari_arah IN ('east', 'south', 'west')) THEN 1
-            WHEN (ID_Simpang = 2 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 4 AND ke_arah = 'east' AND dari_arah IN ('west', 'south', 'north')) THEN 1
-            WHEN (ID_Simpang = 3 AND ke_arah = 'west' AND dari_arah IN ('east', 'south', 'north')) THEN 1
-            ELSE 0
-          END
-        ) AS total_OUT
-
+        COUNT(CASE WHEN dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_IN,
+        COUNT(CASE WHEN ke_arah IN ('east', 'west', 'north', 'south') AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
-
+        AND ID_Simpang IN (${validSimpangIds.join(', ')})
       GROUP BY tanggal, jam, menit
       ORDER BY tanggal, jam, menit;
     `);
