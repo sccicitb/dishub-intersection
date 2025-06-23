@@ -8,8 +8,12 @@ const TrafficPhaseDiagram = ({ tableData }) => {
     let maxTime = 0;
     tableData.forEach(row => {
       Object.values(row.phases).forEach(phase => {
-        if (phase.whi) {
-          const phaseEnd = parseInt(phase.whi) + parseInt(phase.wAll.wk || 0) + parseInt(phase.wAll.wms || 0);
+        if (phase.whi || phase.wAll.wk || phase.wAll.wms) {
+          const mf = parseInt(phase.mf) || 0;
+          const whi = parseInt(phase.whi) || 0;
+          const wk = parseInt(phase.wAll.wk) || 0;
+          const wms = parseInt(phase.wAll.wms) || 0;
+          const phaseEnd = mf + whi + wk + wms;
           maxTime = Math.max(maxTime, phaseEnd);
         }
       });
@@ -19,100 +23,66 @@ const TrafficPhaseDiagram = ({ tableData }) => {
 
   const totalCycle = calculateTotalCycle();
 
-  // Get all phase segments for a row (combining all phases into one timeline)
-  const getAllPhaseSegments = (row) => {
-    const segments = [];
-    
-    Object.entries(row.phases).forEach(([phaseKey, phase]) => {
-      if (phase.whi || phase.wAll.wk || phase.wAll.wms) {
-        const startTime = parseInt(phase.whi) || 0;
-        const wkDuration = parseInt(phase.wAll.wk) || 0;
-        const wmsDuration = parseInt(phase.wAll.wms) || 0;
-        
-        // Green phase (WHI)
-        if (phase.whi && parseInt(phase.whi) > 0) {
-          segments.push({
-            phase: phaseKey.toUpperCase(),
-            type: 'green',
-            start: 0,
-            duration: parseInt(phase.whi),
-            color: 'bg-green-500',
-            label: `${phaseKey.toUpperCase()}`
-          });
+  const getApproachCodes = () => {
+    return tableData
+      .map(row => row.kodePendekat)
+      .filter(code => code)
+      .sort();
+  };
+  // Get phase data for horizontal layout
+  const getPhaseData = () => {
+    const phases = ['f1', 'f2', 'f3', 'f4'];
+    const phaseData = {};
+
+    phases.forEach(phaseKey => {
+      phaseData[phaseKey] = {
+        name: phaseKey.toUpperCase().replace('F', 'FASE '),
+        approaches: []
+      };
+
+      tableData.forEach(row => {
+        const phase = row.phases[phaseKey];
+        if (phase && (phase.mf || phase.whi || phase.wAll.wk || phase.wAll.wms)) {
+          const mf = parseInt(phase.mf) || 0;
+          const whi = parseInt(phase.whi) || 0;
+          const wk = parseInt(phase.wAll.wk) || 0;
+          const wms = parseInt(phase.wAll.wms) || 0;
+
+          if (mf > 0 || whi > 0 || wk > 0 || wms > 0) {
+            phaseData[phaseKey].approaches.push({
+              kode: row.kodePendekat,
+              mf,
+              whi,
+              wk,
+              wms,
+              total: mf + whi + wk + wms
+            });
+          }
         }
-        
-        // Yellow phase (WK)
-        if (wkDuration > 0) {
-          segments.push({
-            phase: phaseKey.toUpperCase(),
-            type: 'yellow',
-            start: parseInt(phase.whi) || 0,
-            duration: wkDuration,
-            color: 'bg-yellow-500',
-            label: `${phaseKey.toUpperCase()}`
-          });
-        }
-        
-        // Red phase (WMS)
-        if (wmsDuration > 0) {
-          segments.push({
-            phase: phaseKey.toUpperCase(),
-            type: 'red',
-            start: (parseInt(phase.whi) || 0) + wkDuration,
-            duration: wmsDuration,
-            color: 'bg-red-500',
-            label: `${phaseKey.toUpperCase()}`
-          });
-        }
-      }
+      });
     });
-    
-    return segments.sort((a, b) => a.start - b.start || a.phase.localeCompare(b.phase));
+
+    return phaseData;
   };
 
-  // Check for overlapping phases and create separate rows if needed
-  const processRowData = (row) => {
-    const allSegments = getAllPhaseSegments(row);
-    
-    // Group segments by time overlap
-    const timeSlots = [];
-    
-    allSegments.forEach(segment => {
-      let placed = false;
-      
-      // Try to place in existing time slots
-      for (let slot of timeSlots) {
-        const hasOverlap = slot.some(existingSegment => 
-          !(segment.start >= existingSegment.start + existingSegment.duration || 
-            existingSegment.start >= segment.start + segment.duration)
-        );
-        
-        if (!hasOverlap) {
-          slot.push(segment);
-          placed = true;
-          break;
-        }
-      }
-      
-      // Create new time slot if no suitable slot found
-      if (!placed) {
-        timeSlots.push([segment]);
-      }
+  const phaseData = getPhaseData();
+  const activePhases = Object.keys(phaseData).filter(key => phaseData[key].approaches.length > 0);
+  const dynamicApproachCodes = getApproachCodes();
+  // Calculate widths for each phase
+  const calculatePhaseWidths = () => {
+    const widths = {};
+    let totalWidth = 0;
+
+    activePhases.forEach(phaseKey => {
+      const maxTotal = Math.max(...phaseData[phaseKey].approaches.map(app => app.total));
+      widths[phaseKey] = maxTotal;
+      totalWidth += maxTotal;
     });
-    
-    return timeSlots;
+
+    return { widths, totalWidth };
   };
 
-  // Generate time markers
-  const generateTimeMarkers = () => {
-    const markers = [];
-    for (let i = 0; i <= totalCycle; i += 10) {
-      markers.push(i);
-    }
-    return markers;
-  };
-
-  const timeMarkers = generateTimeMarkers();
+  const { widths: phaseWidths, totalWidth } = calculatePhaseWidths();
 
   return (
     <div className="w-full py-6 bg-white">
@@ -121,107 +91,193 @@ const TrafficPhaseDiagram = ({ tableData }) => {
           Diagram Waktu Fase Lalu Lintas
         </h2>
         <p className="text-sm text-gray-600">
-          Visualisasi timing untuk setiap pendekat (satu baris per pendekat)
+          {/* Visualisasi timing berurutan per fase (kiri ke kanan: U, S, T, B) */}
+           Visualisasi timing berurutan per fase (Pendekat: {dynamicApproachCodes.join(', ')})
         </p>
       </div>
 
       <div className="overflow-x-auto">
         <div className="min-w-[800px]">
-          {/* Time scale header */}
-          <div className="flex mb-4 relative">
-            <div className="w-20 text-center font-semibold py-2 border-b-2 border-gray-300">
+          {/* Phase headers */}
+          <div className="flex border-b-2 border-gray-300">
+            <div className="w-20 text-center font-semibold py-2 border-r border-gray-300">
               Pendekat
             </div>
-            <div className="flex-1 relative border-b-2 border-gray-300 pb-2">
-              <div className="text-center font-semibold mb-2">Waktu (detik)</div>
-              {timeMarkers.map((time, index) => (
-                <div
-                  key={time}
-                  className="absolute text-xs text-gray-600"
-                  style={{ left: `${(time / totalCycle) * 100}%` }}
-                >
-                  {time}
+            {activePhases.map(phaseKey => (
+              <div
+                key={phaseKey}
+                className="text-center font-semibold py-2 border-r border-gray-300 bg-gray-50"
+                style={{
+                  width: `${(phaseWidths[phaseKey] / totalWidth) * 100}%`,
+                  minWidth: '120px'
+                }}
+              >
+                {phaseData[phaseKey].name}
+              </div>
+            ))}
+          </div>
+
+          {/* Approach data */}
+          {dynamicApproachCodes.map(approachCode => {
+            const approachData = tableData.find(row => row.kodePendekat === approachCode);
+            if (!approachData) return null;
+
+            return (
+              <div key={approachCode} className="flex border-b border-gray-200">
+                {/* Approach code */}
+                <div className="w-20 text-center font-semibold text-sm py-4 border-r border-gray-300 bg-gray-50">
+                  {approachCode}
+                  <div className="text-xs text-gray-600 mt-1">
+                    {approachData.tipePendekat}
+                  </div>
                 </div>
-              ))}
+
+                {/* Phase cells */}
+                {activePhases.map(phaseKey => {
+                  const phaseInfo = phaseData[phaseKey].approaches.find(app => app.kode === approachCode);
+                  const maxPhaseTotal = phaseWidths[phaseKey];
+
+                  return (
+                    <div
+                      key={phaseKey}
+                      className="border-r border-gray-300 flex items-center"
+                      style={{
+                        width: `${(maxPhaseTotal / totalWidth) * 100}%`,
+                        minWidth: '120px',
+                        height: '60px'
+                      }}
+                    >
+                      {phaseInfo ? (
+                        <div className="w-full h-full flex">
+                          {/* MF segment */}
+                          {phaseInfo.mf > 0 && (
+                            <div
+                              className="bg-blue-500 flex items-center justify-center text-white text-xs font-bold border-r border-white"
+                              style={{
+                                width: `${(phaseInfo.mf / maxPhaseTotal) * 100}%`,
+                                minWidth: phaseInfo.mf > 0 ? '20px' : '0px'
+                              }}
+                              title={`MF: ${phaseInfo.mf}s`}
+                            >
+                              {phaseInfo.mf > 3 && 'MF'}
+                            </div>
+                          )}
+
+                          {/* WHI segment */}
+                          {phaseInfo.whi > 0 && (
+                            <div
+                              className="bg-green-500 flex items-center justify-center text-white text-xs font-bold border-r border-white"
+                              style={{
+                                width: `${(phaseInfo.whi / maxPhaseTotal) * 100}%`,
+                                minWidth: phaseInfo.whi > 0 ? '20px' : '0px'
+                              }}
+                              title={`WHI: ${phaseInfo.whi}s`}
+                            >
+                              {phaseInfo.whi > 3 && 'WHI'}
+                            </div>
+                          )}
+
+                          {/* WK segment */}
+                          {phaseInfo.wk > 0 && (
+                            <div
+                              className="bg-yellow-500 flex items-center justify-center text-white text-xs font-bold border-r border-white"
+                              style={{
+                                width: `${(phaseInfo.wk / maxPhaseTotal) * 100}%`,
+                                minWidth: phaseInfo.wk > 0 ? '20px' : '0px'
+                              }}
+                              title={`WK: ${phaseInfo.wk}s`}
+                            >
+                              {phaseInfo.wk > 3 && 'WK'}
+                            </div>
+                          )}
+
+                          {/* WMS segment */}
+                          {phaseInfo.wms > 0 && (
+                            <div
+                              className="bg-red-500 flex items-center justify-center text-white text-xs font-bold"
+                              style={{
+                                width: `${(phaseInfo.wms / maxPhaseTotal) * 100}%`,
+                                minWidth: phaseInfo.wms > 0 ? '20px' : '0px'
+                              }}
+                              title={`WMS: ${phaseInfo.wms}s`}
+                            >
+                              {phaseInfo.wms > 3 && 'WMS'}
+                            </div>
+                          )}
+
+                          {/* Fill remaining space if needed */}
+                          {phaseInfo.total < maxPhaseTotal && (
+                            <div
+                              className="bg-gray-200"
+                              style={{
+                                width: `${((maxPhaseTotal - phaseInfo.total) / maxPhaseTotal) * 100}%`
+                              }}
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                          Tidak Aktif
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+
+          {/* Time indicators */}
+          <div className="flex mt-2 text-xs text-gray-600">
+            <div className="w-20"></div>
+            {activePhases.map(phaseKey => (
+              <div
+                key={phaseKey}
+                className="border-r border-gray-300 px-2"
+                style={{
+                  width: `${(phaseWidths[phaseKey] / totalWidth) * 100}%`,
+                  minWidth: '120px'
+                }}
+              >
+                <div className="text-center">
+                  Max: {phaseWidths[phaseKey]} detik
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* <div className="mt-6 flex justify-center space-x-6">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-blue-500 border"></div>
+              <span className="text-sm">MF (Mulai Fase)</span>
             </div>
-          </div>
-
-          {/* Main diagram */}
-          <div className="space-y-1">
-            {tableData.map((row, rowIndex) => {
-              const timeSlots = processRowData(row);
-              
-              return timeSlots.map((segments, slotIndex) => (
-                <div key={`${rowIndex}-${slotIndex}`} className="flex items-center">
-                  {/* Approach code - only show on first row of each approach */}
-                  <div className="w-20 text-center font-semibold text-sm border-r border-gray-300">
-                    {slotIndex === 0 ? row.kodePendekat : ''}
-                  </div>
-                  
-                  {/* Timeline */}
-                  <div className="flex-1 relative h-10 border border-gray-300 bg-red-200">
-                    {/* Default red background */}
-                    <div className="absolute inset-0 bg-red-300"></div>
-                    
-                    {/* Phase segments */}
-                    {segments.map((segment, segIndex) => (
-                      <div
-                        key={segIndex}
-                        className={`absolute h-full ${segment.color} border-r border-white border-opacity-50`}
-                        style={{
-                          left: `${(segment.start / totalCycle) * 100}%`,
-                          width: `${(segment.duration / totalCycle) * 100}%`
-                        }}
-                        title={`${segment.label} - ${segment.type}: ${segment.start}s-${segment.start + segment.duration}s (${segment.duration}s)`}
-                      >
-                        {/* Phase label */}
-                        {segment.duration > 5 && (
-                          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow">
-                            {segment.label}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    
-                    {/* Time grid lines */}
-                    {timeMarkers.map((time, index) => (
-                      <div
-                        key={time}
-                        className="absolute top-0 bottom-0 w-px bg-gray-400 opacity-30"
-                        style={{ left: `${(time / totalCycle) * 100}%` }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ));
-            })}
-          </div>
-
-          {/* Legend */}
-          <div className="mt-6 flex justify-center space-x-6">
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-green-500 border"></div>
-              <span className="text-sm">Hijau (WHI)</span>
+              <span className="text-sm">WHI (Hijau)</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-yellow-500 border"></div>
-              <span className="text-sm">Kuning (WK)</span>
+              <span className="text-sm">WK (Kuning)</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-red-500 border"></div>
-              <span className="text-sm">Merah (WMS)</span>
+              <span className="text-sm">WMS (Merah)</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-red-300 border"></div>
+              <div className="w-4 h-4 bg-gray-200 border"></div>
               <span className="text-sm">Tidak Aktif</span>
             </div>
-          </div>
+          </div> */}
 
-          {/* Summary */}
-          <div className="mt-4 text-sm text-gray-600">
-            <p><strong>Total Siklus:</strong> {totalCycle} detik</p>
-            <p><strong>Keterangan:</strong> Setiap pendekat ditampilkan dalam satu baris. Jika ada fase yang overlap waktu, akan ditampilkan dalam baris terpisah.</p>
-          </div>
+          {/* <div className="mt-4 text-sm text-gray-600">
+            <p><strong>Keterangan:</strong></p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Setiap kolom mewakili satu fase (F1, F2, F3, F4)</li>
+              <li>Setiap baris mewakili satu pendekat (U, S, T, B)</li>
+              <li>Lebar setiap segmen proporsional dengan durasi waktu</li>
+              <li>MF = Mulai Fase, WHI = Waktu Hijau, WK = Waktu Kuning, WMS = Waktu Merah Semua</li>
+            </ul>
+          </div> */}
         </div>
       </div>
     </div>
@@ -229,7 +285,7 @@ const TrafficPhaseDiagram = ({ tableData }) => {
 };
 
 // Example usage with sample data
-const App = ({dataSketsa}) => {
+const App = ({ dataSketsa }) => {
   const [dataProps, setDataProps] = useState([])
   const sampleData = {
     "tableData": [
@@ -403,6 +459,7 @@ const App = ({dataSketsa}) => {
       }
     ]
   };
+
   useEffect(() => {
     setDataProps(dataSketsa)
   }, [dataSketsa])
