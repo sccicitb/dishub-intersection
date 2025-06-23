@@ -546,27 +546,9 @@ export default function Home () {
         )}
       </Suspense>
       <div className="w-[90%]">
-        <div className="w-full bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
-        {/* <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-5 py-5">
-          <div className="cols-1 bg-base-200/90 min-h-80 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200 gap-5 flex flex-col">
-            <div className="w-full h-80 bg-gray-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl"></div>
-            <CameraStatusTimeline cameraStatusData={cameraStatusData}/>
-          </div>
-          <div className="cols-1 bg-base-200/90 min-h-80 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200 gap-5 flex flex-col">
-            <div className="w-full h-80 bg-gray-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl"></div>
-            <CameraStatusTimeline cameraStatusData={cameraStatusData}/>
-          </div>
-        </div> */}
+        <div className="w-full bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">CCTV Live Stream & Model Deteksi Kendaraan</div>
         <CameraStream />
         <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100 mb-10">
-          {/* <div className="grid grid-cols-2 not-xl:grid-cols-1 gap-2 py-10">
-            <div>
-              <GrafikRoad />
-            </div>
-            <div>
-              <GrafikRoad />
-            </div>
-          </div> */}
         </div>
         <MapComponent />
       </div>
