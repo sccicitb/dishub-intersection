@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense, lazy } from 'react';
 import VideoStream from '../components/videoStream';
+import { survey } from '@/lib/apiService';
 
 const ClasificationTable = lazy(() => import("@/app/components/clasificationTable"));
 const HourVehicleTable = lazy(() => import('@/app/components/HourVehicleTable'));
@@ -10,10 +11,10 @@ const SelectionButtons = lazy(() => import("@/app/components/selectionButton"));
 const DirectionVehicleTable = lazy(() => import("@/app/components/directionVehicleTable"));
 const DirectionTable = lazy(() => import('../components/pergerakanTable'));
 const MapComponent = lazy(() => import("@/app/components/map"));
+const KeluarMasukTable = lazy(() => import('../components/table/keluarMasukTable'));
 
-import { survey } from '@/lib/apiService';
-import AdaptiveVideoPlayer from '../components/adaptiveCameraStream';
-import BlobVideoPlayer from '../components/blobVideoPlayer';
+// import AdaptiveVideoPlayer from '../components/adaptiveCameraStream';
+// import BlobVideoPlayer from '../components/blobVideoPlayer';
 
 const classificationMap = {
   "PKJI 2023 Luar Kota": "luar_kota",
@@ -35,6 +36,8 @@ function MovePage () {
   const [activeSimpangId, setActiveSimpangId] = useState(0);
   const [activeSimpang, setActiveSimpang] = useState("");
   const [activeCamera, setActiveCamera] = useState(1);
+  const [kmTableStatus, setKMTableStatus] = useState(false);
+  const [activeSID, setActiveSID] = useState(1);
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -59,12 +62,12 @@ function MovePage () {
   // }, []);
 
   const fetchSurvey = async () => {
-    if (!activeCamera) return;
+    if (loading || !activeSID) return;
 
     // const classificationParam = classificationMap[activeClassification] || activeClassification?.toLowerCase().replace(/\s+/g, '_');
     const baseParams = {
       // camera_id: activeCamera,
-      camera_id: activeSimpangId,
+      camera_id: activeSID,
       date: formatDateToAPI(dateInput),
       interval: activeInterval || '',
       approach: activePendekatan?.toLowerCase() || '',
@@ -90,7 +93,6 @@ function MovePage () {
         );
 
         const responses = await Promise.all(promises);
-        setLoading(true);
 
         // Gabungkan data dari semua response atau buat struktur data per arah
         // const combinedData = {
@@ -109,13 +111,6 @@ function MovePage () {
 
         setVehicleData(combinedData);
       } else {
-        // Ketika arah spesifik dipilih, panggil API sekali saja
-        // const directionParam = activeDirection === 'Belok Kiri' ? 'kiri' :
-        //   activeDirection === 'Belok Kanan' ? 'belok_kanan' :
-        //     activeDirection === 'Lurus' ? 'lurus' : '';
-
-        setLoading(true);
-
         const res = await survey.getAll(
           baseParams.camera_id,
           baseParams.date,
@@ -137,6 +132,7 @@ function MovePage () {
   };
 
   useEffect(() => {
+    // setLoading(true);
     fetchSurvey();
   }, [activeSimpangId, activeCamera, activeInterval, activePendekatan, activeDirection, dateInput, reportType]);
 
@@ -157,6 +153,7 @@ function MovePage () {
 
   function handleClickSimpang (loc) {
     setActiveSimpangId(loc.id)
+    setActiveSID(loc.id)
   }
   return (
     <div>
@@ -165,6 +162,7 @@ function MovePage () {
         <div className="w-[95%] m-auto">
           <div className="flex max-lg:flex-col items-center place-items-center maxx-lg:space-y-5 py-5">
             <SurveyInfoTable />
+
             <div className="w-full justify-end flex flex-col">
               <SelectionButtons vehicleData={vehicleData}
                 activeSurveyor={activeSurveyor}
@@ -191,10 +189,26 @@ function MovePage () {
               value={dateInput}
               onChange={(e) => setDateInput(e.target.value)}
             />
+            <div className='content-center w-fit flex text-nowrap gap-2 rounded-lg text-sm p-2 bg-[#232f61] text-white font-semibold'>
+              <div className='m-auto'>Keluar-Masuk Simpang</div>
+              <input
+                type="checkbox"
+                checked={kmTableStatus}
+                onChange={() => setKMTableStatus(!kmTableStatus)}
+                className="bg-white/50 checkbox checkbox-xs text-white m-auto"
+              />
+            </div>
           </div>
-          {!loading ? (
-            <DirectionTable vehicleData={vehicleData} classification={activeClassification} activePergerakan={activeDirection} activePendekatan={activePendekatan} />
-          ) : <div className='my-5'>Loading...</div>}
+          <DirectionTable vehicleData={vehicleData} classification={activeClassification} activePergerakan={activeDirection} activePendekatan={activePendekatan} />
+          {kmTableStatus && (
+            <Suspense fallback={<div>Loading Keluar-Masuk Table...</div>}>
+              <KeluarMasukTable
+                selectedDate={dateInput}
+                setSelectedDate={setDateInput}
+                loading={loading}
+              />
+            </Suspense>
+          )}
           <ClasificationTable typeClass={activeClassification} />
         </div>
       </Suspense>
