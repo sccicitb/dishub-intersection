@@ -513,8 +513,8 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
               {cameraModal.cameras.map((camera) => (
                 <button
                   key={camera.id}
-                  disabled={camera.socketEvent === "not_yet_assign"}
-                  className={`w-full text-left rounded-xl btn btn-sm hover:bg-gray-100 ${camera.socketEvent === "not_yet_assign"
+                  disabled={camera.socket_event === "not_yet_assign"}
+                  className={`w-full text-left rounded-xl btn btn-sm hover:bg-gray-100 ${camera.socket_event === "not_yet_assign"
                     ? "border-orange-100 bg-orange-50"
                     : "border-green-300 bg-green-50"
                     }`}
@@ -522,11 +522,11 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
                 >
                   <div className="flex flex-col items-center">
                     <span>{camera.name || `Camera ${camera.id}`}</span>
-                    <small className={`${camera.socketEvent === "not_yet_assign"
+                    <small className={`${camera.socket_event === "not_yet_assign"
                       ? "text-orange-300"
                       : "text-green-600"
                       }`}>
-                      {camera.socketEvent === "not_yet_assign" ? "Video Stream" : "Live Stream + Model Detection"}
+                      {camera.socket_event === "not_yet_assign" ? "Video Stream" : "Live Stream + Model Detection"}
                     </small>
                   </div>
                 </button>
