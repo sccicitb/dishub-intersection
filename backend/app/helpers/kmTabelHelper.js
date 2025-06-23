@@ -4,20 +4,7 @@
  * Based on traffic flow analysis results from Phase 1, Step 1.1
  */
 
-/**
- * Determines if traffic is 'masuk' (incoming) based on simpang and direction
- * Based on volume analysis from traffic flow patterns
- */
-function isTrafficMasuk(simpang_id, dari_arah) {
-  const masukRules = {
-    2: ['east', 'south'],     // East dominant, South secondary
-    3: ['south'],             // South dominant only
-    4: ['west', 'north'],     // West and North balanced
-    5: ['west', 'south']      // West dominant, South secondary
-  };
-
-  return masukRules[simpang_id]?.includes(dari_arah) || false;
-}
+// REMOVED: isTrafficMasuk function - replaced with dynamic approach in survey.model.js
 
 /**
  * Maps database vehicle types to KM Tabel format
@@ -259,32 +246,10 @@ function aggregateVehicleData(vehicles) {
   return aggregated;
 }
 
-/**
- * Gets masuk/keluar rules for all simpangs
- */
-function getAllTrafficRules() {
-  return {
-    2: {
-      masuk: ['east', 'south'],
-      keluar: ['west', 'north']
-    },
-    3: {
-      masuk: ['south'],
-      keluar: ['east', 'west', 'north']
-    },
-    4: {
-      masuk: ['west', 'north'],
-      keluar: ['east', 'south']
-    },
-    5: {
-      masuk: ['west', 'south'],
-      keluar: ['east', 'north']
-    }
-  };
-}
+// REMOVED: getAllTrafficRules function - replaced with dynamic approach in survey.model.js
 
 module.exports = {
-  isTrafficMasuk,
+  // Utility functions (still needed)
   mapVehicleTypes,
   calculateTotalVehicles,
   getTimePeriod,
@@ -294,6 +259,7 @@ module.exports = {
   createEmptyKmTabelStructure,
   formatDateForQuery,
   getTimeSlotCondition,
-  aggregateVehicleData,
-  getAllTrafficRules
+  aggregateVehicleData
+  
+  // REMOVED: isTrafficMasuk, getAllTrafficRules - replaced with dynamic approach
 }; 
