@@ -286,7 +286,7 @@ const getSurveyProporsi = async (req, res) => {
  * Query parameters:
  *   - simpang_id: intersection ID (2, 3, 4, 5)
  *   - date: YYYY-MM-DD format
- *   - interval: '15min' or '1h' (optional, default: '15min')
+ *   - interval: '5min', '10min', '15min', or '1h' (optional, default: '15min')
  *   - approach: traffic direction ('north', 'south', 'east', 'west', 'utara', 'selatan', 'timur', 'barat', 'semua') (optional, default: 'semua')
  */
 const getKMTabelData = async (req, res) => {

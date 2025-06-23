@@ -320,7 +320,7 @@ async function getYearlySummary(startDateObj, filters, includedSubCodes, numYear
  * 
  * @param {number} simpang_id - Intersection ID (2, 3, 4, 5)
  * @param {string} date - Date in YYYY-MM-DD format
- * @param {string} interval - Time interval ('15min' or '1h')
+ * @param {string} interval - Time interval ('5min', '10min', '15min', or '1h')
  * @param {string} approach - Traffic approach ('north', 'south', 'east', 'west', or 'semua')
  * @returns {Promise<Object>} KM Tabel formatted data
  */
@@ -348,14 +348,34 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
   const queryDate = formatDateForQuery(date);
 
   // Build optimized SQL query with time-based grouping
-  const timeGrouping = interval === '1h' 
-    ? 'HOUR(waktu)' 
-    : 'HOUR(waktu), FLOOR(MINUTE(waktu) / 15)';
+  let timeGrouping, minuteGroupField, minuteDivisor;
+  
+  if (interval === '1h') {
+    timeGrouping = 'HOUR(waktu)';
+    minuteGroupField = '';
+  } else {
+    // Handle minute-based intervals (5min, 10min, 15min)
+    switch (interval) {
+      case '5min':
+        minuteDivisor = 5;
+        break;
+      case '10min':
+        minuteDivisor = 10;
+        break;
+      case '15min':
+        minuteDivisor = 15;
+        break;
+      default:
+        minuteDivisor = 15;
+    }
+    timeGrouping = `HOUR(waktu), FLOOR(MINUTE(waktu) / ${minuteDivisor})`;
+    minuteGroupField = `FLOOR(MINUTE(waktu) / ${minuteDivisor}) as minute_group,`;
+  }
   
   let sql = `
     SELECT 
       HOUR(waktu) as hour,
-      ${interval === '15min' ? 'FLOOR(MINUTE(waktu) / 15) as minute_group,' : ''}
+      ${minuteGroupField}
       dari_arah,
       SUM(SM) as SM,
       SUM(MP) as MP,
@@ -380,7 +400,7 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
   }
 
   sql += ` GROUP BY ${timeGrouping}, dari_arah`;
-  sql += ` ORDER BY hour ${interval === '15min' ? ', minute_group' : ''}, dari_arah`;
+  sql += ` ORDER BY hour ${interval !== '1h' ? ', minute_group' : ''}, dari_arah`;
 
   try {
     // Execute optimized query
@@ -394,8 +414,21 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
           if (interval === '1h') {
             return row.hour === timeSlot.hour;
           } else {
-            // 15min interval - minute_group: 0=00-14, 1=15-29, 2=30-44, 3=45-59
-            const expectedMinuteGroup = Math.floor(timeSlot.minute / 15);
+            // Minute-based intervals - calculate expected minute group based on interval
+            let expectedMinuteGroup;
+            switch (interval) {
+              case '5min':
+                expectedMinuteGroup = Math.floor(timeSlot.minute / 5);
+                break;
+              case '10min':
+                expectedMinuteGroup = Math.floor(timeSlot.minute / 10);
+                break;
+              case '15min':
+                expectedMinuteGroup = Math.floor(timeSlot.minute / 15);
+                break;
+              default:
+                expectedMinuteGroup = Math.floor(timeSlot.minute / 15);
+            }
             return row.hour === timeSlot.hour && row.minute_group === expectedMinuteGroup;
           }
         });

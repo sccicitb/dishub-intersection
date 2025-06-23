@@ -75,28 +75,27 @@ function getTimePeriod(hour) {
 function generateTimeSlots(interval = '15min') {
   const slots = [];
   
-  if (interval === '15min') {
-    // Generate 15-minute intervals for 24 hours
-    for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        const startTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        const endMinute = minute + 15;
-        const endHour = endMinute >= 60 ? hour + 1 : hour;
-        const adjustedEndMinute = endMinute >= 60 ? endMinute - 60 : endMinute;
-        const endTime = `${(endHour % 24).toString().padStart(2, '0')}:${adjustedEndMinute.toString().padStart(2, '0')}`;
-        
-        slots.push({
-          time: `${startTime} - ${endTime}`,
-          status: 1,
-          hour: hour,
-          minute: minute,
-          masukSimpang: { sm: 0, mp: 0, ks: 0, ktb: 0, total: 0 },
-          keluarSimpang: { sm: 0, mp: 0, ks: 0, ktb: 0, total: 0 }
-        });
-      }
-    }
-  } else if (interval === '1h') {
-    // Generate 1-hour intervals for 24 hours
+  // Determine minute increment based on interval
+  let minuteIncrement;
+  switch (interval) {
+    case '5min':
+      minuteIncrement = 5;
+      break;
+    case '10min':
+      minuteIncrement = 10;
+      break;
+    case '15min':
+      minuteIncrement = 15;
+      break;
+    case '1h':
+      minuteIncrement = 60;
+      break;
+    default:
+      minuteIncrement = 15; // fallback to 15min
+  }
+  
+  if (interval === '1h') {
+    // Special handling for 1-hour intervals
     for (let hour = 0; hour < 24; hour++) {
       const startTime = `${hour.toString().padStart(2, '0')}:00`;
       const endTime = `${((hour + 1) % 24).toString().padStart(2, '0')}:00`;
@@ -109,6 +108,27 @@ function generateTimeSlots(interval = '15min') {
         masukSimpang: { sm: 0, mp: 0, ks: 0, ktb: 0, total: 0 },
         keluarSimpang: { sm: 0, mp: 0, ks: 0, ktb: 0, total: 0 }
       });
+    }
+  } else {
+    // Handle minute-based intervals (5min, 10min, 15min)
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += minuteIncrement) {
+        const startTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const endMinute = minute + minuteIncrement;
+        const endHour = endMinute >= 60 ? hour + 1 : hour;
+        const adjustedEndMinute = endMinute >= 60 ? endMinute - 60 : endMinute;
+        const endTime = `${(endHour % 24).toString().padStart(2, '0')}:${adjustedEndMinute.toString().padStart(2, '0')}`;
+        
+        slots.push({
+          time: `${startTime} - ${endTime}`,
+          status: 1,
+          hour: hour,
+          minute: minute,
+          minuteIncrement: minuteIncrement,
+          masukSimpang: { sm: 0, mp: 0, ks: 0, ktb: 0, total: 0 },
+          keluarSimpang: { sm: 0, mp: 0, ks: 0, ktb: 0, total: 0 }
+        });
+      }
     }
   }
   
@@ -159,8 +179,8 @@ function validateKmTabelParams(params) {
   }
   
   // Optional parameters validation
-  if (params.interval && !['15min', '1h'].includes(params.interval)) {
-    errors.push('interval must be either "15min" or "1h"');
+  if (params.interval && !['5min', '10min', '15min', '1h'].includes(params.interval)) {
+    errors.push('interval must be one of: "5min", "10min", "15min", "1h"');
   }
   
   if (params.approach && !['north', 'south', 'east', 'west', 'utara', 'selatan', 'timur', 'barat', 'semua'].includes(params.approach)) {
@@ -198,9 +218,24 @@ function getTimeSlotCondition(hour, minute, interval) {
   if (interval === '1h') {
     return `HOUR(waktu) = ${hour}`;
   } else {
-    // 15min interval
+    // Minute-based intervals (5min, 10min, 15min)
+    let minuteIncrement;
+    switch (interval) {
+      case '5min':
+        minuteIncrement = 5;
+        break;
+      case '10min':
+        minuteIncrement = 10;
+        break;
+      case '15min':
+        minuteIncrement = 15;
+        break;
+      default:
+        minuteIncrement = 15;
+    }
+    
     const startMinute = minute;
-    const endMinute = minute + 15;
+    const endMinute = minute + minuteIncrement;
     
     return `HOUR(waktu) = ${hour} AND MINUTE(waktu) >= ${startMinute} AND MINUTE(waktu) < ${endMinute}`;
   }
