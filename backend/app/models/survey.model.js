@@ -1,5 +1,16 @@
 const db = require('../config/db');
 const { getPeriodsAndSlots } = require('../helpers/arus');
+const {
+  isTrafficMasuk,
+  mapVehicleTypes,
+  validateKmTabelParams,
+  createEmptyKmTabelStructure,
+  formatDateForQuery,
+  getTimeSlotCondition,
+  aggregateVehicleData,
+  generateTimeSlots,
+  groupSlotsByPeriods
+} = require('../helpers/kmTabelHelper');
 
 // Mapping agar subCode dari DB bisa disamakan dengan field alias di unit test
 const vehicleAlias = {
@@ -303,6 +314,121 @@ async function getYearlySummary(startDateObj, filters, includedSubCodes, numYear
   return { yearlyData, lhrtData };
 }
 
+/**
+ * KM Tabel API Function
+ * Returns traffic data in DataKMTabel.json format with masuk/keluar separation
+ * 
+ * @param {number} simpang_id - Intersection ID (2, 3, 4, 5)
+ * @param {string} date - Date in YYYY-MM-DD format
+ * @param {string} interval - Time interval ('15min' or '1h')
+ * @param {string} approach - Traffic approach ('north', 'south', 'east', 'west', or 'semua')
+ * @returns {Promise<Object>} KM Tabel formatted data
+ */
+const getKMTabelData = async (simpang_id, date, interval = '15min', approach = 'semua') => {
+  // Input validation using helper function
+  const validation = validateKmTabelParams({ simpang_id, date, interval, approach });
+  if (!validation.isValid) {
+    throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+  }
+
+  // Convert approach parameter to database format
+  const approachMapping = {
+    'utara': 'north',
+    'selatan': 'south', 
+    'timur': 'east',
+    'barat': 'west',
+    'semua': 'semua'
+  };
+  const dbApproach = approachMapping[approach] || approach;
+
+  // Create empty structure to fill with data
+  const kmTabelStructure = createEmptyKmTabelStructure(interval);
+
+  // Format date for SQL query
+  const queryDate = formatDateForQuery(date);
+
+  // Build optimized SQL query with time-based grouping
+  const timeGrouping = interval === '1h' 
+    ? 'HOUR(waktu)' 
+    : 'HOUR(waktu), FLOOR(MINUTE(waktu) / 15)';
+  
+  let sql = `
+    SELECT 
+      HOUR(waktu) as hour,
+      ${interval === '15min' ? 'FLOOR(MINUTE(waktu) / 15) as minute_group,' : ''}
+      dari_arah,
+      SUM(SM) as SM,
+      SUM(MP) as MP,
+      SUM(AUP) as AUP,
+      SUM(TR) as TR,
+      SUM(BS) as BS,
+      SUM(TS) as TS,
+      SUM(TB) as TB,
+      SUM(BB) as BB,
+      SUM(GANDENG) as GANDENG,
+      SUM(KTB) as KTB
+    FROM arus 
+    WHERE ID_Simpang = ? 
+      AND DATE(waktu) = ?
+  `;
+  const params = [simpang_id, queryDate];
+
+  // Add approach filter if not 'semua'
+  if (dbApproach !== 'semua') {
+    sql += ` AND dari_arah = ?`;
+    params.push(dbApproach);
+  }
+
+  sql += ` GROUP BY ${timeGrouping}, dari_arah`;
+  sql += ` ORDER BY hour ${interval === '15min' ? ', minute_group' : ''}, dari_arah`;
+
+  try {
+    // Execute optimized query
+    const [rows] = await db.query(sql, params);
+
+    // Process aggregated results into time slots
+    for (const periodData of kmTabelStructure.vehicleData) {
+      for (const timeSlot of periodData.timeSlots) {
+        // Find matching rows for this time slot
+        const slotRows = rows.filter(row => {
+          if (interval === '1h') {
+            return row.hour === timeSlot.hour;
+          } else {
+            // 15min interval - minute_group: 0=00-14, 1=15-29, 2=30-44, 3=45-59
+            const expectedMinuteGroup = Math.floor(timeSlot.minute / 15);
+            return row.hour === timeSlot.hour && row.minute_group === expectedMinuteGroup;
+          }
+        });
+
+        // Separate into masuk and keluar based on traffic flow logic
+        const masukRows = slotRows.filter(row => 
+          isTrafficMasuk(simpang_id, row.dari_arah)
+        );
+        
+        const keluarRows = slotRows.filter(row => 
+          !isTrafficMasuk(simpang_id, row.dari_arah)
+        );
+
+        // Aggregate masuk traffic
+        if (masukRows.length > 0) {
+          timeSlot.masukSimpang = aggregateVehicleData(masukRows);
+        }
+
+        // Aggregate keluar traffic  
+        if (keluarRows.length > 0) {
+          timeSlot.keluarSimpang = aggregateVehicleData(keluarRows);
+        }
+      }
+    }
+
+    return kmTabelStructure;
+
+  } catch (error) {
+    console.error('Error in getKMTabelData:', error);
+    throw new Error(`Database query failed: ${error.message}`);
+  }
+};
+
 module.exports = {
   getVehicleDataGrouped,
   getArusBySimpangDate,
@@ -312,5 +438,7 @@ module.exports = {
   // Tambahan:
   getDailySummaryByDateRange,
   getMonthlySummary,
-  getYearlySummary
+  getYearlySummary,
+  // KM Tabel API:
+  getKMTabelData
 };
