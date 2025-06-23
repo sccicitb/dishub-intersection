@@ -169,7 +169,16 @@ const ManajemenKamera = () => {
     ukuran_kota: "",
     tanggal: "",
     periode: "",
-    ditangani_oleh: ""
+    ditangani_oleh: "",
+    kecamatan: "",
+    kategori: "",
+    hambatan_samping: "",
+    cuaca: "",
+    lebar_jalur: 0,
+    jumlah_lajur: 0,
+    median: "",
+    belok_kiri_jalan_terus: "",
+    metode_survei: "",
   })
   const [dataMapsID, setDataMapsID] = useState([])
   const [statusDialogKalender, setStatusDialogKalender] = useState(false)
@@ -244,7 +253,9 @@ const ManajemenKamera = () => {
     const today = new Date();
     const dateNow = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const push = {
-      model_detection: data.model_detection || false,
+      Status_Non_Aktif: data.model_detection || false,
+      cuaca: data.cuaca || "",
+      metode_survei: data.metode_survei || "",
       latitude: data.latitude,
       longitude: data.longitude,
       socket_event: data.socket_event,
@@ -252,11 +263,19 @@ const ManajemenKamera = () => {
       latitude: data.location.latitude,
       longitude: data.location.longitude,
       kategori: data.category,
-      kota: data.kota,
+      kota: data.kota || "Jogja",
       ukuran_kota: data.ukuran_kota,
       tanggal: dateNow,
       periode: data.periode,
-      ditangani_oleh: data.ditangani_oleh
+      ditangani_oleh: data.ditangani_oleh,
+      kecamatan: data.kecamatan,
+      hambatan_samping: data.hambatan_samping,
+      cuaca: data.cuaca,
+      lebar_jalur: data.lebar_jalur,
+      jumlah_lajur: data.jumlah_lajur,
+      median: data.median,
+      belok_kiri_jalan_terus: data.belok_kiri_jalan_terus,
+      metode_survei: data.metode_survei,
     };
 
     try {
@@ -352,7 +371,9 @@ const ManajemenKamera = () => {
   //# Fetch update Maps
   const updateMaps = async (id, data) => {
     const push = {
-      model_detection: data.model_detection || false,
+      Status_Non_Aktif: data.model_detection || false,
+      cuaca: data.cuaca || "",
+      metode_survei: data.metode_survei || "",
       latitude: data.latitude,
       longitude: data.longitude,
       socket_event: data.socket_event,
@@ -360,11 +381,19 @@ const ManajemenKamera = () => {
       latitude: data.location.latitude,
       longitude: data.location.longitude,
       kategori: data.category,
-      kota: data.kota,
+      kota: data.kota || "Jogja",
       ukuran_kota: data.ukuran_kota,
       tanggal: data.tanggal,
       periode: data.periode,
-      ditangani_oleh: data.ditangani_oleh
+      ditangani_oleh: data.ditangani_oleh,
+      kecamatan: data.kecamatan,
+      hambatan_samping: data.hambatan_samping,
+      cuaca: data.cuaca,
+      lebar_jalur: data.lebar_jalur,
+      jumlah_lajur: data.jumlah_lajur,
+      median: data.median,
+      belok_kiri_jalan_terus: data.belok_kiri_jalan_terus,
+      metode_survei: data.metode_survei,
     };
 
     try {
@@ -748,11 +777,20 @@ const ManajemenKamera = () => {
         },
         socket_event: dataMapsID.socket_event || data.socket_event,
         kategori: dataMapsID.category || data.category,
-        kota: dataMapsID.Kota || data.kota,
+        kota: dataMapsID.Kota || data.kota || "Jogja",
         ukuran_kota: dataMapsID.Ukuran_Kota || data.ukuran_kota,
         tanggal: dataMapsID?.Tanggal?.split("T")[0] || data.tanggal,
-        periode: dataMapsID.Periode || data.periode,
-        ditangani_oleh: dataMapsID.Ditangani_Oleh || data.ditangani_oleh
+        periode: dataMapsID.Periode || data.Periode,
+        ditangani_oleh: dataMapsID.Ditangani_Oleh || data.ditangani_oleh,
+        kecamatan: dataMapsID.Kecamatan || data.Kecamatan,
+        kategori: dataMapsID.kategori || data.kategori,
+        hambatan_samping: dataMapsID.Hambatan_Samping || data.hambatan_samping,
+        cuaca: dataMapsID.Cuaca || data.cuaca,
+        lebar_jalur: dataMapsID.Lebar_Jalur || data.Lebar_Jalur,
+        jumlah_lajur: dataMapsID.Jumlah_Lajur || data.Jumlah_Lajur,
+        median: dataMapsID.Median || data.Median,
+        belok_kiri_jalan_terus: dataMapsID.Belok_Kiri_Jalan_Terus || data.Belok_Kiri_Jalan_Terus,
+        metode_survei: dataMapsID.Metode_Survei || data.Metode_Survei,
       });
       setShowDialog(true);
 
@@ -776,6 +814,7 @@ const ManajemenKamera = () => {
       socket_event: "",
       ID_Simpang: 0
     })
+
     setFormMaps({
       id: 0,
       name: "",
@@ -792,7 +831,15 @@ const ManajemenKamera = () => {
       ukuran_kota: "",
       tanggal: "",
       periode: "",
-      ditangani_oleh: ""
+      kecamatan: "",
+      kategori: "",
+      hambatan_samping: "",
+      cuaca: "",
+      lebar_jalur: 0,
+      jumlah_lajur: 0,
+      median: "",
+      belok_kiri_jalan_terus: "",
+      metode_survei: "",
     })
   };
 

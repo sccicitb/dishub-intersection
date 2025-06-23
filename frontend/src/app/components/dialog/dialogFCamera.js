@@ -38,7 +38,7 @@ const DialogFCamera = ({
         {(actionDialog === "edit_maps" || actionDialog === "create_maps") && (
           <div className='grid grid-cols-1 lg:grid-cols-3 gap-3'>
 
-            <div>
+            {/* <div>
               <label className="label">Kabupaten/Kota</label>
               <input
                 type="text"
@@ -51,7 +51,7 @@ const DialogFCamera = ({
                   })
                 }
               />
-            </div>
+            </div> */}
 
             {/* Input Nama Lokasi */}
             <div>
@@ -224,6 +224,41 @@ const DialogFCamera = ({
               />
             </div>
 
+            {/* Jumlah Lajur */}
+            <div>
+              <label className="label">Jumlah Lajur</label>
+              <input
+                type="number"
+                className="input input-bordered w-full"
+                value={formMaps?.jumlah_lajur || ""}
+                onChange={(e) =>
+                  onFormMapsChange({
+                    ...formMaps,
+                    jumlah_lajur: e.target.value
+                  })
+                }
+              />
+            </div>
+
+            {/* Median */}
+            <div>
+              <label className="label">Median</label>
+              <select
+                className="select w-full"
+                value={formMaps?.median || ""}
+                onChange={(e) =>
+                  onFormMapsChange({
+                    ...formMaps,
+                    median: e.target.value
+                  })
+                }
+              >
+                <option value="" disabled>Pilih Kategori</option>
+                <option value="Ya">Ya</option>
+                <option value="Tanpa">Tanpa</option>
+              </select>
+            </div>
+
             {/* Hambatan Samping */}
             <div>
               <label className="label">Hambatan Samping</label>
@@ -238,9 +273,49 @@ const DialogFCamera = ({
                 }
               >
                 <option value="" disabled>Pilih Kategori</option>
-                <option value="tingg">Tinggi</option>
+                <option value="Tinggi">Tinggi</option>
                 <option value="Sedang">Sedang</option>
-                <option value="rendah">Rendah</option>
+                <option value="Rendah">Rendah</option>
+              </select>
+            </div>
+
+            {/* Metode Survei */}
+            <div>
+              <label className="label">Metode Survei</label>
+              <select
+                type="number"
+                className="input input-bordered w-full"
+                value={formMaps?.metode_survei || ""}
+                onChange={(e) =>
+                  onFormMapsChange({
+                    ...formMaps,
+                    metode_survei: e.target.value
+                  })
+                }
+              >
+                <option value="">Pilih Kategori</option>
+                <option value="Manual Count">Manual Count</option>
+                <option value="Viana">Viana</option>
+              </select>
+            </div>
+
+             {/* Belok Kiri Jalan Terus */}
+            <div>
+              <label className="label">Belok Kiri Jalan Terus</label>
+              <select
+                type="number"
+                className="input input-bordered w-full"
+                value={formMaps?.belok_kiri_jalan_terus || ""}
+                onChange={(e) =>
+                  onFormMapsChange({
+                    ...formMaps,
+                    belok_kiri_jalan_terus: e.target.value
+                  })
+                }
+              >
+                <option value="">Pilih Kategori</option>
+                <option value="Ya">Ya</option>
+                <option value="Tidak">Tidak</option>
               </select>
             </div>
 
