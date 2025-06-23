@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, Suspense, lazy } from 'react';
-import VideoStream from '../components/videoStream';
-import { survey } from '@/lib/apiService';
+import { survey, maps } from '@/lib/apiService';
+import { getCuacaJogja } from '@/lib/weatherAccess';
+// import VideoStream from '../components/videoStream';
 
 const ClasificationTable = lazy(() => import("@/app/components/clasificationTable"));
 const HourVehicleTable = lazy(() => import('@/app/components/HourVehicleTable'));
@@ -37,7 +38,9 @@ function MovePage () {
   const [activeSimpang, setActiveSimpang] = useState("");
   const [activeCamera, setActiveCamera] = useState(1);
   const [kmTableStatus, setKMTableStatus] = useState(false);
-  const [activeSID, setActiveSID] = useState(1);
+  const [activeSID, setActiveSID] = useState();
+  const [Cuaca, setCuaca] = useState("")
+  const [fetchStatus, setFetchStatus] = useState(false)
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -60,6 +63,29 @@ function MovePage () {
   //     setDirectionData(data.default);
   //   });
   // }, []);
+
+  useEffect(() => {
+    // Fetch simpang data first to get the ID
+    const fetchSimpangData = async () => {
+      try {
+        const simpangRes = await maps.getAllSimpang();
+        const simpangData = Array.isArray(simpangRes?.data?.simpang) ? simpangRes.data.simpang : [];
+
+        let cuaca;
+        if (simpangData.length > 0 && simpangData[0]?.id) {
+          cuaca = await getCuacaJogja(simpangData[0].latitude, simpangData[0].longitude)
+          setActiveSID(simpangData[0].id);
+        }
+
+        setCuaca(cuaca)
+        setFetchStatus(true)
+      } catch (err) {
+        console.error('Error fetching simpang data:', err);
+      }
+    };
+
+    fetchSimpangData();
+  }, []);
 
   const fetchSurvey = async () => {
     if (loading || !activeSID) return;
@@ -161,7 +187,7 @@ function MovePage () {
         <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
         <div className="w-[95%] m-auto">
           <div className="flex max-lg:flex-col items-center place-items-center maxx-lg:space-y-5 py-5">
-            <SurveyInfoTable />
+            <SurveyInfoTable fetchStatus={fetchStatus} id={activeSID} cuaca={Cuaca} />
 
             <div className="w-full justify-end flex flex-col">
               <SelectionButtons vehicleData={vehicleData}

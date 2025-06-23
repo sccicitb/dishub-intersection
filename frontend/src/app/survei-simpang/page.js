@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, lazy, useRef, useCallback } from 'react';
 import { io } from "socket.io-client";
 import { cameras, survey, maps } from '@/lib/apiService';
-
+import { getCuacaJogja } from '@/lib/weatherAccess';
 const socket = io('https://sxe-data.layanancerdas.id', {
   autoConnect: false,
 });
@@ -30,10 +30,12 @@ function SurveiSimpangPage () {
   const [streamData, setStreamData] = useState({});
   const [activeCamera, setActiveCamera] = useState(0);
   const [activeSimpang, setActiveSimpang] = useState('');
-  const [activeSimpangId, setActiveSimpangId] = useState(1);
+  const [fetchStatus, setFetchStatus] = useState(false)
+  const [activeSimpangId, setActiveSimpangId] = useState();
   const [camStandard, setCamStandard] = useState(0)
   const [dataSimpangById, setDataSimpangById] = useState({});
-
+  const [Cuaca, setCuaca] = useState("")
+  
   const formatDateToInput = (date) => {
     if (!date) return "";
     const d = new Date(date);
@@ -52,7 +54,30 @@ function SurveiSimpangPage () {
   const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
 
   // Fetch initial camera & vehicle data
+
   useEffect(() => {
+    // Fetch simpang data first to get the ID
+    const fetchSimpangData = async () => {
+      try {
+        const simpangRes = await maps.getAllSimpang();
+        const simpangData = Array.isArray(simpangRes?.data?.simpang) ? simpangRes.data.simpang : [];
+
+        if (simpangData.length > 0 && simpangData[0]?.id) {
+          setActiveSimpangId(simpangData[0].id);
+        }
+        setFetchStatus(true)
+      } catch (err) {
+        console.error('Error fetching simpang data:', err);
+      }
+    };
+
+    fetchSimpangData();
+  }, []);
+
+  useEffect(() => {
+    if (!activeSimpangId) return;
+    
+    
     const fetchData = async () => {
       try {
         const [cameraRes, simpangRes, surveyRes, mapsRes] = await Promise.all([
@@ -61,23 +86,25 @@ function SurveiSimpangPage () {
           survey.getAll(activeCamera, formatDateToYMDForAPI(dateInput)),
           maps.getById(activeSimpangId),
         ]);
-
+        
         const cameraData = Array.isArray(cameraRes?.data?.cameras) ? cameraRes.data.cameras : [];
         const simpangData = Array.isArray(simpangRes?.data?.buildings) ? simpangRes?.data?.buildings : [];
         const vehicleData = Array.isArray(surveyRes?.data?.vehicleData) ? surveyRes.data.vehicleData : [];
         const mapsData = Array.isArray(mapsRes?.data) ? mapsRes?.data : {};
-
+        
         setDataCamera(cameraData);
-
+        let cuaca;
         if (cameraData.length > 0 && cameraData[0]?.id) {
           setActiveCamera(cameraData[0].id);
           setActiveSimpang(cameraData[0].name || '');
         }
-
+        
         if (simpangData.length > 0 || simpangData[0]?.id) {
           setActiveSimpangId(simpangData[0].id)
+          cuaca = await getCuacaJogja(simpangData[0].location.latitude, simpangData[0].location.longitude)
         }
-
+        
+        setCuaca(cuaca || "");
         setVehicleData(vehicleData);
         setDataSimpangById(mapsData);
 
@@ -86,7 +113,9 @@ function SurveiSimpangPage () {
         setVehicleData([]);
         if (err.response && err.response.status === 404) {
           console.warn("Simpang tidak ditemukan:", err.response.data?.message);
-          setDataSimpangById([]);
+          setDataCamera([]);
+          setVehicleData([]);
+          setDataSimpangById({});
         } else {
           console.error('Error fetching simpang data:', err);
         }
@@ -96,7 +125,7 @@ function SurveiSimpangPage () {
     }
 
     fetchData();
-  }, []); // Only once on mount
+  }, [fetchStatus]); // Only once on mount
 
   // Helper function untuk mendapatkan camera data berdasarkan activeCamera
   const getActiveCameraData = () => {
@@ -312,15 +341,18 @@ function SurveiSimpangPage () {
     return building?.socket_event && building.socket_event !== "not_yet_assign";
   };
 
-  function handleClickSimpang (loc) {
+  async function handleClickSimpang (loc) {
     let name = loc.Nama_Simpang
-    console.log(loc)
+    const cuaca = await getCuacaJogja(loc.latitude, loc.longitude);
+
     if (!name.toLowerCase().includes("simpang")) {
       name = "Simpang " + name
     }
+    console.log(loc)
     setActiveTitle("Survei " + name);
     fetchVehicleData(loc.id);
     setActiveSimpangId(loc.id)
+    setCuaca(cuaca);
   }
 
   useEffect(() => {
@@ -330,7 +362,7 @@ function SurveiSimpangPage () {
   // Render CCTV Stream Component berdasarkan socket_event
   const renderCCTVStream = () => {
     const activeCameraData = getActiveCameraData();
-    console.log(activeCameraData)
+    // console.log(activeCameraData)
     if (!activeCameraData) {
       return (
         <CCTVStream
@@ -386,7 +418,7 @@ function SurveiSimpangPage () {
           </div>
 
           <div className="lg:flex lg:place-items-center gap-5 py-10 space-y-5 max-lg:flex-col">
-            <SurveyInfoTable />
+            <SurveyInfoTable fetchStatus={fetchStatus} id={activeSimpangId} cuaca={Cuaca} />
             <div className="w-full justify-end flex flex-col">
               <SelectionButtons
                 vehicleData={vehicleData}

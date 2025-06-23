@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense, lazy } from 'react';
-
-// import { survey } from '@/lib/apiService';
+import { getCuacaJogja } from '@/lib/weatherAccess';
+import { maps } from '@/lib/apiService';
 
 // const VehicleMonitoringTable = lazy(() => import('@/app/components/vehicleMonitoringTable'));
 const VehicleTable = lazy(() => import("@/app/components/vehicleTable"));
@@ -23,41 +23,33 @@ function SurveiLhrkPage () {
   const [vehicleData, setVehicleData] = useState([]);
   const [activeSimpangId, setActiveSimpangId] = useState(0)
   const [activeCamera, setActiveCamera] = useState(1);
-  const [activeSID, setActiveSID] = useState(1);
+  const [activeSID, setActiveSID] = useState();
   const [activeTitle, setActiveTitle] = useState("Survei LHRK")
+  const [Cuaca, setCuaca] = useState("")
+  const [fetchStatus, setFetchStatus] = useState(false)
 
+  useEffect(() => {
+    // Fetch simpang data first to get the ID
+    const fetchSimpangData = async () => {
+      try {
+        const simpangRes = await maps.getAllSimpang();
+        const simpangData = Array.isArray(simpangRes?.data?.simpang) ? simpangRes.data.simpang : [];
+        
+        let cuaca;
+        if (simpangData.length > 0 && simpangData[0]?.id) {
+          cuaca = await getCuacaJogja(simpangData[0].latitude, simpangData[0].longitude)
+          setActiveSID(simpangData[0].id);
+        }
+        
+        setCuaca(cuaca)
+        setFetchStatus(true)
+      } catch (err) {
+        console.error('Error fetching simpang data:', err);
+      }
+    };
 
-  // const formatDateToInput = (date) => {
-  //   if (!date) return "";
-  //   const d = new Date(date);
-  //   const yyyy = d.getFullYear();
-  //   const mm = String(d.getMonth() + 1).padStart(2, '0');
-  //   const dd = String(d.getDate()).padStart(2, '0');
-  //   return `${yyyy}-${mm}-${dd}`;
-  // };
-
-  // const formatDateToYMDForAPI = (dateStr) => {
-  //   return dateStr.replace(/-/g, '/');
-  // };
-
-  // const yesterday = new Date();
-  // yesterday.setDate(yesterday.getDate() - 1);
-  // const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
-
-
-  // const fetchSurvey = async (active, date, interval) => {
-  //   setLoading(true)
-  //   try {
-  //     const res = await survey.getAll(active.slice(active.indexOf('n') + 1), date, interval);
-  //     const datafetch = Array.isArray(res?.data?.vehicleData) ? res.data.vehicleData : [];
-  //     setVehicleData(datafetch);
-  //     setLoading(false)
-  //   } catch (err) {
-  //     setLoading(false)
-  //     console.error('Error fetching survey data:', err);
-  //     setVehicleData([]);
-  //   }
-  // };
+    fetchSimpangData();
+  }, []);
 
   const handleClick = (building) => {
     // Pastikan objek valid dan memiliki properti kamera
@@ -75,18 +67,6 @@ function SurveiLhrkPage () {
     }
   };
 
-  // useEffect(() => {
-  //   if (activeCamera) {
-  //     fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval);
-  //   }
-  // }, [dateInput, activeCamera, activeInterval]);
-
-  // useEffect(() => {
-  //   if (activeCamera) {
-  //     fetchSurvey(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval);
-  //   }
-  // }, []);
-
   function handleClickSimpang (loc) {
     let name = loc.Nama_Simpang
     if (!name.toLowerCase().includes("simpang")) {
@@ -102,7 +82,7 @@ function SurveiLhrkPage () {
         <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
         <div className="w-[95%] m-auto">
           <div className="flex max-lg:flex-col items-center place-items-center max-lg:space-y-5 py-5">
-            <SurveyInfoTable />
+            <SurveyInfoTable fetchStatus={fetchStatus} id={activeSID} cuaca={Cuaca} />
             <div className="w-full justify-end flex flex-col">
               <SelectionButtons vehicleData={vehicleData}
                 activeSurveyor={activeSurveyor}
