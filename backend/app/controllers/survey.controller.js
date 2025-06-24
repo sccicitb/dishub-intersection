@@ -280,4 +280,113 @@ const getSurveyProporsi = async (req, res) => {
   }
 };
 
-module.exports = { getVehicleSummaryData, exportVehicleData, getSurveyProporsi, getSurveyProporsi };
+/**
+ * GET /api/surveys/km-tabel
+ * KM Tabel API endpoint with DataKMTabel.json format
+ * Query parameters:
+ *   - simpang_id: intersection ID (2, 3, 4, 5)
+ *   - date: YYYY-MM-DD format
+ *   - interval: '5min', '10min', '15min', or '1h' (optional, default: '15min')
+ *   - approach: traffic direction ('north', 'south', 'east', 'west', 'utara', 'selatan', 'timur', 'barat', 'semua') (optional, default: 'semua')
+ */
+const getKMTabelData = async (req, res) => {
+  const startTime = Date.now();
+  
+  try {
+    // Extract and validate parameters
+    const { simpang_id, date, interval, approach } = req.query;
+    
+    // Input validation
+    if (!simpang_id) {
+      return res.status(400).json({ 
+        error: 'Parameter simpang_id is required',
+        message: 'Please provide simpang_id (2, 3, 4, or 5)'
+      });
+    }
+    
+    if (!date) {
+      return res.status(400).json({ 
+        error: 'Parameter date is required',
+        message: 'Please provide date in YYYY-MM-DD format'
+      });
+    }
+
+    // Convert string parameters to proper types
+    const simpangId = parseInt(simpang_id, 10);
+    const requestInterval = interval ? interval.toLowerCase() : '15min';
+    const requestApproach = approach || 'semua';
+
+    // Call model function with proper error handling
+    const kmTabelData = await surveyModel.getKMTabelData(
+      simpangId,
+      date,
+      requestInterval,
+      requestApproach
+    );
+
+    // Calculate execution time for performance monitoring
+    const executionTime = Date.now() - startTime;
+
+    // Log successful request for monitoring
+    console.log(`[KM-Tabel] SUCCESS: simpang=${simpangId}, date=${date}, interval=${requestInterval}, approach=${requestApproach}, time=${executionTime}ms`);
+
+    // Return success response with performance metadata
+    return res.json({
+      success: true,
+      data: kmTabelData,
+      metadata: {
+        simpang_id: simpangId,
+        date: date,
+        interval: requestInterval,
+        approach: requestApproach,
+        execution_time_ms: executionTime,
+        timestamp: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    const executionTime = Date.now() - startTime;
+    
+    // Log error for monitoring
+    console.error(`[KM-Tabel] ERROR: ${error.message}`, {
+      query: req.query,
+      execution_time_ms: executionTime,
+      stack: error.stack
+    });
+
+    // Handle validation errors
+    if (error.message.includes('Validation failed')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Parameter validation failed',
+        message: error.message,
+        query_received: req.query
+      });
+    }
+
+    // Handle database errors
+    if (error.message.includes('Database query failed')) {
+      return res.status(500).json({
+        success: false,
+        error: 'Database error',
+        message: 'Failed to retrieve traffic data from database',
+        execution_time_ms: executionTime
+      });
+    }
+
+    // Generic error handler
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'An unexpected error occurred while processing your request',
+      execution_time_ms: executionTime
+    });
+  }
+};
+
+module.exports = { 
+  getVehicleSummaryData, 
+  exportVehicleData, 
+  getSurveyProporsi, 
+  getKMTabelData 
+};
