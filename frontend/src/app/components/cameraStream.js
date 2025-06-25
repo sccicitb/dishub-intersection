@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import VideoStream from '../components/videoStream';
+// import VideoStream from '../components/videoStream';
 import CCTVStream from '../components/cctvStream';
 import CameraStatusTimeline from "@/app/components/cameraStatusTime";
 import { maps, cameras, logCamera } from '@/lib/apiService';
@@ -115,13 +115,14 @@ const CameraStream = () => {
     });
 
     socket.on('disconnect', () => {
-      console.log('Socket disconnected');
+      console.log('Socket disconnected'); 
       setSocketConnected(false);
     });
 
     dataCameras.forEach(cam => {
-      if (cam?.socket_event && cam?.id) {
+      if (cam?.socket_event && cam?.id && cam?.socket_event !== "not_yet_assign") {
         socket.on(cam.socket_event, (data) => {
+          console.log(cam)
           setStreamData(prev => ({ ...prev, [cam.id]: data }));
         });
       }
