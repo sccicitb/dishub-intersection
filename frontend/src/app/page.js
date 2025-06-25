@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense, lazy } from "react";
 import { vehicles } from "@/lib/apiAccess";
+import SocketConnection from "./components/testingSocket";
 
 const LintasChart = lazy(() => import("@/app/components/lintasChart"));
 const TotalChart = lazy(() => import("@/app/components/totalChart"));
@@ -548,6 +549,7 @@ export default function Home () {
       <div className="w-[90%]">
         <div className="w-full bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">CCTV Live Stream & Model Deteksi Kendaraan</div>
         <CameraStream />
+        {/* <SocketConnection/> */}
         <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100 mb-10">
         </div>
         <MapComponent />
