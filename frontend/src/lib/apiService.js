@@ -85,5 +85,14 @@ export const survey = {
 
     return getRequest(`/surveys/data-summary?${params.join('&')}`);
   },
+   getAllKM: (camera_id, date, interval, approach) => {
+    // let params = [`camera_id=${camera_id}`, `date=${date}`];
+    let params = [`simpang_id=${camera_id}`, `date=${date}`];
+
+    if (interval) params.push(`interval=${interval}`);
+    if (approach) params.push(`approach=${approach}`);
+
+    return getRequest(`/surveys/km-table?${params.join('&')}`);
+  },
   getProporsi: (simpang_id, type, date) => getRequest(`/survey-proporsi?ID_Simpang=${simpang_id}${type ? '&type=' + type + '' : ''}&date=${date}`)
 }
