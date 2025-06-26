@@ -1,5 +1,15 @@
 const db = require('../config/db');
 const { getPeriodsAndSlots } = require('../helpers/arus');
+const {
+  mapVehicleTypes,
+  validateKmTabelParams,
+  createEmptyKmTabelStructure,
+  formatDateForQuery,
+  getTimeSlotCondition,
+  aggregateVehicleData,
+  generateTimeSlots,
+  groupSlotsByPeriods
+} = require('../helpers/kmTabelHelper');
 
 // Mapping agar subCode dari DB bisa disamakan dengan field alias di unit test
 const vehicleAlias = {
@@ -303,6 +313,180 @@ async function getYearlySummary(startDateObj, filters, includedSubCodes, numYear
   return { yearlyData, lhrtData };
 }
 
+/**
+ * Helper function to get valid simpang IDs from database
+ * Reuses the same approach from vehicle.model.js for consistency
+ */
+const getValidSimpangIds = async () => {
+  try {
+    // Try to get simpang IDs from simpang table
+    const [simpangRows] = await db.query('SELECT DISTINCT id FROM simpang WHERE id IN (SELECT DISTINCT ID_Simpang FROM arus) ORDER BY id');
+    return simpangRows.map(row => row.id);
+  } catch (error) {
+    // Fallback to known simpang IDs if simpang table doesn't exist or has issues
+    console.warn('Using fallback simpang IDs:', error.message);
+    const [arusRows] = await db.query('SELECT DISTINCT ID_Simpang FROM arus ORDER BY ID_Simpang');
+    return arusRows.map(row => row.ID_Simpang);
+  }
+};
+
+/**
+ * KM Tabel API Function - DYNAMIC VERSION
+ * Returns traffic data in DataKMTabel.json format with 100% coverage
+ * Uses dynamic approach instead of hardcoded traffic rules
+ * 
+ * @param {number} simpang_id - Intersection ID (2, 3, 4, 5)
+ * @param {string} date - Date in YYYY-MM-DD format
+ * @param {string} interval - Time interval ('5min', '10min', '15min', or '1h')
+ * @param {string} approach - Traffic approach ('north', 'south', 'east', 'west', or 'semua')
+ * @returns {Promise<Object>} KM Tabel formatted data
+ */
+const getKMTabelData = async (simpang_id, date, interval = '15min', approach = 'semua') => {
+  // Input validation using helper function
+  const validation = validateKmTabelParams({ simpang_id, date, interval, approach });
+  if (!validation.isValid) {
+    throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+  }
+
+  // Validate simpang_id against database
+  const validSimpangIds = await getValidSimpangIds();
+  if (!validSimpangIds.includes(parseInt(simpang_id))) {
+    throw new Error(`Invalid simpang_id: ${simpang_id}. Valid IDs: ${validSimpangIds.join(', ')}`);
+  }
+
+  // Convert approach parameter to database format
+  const approachMapping = {
+    'utara': 'north',
+    'selatan': 'south', 
+    'timur': 'east',
+    'barat': 'west',
+    'semua': 'semua'
+  };
+  const dbApproach = approachMapping[approach] || approach;
+
+  // Create empty structure to fill with data
+  const kmTabelStructure = createEmptyKmTabelStructure(interval);
+
+  // Format date for SQL query
+  const queryDate = formatDateForQuery(date);
+
+  // Build optimized SQL query with time-based grouping
+  let timeGrouping, minuteGroupField, minuteDivisor;
+  
+  if (interval === '1h') {
+    timeGrouping = 'HOUR(waktu)';
+    minuteGroupField = '';
+  } else {
+    // Handle minute-based intervals (5min, 10min, 15min)
+    switch (interval) {
+      case '5min':
+        minuteDivisor = 5;
+        break;
+      case '10min':
+        minuteDivisor = 10;
+        break;
+      case '15min':
+        minuteDivisor = 15;
+        break;
+      default:
+        minuteDivisor = 15;
+    }
+    timeGrouping = `HOUR(waktu), FLOOR(MINUTE(waktu) / ${minuteDivisor})`;
+    minuteGroupField = `FLOOR(MINUTE(waktu) / ${minuteDivisor}) as minute_group,`;
+  }
+  
+  // DYNAMIC APPROACH: Get ALL traffic data first, then separate into masuk/keluar dynamically
+  let sql = `
+    SELECT 
+      HOUR(waktu) as hour,
+      ${minuteGroupField}
+      dari_arah,
+      ke_arah,
+      SUM(SM) as SM,
+      SUM(MP) as MP,
+      SUM(AUP) as AUP,
+      SUM(TR) as TR,
+      SUM(BS) as BS,
+      SUM(TS) as TS,
+      SUM(TB) as TB,
+      SUM(BB) as BB,
+      SUM(GANDENG) as GANDENG,
+      SUM(KTB) as KTB
+    FROM arus 
+    WHERE ID_Simpang = ? 
+      AND DATE(waktu) = ?
+      AND dari_arah IN ('east', 'west', 'north', 'south')
+  `;
+  const params = [simpang_id, queryDate];
+
+  // Add approach filter if not 'semua'
+  if (dbApproach !== 'semua') {
+    sql += ` AND dari_arah = ?`;
+    params.push(dbApproach);
+  }
+
+  sql += ` GROUP BY ${timeGrouping}, dari_arah, ke_arah`;
+  sql += ` ORDER BY hour ${interval !== '1h' ? ', minute_group' : ''}, dari_arah, ke_arah`;
+
+  try {
+    // Execute optimized query
+    const [rows] = await db.query(sql, params);
+
+    // Process aggregated results into time slots
+    for (const periodData of kmTabelStructure.vehicleData) {
+      for (const timeSlot of periodData.timeSlots) {
+        // Find matching rows for this time slot
+        const slotRows = rows.filter(row => {
+          if (interval === '1h') {
+            return row.hour === timeSlot.hour;
+          } else {
+            // Minute-based intervals - calculate expected minute group based on interval
+            let expectedMinuteGroup;
+            switch (interval) {
+              case '5min':
+                expectedMinuteGroup = Math.floor(timeSlot.minute / 5);
+                break;
+              case '10min':
+                expectedMinuteGroup = Math.floor(timeSlot.minute / 10);
+                break;
+              case '15min':
+                expectedMinuteGroup = Math.floor(timeSlot.minute / 15);
+                break;
+              default:
+                expectedMinuteGroup = Math.floor(timeSlot.minute / 15);
+            }
+            return row.hour === timeSlot.hour && row.minute_group === expectedMinuteGroup;
+          }
+        });
+
+        // DYNAMIC SEPARATION: All 'dari_arah' traffic considered as masuk (arriving at intersection)
+        // This provides 100% coverage without hardcoded rules
+        const masukRows = slotRows; // All traffic is considered masuk since it's arriving at intersection
+        
+        // For keluar, we could track ke_arah if needed, but typically KM Tabel focuses on masuk traffic
+        // If keluar is needed, it can be calculated based on ke_arah data
+        const keluarRows = []; // Keep empty for now, can be implemented if business logic requires it
+
+        // Aggregate masuk traffic (all traffic arriving at intersection)
+        if (masukRows.length > 0) {
+          timeSlot.masukSimpang = aggregateVehicleData(masukRows);
+        }
+
+        // Aggregate keluar traffic (if implemented)
+        if (keluarRows.length > 0) {
+          timeSlot.keluarSimpang = aggregateVehicleData(keluarRows);
+        }
+      }
+    }
+
+    return kmTabelStructure;
+
+  } catch (error) {
+    console.error('Error in getKMTabelData:', error);
+    throw new Error(`Database query failed: ${error.message}`);
+  }
+};
+
 module.exports = {
   getVehicleDataGrouped,
   getArusBySimpangDate,
@@ -312,5 +496,7 @@ module.exports = {
   // Tambahan:
   getDailySummaryByDateRange,
   getMonthlySummary,
-  getYearlySummary
+  getYearlySummary,
+  // KM Tabel API:
+  getKMTabelData
 };
