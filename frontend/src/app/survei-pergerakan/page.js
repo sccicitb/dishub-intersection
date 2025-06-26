@@ -41,6 +41,7 @@ function MovePage () {
   const [activeSID, setActiveSID] = useState();
   const [Cuaca, setCuaca] = useState("")
   const [fetchStatus, setFetchStatus] = useState(false)
+  const [dataKM, setDataKM] = useState([])
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -86,6 +87,24 @@ function MovePage () {
 
     fetchSimpangData();
   }, []);
+
+  const fetchSurveyKM = async () => {
+    if (loading || !activeSID) return;
+
+    const baseParams = {
+      camera_id: activeSID,
+      date: formatDateToAPI(dateInput),
+      interval: activeInterval || '',
+      approach: activePendekatan?.toLowerCase() || '',
+    };
+
+    try {
+      const data = await survey.getAllKM(baseParams)
+      setDataKM(data)
+    } catch (err) {
+      console.error({ "error": err })
+    }
+  }
 
   const fetchSurvey = async () => {
     if (loading || !activeSID) return;
@@ -162,6 +181,11 @@ function MovePage () {
     fetchSurvey();
   }, [activeSimpangId, activeCamera, activeInterval, activePendekatan, activeDirection, dateInput, reportType]);
 
+    useEffect(() => {
+    fetchSurveyKM();
+  }, [activeSimpangId, activeInterval, activePendekatan, activeDirection, dateInput]);
+
+
   const handleClick = (building) => {
     if (!building) {
       console.warn("Invalid building or camera data", building);
@@ -232,6 +256,7 @@ function MovePage () {
                 selectedDate={dateInput}
                 setSelectedDate={setDateInput}
                 loading={loading}
+                data={dataKM}
               />
             </Suspense>
           )}

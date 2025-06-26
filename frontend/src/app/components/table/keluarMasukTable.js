@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const KeluarMasukTable = ({ trafficData, selectedDate, setSelectedDate, loading }) => {
+const KeluarMasukTable = ({ data, selectedDate, setSelectedDate, loading }) => {
   const [vehicleData, setVehicleData] = useState([]);
   const [error, setError] = useState(null);
 
@@ -20,6 +20,10 @@ const KeluarMasukTable = ({ trafficData, selectedDate, setSelectedDate, loading 
       {error}
     </div>;
   }
+
+  useEffect(() => {
+    setVehicleData(data)
+  },[data])
 
   const generateTableRows = () => {
     let rows = [];

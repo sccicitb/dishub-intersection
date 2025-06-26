@@ -1,8 +1,10 @@
 "use client";
 import { lazy, Suspense } from 'react';
+import { useAuth } from "@/app/context/authContext";
 const SurveyLalulintasExport = lazy(() => import('./exportPdf'));
 
 export default function SelectionButtons ({ pendekatan, interval, exportPdf, arahPergerakan, vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, setActivePergerakan, activeInterval, setActiveInterval, activeDirection, setActiveDirection, direction }) {
+  const { pathname } = useAuth();
 
   // Opsi untuk surveyor
   const surveyorOptions = ['VIANA', 'Manual', 'Semua'];
@@ -26,6 +28,26 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
       display: 'jam'
     }
   ];
+
+  const intervalOptionsP = [
+    {
+      item: '5min',
+      display: '5 Menit'
+    },
+    {
+      item: '10min',
+      display: '10 Menit'
+    },
+    {
+      item: '15min',
+      display: '15 Menit'
+    },
+    {
+      item: '1h',
+      display: 'jam'
+    }
+  ];
+
 
   // Opsi untuk jenis klasifikasi
   const classificationOptions = ['PKJI 2023 Luar Kota', 'PKJI 2023 Dalam Kota', 'Tipikal'];
@@ -51,7 +73,15 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
         <div className="space-y-1">
           <h3 className="text-[14px] font-medium">Pilih Interval</h3>
           <div className="join w-full gap-5 flex overflow-x-auto p-2">
-            {intervalOptions.map((option, id) => (
+            {pathname !== "/survei-pergerakan" ? intervalOptions.map((option, id) => (
+              <button
+                key={id}
+                className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeInterval.toLowerCase() === option.item.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
+                onClick={() => setActiveInterval(option.item)}
+              >
+                {option.display}
+              </button>
+            )) : intervalOptionsP.map((option, id) => (
               <button
                 key={id}
                 className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeInterval.toLowerCase() === option.item.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
