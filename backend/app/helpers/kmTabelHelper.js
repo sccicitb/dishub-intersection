@@ -75,13 +75,14 @@ function generateTimeSlots(interval = '15min') {
       minuteIncrement = 15;
       break;
     case '1h':
+    case '60min':
       minuteIncrement = 60;
       break;
     default:
       minuteIncrement = 15; // fallback to 15min
   }
   
-  if (interval === '1h') {
+  if (interval === '1h' || interval === '60min') {
     // Special handling for 1-hour intervals
     for (let hour = 0; hour < 24; hour++) {
       const startTime = `${hour.toString().padStart(2, '0')}:00`;
@@ -166,8 +167,8 @@ function validateKmTabelParams(params) {
   }
   
   // Optional parameters validation
-  if (params.interval && !['5min', '10min', '15min', '1h'].includes(params.interval)) {
-    errors.push('interval must be one of: "5min", "10min", "15min", "1h"');
+  if (params.interval && !['5min', '10min', '15min', '1h', '60min'].includes(params.interval)) {
+    errors.push('interval must be one of: "5min", "10min", "15min", "1h", "60min"');
   }
   
   if (params.approach && !['north', 'south', 'east', 'west', 'utara', 'selatan', 'timur', 'barat', 'semua'].includes(params.approach)) {
@@ -202,7 +203,7 @@ function formatDateForQuery(dateString) {
  * Gets SQL condition for time slot filtering
  */
 function getTimeSlotCondition(hour, minute, interval) {
-  if (interval === '1h') {
+  if (interval === '1h' || interval === '60min') {
     return `HOUR(waktu) = ${hour}`;
   } else {
     // Minute-based intervals (5min, 10min, 15min)
