@@ -254,7 +254,7 @@ const DialogFCamera = ({
                 }
               >
                 <option value="" disabled>Pilih Kategori</option>
-                <option value="Ya">Ya</option>
+                <option value="Ada">Ada</option>
                 <option value="Tanpa">Tanpa</option>
               </select>
             </div>
