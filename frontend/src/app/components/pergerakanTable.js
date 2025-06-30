@@ -371,7 +371,6 @@ const DirectionTable = ({ vehicleData, classification, activePergerakan, activeP
     // This function might need to be called with different API calls for each direction
 
     if (!vehicleData || typeof vehicleData !== 'object') {
-      console.log('vehicleData tidak valid:', vehicleData);
       return (
         <tr>
           <td colSpan={22} className="text-center py-4">
@@ -396,7 +395,7 @@ const DirectionTable = ({ vehicleData, classification, activePergerakan, activeP
     }
 
     if (!referenceData) {
-      console.log('Tidak ada data referensi yang valid untuk semua arah');
+      // console.log('Tidak ada data referensi yang valid untuk semua arah');
       return (
         <tr>
           <td colSpan="17" className="text-center py-4">

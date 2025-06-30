@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const KeluarMasukTable = ({ data, selectedDate, setSelectedDate, loading }) => {
+const KeluarMasukTable = ({ selectedDate, setSelectedDate, loading, data }) => {
   const [vehicleData, setVehicleData] = useState([]);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    import("@/data/DataKMTabel.json").then((data) => setVehicleData(data.default || []))
-  }, []);
+  // useEffect(() => {
+  //   import("@/data/DataKMTabel.json").then((data) => setVehicleData(data.default || []))
+  // }, []);
 
   const handleDateChange = (e) => {
     if (setSelectedDate) {
