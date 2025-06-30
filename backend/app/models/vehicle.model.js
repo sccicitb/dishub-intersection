@@ -20,33 +20,110 @@ const Vehicle = function (data) {
   this.updated_at = data.updated_at;
 };
 
-// Helper function to get WHERE clause based on filter type
+// ✅ OPTIMIZED: Helper function to get index-friendly WHERE clause based on filter type
 const getDateFilterClause = (filter) => {
+  // Get current date in Jakarta timezone (UTC+7)
+  const now = new Date();
+  const jakartaOffset = 7 * 60; // 7 hours in minutes
+  const jakartaNow = new Date(now.getTime() + (jakartaOffset * 60 * 1000));
+  
   switch (filter) {
     case 'day':
-    case 'harian':
-      return "DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+    case 'harian': {
+      // Today in Jakarta timezone
+      const todayStart = new Date(jakartaNow);
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(jakartaNow);
+      todayEnd.setHours(23, 59, 59, 999);
+      
+      // Convert back to UTC for database storage
+      const startUTC = new Date(todayStart.getTime() - (jakartaOffset * 60 * 1000));
+      const endUTC = new Date(todayEnd.getTime() - (jakartaOffset * 60 * 1000));
+      
+      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+    }
       
     case 'week':
-    case 'minggu':
-      // This week (Monday to Sunday)
-      return "WEEK(CONVERT_TZ(waktu, '+00:00', '+07:00'), 1) = WEEK(CONVERT_TZ(NOW(), '+00:00', '+07:00'), 1) AND YEAR(CONVERT_TZ(waktu, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+    case 'minggu': {
+      // This week (Monday to Sunday) in Jakarta timezone
+      const startOfWeek = new Date(jakartaNow);
+      const day = startOfWeek.getDay();
+      const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Monday
+      startOfWeek.setDate(diff);
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(endOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+      
+      // Convert back to UTC
+      const startUTC = new Date(startOfWeek.getTime() - (jakartaOffset * 60 * 1000));
+      const endUTC = new Date(endOfWeek.getTime() - (jakartaOffset * 60 * 1000));
+      
+      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+    }
       
     case 'month':
-    case 'bulanan':
-      return "MONTH(CONVERT_TZ(waktu, '+00:00', '+07:00')) = MONTH(CONVERT_TZ(NOW(), '+00:00', '+07:00')) AND YEAR(CONVERT_TZ(waktu, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+    case 'bulanan': {
+      // This month in Jakarta timezone
+      const startOfMonth = new Date(jakartaNow.getFullYear(), jakartaNow.getMonth(), 1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      
+      const endOfMonth = new Date(jakartaNow.getFullYear(), jakartaNow.getMonth() + 1, 0);
+      endOfMonth.setHours(23, 59, 59, 999);
+      
+      // Convert back to UTC
+      const startUTC = new Date(startOfMonth.getTime() - (jakartaOffset * 60 * 1000));
+      const endUTC = new Date(endOfMonth.getTime() - (jakartaOffset * 60 * 1000));
+      
+      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+    }
       
     case 'quarter':
-    case 'kuartal':
-      // This quarter (Q1: Jan-Mar, Q2: Apr-Jun, Q3: Jul-Sep, Q4: Oct-Dec)
-      return "QUARTER(CONVERT_TZ(waktu, '+00:00', '+07:00')) = QUARTER(CONVERT_TZ(NOW(), '+00:00', '+07:00')) AND YEAR(CONVERT_TZ(waktu, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+    case 'kuartal': {
+      // This quarter in Jakarta timezone
+      const quarter = Math.floor(jakartaNow.getMonth() / 3);
+      const startOfQuarter = new Date(jakartaNow.getFullYear(), quarter * 3, 1);
+      startOfQuarter.setHours(0, 0, 0, 0);
+      
+      const endOfQuarter = new Date(jakartaNow.getFullYear(), quarter * 3 + 3, 0);
+      endOfQuarter.setHours(23, 59, 59, 999);
+      
+      // Convert back to UTC
+      const startUTC = new Date(startOfQuarter.getTime() - (jakartaOffset * 60 * 1000));
+      const endUTC = new Date(endOfQuarter.getTime() - (jakartaOffset * 60 * 1000));
+      
+      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+    }
       
     case 'year':
-    case 'tahunan':
-      return "YEAR(CONVERT_TZ(waktu, '+00:00', '+07:00')) = YEAR(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+    case 'tahunan': {
+      // This year in Jakarta timezone
+      const startOfYear = new Date(jakartaNow.getFullYear(), 0, 1);
+      startOfYear.setHours(0, 0, 0, 0);
       
-    default:
-      return "DATE(CONVERT_TZ(waktu, '+00:00', '+07:00')) = DATE(CONVERT_TZ(NOW(), '+00:00', '+07:00'))";
+      const endOfYear = new Date(jakartaNow.getFullYear(), 11, 31);
+      endOfYear.setHours(23, 59, 59, 999);
+      
+      // Convert back to UTC
+      const startUTC = new Date(startOfYear.getTime() - (jakartaOffset * 60 * 1000));
+      const endUTC = new Date(endOfYear.getTime() - (jakartaOffset * 60 * 1000));
+      
+      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+    }
+      
+    default: {
+      // Default to today
+      const todayStart = new Date(jakartaNow);
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(jakartaNow);
+      todayEnd.setHours(23, 59, 59, 999);
+      
+      const startUTC = new Date(todayStart.getTime() - (jakartaOffset * 60 * 1000));
+      const endUTC = new Date(todayEnd.getTime() - (jakartaOffset * 60 * 1000));
+      
+      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+    }
   }
 };
 
