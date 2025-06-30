@@ -15,6 +15,7 @@ export const Loading = () => { return (<div className="w-full h-full m-auto text
 const FormSAIIIPage = () => {
   const [dataCameras, setDataCameras] = useState([]);
   const [selectCameras, setSelectCameras] = useState();
+  const [headerData, setHeader] = useState({});
 
   const fetchData = async () => {
     try {

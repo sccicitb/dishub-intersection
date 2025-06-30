@@ -17,6 +17,7 @@ export const Loading = () => { return (<div className="w-full h-full m-auto text
 const FaseIVPage = () => {
   const [dataCameras, setDataCameras] = useState([]);
   const [selectCameras, setSelectCameras] = useState();
+  const [headerData, setHeader] = useState({});
 
   const fetchData = async () => {
     try {
@@ -41,12 +42,13 @@ const FaseIVPage = () => {
 
   }
 
+  useEffect(() => {console.log(headerData)}, [headerData])
   return (
     <div>
       <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
-      <SurveyFormSAHeader />
+      <SurveyFormSAHeader setDataHeader={setHeader}/>
       <div className="lg:w-1/2 p-3">
         {/* <SurveyInfoTable /> */}
       </div>
