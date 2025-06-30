@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { GoPlus } from "react-icons/go";
 import { FaMinus } from "react-icons/fa6";
 
-const SurveyFormSAHeader = () => {
+const SurveyFormSAHeader = ({setDataHeader}) => {
   const [formData, setFormData] = useState({
     tanggal: '',
     kabupatenKota: '',
@@ -68,7 +68,7 @@ const SurveyFormSAHeader = () => {
 
     // Example API call structure
     console.log(cleanData);
-
+    setDataHeader(cleanData)
     alert('Data berhasil disimpan! Lihat console untuk detail data.');
   };
 

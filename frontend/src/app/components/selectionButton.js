@@ -73,7 +73,7 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
         <div className="space-y-1">
           <h3 className="text-[14px] font-medium">Pilih Interval</h3>
           <div className="join w-full gap-5 flex overflow-x-auto p-2">
-            {pathname !== "/survei-pergerakan" ? intervalOptions.map((option, id) => (
+            {pathname !== "/survei-pergerakan" ? intervalOptionsP.map((option, id) => (
               <button
                 key={id}
                 className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeInterval.toLowerCase() === option.item.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
