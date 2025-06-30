@@ -28,7 +28,7 @@ const TURN_MAP = {
  *   - reportType: 'hourly' (default existing), 
  *                 'dailyRange', 'dailyMonth', 'monthly', 'yearly'
  *   - simpang_id, approach, direction, classification (seperti semula)
- *   - interval: '15min' | '1h' (bila reportType=hourly)
+ *   - interval: '5min' | '10min' | '15min' | '1h' (bila reportType=hourly)
  *   - startDate, endDate        (bila dailyRange)
  *   - month, year               (bila dailyMonth atau monthly)
  *   - months (format '1,2,3'), year  (bila monthly, artinya beberapa bulan di tahun yg sama)
@@ -58,8 +58,18 @@ const getVehicleSummaryData = async (req, res) => {
 
     // --- 3. Switch case untuk tiap reportType ---
     if (reportType === 'hourly') {
-      // 3.a Eksisting logic: per‐periode (15min/1h) untuk satu hari
-      const interval = req.query.interval ? req.query.interval.toLowerCase() : '15min';
+      // 3.a Eksisting logic: per‐periode (5min/10min/15min/1h) untuk satu hari
+      const requestedInterval = req.query.interval ? req.query.interval.toLowerCase() : '15min';
+      
+      // Validate interval parameter
+      const validIntervals = ['5min', '10min', '15min', '1h', '60min'];
+      if (!validIntervals.includes(requestedInterval)) {
+        return res.status(400).json({ 
+          error: `Invalid interval: ${requestedInterval}. Valid intervals: ${validIntervals.join(', ')}` 
+        });
+      }
+      
+      const interval = requestedInterval;
       const date = req.query.date; // optional; kalau kosong, model akan treat sebagai “today until now”
 
       // Panggil model lama
@@ -201,13 +211,17 @@ const getVehicleSummaryData = async (req, res) => {
 
 /**
  * GET /api/surveys/export-vehicle
- * Param: interval = '15min' (default) | '1h' | '60min'
+ * Param: interval = '5min' | '10min' | '15min' (default) | '1h' | '60min'
  */
 const exportVehicleData = async (req, res) => {
   try {
     const { simpang_id, date, interval } = req.query;
-    const summaryInterval = (interval && ['1h', '1hour', '60min'].includes(interval.toLowerCase()))
-      ? '1h'
+    
+    // Validate and set interval
+    const requestedInterval = interval ? interval.toLowerCase() : '15min';
+    const validIntervals = ['5min', '10min', '15min', '1h', '60min', '1hour'];
+    const summaryInterval = validIntervals.includes(requestedInterval) 
+      ? (requestedInterval === '1hour' ? '1h' : requestedInterval) 
       : '15min';
 
     if (!simpang_id || !date)
@@ -286,7 +300,7 @@ const getSurveyProporsi = async (req, res) => {
  * Query parameters:
  *   - simpang_id: intersection ID (2, 3, 4, 5)
  *   - date: YYYY-MM-DD format
- *   - interval: '5min', '10min', '15min', or '1h' (optional, default: '15min')
+ *   - interval: '5min', '10min', '15min', '1h', or '60min' (optional, default: '15min')
  *   - approach: traffic direction ('north', 'south', 'east', 'west', 'utara', 'selatan', 'timur', 'barat', 'semua') (optional, default: 'semua')
  */
 const getKMTabelData = async (req, res) => {

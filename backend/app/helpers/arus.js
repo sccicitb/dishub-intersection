@@ -70,9 +70,28 @@ function fromMinutes(min) {
   return `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
 }
 
-// Main helper: interval = '15min' | '1h' | '60min'
+// Main helper: interval = '5min' | '10min' | '15min' | '1h' | '60min'
 function getPeriodsAndSlots(arusRows, interval = '15min') {
-  const intervalMinutes = (interval === '1h' || interval === '60min') ? 60 : 15;
+  let intervalMinutes;
+  
+  // Determine interval in minutes based on input
+  switch (interval.toLowerCase()) {
+    case '5min':
+      intervalMinutes = 5;
+      break;
+    case '10min':
+      intervalMinutes = 10;
+      break;
+    case '15min':
+      intervalMinutes = 15;
+      break;
+    case '1h':
+    case '60min':
+      intervalMinutes = 60;
+      break;
+    default:
+      intervalMinutes = 15; // fallback to 15min
+  }
 
   return PERIODS.map(period => {
     const slots = generateTimeSlots(period.start, period.end, intervalMinutes);

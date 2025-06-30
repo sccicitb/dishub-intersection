@@ -15,27 +15,51 @@ function getIntervals(date, intervalType, isToday, now = null) {
   const start = parseDate(date, '00:00');
   let end;
 
+  // Determine interval minutes
+  let intervalMinutes;
+  switch (intervalType.toLowerCase()) {
+    case '5min':
+      intervalMinutes = 5;
+      break;
+    case '10min':
+      intervalMinutes = 10;
+      break;
+    case '15min':
+      intervalMinutes = 15;
+      break;
+    case '1h':
+    case '60min':
+    case '1hour':
+      intervalMinutes = 60;
+      break;
+    default:
+      intervalMinutes = 15; // fallback to 15min
+  }
+
   if (isToday) {
     now = now || new Date();
     const nowHour = now.getHours();
     const nowMinute = now.getMinutes();
-    if (intervalType === '15min') {
-      let minute = Math.ceil((nowMinute + 1) / 15) * 15;
+    
+    if (intervalMinutes === 60) {
+      // Hour-based interval
+      let hour = nowHour + 1;
+      end = new Date(now);
+      end.setHours(hour);
+      end.setMinutes(0);
+      end.setSeconds(0);
+      end.setMilliseconds(0);
+    } else {
+      // Minute-based intervals (5min, 10min, 15min)
+      let minute = Math.ceil((nowMinute + 1) / intervalMinutes) * intervalMinutes;
       let hour = nowHour;
-      if (minute === 60) {
+      if (minute >= 60) {
         hour += 1;
         minute = 0;
       }
       end = new Date(now);
       end.setHours(hour);
       end.setMinutes(minute);
-      end.setSeconds(0);
-      end.setMilliseconds(0);
-    } else {
-      let hour = nowHour + 1;
-      end = new Date(now);
-      end.setHours(hour);
-      end.setMinutes(0);
       end.setSeconds(0);
       end.setMilliseconds(0);
     }
@@ -45,15 +69,21 @@ function getIntervals(date, intervalType, isToday, now = null) {
     end.setMinutes(59, 59, 999);
     end = new Date(end.getTime() + 60 * 1000); // 24:00
   }
+  
   let current = new Date(start);
   while (current < end) {
     let next = new Date(current);
-    if (intervalType === '15min') {
-      next.setMinutes(current.getMinutes() + 15);
-    } else {
+    
+    if (intervalMinutes === 60) {
+      // Hour-based interval
       next.setHours(current.getHours() + 1);
+    } else {
+      // Minute-based intervals
+      next.setMinutes(current.getMinutes() + intervalMinutes);
     }
+    
     if (next > end) break; // PATCH: stop kalau next lebih dari end
+    
     intervals.push({
       label: formatTime(current),
       start: new Date(current),
