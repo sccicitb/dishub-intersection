@@ -9,14 +9,15 @@
 /**
  * Maps database vehicle types to KM Tabel format
  * Returns object with sm, mp, ks, ktb counts
+ * ✅ FIXED: Convert all database values to numbers to prevent string concatenation
  */
 function mapVehicleTypes(vehicleData) {
   return {
-    sm: vehicleData.SM || 0,                                    // Sepeda Motor
-    mp: vehicleData.MP || 0,                                    // Mobil Penumpang
-    ks: (vehicleData.BS || 0) + (vehicleData.TS || 0),         // Kendaraan Sedang (Bus Sedang + Truck Sedang)
-    ktb: (vehicleData.BB || 0) + (vehicleData.TB || 0) + 
-         (vehicleData.GANDENG || 0) + (vehicleData.KTB || 0)   // Kendaraan Berat
+    sm: Number(vehicleData.SM) || 0,                                    // Sepeda Motor
+    mp: Number(vehicleData.MP) || 0,                                    // Mobil Penumpang
+    ks: (Number(vehicleData.BS) || 0) + (Number(vehicleData.TS) || 0),         // Kendaraan Sedang (Bus Sedang + Truck Sedang)
+    ktb: (Number(vehicleData.BB) || 0) + (Number(vehicleData.TB) || 0) + 
+         (Number(vehicleData.GANDENG) || 0) + (Number(vehicleData.KTB) || 0)   // Kendaraan Berat
   };
 }
 
