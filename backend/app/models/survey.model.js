@@ -93,8 +93,11 @@ const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, i
   return { vehicleData };
 };
 
+// ✅ OPTIMIZED: Use index-friendly date range instead of DATE() function
 const getArusBySimpangDate = async (simpang_id, date) => {
-  const [rows] = await db.query(`SELECT * FROM arus WHERE ID_Simpang = ? AND DATE(waktu) = ?`, [simpang_id, date]);
+  const startDate = `${date} 00:00:00`;
+  const endDate = `${date} 23:59:59`;
+  const [rows] = await db.query(`SELECT * FROM arus WHERE ID_Simpang = ? AND waktu BETWEEN ? AND ?`, [simpang_id, startDate, endDate]);
   return rows;
 };
 
@@ -111,30 +114,36 @@ const getArusSummaryByInterval = async (ID_Simpang, dbSubCodes, start, end) => {
   return rows;
 };
 
+// ✅ OPTIMIZED: Use index-friendly date range instead of DATE() function
 const getSumForCell = async (ID_Simpang, dari_arah, ke_arah, jenis, date) => {
   // date: 'YYYY-MM-DD'
+  const startDate = `${date} 00:00:00`;
+  const endDate = `${date} 23:59:59`;
   const sql = `
     SELECT SUM(\`${jenis}\`) AS total
     FROM arus
     WHERE ID_Simpang = ?
       AND dari_arah = ?
       AND ke_arah = ?
-      AND DATE(waktu) = ?
+      AND waktu BETWEEN ? AND ?
   `;
-  const [rows] = await db.query(sql, [ID_Simpang, dari_arah, ke_arah, date]);
+  const [rows] = await db.query(sql, [ID_Simpang, dari_arah, ke_arah, startDate, endDate]);
   return Number(rows[0]?.total) || 0;
 };
 
+// ✅ OPTIMIZED: Use index-friendly date range instead of DATE() function
 const getArusSummaryGrid = async (ID_Simpang, jenisKendaraanDB, queryDate) => {
   const selectFields = jenisKendaraanDB.map(code => `SUM(\`${code}\`) AS \`${code}\``).join(', ');
+  const startDate = `${queryDate} 00:00:00`;
+  const endDate = `${queryDate} 23:59:59`;
   const sql = `
     SELECT dari_arah, ke_arah, ${selectFields}
     FROM arus
     WHERE ID_Simpang = ?
-      AND DATE(waktu) = ?
+      AND waktu BETWEEN ? AND ?
     GROUP BY dari_arah, ke_arah
   `;
-  const [rows] = await db.query(sql, [ID_Simpang, queryDate]);
+  const [rows] = await db.query(sql, [ID_Simpang, startDate, endDate]);
   return rows; // Array of { dari_arah, ke_arah, SM, MP, ... }
 };
 
@@ -395,7 +404,10 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
     minuteGroupField = `FLOOR(MINUTE(waktu) / ${minuteDivisor}) as minute_group,`;
   }
   
-  // DYNAMIC APPROACH: Get ALL traffic data first, then separate into masuk/keluar dynamically
+  // ✅ OPTIMIZED: Use index-friendly date range instead of DATE() function
+  const startDate = `${queryDate} 00:00:00`;
+  const endDate = `${queryDate} 23:59:59`;
+  
   let sql = `
     SELECT 
       HOUR(waktu) as hour,
@@ -414,10 +426,10 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
       SUM(KTB) as KTB
     FROM arus 
     WHERE ID_Simpang = ? 
-      AND DATE(waktu) = ?
+      AND waktu BETWEEN ? AND ?
       AND dari_arah IN ('east', 'west', 'north', 'south')
   `;
-  const params = [simpang_id, queryDate];
+  const params = [simpang_id, startDate, endDate];
 
   // Add approach filter if not 'semua'
   if (dbApproach !== 'semua') {
