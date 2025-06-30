@@ -171,7 +171,7 @@ export default function VehicleDataTable () {
                 Fase
               </th>
               <th rowSpan="3" className="text-center border border-base-300 min-w-5 font-semibold">
-                Kode <br/> Pendekat
+                Kode <br /> Pendekat
               </th>
               <th rowSpan="3" className="text-center border border-base-300 min-w-14 font-semibold">
                 Jarak
@@ -183,13 +183,13 @@ export default function VehicleDataTable () {
                 Kecepatan (m/detik)
               </th>
               <th rowSpan="2" className="text-center border border-base-300 min-w-10 font-semibold">
-                Waktu <br/>Tempuh
+                Waktu <br />Tempuh
               </th>
               <th rowSpan="2" className="text-center border border-base-300 min-w-10 font-semibold">
                 W<sub>MS</sub>
               </th>
               <th rowSpan="2" className="text-center border border-base-300 min-w-10 font-semibold">
-                W<sub>MS</sub> <br/> Disesuaikan
+                W<sub>MS</sub> <br /> Disesuaikan
               </th>
               <th rowSpan="2" className="text-center border border-base-300 min-w-10 font-semibold">
                 W<sub>K</sub>
@@ -248,14 +248,15 @@ export default function VehicleDataTable () {
                     </td>
                   )}
                   {jarakIndex === 0 && (
-                    <td rowSpan="4" className="text-center border border-base-300 align-middle">
-                      <input
-                        type="text"
-                        className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full text-center font-semibold"
-                        value={row.kode}
-                        onChange={(e) => handleKodeChange(rowIndex, e.target.value)}
-                      />
-                      {/* {row.kode} */}
+                    <td rowSpan="4" className="text-center border border-base-300 p-0">
+                      <div className="flex h-full min-h-[16rem]">
+                        <input
+                          type="text"
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
+                          value={row.kode}
+                          onChange={(e) => handleKodeChange(rowIndex, e.target.value)}
+                        />
+                      </div>
                     </td>
                   )}
                   <td className="border border-base-300">
@@ -263,148 +264,183 @@ export default function VehicleDataTable () {
                       {jarakType.label}<sub>{jarakType.sub}</sub>
                     </div>
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="0.1"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].pendekat.u}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'pendekat', 'u', e.target.value)
-                      }
-                    />
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
+                        value={row.jarak[jarakType.key].pendekat.u}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'pendekat', 'u', e.target.value)
+                        }
+                      />
+                    </div>
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="0.1"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].pendekat.s}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'pendekat', 's', e.target.value)
-                      }
-                    />
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
+                        value={row.jarak[jarakType.key].pendekat.s}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'pendekat', 's', e.target.value)
+                        }
+                      />
+                    </div>
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="0.1"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].pendekat.t}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'pendekat', 't', e.target.value)
-                      }
-                    />
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
+                        value={row.jarak[jarakType.key].pendekat.t}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'pendekat', 't', e.target.value)
+                        }
+                      />
+                    </div>
+
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="0.1"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].pendekat.b}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'pendekat', 'b', e.target.value)
-                      }
-                    />
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
+                        value={row.jarak[jarakType.key].pendekat.b}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'pendekat', 'b', e.target.value)
+                        }
+                      />
+                    </div>
+
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="0.1"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].kecepatan.berangkat}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'berangkat', e.target.value)
-                      }
-                    />
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
+                        value={row.jarak[jarakType.key].kecepatan.berangkat}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'berangkat', e.target.value)
+                        }
+                      />
+                    </div>
+
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="0.1"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].kecepatan.datang}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'datang', e.target.value)
-                      }
-                    />
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
+                        value={row.jarak[jarakType.key].kecepatan.datang}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'datang', e.target.value)
+                        }
+                      />
+                    </div>
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="0.1"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].kecepatan.pejalanKaki}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'pejalanKaki', e.target.value)
-                      }
-                    />
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
+                        value={row.jarak[jarakType.key].kecepatan.pejalanKaki}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'pejalanKaki', e.target.value)
+                        }
+                      />
+                    </div>
+
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].waktuTempuh}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'waktuTempuh', null, e.target.value)
-                      }
-                    />
+                  <td className="text-center border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
+                        value={row.jarak[jarakType.key].waktuTempuh}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'waktuTempuh', null, e.target.value)
+                        }
+                      />
+                    </div>
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].wws}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'wws', null, e.target.value)
-                      }
-                    />
+
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
+                        value={row.jarak[jarakType.key].wws}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'wws', null, e.target.value)
+                        }
+                      />
+                    </div>
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="1"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].wusDisarankan}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'wusDisarankan', null, e.target.value)
-                      }
-                    />
+
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="1"
+                        className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
+                        value={row.jarak[jarakType.key].wusDisarankan}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'wusDisarankan', null, e.target.value)
+                        }
+                      />
+                    </div>
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="1"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].wk}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'wk', null, e.target.value)
-                      }
-                    />
+
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="1"
+                        className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
+                        value={row.jarak[jarakType.key].wk}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'wk', null, e.target.value)
+                        }
+                      />
+                    </div>
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="1"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].wAll}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'wAll', null, e.target.value)
-                      }
-                    />
+
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="1"
+                        className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
+                        value={row.jarak[jarakType.key].wAll}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'wAll', null, e.target.value)
+                        }
+                      />
+                    </div>
                   </td>
-                  <td className="text-center border border-base-300">
-                    <input
-                      type="number"
-                      step="1"
-                      className="h-full focus:ring-0 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold text-center"
-                      value={row.jarak[jarakType.key].wHijau}
-                      onChange={(e) =>
-                        handleInputChange(rowIndex, jarakType.key, 'wHijau', null, e.target.value)
-                      }
-                    />
+
+                  <td className="border border-base-300 p-0">
+                    <div className="flex h-full min-h-[4rem]">
+                      <input
+                        type="number"
+                        step="1"
+                        className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
+                        value={row.jarak[jarakType.key].wHijau}
+                        onChange={(e) =>
+                          handleInputChange(rowIndex, jarakType.key, 'wHijau', null, e.target.value)
+                        }
+                      />
+                    </div>
                   </td>
                 </tr>
               ))
