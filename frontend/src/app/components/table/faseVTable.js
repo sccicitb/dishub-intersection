@@ -619,7 +619,7 @@ export default function FormSAVTable () {
         </div>
       </div>
       {/* <SketsaSimpangV data={tableData} /> */}
-      <div>
+      <div className='w-full overflow-x-auto'>
         <div className="min-w-[900px] flex flex-col w-fit bg-[#bec1ce] mx-auto font-semibold text-sm text-gray-800">
           {/* North */}
           <div className="grid grid-cols-3">
