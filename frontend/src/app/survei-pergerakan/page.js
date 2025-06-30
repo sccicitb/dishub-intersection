@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, Suspense, lazy } from 'react';
-import { survey, maps } from '@/lib/apiService';
+import { survey, maps, cameras } from '@/lib/apiService';
 import { getCuacaJogja } from '@/lib/weatherAccess';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 // import VideoStream from '../components/videoStream';
 
 const ClasificationTable = lazy(() => import("@/app/components/clasificationTable"));
@@ -17,21 +19,21 @@ const KeluarMasukTable = lazy(() => import('../components/table/keluarMasukTable
 // import AdaptiveVideoPlayer from '../components/adaptiveCameraStream';
 // import BlobVideoPlayer from '../components/blobVideoPlayer';
 
-const classificationMap = {
-  "PKJI 2023 Luar Kota": "luar_kota",
-  "PKJI 2023 Dalam Kota": "dalam_kota",
-  "PKJI 2023 Tipikal": "tipikal",
-};
+// const classificationMap = {
+//   "PKJI 2023 Luar Kota": "luar_kota",
+//   "PKJI 2023 Dalam Kota": "dalam_kota",
+//   "PKJI 2023 Tipikal": "tipikal",
+// };
 
 function MovePage () {
   const [loading, setLoading] = useState(false);
   const [vehicleData, setVehicleData] = useState(null);
-  const [directionData, setDirectionData] = useState(null);
+  // const [directionData, setDirectionData] = useState(null);
   const [reportType] = useState('hourly');
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
-  const [activeInterval, setActiveInterval] = useState('');
+  const [activeInterval, setActiveInterval] = useState('1h');
   const [activeDirection, setActiveDirection] = useState('Semua');
   const [activeTitle, setActiveTitle] = useState("Survei Pergerakan");
   const [activeSimpangId, setActiveSimpangId] = useState(0);
@@ -42,6 +44,7 @@ function MovePage () {
   const [Cuaca, setCuaca] = useState("")
   const [fetchStatus, setFetchStatus] = useState(false)
   const [dataKM, setDataKM] = useState([])
+  const [simpangModel, setSimpangModel] = useState([])
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -65,12 +68,16 @@ function MovePage () {
   //   });
   // }, []);
 
+
   useEffect(() => {
     // Fetch simpang data first to get the ID
     const fetchSimpangData = async () => {
       try {
         const simpangRes = await maps.getAllSimpang();
+        const cameraRes = await cameras.getAll();
         const simpangData = Array.isArray(simpangRes?.data?.simpang) ? simpangRes.data.simpang : [];
+        const cameraData = Array.isArray(cameraRes?.data?.cameras) ? cameraRes.data.cameras : [];
+        setSimpangModel(cameraData.filter(item => item.socket_event !== "not_yet_assign").map(d => d.ID_Simpang))
 
         let cuaca;
         if (simpangData.length > 0 && simpangData[0]?.id) {
@@ -84,27 +91,9 @@ function MovePage () {
         console.error('Error fetching simpang data:', err);
       }
     };
-
     fetchSimpangData();
   }, []);
 
-  const fetchSurveyKM = async () => {
-    if (loading || !activeSID) return;
-
-    const baseParams = {
-      camera_id: activeSID,
-      date: formatDateToAPI(dateInput),
-      interval: activeInterval || '',
-      approach: activePendekatan?.toLowerCase() || '',
-    };
-
-    try {
-      const data = await survey.getAllKM(baseParams)
-      setDataKM(data)
-    } catch (err) {
-      console.error({ "error": err })
-    }
-  }
 
   const fetchSurvey = async () => {
     if (loading || !activeSID) return;
@@ -176,14 +165,40 @@ function MovePage () {
     }
   };
 
-  useEffect(() => {
-    // setLoading(true);
-    fetchSurvey();
-  }, [activeSimpangId, activeCamera, activeInterval, activePendekatan, activeDirection, dateInput, reportType]);
 
-    useEffect(() => {
+  const fetchSurveyKM = async () => {
+    if (loading || !activeSID) return;
+
+
+    if(!simpangModel.includes(activeSID)) return toast.info("Simpang yang dipilih tidak memiliki model deteksi, Silahkan pilih yang lain", {position : 'top-right'})
+
+    const base = {
+      camera_id: activeSID,
+      date: dateInput,
+      interval: activeInterval || '',
+      approach: activePendekatan?.toLowerCase() || '',
+    };
+
+    try {
+      const data = await survey.getAllKM(base.camera_id,
+        base.date,
+        base.interval,
+        base.approach)
+      setDataKM(data.data.data)
+    } catch (err) {
+      import("@/data/DataKMTabel.json").then((data) => setDataKM((data.default || [])))
+      console.error({ "error": err })
+    }
+  }
+
+  useEffect(() => {
+    // setLoading(true/);
+    fetchSurvey();
+  }, [activeSID, activeCamera, activeInterval, activePendekatan, activeDirection, dateInput, reportType]);
+
+  useEffect(() => {
     fetchSurveyKM();
-  }, [activeSimpangId, activeInterval, activePendekatan, activeDirection, dateInput]);
+  }, [activeSID, activeInterval, activePendekatan, activeDirection, dateInput]);
 
 
   const handleClick = (building) => {
@@ -205,8 +220,10 @@ function MovePage () {
     setActiveSimpangId(loc.id)
     setActiveSID(loc.id)
   }
+
   return (
     <div>
+      <ToastContainer />
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
         <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
         <div className="w-[95%] m-auto">
