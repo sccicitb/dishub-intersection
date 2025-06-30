@@ -93,7 +93,24 @@ function MovePage () {
     };
     fetchSimpangData();
   }, []);
+  
+  const fetchSurveyKM = async () => {
+    if (loading || !activeSID) return;
 
+    const baseParams = {
+      camera_id: activeSID,
+      date: formatDateToAPI(dateInput),
+      interval: activeInterval || '',
+      approach: activePendekatan?.toLowerCase() || '',
+    };
+
+    try {
+      const data = await survey.getAllKM(baseParams)
+      setDataKM(data)
+    } catch (err) {
+      console.error({ "error": err })
+    }
+  }
 
   const fetchSurvey = async () => {
     if (loading || !activeSID) return;
@@ -199,6 +216,11 @@ function MovePage () {
   useEffect(() => {
     fetchSurveyKM();
   }, [activeSID, activeInterval, activePendekatan, activeDirection, dateInput]);
+
+
+    useEffect(() => {
+    fetchSurveyKM();
+  }, [activeSimpangId, activeInterval, activePendekatan, activeDirection, dateInput]);
 
 
   const handleClick = (building) => {

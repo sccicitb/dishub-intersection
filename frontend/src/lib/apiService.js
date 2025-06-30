@@ -85,6 +85,7 @@ export const survey = {
 
     return getRequest(`/surveys/data-summary?${params.join('&')}`);
   },
+  
    getAllKM: (simpang_id, date, interval, approach) => {
     // let params = [`simpang_id=${simpang_id}`, `date=${date}`];
     let params = [`simpang_id=${simpang_id}`, `date=${date}`];
