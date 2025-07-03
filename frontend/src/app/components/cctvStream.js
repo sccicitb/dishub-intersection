@@ -8,7 +8,6 @@ export default function CCTVStream ({ data, title, customLarge, large = false, o
 
   // Get message data with fallback
   const { message } = data || {};
-
   // Extract values with fallbacks
   const {
     image_url,
@@ -24,6 +23,14 @@ export default function CCTVStream ({ data, title, customLarge, large = false, o
       setImageError(false);
     }
   }, [image_url]);
+
+  useEffect(() => {
+    if (data?.message?.detections?.length > 0) {
+      console.log(data);
+      // const filtered = data.filter(item => item.detections?.length > 0);
+      // console.log('Data with detections:', filtered);
+    }
+  }, [data])
 
   // Check if image_url is empty or undefined
   const isValidImageUrl = image_url && image_url !== "";
@@ -68,9 +75,9 @@ export default function CCTVStream ({ data, title, customLarge, large = false, o
                 onError={() => setImageError(true)}
               >
               </img> */}
-                <div className="absolute top-[40%] w-full text-center text-sm ">
-                  Waiting for connection...
-                </div>
+              <div className="absolute top-[40%] w-full text-center text-sm ">
+                Waiting for connection...
+              </div>
               <div className="h-15 bg-black">
               </div>
             </div>

@@ -409,7 +409,7 @@ function SurveiSimpangPage () {
         )}
         <div className="w-[95%] m-auto">
           <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
-            <RecentVehicle customCSS={'h-[320px]'} />
+            <RecentVehicle customCSS={'h-[320px]'} data={streamData[activeCamera]}/>
             <div className="py-1 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
               <div className="w-full">
                 {renderCCTVStream()}
@@ -443,7 +443,7 @@ function SurveiSimpangPage () {
             <label className="mr-2 font-medium">Pilih Tanggal:</label>
             <input
               type="date"
-              className="border rounded px-2 py-1"
+              className="border rounded px-2 py-1"  
               value={dateInput}
               onChange={(e) => setDateInput(e.target.value)}
             />

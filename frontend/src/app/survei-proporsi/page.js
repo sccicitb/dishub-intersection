@@ -320,7 +320,7 @@ function SurveiProporsi () {
         {/* Main Content Section */}
         <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
           <Suspense fallback={<LoadingFallback />}>
-            <RecentVehicle hg={340} />
+            <RecentVehicle hg={350} data={streamData[activeCamera]}/>
           </Suspense>
 
           <div className="py-1 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">

@@ -31,6 +31,22 @@
   --error: #F87272;
 }
 
+.scrollbar-thin-custom {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #cbd5e0 transparent; /* Warna scrollbar */
+}
+
+.scrollbar-thin-custom::-webkit-scrollbar {
+  height: 6px;
+}
+.scrollbar-thin-custom::-webkit-scrollbar-thumb {
+  background-color: #a0aec0; /* abu-abu */
+  border-radius: 4px;
+}
+.scrollbar-thin-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 * {
   -webkit-print-color-adjust: exact !important;
   color-adjust: exact !important;
