@@ -1,6 +1,8 @@
 "use client";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { cameras } from '@/lib/apiService';
+import { ToastContainer,toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const FaseApilTable = lazy(() => import("@/app/components/table/faseApilTable"));
 const FaseLapanganTable = lazy(() => import("@/app/components/table/faseLapanganTable"));
@@ -14,7 +16,9 @@ export const Loading = () => { return (<div className="w-full h-full m-auto text
 const FormSAIPage = () => {
   const [dataCameras, setDataCameras] = useState([]);
   const [selectCameras, setSelectCameras] = useState();
+  const [lapangan, setLapangan] = useState({});
   const [headerData, setHeader] = useState({});
+  const [faseApil, setFaseApil] = useState({});
 
   const fetchData = async () => {
     try {
@@ -39,8 +43,56 @@ const FormSAIPage = () => {
 
   }
 
+  let payload;
+
+  useEffect(() => {
+    payload = {
+      header: { ...headerData },
+      ...lapangan,
+      fase: { ...faseApil }
+    };
+    console.log('Payload gabungan:', payload);
+  }, [lapangan, headerData, faseApil]);
+
+  const submitData = () => {
+    console.log(payload);
+  }
+
+  const handleSubmit = () => {
+    toast.info(
+      ({ closeToast }) => (
+        <div>
+          <p className="text-sm">Yakin ingin mengirim data?</p>
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => {
+                submitData(); // fungsi kirim API
+                toast.dismiss(); // tutup semua toast
+              }}
+              className="btn btn-sm text-white font-light btn-success"
+            >
+              Ya
+            </button>
+            <button
+              onClick={() => toast.dismiss()}
+              className="btn btn-sm text-white font-light btn-error"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+      }
+    );
+  };
+
   return (
     <div>
+      <ToastContainer />
       <div>
         {/* <div className="w-56 px-3">
           <fieldset className="fieldset">
@@ -63,7 +115,7 @@ const FormSAIPage = () => {
       <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
-      <SurveyFormSAHeader setDataHeader={setHeader}/>
+      <SurveyFormSAHeader setDataHeader={setHeader} />
       <div className="lg:w-1/2 p-3">
         {/* <SurveyInfoTable /> */}
       </div>
@@ -75,9 +127,12 @@ const FormSAIPage = () => {
         <MapComponent title={""} onClick={handleCameraSelect} onClickSimpang={handleSimpangSelect} form />
       </Suspense>
       <Suspense fallback={<Loading />}>
-        <FaseLapanganTable />
-        <FaseApilTable />
+        <FaseLapanganTable setDataLapangan={setLapangan} />
+        <FaseApilTable setDataFaseApil={setFaseApil}/>
       </Suspense>
+      <div className="w-full items-center flex p-6">
+        <button onClick={handleSubmit} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
+      </div>
     </div>
   )
 }
