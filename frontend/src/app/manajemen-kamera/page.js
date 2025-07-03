@@ -1311,9 +1311,7 @@ const ManajemenKamera = () => {
           </div>
 
           {/* Recent Vehicle Section */}
-          {!fullSize && (
-            <RecentVehicle hg={600} />
-          )}
+          <RecentVehicle hg={600} allData={filteredBuildings} streamData={streamData}/>
         </div>
 
         {/* Calendar Management Section */}

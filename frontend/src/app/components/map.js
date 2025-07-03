@@ -20,7 +20,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
   const [theme, setTheme] = useState("light");
   const [bounds, setBounds] = useState(null);
   const [rulerStatus, setRulerStatus] = useState(false);
-
+  const [shouldRenderMap, setShouldRenderMap] = useState(false);
   // Data States  
   const [buildings, setBuildings] = useState([]);
   const [categorizedBuildings, setCategorizedBuildings] = useState({});
@@ -101,6 +101,15 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
   };
 
   useEffect(() => {
+    // Delay rendering map sampai DOM siap
+    const timer = setTimeout(() => {
+      setShouldRenderMap(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     console.log(buildings)
   }, [buildings])
 
@@ -170,11 +179,32 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
   }, [theme]);
 
   // Map event handlers
+  // const handleMapLoad = useCallback((event) => {
+  //   if (event?.target) {
+  //     mapRef.current = event.target;
+  //     setTimeout(() => setMapReady(true), 200);
+  //   }
+  // }, []);
   const handleMapLoad = useCallback((event) => {
-    if (event?.target) {
-      mapRef.current = event.target;
-      setTimeout(() => setMapReady(true), 200);
-    }
+    const map = event?.target;
+
+    if (!map) return;
+
+    mapRef.current = map;
+
+    // Fungsi untuk check dan set ready
+    const checkAndSetReady = () => {
+      if (map.isStyleLoaded() && map.loaded()) {
+        setMapReady(true);
+        console.log('Map fully loaded and ready');
+      } else {
+        // Retry setelah 100ms jika belum ready
+        setTimeout(checkAndSetReady, 5000);
+      }
+    };
+
+    // Mulai checking
+    checkAndSetReady();
   }, []);
 
   // Fit bounds to all buildings
@@ -281,69 +311,71 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
 
       <div style={{ width: "100%", height: sizeHeight || "50vh" }} className="relative">
         {/* Map */}
-        <Map
-          ref={mapRef}
-          antialias={true}
-          projection="globe"
-          mapStyle={mapStyles[form ? "form_sa" : theme]}
-          initialViewState={{
-            longitude: center.longitude,
-            latitude: center.latitude,
-            zoom: 7,
-          }}
-          onLoad={handleMapLoad}
-          style={{ width: "100%", height: "100%" }}
-          onClick={(e) => {
-            if (!form || !rulerStatus) return;
 
-            const { lng, lat } = e.lngLat;
+        {shouldRenderMap && (
+          <Map
+            ref={mapRef}
+            antialias={true}
+            projection="globe"
+            mapStyle={mapStyles[form ? "form_sa" : theme]}
+            initialViewState={{
+              longitude: center.longitude,
+              latitude: center.latitude,
+              zoom: 7,
+            }}
+            onLoad={handleMapLoad}
+            style={{ width: "100%", height: "100%" }}
+            onClick={(e) => {
+              if (!form || !rulerStatus) return;
 
-            const newPoints = [...measurePoints, [lng, lat]];
-            setMeasurePoints(newPoints);
+              const { lng, lat } = e.lngLat;
 
-            if (newPoints.length === 2) {
-              const from = turf.point(newPoints[0]);
-              const to = turf.point(newPoints[1]);
-              const distance = turf.distance(from, to, { units: 'meters' });
-              alert(`Jarak: ${distance.toFixed(2)} m`);
-              // Simpan garis untuk nanti digambar
-              const line = {
-                id: uuidv4(),
-                label: lines.length + 1,
-                feature: {
-                  type: "Feature",
-                  geometry: {
-                    type: "LineString",
-                    coordinates: newPoints,
+              const newPoints = [...measurePoints, [lng, lat]];
+              setMeasurePoints(newPoints);
+
+              if (newPoints.length === 2) {
+                const from = turf.point(newPoints[0]);
+                const to = turf.point(newPoints[1]);
+                const distance = turf.distance(from, to, { units: 'meters' });
+                alert(`Jarak: ${distance.toFixed(2)} m`);
+                // Simpan garis untuk nanti digambar
+                const line = {
+                  id: uuidv4(),
+                  label: lines.length + 1,
+                  feature: {
+                    type: "Feature",
+                    geometry: {
+                      type: "LineString",
+                      coordinates: newPoints,
+                    }
                   }
-                }
-              };
-              const midpoint = turf.midpoint(from, to);
-              midpoint.properties = {
-                distance: `Garis ${line.label} ${distance.toFixed(2)} m`,
-                id: line.id
-              };
+                };
+                const midpoint = turf.midpoint(from, to);
+                midpoint.properties = {
+                  distance: `Garis ${line.label} ${distance.toFixed(2)} m`,
+                  id: line.id
+                };
 
-              // midpoint.properties = {
-              //   id: Date.now(), // atau ID unik lainnya
-              //   distance: `ID: ${Date.now()} - ${distance.toFixed(2)} km`, // gabungkan teks
-              // };
+                // midpoint.properties = {
+                //   id: Date.now(), // atau ID unik lainnya
+                //   distance: `ID: ${Date.now()} - ${distance.toFixed(2)} km`, // gabungkan teks
+                // };
 
-              // setDistanceLine(line);
-              // setDistanceLabel(midpoint);
-              setLines(prev => [...prev, line])
-              setDistanceLine(prev => [...prev, line]);
-              setDistanceLabel(prev => [...prev, midpoint]);
-              // Reset agar bisa klik ulang nanti
-              setTimeout(() => {
-                setMeasurePoints([]);
-              }, 1000);
-            }
-          }}
-        >
-          <NavigationControl position="top-right" />
-          {/* ruller */}
-          {/* {distanceLine && (
+                // setDistanceLine(line);
+                // setDistanceLabel(midpoint);
+                setLines(prev => [...prev, line])
+                setDistanceLine(prev => [...prev, line]);
+                setDistanceLabel(prev => [...prev, midpoint]);
+                // Reset agar bisa klik ulang nanti
+                setTimeout(() => {
+                  setMeasurePoints([]);
+                }, 1000);
+              }
+            }}
+          >
+            <NavigationControl position="top-right" />
+            {/* ruller */}
+            {/* {distanceLine && (
             <Source id="measure-line" type="geojson" data={distanceLine}>
               <Layer
                 id="measure-line-layer"
@@ -375,62 +407,63 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
               />
             </Source>
           )} */}
-          {distanceLine.map(({ id, feature }) => (
-            <Source key={id} id={`line-${id}`} type="geojson" data={feature}>
-              <Layer
-                id={`line-layer-${id}`}
-                type="line"
-                paint={{
-                  "line-color": "#FF0000",
-                  "line-width": 3
-                }}
-              />
-            </Source>
-          ))}
+            {distanceLine.map(({ id, feature }) => (
+              <Source key={id} id={`line-${id}`} type="geojson" data={feature}>
+                <Layer
+                  id={`line-layer-${id}`}
+                  type="line"
+                  paint={{
+                    "line-color": "#FF0000",
+                    "line-width": 3
+                  }}
+                />
+              </Source>
+            ))}
 
-          {distanceLabel.map((label) => (
-            <Source key={label.properties.id} id={`label-${label.properties.id}`} type="geojson" data={label}>
-              <Layer
-                id={`label-layer-${label.properties.id}`}
-                type="symbol"
-                layout={{
-                  "text-field": ["get", "distance"],
-                  "text-size": 14,
-                  "text-offset": [0, 1.5],
-                  "text-anchor": "top",
-                }}
-                paint={{
-                  "text-color": "#000000",
-                  "text-halo-color": "#ffffff",
-                  "text-halo-width": 1.5,
-                }}
-              />
-            </Source>
-          ))}
+            {distanceLabel.map((label) => (
+              <Source key={label.properties.id} id={`label-${label.properties.id}`} type="geojson" data={label}>
+                <Layer
+                  id={`label-layer-${label.properties.id}`}
+                  type="symbol"
+                  layout={{
+                    "text-field": ["get", "distance"],
+                    "text-size": 14,
+                    "text-offset": [0, 1.5],
+                    "text-anchor": "top",
+                  }}
+                  paint={{
+                    "text-color": "#000000",
+                    "text-halo-color": "#ffffff",
+                    "text-halo-width": 1.5,
+                  }}
+                />
+              </Source>
+            ))}
 
-          {measurePoints.map(([lng, lat], index) => (
-            <Marker key={index} longitude={lng} latitude={lat}>
-              <div className="bg-red-500 w-3 h-3 rounded-full border border-white" />
-            </Marker>
-          ))}
-
-          {/* Building Markers */}
-          {
-            buildings.map((building) => (
-              <Marker
-                key={building.id}
-                longitude={building.longitude}
-                latitude={building.latitude}
-              >
-                <div onClick={() => flyToLocation(building)} style={{ cursor: "pointer" }}>
-                  <FaMapMarkerAlt size={35} color="brown" />
-                </div>
+            {measurePoints.map(([lng, lat], index) => (
+              <Marker key={index} longitude={lng} latitude={lat}>
+                <div className="bg-red-500 w-3 h-3 rounded-full border border-white" />
               </Marker>
-            ))
-          }
-        </Map>
+            ))}
 
-        <div className={`absolute top-20 left-3 z-10 items-center`}>
+            {/* Building Markers */}
+            {
+              buildings.map((building) => (
+                <Marker
+                  key={building.id}
+                  longitude={building.longitude}
+                  latitude={building.latitude}
+                >
+                  <div onClick={() => flyToLocation(building)} style={{ cursor: "pointer" }}>
+                    <FaMapMarkerAlt size={35} color="brown" />
+                  </div>
+                </Marker>
+              ))
+            }
+          </Map>
+        )}
+
+        < div className={`absolute top-20 left-3 z-10 items-center`}>
           <div className="flex-col flex gap-2">
             {distanceLine.map(({ id, label }) => (
               <button
@@ -505,42 +538,44 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
       </div>
 
       {/* Camera Selection Modal */}
-      {cameraModal.isOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
-          <div className="bg-white rounded-xl p-5 shadow-lg w-80 max-w-full">
-            <h2 className="text-xs font-semibold mb-4">Pilih Kamera</h2>
-            <div className="space-y-2">
-              {cameraModal.cameras.map((camera) => (
-                <button
-                  key={camera.id}
-                  disabled={camera.socket_event === "not_yet_assign"}
-                  className={`w-full text-left rounded-xl btn btn-sm hover:bg-gray-100 ${camera.socket_event === "not_yet_assign"
-                    ? "border-orange-100 bg-orange-50"
-                    : "border-green-300 bg-green-50"
-                    }`}
-                  onClick={() => handleCameraSelect(camera)}
-                >
-                  <div className="flex flex-col items-center">
-                    <span>{camera.name || `Camera ${camera.id}`}</span>
-                    <small className={`${camera.socket_event === "not_yet_assign"
-                      ? "text-orange-300"
-                      : "text-green-600"
-                      }`}>
-                      {camera.socket_event === "not_yet_assign" ? "Video Stream" : "Live Stream + Model Detection"}
-                    </small>
-                  </div>
-                </button>
-              ))}
+      {
+        cameraModal.isOpen && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
+            <div className="bg-white rounded-xl p-5 shadow-lg w-80 max-w-full">
+              <h2 className="text-xs font-semibold mb-4">Pilih Kamera</h2>
+              <div className="space-y-2">
+                {cameraModal.cameras.map((camera) => (
+                  <button
+                    key={camera.id}
+                    disabled={camera.socket_event === "not_yet_assign"}
+                    className={`w-full text-left rounded-xl btn btn-sm hover:bg-gray-100 ${camera.socket_event === "not_yet_assign"
+                      ? "border-orange-100 bg-orange-50"
+                      : "border-green-300 bg-green-50"
+                      }`}
+                    onClick={() => handleCameraSelect(camera)}
+                  >
+                    <div className="flex flex-col items-center">
+                      <span>{camera.name || `Camera ${camera.id}`}</span>
+                      <small className={`${camera.socket_event === "not_yet_assign"
+                        ? "text-orange-300"
+                        : "text-green-600"
+                        }`}>
+                        {camera.socket_event === "not_yet_assign" ? "Video Stream" : "Live Stream + Model Detection"}
+                      </small>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button
+                className="btn btn-sm mt-4 w-full btn-error rounded-xl"
+                onClick={() => setCameraModal({ isOpen: false, cameras: [] })}
+              >
+                Batal
+              </button>
             </div>
-            <button
-              className="btn btn-sm mt-4 w-full btn-error rounded-xl"
-              onClick={() => setCameraModal({ isOpen: false, cameras: [] })}
-            >
-              Batal
-            </button>
           </div>
-        </div>
-      )}
+        )
+      }
     </div >
   );
 };
