@@ -25,7 +25,7 @@ export const SketsaAPILL = ({ directions, currentPhase = 'fase_1' }) => {
     if (movement === 'bkijt' && isMovementActive === true) {
       return 'text-green-500';
     }
-    
+
     // Untuk movement lainnya, ikuti logika fase
     if (isPhaseActive && isMovementActive) {
       return 'text-green-500'; // Hijau untuk aktif
@@ -40,14 +40,14 @@ export const SketsaAPILL = ({ directions, currentPhase = 'fase_1' }) => {
   const getBelokKiriMovement = (direction) => {
     const directionData = directions[direction];
     if (!directionData) return null;
-    
+
     // Prioritas jika ada BKIJT Jika tidak tampilkan BKI
     if (directionData.arah.bkijt) {
       return 'bkijt';
     } else if (directionData.arah.bki) {
       return 'bki';
     }
-    return null;
+    return 'bki';
   };
 
   // Fungsi untuk mendapatkan ikon panah berdasarkan arah dan gerakan
@@ -87,7 +87,6 @@ export const SketsaAPILL = ({ directions, currentPhase = 'fase_1' }) => {
 
       <div className="relative w-40 h-40 bg-white border-2 border-gray-300 rounded-lg">
         {/* Intersection center */}
-        {/* <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-yellow-200 rounded-full border-2 border-gray-400"></div> */}
 
         {/* Utara - Top */}
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-1">
@@ -118,32 +117,40 @@ export const SketsaAPILL = ({ directions, currentPhase = 'fase_1' }) => {
         </div>
 
         {/* Timur - Right */}
-        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-1">
-          <div className="text-xs font-semibold text-gray-700">T</div>
-          <div className="flex flex-col space-y-1">
-            {getArrowIcon('timur', 'bka', 20)}
-            {getArrowIcon('timur', 'lurus', 20)}
-            {getBelokKiriMovement('timur') && getArrowIcon('timur', getBelokKiriMovement('timur'), 20)}
+        {directions["timur"] && (
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-1">
+            <div className="flex gap-1">
+              <div className="flex flex-col space-y-1">
+                {getArrowIcon('timur', 'bka', 20)}
+                {getArrowIcon('timur', 'lurus', 20)}
+                {getBelokKiriMovement('timur') && getArrowIcon('timur', getBelokKiriMovement('timur'), 20)}
+              </div>
+              <div className="text-xs text-gray-500">
+                {directions.timur?.tipe_pendekat?.terlindung && 'P'}
+                {directions.timur?.tipe_pendekat?.terlawan && 'O'}
+              </div>
+              <div className="text-xs font-semibold text-gray-700 m-auto">T</div>
+            </div>
           </div>
-          <div className="text-xs text-gray-500">
-            {directions.timur?.tipe_pendekat?.terlindung && 'P'}
-            {directions.timur?.tipe_pendekat?.terlawan && 'O'}
-          </div>
-        </div>
+        )}
 
         {/* Barat - Left */}
-        <div className="absolute left-2 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-1">
-          <div className="text-xs font-semibold text-gray-700">B</div>
-          <div className="flex flex-col space-y-1">
-            {getBelokKiriMovement('barat') && getArrowIcon('barat', getBelokKiriMovement('barat'), 20)}
-            {getArrowIcon('barat', 'lurus', 20)}
-            {getArrowIcon('barat', 'bka', 20)}
+        {directions["barat"] && (
+          <div className="absolute left-2 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-1">
+            <div className="flex gap-1">
+              <div className="text-xs font-semibold text-gray-700 text-center m-auto">B</div>
+              <div className="flex flex-col space-y-1">
+                {getBelokKiriMovement('barat') && getArrowIcon('barat', getBelokKiriMovement('barat'), 20)}
+                {getArrowIcon('barat', 'lurus', 20)}
+                {getArrowIcon('barat', 'bka', 20)}
+              </div>
+              <div className="text-xs text-gray-500">
+                {directions.barat?.tipe_pendekat?.terlindung && 'P'}
+                {directions.barat?.tipe_pendekat?.terlawan && 'O'}
+              </div>
+            </div>
           </div>
-          <div className="text-xs text-gray-500">
-            {directions.barat?.tipe_pendekat?.terlindung && 'P'}
-            {directions.barat?.tipe_pendekat?.terlawan && 'O'}
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Legend */}

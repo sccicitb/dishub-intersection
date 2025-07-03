@@ -5,7 +5,7 @@ import { GoPlus } from "react-icons/go";
 import { FaMinus } from "react-icons/fa6";
 
 
-export default function FaseLapanganTable () {
+export default function FaseLapanganTable ({ setDataLapangan }) {
   const [formData, setFormData] = useState({
     pendekat: [
       {
@@ -133,6 +133,7 @@ export default function FaseLapanganTable () {
     };
 
     console.log('Data Pendekat yang akan dikirim:', cleanData);
+    setDataLapangan(cleanData)
     alert('Data berhasil disimpan! Lihat console untuk detail data.');
   };
 
@@ -237,7 +238,7 @@ export default function FaseLapanganTable () {
                   value={pendekat.median}
                   onChange={(e) => handleInputChange(index, 'median', e.target.value)}
                   placeholder="Contoh: Ada/Tidak Ada"
-                  className="w-full px-3 select select-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent"
+                  className="w-full px-3 input input-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent"
                 />
               </div>
 
@@ -252,7 +253,7 @@ export default function FaseLapanganTable () {
                   value={pendekat.kelandaianPendekat}
                   onChange={(e) => handleInputChange(index, 'kelandaianPendekat', e.target.value)}
                   placeholder="Contoh: 2.5"
-                  className="w-full px-3 select select-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent"
+                  className="w-full px-3 input input-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent"
                 />
               </div>
 
@@ -286,7 +287,7 @@ export default function FaseLapanganTable () {
                   value={pendekat.jarakKeKendaraanParkir}
                   onChange={(e) => handleInputChange(index, 'jarakKeKendaraanParkir', e.target.value)}
                   placeholder="Contoh: 15.5"
-                  className="w-full px-3 select select-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent"
+                  className="w-full px-3 input input-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent"
                 />
               </div>
             </div>
@@ -305,7 +306,7 @@ export default function FaseLapanganTable () {
                     value={pendekat.lebarPendekat.awalLajur}
                     onChange={(e) => handleLebarPendekataChange(index, 'awalLajur', e.target.value)}
                     placeholder="0.0"
-                    className="w-full px-3 select select-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:ring-green-100/90 focus:border-transparent"
+                    className="w-full px-3 input input-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:ring-green-100/90 focus:border-transparent"
                   />
                 </div>
 
@@ -319,7 +320,7 @@ export default function FaseLapanganTable () {
                     value={pendekat.lebarPendekat.garisHenti}
                     onChange={(e) => handleLebarPendekataChange(index, 'garisHenti', e.target.value)}
                     placeholder="0.0"
-                    className="w-full px-3 select select-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:ring-green-100/90 focus:border-transparent"
+                    className="w-full px-3 input input-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:ring-green-100/90 focus:border-transparent"
                   />
                 </div>
 
@@ -333,7 +334,7 @@ export default function FaseLapanganTable () {
                     value={pendekat.lebarPendekat.lajurBki}
                     onChange={(e) => handleLebarPendekataChange(index, 'lajurBki', e.target.value)}
                     placeholder="0.0"
-                    className="w-full px-3 select select-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:ring-green-100/90 focus:border-transparent"
+                    className="w-full px-3 input input-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:ring-green-100/90 focus:border-transparent"
                   />
                 </div>
 
@@ -347,7 +348,7 @@ export default function FaseLapanganTable () {
                     value={pendekat.lebarPendekat.lajurKeluar}
                     onChange={(e) => handleLebarPendekataChange(index, 'lajurKeluar', e.target.value)}
                     placeholder="0.0"
-                    className="w-full px-3 select select-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:ring-green-100/90 focus:border-transparent"
+                    className="w-full px-3 input input-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:ring-green-100/90 focus:border-transparent"
                   />
                 </div>
               </div>
