@@ -110,7 +110,7 @@ const SurveyFormSAHeader = ({setDataHeader}) => {
   );
 
   return (
-    <div className="w-[98%] mx-auto p-6 bg-gray-50 shadow-sm rounded-lg">
+    <div className="w-[98%] mx-auto p-6">
 
       <div className='grid grid-cols-1 lg:grid-cols-2 lg:space-x-10 w-full space-y-10'>
         <div className="space-y-6 grid grid-cols-3 gap-2">

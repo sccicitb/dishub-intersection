@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 
-export default function VehicleDataTable () {
+export default function VehicleDataTable ({ setDataKonflik }) {
   const [tableData, setTableData] = useState({
     whh: 0,
     dataFase: [
@@ -370,7 +370,7 @@ export default function VehicleDataTable () {
       <div className="overflow-x-auto">
         <table className="table table-xs w-full border border-base-300">
           <thead>
-            <tr className="bg-gray-300">
+            <tr className="bg-base-300">
               <th rowSpan="3" className="text-center border border-base-300 min-w-10 font-semibold">
                 Fase
               </th>
@@ -405,7 +405,7 @@ export default function VehicleDataTable () {
                 W<sub>HH</sub>
               </th>
             </tr>
-            <tr className="bg-gray-300">
+            <tr className="bg-base-300">
               <th rowSpan={2} className="text-center border border-base-300 min-w-10 font-semibold">U</th>
               <th rowSpan={2} className="text-center border border-base-300 min-w-10 font-semibold">S</th>
               <th rowSpan={2} className="text-center border border-base-300 min-w-10 font-semibold">T</th>
@@ -420,7 +420,7 @@ export default function VehicleDataTable () {
                 Pejalan Kaki
               </th>
             </tr>
-            <tr className="bg-gray-300 text-xs">
+            <tr className="bg-base-300 text-xs">
               <th className="text-center border border-base-300 font-semibold">(m)</th>
               <th className="text-center border border-base-300 font-semibold">
                 V<sub>kbr</sub>
@@ -607,7 +607,7 @@ export default function VehicleDataTable () {
                           step="1"
                           readOnly
                           className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
-                          value={row.jarak[jarakType.key].wmsDisesuaikan}
+                          value={row.jarak[jarakType.key].wmsDisesuaikan === 0 || row.jarak[jarakType.key].wmsDisesuaikan === '0' ? '' : row.jarak[jarakType.key].wmsDisesuaikan}
                           // value={row.jarak[jarakType.key].wms === 0 || row.jarak[jarakType.key].wms === '0' ? '' : row.jarak[jarakType.key].wms}
                           onChange={(e) =>
                             handleInputChange(rowIndex, jarakType.key, 'wmsDisesuaikan', null, e.target.value)
@@ -623,7 +623,7 @@ export default function VehicleDataTable () {
                           type="number"
                           step="1"
                           className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
-                          value={row.jarak[jarakType.key].wk}
+                          value={row.jarak[jarakType.key].wk === 0 || row.jarak[jarakType.key].wk === '0' ? '' : row.jarak[jarakType.key].wk}
                           onChange={(e) =>
                             handleInputChange(rowIndex, jarakType.key, 'wk', null, e.target.value)
                           }
@@ -640,7 +640,7 @@ export default function VehicleDataTable () {
                           step="1"
                           readOnly
                           className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
-                          value={row.jarak[jarakType.key].wah}
+                          value={row.jarak[jarakType.key].wah === 0 || row.jarak[jarakType.key].wah === '0' ? '' : row.jarak[jarakType.key].wah}
                         // onChange={(e) =>
                         //   handleInputChange(rowIndex, jarakType.key, 'wah', null, e.target.value)
                         // }
@@ -668,7 +668,9 @@ export default function VehicleDataTable () {
 
                   {rowIndex === 0 && jarakIndex === 0 && (
                     <td rowSpan={totalRows}>
-                      <input value={tableData.whh} readOnly
+                      <input
+                        value={tableData.whh === 0 || tableData.whh === '0' ? '' : tableData.whh === 0}
+                        readOnly
                         className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
                       />
                     </td>
@@ -676,10 +678,10 @@ export default function VehicleDataTable () {
                 </tr>
               ))))}
             <tr>
-              <td colSpan={8} className='text-xs text-gray-600 align-text-top border-1 border-gray-100'>
+              <td colSpan={8} className='text-xs text-base-600 align-text-top border-1 border-base-100'>
                 <strong>Catatan:</strong><br /> Dari fase 3 ke 4 tidak memerlukan WMS karena arus dari barat tetap berjalan
               </td>
-              <td colSpan={3} className='text-xs text-gray-600 align-text-top'>
+              <td colSpan={3} className='text-xs text-base-600 align-text-top'>
                 <table>
                   <tbody>
                     <tr>
@@ -708,7 +710,7 @@ export default function VehicleDataTable () {
                   </tbody>
                 </table>
               </td>
-              <td colSpan={5} className='border-1 border-gray-100'>
+              <td colSpan={5} className='border-1 border-base-100'>
                 <Image
                   src="/image/Picture1.png"
                   alt=""
@@ -796,8 +798,7 @@ export default function VehicleDataTable () {
         <button
           className="btn btn-sm btn-success"
           onClick={() => {
-            console.log('Data saved:', tableData);
-            alert('Data berhasil disimpan! (Lihat console untuk detail)');
+            setDataKonflik(tableData)
           }}
         >
           Simpan Data
@@ -815,12 +816,12 @@ export default function VehicleDataTable () {
         </button> */}
       </div>
 
-      <div className="mt-4 p-3 bg-gray-100 rounded">
+      {/* <div className="mt-4 p-3 bg-gray-100 rounded">
         <h3 className="text-[12px] font-medium mb-2">Data JSON saat ini:</h3>
         <pre className="text-[10px] overflow-x-auto">
           {JSON.stringify(tableData, null, 2)}
         </pre>
-      </div>
+      </div> */}
       {/* <div className="mt-6 p-4 bg-base-200 rounded-lg">
         <h3 className="font-semibold mb-2">Keterangan:</h3>
         <div className="text-sm space-y-1">
