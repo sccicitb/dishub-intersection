@@ -170,7 +170,7 @@ const RainfallChart = ({data}) => {
 
   return (
     <div className="w-full overflow-x-auto p-2 rounded-lg">
-      <div className="min-w-[500px] lg:max-w-[800px] max-w-5xl mx-auto">
+      <div className="min-w-[500px] lg:max-w-[1000px] w-full mx-auto">
         <div className="bg-white px-6 py-2 rounded-lg shadow-sm">
           <div className="relative h-96 w-full">
             <Line data={chartData} options={options} />
