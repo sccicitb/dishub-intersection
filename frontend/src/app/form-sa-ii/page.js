@@ -1,6 +1,7 @@
 "use client"
 import { lazy, Suspense, useEffect, useState } from "react"
 import DataEkuivalensi from '@/data/DataEkuivalensi.json';
+import EkuivalensiForm from "../components/form/ekuivalensiForm";
 
 const SimpangTrafficKinerja = lazy(() => import("@/app/components/simpangTrafficKinerja"));
 const TrafficKinerjaTable = lazy(() => import("@/app/components/trafficSurveyTable"));
@@ -20,16 +21,18 @@ const FormSAIIPage = () => {
       setDataTerlawan(data.default.filter((item) => item.type === "terlawanan" ? data.default.data : []))
     })
   }, [])
+
   return (
     <div>
       <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
       <SurveyFormSAHeader setDataHeader={setHeader}/>
+      <EkuivalensiForm />
       <Suspense fallback={<div className="my-5 w-full text-center">Loading...</div>}>
         <TrafficKinerjaTable />
         <SimpangTrafficKinerja />
-        <div className="lg:flex w-full">
+        <div className="w-full">
           <EkuivalensiChart data={dataTerlindung} />
           <EkuivalensiChart data={dataTerlawan} />
         </div>
