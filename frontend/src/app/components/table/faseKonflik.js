@@ -1,156 +1,360 @@
-import { useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
-export default function VehicleDataTable () {
-  const [tableData, setTableData] = useState([
-    {
-      fase: 2,
-      kode: 'U',
-      jarak: {
-        lintasanBerangkat: {
-          pendekat: {
-            u: '', s: '', t: 15.5, b: ''
+
+export default function VehicleDataTable ({ setDataKonflik }) {
+  const [tableData, setTableData] = useState({
+    whh: 0,
+    dataFase: [
+      {
+        fase: 2,
+        kode: 'U',
+        whh: 0,
+        jarak: {
+          lintasanBerangkat: {
+            pendekat: {
+              u: 0, s: 0, t: 0, b: 0
+            },
+            kecepatan: {
+              vkbr: 0, vkdt: 0, vpk: 0
+            },
+            waktuTempuh: 0,
+            wms: 0,
+            wmsDisesuaikan: 0,
+            wk: 0,
+            wah: 0,
           },
-          kecepatan: {
-            berangkat: 10, datang: 10, pejalanKaki: ''
+          panjangBerangkat: {
+            pendekat: {
+              u: 0, s: 0, t: 0, b: 0
+            },
+            kecepatan: {
+              vkbr: 0, vkdt: 0, vpk: 0
+            },
+            waktuTempuh: 0,
+            wms: 0,
+            wmsDisesuaikan: 0,
+            wk: 0,
+            wah: 0,
           },
-          waktuTempuh: 1.62,
-          wws: 0.57,
-          wusDisarankan: 1,
-          wk: 3,
-          wAll: 4,
-          wHijau: ''
-        },
-        panjangBerangkat: {
-          pendekat: {
-            u: '', s: '', t: 5, b: ''
+          lintasanDatang: {
+            pendekat: {
+              u: 0, s: 0, t: 0, b: 0
+            },
+            kecepatan: {
+              vkbr: 0, vkdt: 0, vpk: 0
+            },
+            waktuTempuh: 0,
+            wms: 0,
+            wmsDisesuaikan: 0,
+            wk: 0,
+            wah: 0,
           },
-          kecepatan: {
-            berangkat: '', datang: '', pejalanKaki: ''
+          lintasanPejalan: {
+            pendekat: {
+              u: 0, s: 0, t: 0, b: 0
+            },
+            kecepatan: {
+              vkbr: 0, vkdt: 0, vpk: 0
+            },
+            waktuTempuh: 0,
+            wms: 0,
+            wmsDisesuaikan: 0,
+            wk: 0,
+            wah: 0,
+          }
+        }
+      },
+      {
+        fase: 1,
+        kode: 'S',
+        whh: 0,
+        jarak: {
+          lintasanBerangkat: {
+            pendekat: {
+              u: 0, s: 0, t: 0, b: 0
+            },
+            kecepatan: {
+              vkbr: 0, vkdt: 0, vpk: 0
+            },
+            waktuTempuh: 0,
+            wms: 0,
+            wmsDisesuaikan: 0,
+            wk: 0,
+            wah: 0,
           },
-          waktuTempuh: '',
-          wws: '',
-          wusDisarankan: '',
-          wk: '',
-          wAll: '',
-          wHijau: ''
-        },
-        lintasanDatang: {
-          pendekat: {
-            u: '', s: '', t: '', b: ''
+          panjangBerangkat: {
+            pendekat: {
+              u: 0, s: 0, t: 0, b: 0
+            },
+            kecepatan: {
+              vkbr: 0, vkdt: 0, vpk: 0
+            },
+            waktuTempuh: 0,
+            wms: 0,
+            wmsDisesuaikan: 0,
+            wk: 0,
+            wah: 0,
           },
-          kecepatan: {
-            berangkat: '', datang: '', pejalanKaki: ''
+          lintasanDatang: {
+            pendekat: {
+              u: 0, s: 0, t: 0, b: 0
+            },
+            kecepatan: {
+              vkbr: 0, vkdt: 0, vpk: 0
+            },
+            waktuTempuh: 0,
+            wms: 0,
+            wmsDisesuaikan: 0,
+            wk: 0,
+            wah: 0,
           },
-          waktuTempuh: '',
-          wws: '',
-          wusDisarankan: '',
-          wk: '',
-          wAll: '',
-          wHijau: ''
-        },
-        lintasanPejalan: {
-          pendekat: {
-            u: '', s: '', t: '', b: ''
-          },
-          kecepatan: {
-            berangkat: '', datang: '', pejalanKaki: ''
-          },
-          waktuTempuh: '',
-          wws: '',
-          wusDisarankan: '',
-          wk: '',
-          wAll: '',
-          wHijau: ''
+          lintasanPejalan: {
+            pendekat: {
+              u: 0, s: 0, t: 0, b: 0
+            },
+            kecepatan: {
+              vkbr: 0, vkdt: 0, vpk: 0
+            },
+            waktuTempuh: 0,
+            wms: 0,
+            wmsDisesuaikan: 0,
+            wk: 0,
+            wah: 0,
+          }
         }
       }
-    },
-    {
-      fase: 1,
-      kode: 'S',
-      jarak: {
-        lintasanBerangkat: {
-          pendekat: {
-            u: '', s: 15.5, t: '', b: ''
-          },
-          kecepatan: {
-            berangkat: 10, datang: 10, pejalanKaki: ''
-          },
-          waktuTempuh: 1.6,
-          wws: 0.45,
-          wusDisarankan: 1,
-          wk: 3,
-          wAll: 4,
-          wHijau: ''
-        },
-        panjangBerangkat: {
-          pendekat: {
-            u: '', s: 5, t: '', b: ''
-          },
-          kecepatan: {
-            berangkat: '', datang: '', pejalanKaki: ''
-          },
-          waktuTempuh: '',
-          wws: '',
-          wusDisarankan: '',
-          wk: '',
-          wAll: '',
-          wHijau: ''
-        },
-        lintasanDatang: {
-          pendekat: {
-            u: '', s: 16, t: '', b: ''
-          },
-          kecepatan: {
-            berangkat: '', datang: '', pejalanKaki: ''
-          },
-          waktuTempuh: '',
-          wws: '',
-          wusDisarankan: '',
-          wk: '',
-          wAll: '',
-          wHijau: ''
-        },
-        lintasanPejalan: {
-          pendekat: {
-            u: '', s: '', t: '', b: ''
-          },
-          kecepatan: {
-            berangkat: '', datang: '', pejalanKaki: ''
-          },
-          waktuTempuh: '',
-          wws: '',
-          wusDisarankan: '',
-          wk: '',
-          wAll: '',
-          wHijau: ''
-        }
-      }
-    }
-  ]);
+    ]
+  });
+
+  const recalculateWhh = (dataFase) => {
+    // Menjumlahkan semua nilai wah dari lintasanBerangkat di setiap fase
+    const totalWah = dataFase.reduce((total, fase) => {
+      return total + (fase.jarak.lintasanBerangkat.wah || 0);
+    }, 0);
+
+    return totalWah;
+  };
+
+
+  const [totals, setTotals] = useState({});
+  const wkBaku = 3;
 
   const handleInputChange = (rowIndex, jarakType, field, subField, value) => {
-    const newData = [...tableData];
+    const newData = { ...tableData };
+    const newDataFase = [...newData.dataFase];
+
     if (subField) {
-      newData[rowIndex].jarak[jarakType][field][subField] = value;
+      newDataFase[rowIndex].jarak[jarakType][field][subField] = value;
     } else {
-      newData[rowIndex].jarak[jarakType][field] = value;
+      newDataFase[rowIndex].jarak[jarakType][field] = value;
     }
+
+    // hitung ulang waktuTempuh kalau field yang berubah adalah u atau vkbr
+    const pendekatU = newDataFase[rowIndex].jarak[jarakType].pendekat?.u ?? 0;
+    const vkbr = newDataFase[rowIndex].jarak[jarakType].kecepatan?.vkbr ?? 0;
+    const vkdt = newDataFase[rowIndex].jarak[jarakType].kecepatan?.vkdt ?? 0;
+
+    const pendekat = newDataFase[rowIndex].jarak[jarakType].pendekat;
+
+    const total =
+      parseFloat(pendekat?.u || 0) +
+      parseFloat(pendekat?.t || 0) +
+      parseFloat(pendekat?.b || 0) +
+      parseFloat(pendekat?.s || 0);
+
+    console.log(newDataFase[rowIndex].jarak[jarakType].pendekat, jarakType)
+
+    if ((field === 'pendekat' && subField === 'u') ||
+      (field === 'pendekat' && subField === 't') ||
+      (field === 'pendekat' && subField === 'b') ||
+      (field === 'pendekat' && subField === 's') ||
+      (field === 'kecepatan' && subField === 'vkbr') ||
+      (field === 'kecepatan' && subField === 'vkdt') ||
+      (field === 'wk')
+    ) {
+
+      // Update totals untuk row ini
+      const newTotals = { ...totals };
+
+      if (!newTotals[rowIndex]) {
+        newTotals[rowIndex] = { LKBR: 0, PKBR: 0, LKDT: 0, LPK: 0, WMS: 0, WAH: 0 };
+      }
+
+      if (jarakType === "lintasanBerangkat") {
+        newTotals[rowIndex].PKBR = total;
+      } else if (jarakType === "panjangBerangkat") {
+        newTotals[rowIndex].LKBR = total;
+      } else if (jarakType === "lintasanDatang") {
+        newTotals[rowIndex].LKDT = total;
+      } else if (jarakType === "lintasanPejalan") {
+        newTotals[rowIndex].LPK = total;
+      }
+
+      setTotals(newTotals);
+
+      // Ambil nilai VKBR dari kedua jarakType (gunakan yang terbaru atau yang ada)
+      const vkbrLintasan = newDataFase[rowIndex].jarak.lintasanBerangkat?.kecepatan?.vkbr ?? 0;
+      const vkbrPanjang = newDataFase[rowIndex].jarak.panjangBerangkat?.kecepatan?.vkbr ?? 0;
+      const vkdtValue = newDataFase[rowIndex].jarak.lintasanDatang?.kecepatan?.vkdt ?? 0;
+
+      const wmsLintasan = newDataFase[rowIndex].jarak.lintasanBerangkat?.wmsDisesuaikan ?? 0;
+      const wmsPanjang = newDataFase[rowIndex].jarak.panjangBerangkat?.wmsDisesuaikan ?? 0;
+      const wmsDatang = newDataFase[rowIndex].jarak.lintasanDatang?.wmsDisesuaikan ?? 0;
+
+      const wkLintasan = newDataFase[rowIndex].jarak.lintasanBerangkat?.wk ?? 0;
+      const wkBerangkat = newDataFase[rowIndex].jarak.panjangBerangkat?.wk ?? 0;
+      const wkDatang = newDataFase[rowIndex].jarak.lintasanDatang?.wk ?? 0;
+
+      const wahLintasan = newDataFase[rowIndex].jarak.lintasanBerangkat?.wah ?? 0;
+      const wahBerangkat = newDataFase[rowIndex].jarak.panjangBerangkat?.wah ?? 0;
+      const wahLintasanDatang = newDataFase[rowIndex].jarak.lintasanDatang?.wah ?? 0;
+
+      const vkdt = parseFloat(vkdtValue);
+      const vkbr = parseFloat(vkbrLintasan || vkbrPanjang || 0);
+      const wmsDisesuaikan = parseFloat(wmsLintasan || wmsPanjang || wmsDatang || 0);
+      const wk = parseFloat(wkLintasan || wkBerangkat || wkDatang || 0);
+      const wah = parseFloat(wahLintasan || wahBerangkat || wahLintasanDatang || 0);
+
+      // Gunakan nilai dari row ini untuk menghitung waktums
+      const currentLKBR = newTotals[rowIndex].LKBR;
+      const currentPKBR = newTotals[rowIndex].PKBR;
+      const currentLKDT = newTotals[rowIndex].LKDT;
+
+      const currentWMS = newTotals[rowIndex].WMS;
+
+      console.log(newTotals);
+      console.log(currentLKBR, currentPKBR, vkbr, vkdt, currentWMS, wk, wkBaku);
+
+      if (wkBaku === 3) {
+        console.log(rowIndex, jarakType)
+        newDataFase[rowIndex].jarak[jarakType].wk = wkBaku
+      } else {
+        null;
+      }
+
+      // Update waktums untuk KEDUA jarakType jika vkbr > 0
+      let waktums2 = 0;
+      const totalswah = wmsDisesuaikan + wkBaku
+      console.log(wmsLintasan, wmsPanjang, wmsDatang, totalswah, wmsDisesuaikan, wkBaku)
+
+      if (vkdt > 0) {
+        waktums2 = parseFloat((currentLKDT / vkdt)).toFixed(2);
+        console.log('Updated waktums2:', waktums2);
+      }
+      if (vkbr > 0) {
+        const waktums = parseFloat((((currentPKBR + currentLKBR) / vkbr) - waktums2) * 0.1).toFixed(2);
+        // Update waktums untuk lintasanBerangkat
+        if (newDataFase[rowIndex].jarak.lintasanBerangkat) {
+          newDataFase[rowIndex].jarak.lintasanBerangkat.wms = waktums;
+        }
+
+        // Update waktums untuk panjangBerangkat
+        if (newDataFase[rowIndex].jarak.panjangBerangkat) {
+          newDataFase[rowIndex].jarak.panjangBerangkat.wms = waktums;
+        }
+
+        if (newDataFase[rowIndex].jarak.lintasanDatang) {
+          newDataFase[rowIndex].jarak.lintasanDatang.wms = waktums;
+        }
+
+        console.log('Updated waktums:', waktums);
+
+        if (waktums > 0) {
+          newDataFase[rowIndex].jarak.lintasanBerangkat.wmsDisesuaikan = Math.ceil(waktums);
+          newDataFase[rowIndex].jarak.panjangBerangkat.wmsDisesuaikan = Math.ceil(waktums);
+          newDataFase[rowIndex].jarak.lintasanDatang.wmsDisesuaikan = Math.ceil(waktums);
+        }
+
+        if (totalswah > 0) {
+          console.log("test", totalswah)
+          newDataFase[rowIndex].jarak.lintasanBerangkat.wah = totalswah;
+          newDataFase[rowIndex].jarak.panjangBerangkat.wah = totalswah;
+          newDataFase[rowIndex].jarak.lintasanDatang.wah = totalswah;
+        }
+
+        // if (wah) {
+        //   newData.whh = recalculateWhh(newDataFase[rowIndex])
+        //   console.log("test")
+        // }
+        if (wah || totalswah > 0) {
+          console.log("test", totalswah)
+          newDataFase[rowIndex].jarak.lintasanBerangkat.wah = totalswah;
+          newDataFase[rowIndex].jarak.panjangBerangkat.wah = totalswah;
+          newDataFase[rowIndex].jarak.lintasanDatang.wah = totalswah;
+
+          // Hitung ulang whh dari semua fase
+          newData.whh = recalculateWhh(newDataFase);
+          console.log("Updated whh:", newData.whh);
+        }
+      }
+    }
+
+    let waktuTempuhs = 0;
+
+    if (
+      (field === 'pendekat' && subField === 'u') ||
+      (field === 'pendekat' && subField === 's') ||
+      (field === 'pendekat' && subField === 'b') ||
+      (field === 'pendekat' && subField === 't') ||
+      (field === 'kecepatan' && subField === 'vkbr')
+    ) {
+      console.log(subField, field)
+      waktuTempuhs = vkbr > 0 ? waktuTempuhs = parseFloat((total / vkbr).toFixed(2)) : 0;
+      // const waktuTempuh = vkbr > 0 || subField !== 'vkdt' ? parseFloat((total / vkbr).toFixed(2)) : parseFloat((total / vkdt).toFixed(2));
+      newDataFase[rowIndex].jarak[jarakType].waktuTempuh = waktuTempuhs;
+    } else if (
+      (field === 'pendekat' && subField === 'u') ||
+      (field === 'pendekat' && subField === 's') ||
+      (field === 'pendekat' && subField === 'b') ||
+      (field === 'pendekat' && subField === 't') ||
+      (field === 'kecepatan' && subField === 'vkdt')
+    ) {
+      waktuTempuhs = vkdt > 0 ? waktuTempuhs = parseFloat((total / vkdt).toFixed(2)) : 0;
+      newDataFase[rowIndex].jarak[jarakType].waktuTempuh = waktuTempuhs;
+    }
+
+    newData.dataFase = newDataFase;
     setTableData(newData);
   };
 
   const handleKodeChange = (rowIndex, value) => {
-    const newData = [...tableData];
-    newData[rowIndex].kode = value;
+    const newData = { ...tableData };
+    const newDataFase = [...newData.dataFase];
+    newDataFase[rowIndex].kode = value;
+    newData.dataFase = newDataFase;
     setTableData(newData);
   };
 
   const jarakTypes = [
-    { key: 'lintasanBerangkat', label: 'Lintasan Kendaraan Berangkat, L', sub: 'bkr' },
-    { key: 'panjangBerangkat', label: 'Panjang Kendaraan Berangkat, P', sub: 'bkr' },
-    { key: 'lintasanDatang', label: 'Lintasan Kendaraan Datang, L', sub: 'dkt' },
+    { key: 'lintasanBerangkat', label: 'Lintasan Kendaraan Berangkat, L', sub: 'kbr' },
+    { key: 'panjangBerangkat', label: 'Panjang Kendaraan Berangkat, P', sub: 'kbr' },
+    { key: 'lintasanDatang', label: 'Lintasan Kendaraan Datang, L', sub: 'kdt' },
     { key: 'lintasanPejalan', label: 'Lintasan Pejalan Kaki, L', sub: 'pk' }
   ];
+
+  useEffect(() => {
+    const newData = { ...tableData };
+    const updatedDataFase = newData.dataFase.map((row) => {
+      const newRow = { ...row };
+
+      // iterasi semua jenis jarak (misalnya: 'lintasanBerangkat', 'pendekat', dst.)
+      Object.keys(newRow.jarak).forEach((jarakKey) => {
+        console.log(newRow.jarak, jarakKey)
+        if (newRow.jarak[jarakKey].wk !== 3) {
+          newRow.jarak[jarakKey].wk = 3;
+        }
+      });
+
+      return newRow;
+    });
+
+    newData.dataFase = updatedDataFase;
+    setTableData(newData);
+  }, []);
+
+  const totalRows = tableData.dataFase.length * jarakTypes.length;
 
   return (
     <div className="p-6 bg-base-100 min-h-screen">
@@ -166,14 +370,14 @@ export default function VehicleDataTable () {
       <div className="overflow-x-auto">
         <table className="table table-xs w-full border border-base-300">
           <thead>
-            <tr className="bg-gray-300">
+            <tr className="bg-base-300">
               <th rowSpan="3" className="text-center border border-base-300 min-w-10 font-semibold">
                 Fase
               </th>
               <th rowSpan="3" className="text-center border border-base-300 min-w-5 font-semibold">
                 Kode <br /> Pendekat
               </th>
-              <th rowSpan="3" className="text-center border border-base-300 min-w-14 font-semibold">
+              <th rowSpan={'2'} className="text-center border border-base-300 min-w-14 font-semibold">
                 Jarak
               </th>
               <th colSpan="4" className="text-center border border-base-300 font-semibold">
@@ -201,11 +405,11 @@ export default function VehicleDataTable () {
                 W<sub>HH</sub>
               </th>
             </tr>
-            <tr className="bg-gray-300">
-              <th className="text-center border border-base-300 min-w-10 font-semibold">U</th>
-              <th className="text-center border border-base-300 min-w-10 font-semibold">S</th>
-              <th className="text-center border border-base-300 min-w-10 font-semibold">T</th>
-              <th className="text-center border border-base-300 min-w-10 font-semibold">B</th>
+            <tr className="bg-base-300">
+              <th rowSpan={2} className="text-center border border-base-300 min-w-10 font-semibold">U</th>
+              <th rowSpan={2} className="text-center border border-base-300 min-w-10 font-semibold">S</th>
+              <th rowSpan={2} className="text-center border border-base-300 min-w-10 font-semibold">T</th>
+              <th rowSpan={2} className="text-center border border-base-300 min-w-10 font-semibold">B</th>
               <th className="text-center border border-base-300 min-w-10 font-semibold">
                 Berangkat
               </th>
@@ -216,17 +420,13 @@ export default function VehicleDataTable () {
                 Pejalan Kaki
               </th>
             </tr>
-            <tr className="bg-gray-300 text-xs">
+            <tr className="bg-base-300 text-xs">
               <th className="text-center border border-base-300 font-semibold">(m)</th>
-              <th className="text-center border border-base-300 font-semibold">(detik)</th>
-              <th className="text-center border border-base-300 font-semibold">(detik)</th>
-              <th className="text-center border border-base-300 font-semibold">(detik)</th>
-              <th className="text-center border border-base-300 font-semibold">(detik)</th>
               <th className="text-center border border-base-300 font-semibold">
-                V<sub>bkr</sub>
+                V<sub>kbr</sub>
               </th>
               <th className="text-center border border-base-300 font-semibold">
-                V<sub>dkt</sub>
+                V<sub>kdt</sub>
               </th>
               <th className="text-center border border-base-300 font-semibold">
                 V<sub>pk</sub>
@@ -235,11 +435,13 @@ export default function VehicleDataTable () {
               <th className="text-center border border-base-300 font-semibold">(detik)</th>
               <th className="text-center border border-base-300 font-semibold">(detik)</th>
               <th className="text-center border border-base-300 font-semibold">(detik)</th>
+              <th className="text-center border border-base-300 font-semibold">(detik)</th>
               <th className="text-center border border-base-300 font-semibold">(detik/siklus)</th>
             </tr>
           </thead>
           <tbody>
-            {tableData.map((row, rowIndex) => (
+            {tableData.dataFase.map((row, rowIndex) =>
+            (
               jarakTypes.map((jarakType, jarakIndex) => (
                 <tr key={`${rowIndex}-${jarakIndex}`} className="hover:bg-base-200">
                   {jarakIndex === 0 && (
@@ -252,7 +454,7 @@ export default function VehicleDataTable () {
                       <div className="flex h-full min-h-[16rem]">
                         <input
                           type="text"
-                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
+                          className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
                           value={row.kode}
                           onChange={(e) => handleKodeChange(rowIndex, e.target.value)}
                         />
@@ -270,7 +472,7 @@ export default function VehicleDataTable () {
                         type="number"
                         step="0.1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
-                        value={row.jarak[jarakType.key].pendekat.u}
+                        value={row.jarak[jarakType.key].pendekat.u === 0 || row.jarak[jarakType.key].pendekat.u === '0' ? '' : row.jarak[jarakType.key].pendekat.u}
                         onChange={(e) =>
                           handleInputChange(rowIndex, jarakType.key, 'pendekat', 'u', e.target.value)
                         }
@@ -283,7 +485,7 @@ export default function VehicleDataTable () {
                         type="number"
                         step="0.1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
-                        value={row.jarak[jarakType.key].pendekat.s}
+                        value={row.jarak[jarakType.key].pendekat.s === 0 || row.jarak[jarakType.key].pendekat.s === '0' ? '' : row.jarak[jarakType.key].pendekat.s}
                         onChange={(e) =>
                           handleInputChange(rowIndex, jarakType.key, 'pendekat', 's', e.target.value)
                         }
@@ -296,7 +498,7 @@ export default function VehicleDataTable () {
                         type="number"
                         step="0.1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
-                        value={row.jarak[jarakType.key].pendekat.t}
+                        value={row.jarak[jarakType.key].pendekat.t === 0 || row.jarak[jarakType.key].pendekat.t === '0' ? '' : row.jarak[jarakType.key].pendekat.t}
                         onChange={(e) =>
                           handleInputChange(rowIndex, jarakType.key, 'pendekat', 't', e.target.value)
                         }
@@ -310,7 +512,7 @@ export default function VehicleDataTable () {
                         type="number"
                         step="0.1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
-                        value={row.jarak[jarakType.key].pendekat.b}
+                        value={row.jarak[jarakType.key].pendekat.b === 0 || row.jarak[jarakType.key].pendekat.b === '0' ? '' : row.jarak[jarakType.key].pendekat.b}
                         onChange={(e) =>
                           handleInputChange(rowIndex, jarakType.key, 'pendekat', 'b', e.target.value)
                         }
@@ -324,9 +526,9 @@ export default function VehicleDataTable () {
                         type="number"
                         step="0.1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
-                        value={row.jarak[jarakType.key].kecepatan.berangkat}
+                        value={row.jarak[jarakType.key].kecepatan.vkbr === 0 || row.jarak[jarakType.key].kecepatan.vkbr === '0' ? '' : row.jarak[jarakType.key].kecepatan.vkbr}
                         onChange={(e) =>
-                          handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'berangkat', e.target.value)
+                          handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'vkbr', e.target.value)
                         }
                       />
                     </div>
@@ -338,9 +540,9 @@ export default function VehicleDataTable () {
                         type="number"
                         step="0.1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
-                        value={row.jarak[jarakType.key].kecepatan.datang}
+                        value={row.jarak[jarakType.key].kecepatan.vkdt === 0 || row.jarak[jarakType.key].kecepatan.vkdt === '0' ? '' : row.jarak[jarakType.key].kecepatan.vkdt}
                         onChange={(e) =>
-                          handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'datang', e.target.value)
+                          handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'vkdt', e.target.value)
                         }
                       />
                     </div>
@@ -351,9 +553,9 @@ export default function VehicleDataTable () {
                         type="number"
                         step="0.1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-full min-w-10 border-0"
-                        value={row.jarak[jarakType.key].kecepatan.pejalanKaki}
+                        value={row.jarak[jarakType.key].kecepatan.vpk === 0 || row.jarak[jarakType.key].kecepatan.vpk === '0' ? '' : row.jarak[jarakType.key].kecepatan.vpk}
                         onChange={(e) =>
-                          handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'pejalanKaki', e.target.value)
+                          handleInputChange(rowIndex, jarakType.key, 'kecepatan', 'vpk', e.target.value)
                         }
                       />
                     </div>
@@ -364,92 +566,122 @@ export default function VehicleDataTable () {
                       <input
                         type="number"
                         step="0.01"
+                        readOnly
                         className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
-                        value={row.jarak[jarakType.key].waktuTempuh}
-                        onChange={(e) =>
-                          handleInputChange(rowIndex, jarakType.key, 'waktuTempuh', null, e.target.value)
-                        }
-                      />
-                    </div>
-                  </td>
+                        // value={row.jarak[jarakType.key].waktuTempuh}
+                        value={row.jarak[jarakType.key].waktuTempuh === 0 || row.jarak[jarakType.key].waktuTempuh === '0' ? '' : row.jarak[jarakType.key].waktuTempuh}
 
-                  <td className="border border-base-300 p-0">
-                    <div className="flex h-full min-h-[4rem]">
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
-                        value={row.jarak[jarakType.key].wws}
-                        onChange={(e) =>
-                          handleInputChange(rowIndex, jarakType.key, 'wws', null, e.target.value)
-                        }
-                      />
-                    </div>
-                  </td>
+                      // value={row.jarak[jarakType.key].pendekat.u / row.jarak[jarakType.key].kecepatan.vkbr}
+                      // onChange={() => {
+                      //   const pendekatU = row?.jarak?.[jarakType?.key]?.pendekat?.u ?? 0;
+                      //   const kecepatanVkbr = row?.jarak?.[jarakType?.key]?.kecepatan?.vkbr ?? 1; // hindari dibagi 0
 
-                  <td className="border border-base-300 p-0">
-                    <div className="flex h-full min-h-[4rem]">
-                      <input
-                        type="number"
-                        step="1"
-                        className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
-                        value={row.jarak[jarakType.key].wusDisarankan}
-                        onChange={(e) =>
-                          handleInputChange(rowIndex, jarakType.key, 'wusDisarankan', null, e.target.value)
-                        }
+                      //   const hasil = pendekatU / kecepatanVkbr;
+                      //   handleInputChange(rowIndex, jarakType.key, 'waktuTempuh', null, hasil)
+                      // }
+                      // }
                       />
                     </div>
                   </td>
+                  {jarakIndex === 0 && (
+                    <td className="border border-base-300 p-0" rowSpan={4}>
+                      <div className="flex h-full min-h-[4rem]">
+                        <input
+                          type="number"
+                          step="0.01"
+                          readOnly
+                          className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
+                          value={row.jarak[jarakType.key].wms === 0 || row.jarak[jarakType.key].wms === '0' ? '' : row.jarak[jarakType.key].wms}
+                          onChange={(e) =>
+                            handleInputChange(rowIndex, jarakType.key, 'wms', null, e.target.value)
+                          }
+                        />
+                      </div>
+                    </td>
+                  )}
+                  {jarakIndex === 0 && (
+                    <td className="border border-base-300 p-0" rowSpan={4}>
+                      <div className="flex h-full min-h-[4rem]">
+                        <input
+                          type="number"
+                          step="1"
+                          readOnly
+                          className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
+                          value={row.jarak[jarakType.key].wmsDisesuaikan === 0 || row.jarak[jarakType.key].wmsDisesuaikan === '0' ? '' : row.jarak[jarakType.key].wmsDisesuaikan}
+                          // value={row.jarak[jarakType.key].wms === 0 || row.jarak[jarakType.key].wms === '0' ? '' : row.jarak[jarakType.key].wms}
+                          onChange={(e) =>
+                            handleInputChange(rowIndex, jarakType.key, 'wmsDisesuaikan', null, e.target.value)
+                          }
+                        />
+                      </div>
+                    </td>
+                  )}
+                  {jarakIndex === 0 && (
+                    <td className="border border-base-300 p-0" rowSpan={4}>
+                      <div className="flex h-full min-h-[4rem]">
+                        <input
+                          type="number"
+                          step="1"
+                          className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
+                          value={row.jarak[jarakType.key].wk === 0 || row.jarak[jarakType.key].wk === '0' ? '' : row.jarak[jarakType.key].wk}
+                          onChange={(e) =>
+                            handleInputChange(rowIndex, jarakType.key, 'wk', null, e.target.value)
+                          }
+                        />
+                      </div>
+                    </td>
+                  )}
 
-                  <td className="border border-base-300 p-0">
-                    <div className="flex h-full min-h-[4rem]">
-                      <input
-                        type="number"
-                        step="1"
-                        className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
-                        value={row.jarak[jarakType.key].wk}
-                        onChange={(e) =>
-                          handleInputChange(rowIndex, jarakType.key, 'wk', null, e.target.value)
-                        }
-                      />
-                    </div>
-                  </td>
+                  {jarakIndex === 0 && (
+                    <td className="border border-base-300 p-0" rowSpan={4}>
+                      <div className="flex h-full min-h-[4rem]">
+                        <input
+                          type="number"
+                          step="1"
+                          readOnly
+                          className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
+                          value={row.jarak[jarakType.key].wah === 0 || row.jarak[jarakType.key].wah === '0' ? '' : row.jarak[jarakType.key].wah}
+                        // onChange={(e) =>
+                        //   handleInputChange(rowIndex, jarakType.key, 'wah', null, e.target.value)
+                        // }
+                        />
+                      </div>
+                    </td>
+                  )}
+                  {/* 
+                  {jarakIndex === 0 && (
+                    <td className="border border-base-300 p-0" rowSpan={4 * (jarakIndex + 1)}>
+                      <div className="flex h-full min-h-[4rem]">
+                        <input
+                          type="number"
+                          step="1"
+                          readOnly
+                          className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
+                          value={tableData.whh}
+                        // onChange={(e) =>
+                        //   handleInputChange(rowIndex, jarakType.key, 'wah', null, e.target.value)
+                        // }
+                        />
+                      </div>
+                    </td>
+                  )} */}
 
-                  <td className="border border-base-300 p-0">
-                    <div className="flex h-full min-h-[4rem]">
+                  {rowIndex === 0 && jarakIndex === 0 && (
+                    <td rowSpan={totalRows}>
                       <input
-                        type="number"
-                        step="1"
+                        value={tableData.whh === 0 || tableData.whh === '0' ? '' : tableData.whh === 0}
+                        readOnly
                         className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
-                        value={row.jarak[jarakType.key].wAll}
-                        onChange={(e) =>
-                          handleInputChange(rowIndex, jarakType.key, 'wAll', null, e.target.value)
-                        }
                       />
-                    </div>
-                  </td>
-
-                  <td className="border border-base-300 p-0">
-                    <div className="flex h-full min-h-[4rem]">
-                      <input
-                        type="number"
-                        step="1"
-                        className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
-                        value={row.jarak[jarakType.key].wHijau}
-                        onChange={(e) =>
-                          handleInputChange(rowIndex, jarakType.key, 'wHijau', null, e.target.value)
-                        }
-                      />
-                    </div>
-                  </td>
+                    </td>
+                  )}
                 </tr>
-              ))
-            ))}
+              ))))}
             <tr>
-              <td colSpan={8} className='text-xs text-gray-600 align-text-top border-1 border-gray-100'>
+              <td colSpan={8} className='text-xs text-base-600 align-text-top border-1 border-base-100'>
                 <strong>Catatan:</strong><br /> Dari fase 3 ke 4 tidak memerlukan WMS karena arus dari barat tetap berjalan
               </td>
-              <td colSpan={3} className='text-xs text-gray-600 align-text-top'>
+              <td colSpan={3} className='text-xs text-base-600 align-text-top'>
                 <table>
                   <tbody>
                     <tr>
@@ -478,7 +710,7 @@ export default function VehicleDataTable () {
                   </tbody>
                 </table>
               </td>
-              <td colSpan={5} className='border-1 border-gray-100'>
+              <td colSpan={5} className='border-1 border-base-100'>
                 <Image
                   src="/image/Picture1.png"
                   alt=""
@@ -496,32 +728,68 @@ export default function VehicleDataTable () {
           className="btn btn-primary btn-sm"
           onClick={() => {
             const newRow = {
-              fase: tableData.length + 1,
+              fase: tableData.dataFase.length + 1,
               kode: '',
+              whh: 0,
               jarak: {
                 lintasanBerangkat: {
-                  pendekat: { u: '', s: '', t: '', b: '' },
-                  kecepatan: { berangkat: '', datang: '', pejalanKaki: '' },
-                  waktuTempuh: '', wws: '', wusDisarankan: '', wk: '', wAll: '', wHijau: ''
+                  pendekat: {
+                    u: 0, s: 0, t: 0, b: 0
+                  },
+                  kecepatan: {
+                    vkbr: 0, vkdt: 0, vpk: 0
+                  },
+                  waktuTempuh: 0,
+                  wms: 0,
+                  wmsDisesuaikan: 0,
+                  wk: 0,
+                  wah: 0,
                 },
                 panjangBerangkat: {
-                  pendekat: { u: '', s: '', t: '', b: '' },
-                  kecepatan: { berangkat: '', datang: '', pejalanKaki: '' },
-                  waktuTempuh: '', wws: '', wusDisarankan: '', wk: '', wAll: '', wHijau: ''
+                  pendekat: {
+                    u: 0, s: 0, t: 0, b: 0
+                  },
+                  kecepatan: {
+                    vkbr: 0, vkdt: 0, vpk: 0
+                  },
+                  waktuTempuh: 0,
+                  wms: 0,
+                  wmsDisesuaikan: 0,
+                  wk: 0,
+                  wah: 0,
                 },
                 lintasanDatang: {
-                  pendekat: { u: '', s: '', t: '', b: '' },
-                  kecepatan: { berangkat: '', datang: '', pejalanKaki: '' },
-                  waktuTempuh: '', wws: '', wusDisarankan: '', wk: '', wAll: '', wHijau: ''
+                  pendekat: {
+                    u: 0, s: 0, t: 0, b: 0
+                  },
+                  kecepatan: {
+                    vkbr: 0, vkdt: 0, vpk: 0
+                  },
+                  waktuTempuh: 0,
+                  wms: 0,
+                  wmsDisesuaikan: 0,
+                  wk: 0,
+                  wah: 0,
                 },
                 lintasanPejalan: {
-                  pendekat: { u: '', s: '', t: '', b: '' },
-                  kecepatan: { berangkat: '', datang: '', pejalanKaki: '' },
-                  waktuTempuh: '', wws: '', wusDisarankan: '', wk: '', wAll: '', wHijau: ''
+                  pendekat: {
+                    u: 0, s: 0, t: 0, b: 0
+                  },
+                  kecepatan: {
+                    vkbr: 0, vkdt: 0, vpk: 0
+                  },
+                  waktuTempuh: 0,
+                  wms: 0,
+                  wmsDisesuaikan: 0,
+                  wk: 0,
+                  wah: 0,
                 }
               }
-            };
-            setTableData([...tableData, newRow]);
+            }
+            setTableData({
+              ...tableData,
+              dataFase: [...tableData.dataFase, newRow]
+            });
           }}
         >
           Tambah Baris
@@ -530,14 +798,13 @@ export default function VehicleDataTable () {
         <button
           className="btn btn-sm btn-success"
           onClick={() => {
-            console.log('Data saved:', tableData);
-            alert('Data berhasil disimpan! (Lihat console untuk detail)');
+            setDataKonflik(tableData)
           }}
         >
           Simpan Data
         </button>
 
-        <button
+        {/* <button
           className="btn btn-sm btn-warning"
           onClick={() => {
             if (confirm('Apakah Anda yakin ingin menghapus semua data?')) {
@@ -546,9 +813,15 @@ export default function VehicleDataTable () {
           }}
         >
           Reset Tabel
-        </button>
+        </button> */}
       </div>
 
+      {/* <div className="mt-4 p-3 bg-gray-100 rounded">
+        <h3 className="text-[12px] font-medium mb-2">Data JSON saat ini:</h3>
+        <pre className="text-[10px] overflow-x-auto">
+          {JSON.stringify(tableData, null, 2)}
+        </pre>
+      </div> */}
       {/* <div className="mt-6 p-4 bg-base-200 rounded-lg">
         <h3 className="font-semibold mb-2">Keterangan:</h3>
         <div className="text-sm space-y-1">
