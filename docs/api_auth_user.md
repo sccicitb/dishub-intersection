@@ -1,3 +1,33 @@
+# How to Use JWT Token in API Requests (Frontend Guide)
+
+To access protected endpoints, the frontend must include the JWT token in the `Authorization` header of every API request:
+
+```http
+Authorization: Bearer <token>
+```
+
+**Example using fetch:**
+```js
+fetch('/api/protected-endpoint', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer ' + token,
+    'Content-Type': 'application/json',
+  },
+});
+```
+
+- Replace `<token>` with the JWT received from the login endpoint.
+- The token should be sent with every request to protected routes.
+- If the token is missing or invalid, the backend will return a 401 Unauthorized error.
+
+**Best Practices:**
+- Store the JWT securely (e.g., in an HTTP-only cookie or secure storage).
+- Always check for token expiration and handle re-authentication as needed.
+- Never expose the JWT in URLs or client-side logs.
+
+---
+
 # API Documentation: Authentication & User Management
 
 ## Authentication Endpoints
