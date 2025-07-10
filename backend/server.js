@@ -60,6 +60,13 @@ require("./app/routes/maps.routes.js")(app);
 require('./app/routes/camera.routes.js')(app);
 require("./app/routes/survey.routes.js")(app);
 require('./app/routes/simpang.routes')(app);
+
+// Authentication and User Management Routes
+const authRoutes = require('./app/routes/auth.routes');
+const userRoutes = require('./app/routes/user.routes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 // Simpan instance listen di variabel
 const PORT = process.env.PORT || 8080;
 
