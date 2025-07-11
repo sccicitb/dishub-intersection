@@ -6,7 +6,7 @@ import { FaMinus } from "react-icons/fa6";
 import { Description } from '../ui/description';
 import { IoReloadOutline } from "react-icons/io5";
 
-const SurveyFormSAHeader = ({ setDataHeader }) => {
+const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
   const [formData, setFormData] = useState({
     id: 0,
     tanggal: '',
@@ -18,7 +18,7 @@ const SurveyFormSAHeader = ({ setDataHeader }) => {
     perihal: '',
     periode: ''
   });
-  const [optionSelect, setOptionSelect] = useState('');
+  const [optionSelect, setOptionSelect] = useState(0);
   const [dataLocalHead, setDataLocalHead] = useState([])
   const [statusHeader, setStatusHeader] = useState(false)
   const handleInputChange = (field, value) => {
@@ -106,6 +106,8 @@ const SurveyFormSAHeader = ({ setDataHeader }) => {
     // Simulasi sukses
     console.log('Data berhasil disimpan:', cleanData);
     alert('Data berhasil disimpan!');
+
+    setDataHeader(cleanData)
   };
 
 
@@ -135,9 +137,12 @@ const SurveyFormSAHeader = ({ setDataHeader }) => {
         periode: selectedData.periode || ''
       });
     }
+    setSelectedId(selectedData.id || 0)
+    setDataHeader(selectedData)
   };
 
   const handleReset = () => {
+    onResetAll();
     setFormData({
       id: 0,
       tanggal: '',
@@ -195,7 +200,7 @@ const SurveyFormSAHeader = ({ setDataHeader }) => {
           {!statusHeader ? (
             <div className='w-fit text-blue-600 font-semibold text-xs cursor-pointer' onClick={() => setStatusHeader(!statusHeader)}>Lanjut dengan mengisi form yang sudah ada?</div>
           ) : (
-            <div className='w-fit text-red-600 font-semibold text-xs cursor-pointer' onClick={() => { handleReset(), setStatusHeader(!statusHeader), setOptionSelect("") }}>Reset Form (Buat Baru)</div>
+            <div className='w-fit text-red-600 font-semibold text-xs cursor-pointer' onClick={() => { setOptionSelect(0), handleReset(), setStatusHeader(!statusHeader), setOptionSelect("") }}>Reset Form (Buat Baru)</div>
           )}
           {statusHeader && (
             <div>
@@ -204,7 +209,7 @@ const SurveyFormSAHeader = ({ setDataHeader }) => {
                 value={optionSelect}
                 onChange={handleSelect}
               >
-                <option value="">Pilih Data Header</option>
+                <option value={0}>Pilih Data Header</option>
                 {dataLocalHead.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.perihal} - {item.lokasi}
@@ -217,7 +222,7 @@ const SurveyFormSAHeader = ({ setDataHeader }) => {
             </div>
           )}
         </div>
-      </Description>
+      </Description >
       <div className='bg-base-200 p-5 rounded-md border border-base-300 grid grid-cols-1 lg:grid-cols-2 lg:space-x-10 w-full space-y-10'>
         <div className="space-y-6 grid grid-cols-3 gap-2">
           {/* Tanggal */}
@@ -360,7 +365,7 @@ const SurveyFormSAHeader = ({ setDataHeader }) => {
           <span>Simpan</span>
         </button>
       </div>
-    </div>
+    </div >
   );
 };
 

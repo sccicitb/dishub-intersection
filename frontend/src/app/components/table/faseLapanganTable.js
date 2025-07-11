@@ -5,7 +5,7 @@ import { GoPlus } from "react-icons/go";
 import { FaMinus } from "react-icons/fa6";
 
 
-export default function FaseLapanganTable ({ setDataLapangan }) {
+export default function FaseLapanganTable ({ setDataLapangan, selectedId }) {
   const [formData, setFormData] = useState({
     pendekat: [
       {
@@ -79,6 +79,43 @@ export default function FaseLapanganTable ({ setDataLapangan }) {
     }));
   };
 
+  const loadSA1 = (id) => {
+    const existing = JSON.parse(localStorage.getItem('data'));
+    return existing?.data?.sa1?.[id] || null;
+  };
+
+  useEffect(() => {
+    if (selectedId === 0) {
+      setFormData({
+        pendekat: [
+          {
+            kodePendekat: "",
+            tipeLingkunganJalan: "",
+            kelasHambatanSamping: "",
+            median: "",
+            kelandaianPendekat: "",
+            bkjt: "",
+            jarakKeKendaraanParkir: "",
+            lebarPendekat: {
+              awalLajur: "",
+              garisHenti: "",
+              lajurBki: "",
+              lajurKeluar: ""
+            }
+          }
+        ]
+      })
+    }
+    if (selectedId !== undefined && selectedId !== null && selectedId !== 0 && selectedId !== '0' && selectedId !== '') {
+      const loadData = loadSA1(selectedId)
+      if (!loadData || !Array.isArray(loadData.pendekat)) return;
+      setFormData(loadData)
+      setDataLapangan(loadData)
+
+      console.log(loadData)
+    }
+  }, [selectedId])
+
   const addRow = () => {
     const newRow = {
       kodePendekat: "",
@@ -112,7 +149,7 @@ export default function FaseLapanganTable ({ setDataLapangan }) {
   };
 
   const handleSubmit = () => {
-    // Validasi form
+    // Validasi wajib
     const hasEmptyRequired = formData.pendekat.some(item =>
       !item.kodePendekat || !item.tipeLingkunganJalan || !item.kelasHambatanSamping
     );
@@ -122,20 +159,30 @@ export default function FaseLapanganTable ({ setDataLapangan }) {
       return;
     }
 
+    // Bersihkan dan filter data
     const cleanData = {
       ...formData,
       pendekat: formData.pendekat.map(item => ({
         ...item,
         lebarPendekat: Object.fromEntries(
-          Object.entries(item.lebarPendekat).filter(([key, value]) => value.trim() !== '')
+          Object.entries(item.lebarPendekat || {}).filter(([key, value]) => value.trim() !== '')
         )
-      })).filter(item => item.kodePendekat) 
+      })).filter(item => item.kodePendekat)
     };
 
+    // Hapus data fase lama agar komponen fase bisa generate ulang
+    delete cleanData.fase;
+
+    // Optional: agar React detect perubahan meskipun sama
+    cleanData.updatedAt = Date.now();
+
+    // Simpan ke parent
+    setDataLapangan(cleanData);
+
     console.log('Data Pendekat yang akan dikirim:', cleanData);
-    setDataLapangan(cleanData)
     alert('Data berhasil disimpan! Lihat console untuk detail data.');
   };
+
 
   return (
     <div className="w-full mx-auto p-6">
@@ -268,6 +315,10 @@ export default function FaseLapanganTable ({ setDataLapangan }) {
                   className="w-full px-3 select select-sm py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent"
                   required
                 >
+                  <option value="">
+                    Pilih Kategori
+                  </option>
+
                   {bkijtOptions.map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -412,37 +463,37 @@ export default function FaseLapanganTable ({ setDataLapangan }) {
               {formData.pendekat.map((row, index) => (
                 <tr key={index} className="hover:bg-gray-50">
                   <td className="text-center border border-gray-300">
-                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.kodePendekat} onChange={() => {}}/>
+                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.kodePendekat} onChange={() => { }} />
                   </td>
                   <td className="text-center border border-gray-300">
-                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.tipeLingkunganJalan} onChange={() => {}} />
+                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.tipeLingkunganJalan} onChange={() => { }} />
                   </td>
                   <td className="text-center border border-gray-300">
-                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.kelasHambatanSamping} onChange={() => {}} />
+                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.kelasHambatanSamping} onChange={() => { }} />
                   </td>
                   <td className="text-center border border-gray-300">
-                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.median} onChange={() => {}} />
+                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.median} onChange={() => { }} />
                   </td>
                   <td className="text-center border border-gray-300">
-                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.kelandaianPendekat} onChange={() => {}} />
+                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.kelandaianPendekat} onChange={() => { }} />
                   </td>
                   <td className="text-center border border-gray-300">
-                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.bkjt === 1 ? "Y" : "T"} onChange={() => {}} />
+                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.bkjt === '1' ? "Y" : row?.bkjt === '0' ? "T" : ''} onChange={() => { }} />
                   </td>
                   <td className="text-center border border-gray-300">
-                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.jarakKeKendaraanParkir} onChange={() => {}} />
+                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.jarakKeKendaraanParkir} onChange={() => { }} />
                   </td>
                   <td className="text-center border border-gray-300">
-                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.lebarPendekat?.awalLajur} onChange={() => {}} />
+                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.lebarPendekat?.awalLajur} onChange={() => { }} />
                   </td>
                   <td className="text-center border border-gray-300">
-                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.lebarPendekat?.garisHenti} onChange={() => {}} />
+                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.lebarPendekat?.garisHenti} onChange={() => { }} />
                   </td>
                   <td className="text-center border border-gray-300">
-                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.lebarPendekat?.lajurBki} onChange={() => {}} />
+                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.lebarPendekat?.lajurBki} onChange={() => { }} />
                   </td>
                   <td className="text-center border border-gray-300">
-                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.lebarPendekat?.lajurKeluar} onChange={() => {}} />
+                    <input type={"text"} className='h-full w-full capitalize text-center font-semibold  border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent' value={row?.lebarPendekat?.lajurKeluar} onChange={() => { }} />
                   </td>
                 </tr>
               ))}
