@@ -13,6 +13,7 @@ const FormSAIIPage = () => {
   const [dataTerlindung, setDataTerlindung] = useState([]);
   const [dataTerlawan, setDataTerlawan] = useState([]);
   const [headerData, setHeader] = useState({});
+  const [dataEmp, setDataEmp] = useState({});
 
   useEffect(() => {
     import('@/data/DataEkuivalensi.json').then((data) => {
@@ -22,15 +23,19 @@ const FormSAIIPage = () => {
     })
   }, [])
 
+  useEffect(() => {
+    console.log(dataEmp)
+  }, [dataEmp])
+
   return (
     <div>
       <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
       <SurveyFormSAHeader setDataHeader={setHeader}/>
-      <EkuivalensiForm />
+      <EkuivalensiForm setEMP={setDataEmp}/>
       <Suspense fallback={<div className="my-5 w-full text-center">Loading...</div>}>
-        <TrafficKinerjaTable />
+        <TrafficKinerjaTable dataEMP={dataEmp}/>
         <SimpangTrafficKinerja />
         <div className="w-full">
           <EkuivalensiChart data={dataTerlindung} />

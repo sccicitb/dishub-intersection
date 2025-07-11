@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GoPlus } from "react-icons/go";
 import { FaMinus } from "react-icons/fa6";
+import { Description } from '../ui/description';
+import { IoReloadOutline } from "react-icons/io5";
 
-const SurveyFormSAHeader = ({setDataHeader}) => {
+const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
   const [formData, setFormData] = useState({
+    id: 0,
     tanggal: '',
     kabupatenKota: '',
     lokasi: '',
@@ -15,7 +18,9 @@ const SurveyFormSAHeader = ({setDataHeader}) => {
     perihal: '',
     periode: ''
   });
-
+  const [optionSelect, setOptionSelect] = useState(0);
+  const [dataLocalHead, setDataLocalHead] = useState([])
+  const [statusHeader, setStatusHeader] = useState(false)
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -46,6 +51,14 @@ const SurveyFormSAHeader = ({setDataHeader}) => {
     }
   };
 
+  useEffect(() => {
+    const stored = localStorage.getItem('data');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setDataLocalHead(parsed.data?.headerData || []);
+    }
+  }, []);
+
   const handleSubmit = () => {
     // Validasi form
     const requiredFields = ['tanggal', 'kabupatenKota', 'lokasi'];
@@ -56,21 +69,92 @@ const SurveyFormSAHeader = ({setDataHeader}) => {
       return;
     }
 
-    // Filter empty strings from arrays
+    // Filter empty string dari array
     const cleanData = {
       ...formData,
       ruasJalanMayor: formData.ruasJalanMayor.filter(item => item.trim() !== ''),
       ruasJalanMinor: formData.ruasJalanMinor.filter(item => item.trim() !== '')
     };
 
-    // Simulate API call
-    console.log('Data yang akan dikirim ke API:', cleanData);
+    // Ambil localStorage
+    const raw = localStorage.getItem('data');
+    let existing = raw ? JSON.parse(raw) : {
+      data: { headerData: [], sa1: {}, sa2: {}, sa3: {} }
+    };
 
-    // Example API call structure
-    console.log(cleanData);
+    if (!Array.isArray(existing.data.headerData)) {
+      existing.data.headerData = [];
+    }
+
+    // Kalau sedang edit (sudah ada id)
+    if (cleanData.id > 0) {
+      const index = existing.data.headerData.findIndex(item => item.id === cleanData.id);
+      if (index !== -1) {
+        existing.data.headerData[index] = cleanData; // update
+      } else {
+        existing.data.headerData.push({ ...cleanData, id: Date.now() }); // fallback kalau id tidak ditemukan
+      }
+    } else {
+      // Kalau tambah baru
+      const newId = Date.now();
+      existing.data.headerData.push({ ...cleanData, id: newId });
+    }
+
+    // Simpan kembali ke localStorage
+    localStorage.setItem('data', JSON.stringify(existing));
+
+    // Simulasi sukses
+    console.log('Data berhasil disimpan:', cleanData);
+    alert('Data berhasil disimpan!');
+
     setDataHeader(cleanData)
-    alert('Data berhasil disimpan! Lihat console untuk detail data.');
   };
+
+
+  const refreshData = () => {
+    const stored = localStorage.getItem('data');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setDataLocalHead(parsed.data?.headerData || []);
+    }
+  }
+
+  const handleSelect = (e) => {
+    const selectedId = e.target.value;
+    setOptionSelect(selectedId);
+
+    const selectedData = dataLocalHead.find(item => item.id.toString() === selectedId);
+    if (selectedData) {
+      setFormData({
+        id: selectedData.id || 0,
+        tanggal: selectedData.tanggal || '',
+        kabupatenKota: selectedData.kabupatenKota || '',
+        lokasi: selectedData.lokasi || '',
+        ruasJalanMayor: selectedData.ruasJalanMayor || [''],
+        ruasJalanMinor: selectedData.ruasJalanMinor || [''],
+        ukuranKota: selectedData.ukuranKota || '',
+        perihal: selectedData.perihal || '',
+        periode: selectedData.periode || ''
+      });
+    }
+    setSelectedId(selectedData.id || 0)
+    setDataHeader(selectedData)
+  };
+
+  const handleReset = () => {
+    onResetAll();
+    setFormData({
+      id: 0,
+      tanggal: '',
+      kabupatenKota: '',
+      lokasi: '',
+      ruasJalanMayor: [''],
+      ruasJalanMinor: [''],
+      ukuranKota: '',
+      perihal: '',
+      periode: ''
+    });
+  }
 
   const renderArrayInput = (field, label, placeholder) => (
     <div className="space-y-2">
@@ -110,9 +194,36 @@ const SurveyFormSAHeader = ({setDataHeader}) => {
   );
 
   return (
-    <div className="w-[98%] mx-auto p-6">
-
-      <div className='grid grid-cols-1 lg:grid-cols-2 lg:space-x-10 w-full space-y-10'>
+    <div className="w-full mx-auto px-6 gap-3 flex flex-col">
+      <Description>
+        <div className='flex flex-col gap-2'>
+          {!statusHeader ? (
+            <div className='w-fit text-blue-600 font-semibold text-xs cursor-pointer' onClick={() => setStatusHeader(!statusHeader)}>Lanjut dengan mengisi form yang sudah ada?</div>
+          ) : (
+            <div className='w-fit text-red-600 font-semibold text-xs cursor-pointer' onClick={() => { setOptionSelect(0), handleReset(), setStatusHeader(!statusHeader), setOptionSelect("") }}>Reset Form (Buat Baru)</div>
+          )}
+          {statusHeader && (
+            <div>
+              <select
+                className="select select-bordered focus:outline-none select-sm bg-transparent focus:ring-0 "
+                value={optionSelect}
+                onChange={handleSelect}
+              >
+                <option value={0}>Pilih Data Header</option>
+                {dataLocalHead.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.perihal} - {item.lokasi}
+                  </option>
+                ))}
+              </select>
+              <button className='btn btn-sm bg-transparent hover:drop-shadow-2xl hover:bg-transparent border-none ring-0' onClick={() => refreshData()}>
+                <IoReloadOutline className='text-xl text-success' />
+              </button>
+            </div>
+          )}
+        </div>
+      </Description >
+      <div className='bg-base-200 p-5 rounded-md border border-base-300 grid grid-cols-1 lg:grid-cols-2 lg:space-x-10 w-full space-y-10'>
         <div className="space-y-6 grid grid-cols-3 gap-2">
           {/* Tanggal */}
           <div>
@@ -245,17 +356,16 @@ const SurveyFormSAHeader = ({setDataHeader}) => {
           </table>
         </div>
       </div>
-      <div className="rounded-md mt-5">
+      <div className="rounded-md gap-5 flex flex-col">
         <button
           type="button"
           onClick={handleSubmit}
           className="w-full btn-sm btn btn-success"
         >
-          <span>Simpan Data</span>
+          <span>Simpan</span>
         </button>
       </div>
-
-    </div>
+    </div >
   );
 };
 
