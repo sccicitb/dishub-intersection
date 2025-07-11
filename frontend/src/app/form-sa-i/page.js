@@ -1,7 +1,7 @@
 "use client";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { cameras } from '@/lib/apiService';
-import { ToastContainer,toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const FaseApilTable = lazy(() => import("@/app/components/table/faseApilTable"));
@@ -19,6 +19,45 @@ const FormSAIPage = () => {
   const [lapangan, setLapangan] = useState({});
   const [headerData, setHeader] = useState({});
   const [faseApil, setFaseApil] = useState({});
+  const [selectedId, setSelectedId] = useState(0);
+
+  const handleResetAll = () => {
+    setSelectedId(0);
+    setHeader({
+      id: 0,
+      tanggal: '',
+      kabupatenKota: '',
+      lokasi: '',
+      ruasJalanMayor: [''],
+      ruasJalanMinor: [''],
+      ukuranKota: '',
+      perihal: '',
+      periode: ''
+    });
+    setLapangan({
+      pendekat: [
+        {
+          kodePendekat: "",
+          tipeLingkunganJalan: "",
+          kelasHambatanSamping: "",
+          median: "",
+          kelandaianPendekat: "",
+          bkjt: "",
+          jarakKeKendaraanParkir: "",
+          lebarPendekat: {
+            awalLajur: "",
+            garisHenti: "",
+            lajurBki: "",
+            lajurKeluar: ""
+          }
+        }
+      ]
+    });
+    setFaseApil({
+      lokasi: "",
+      data: {}
+    });
+  };
 
   const fetchData = async () => {
     try {
@@ -26,6 +65,7 @@ const FormSAIPage = () => {
       const data = camerasRes.data.cameras || [];
       setDataCameras(data);
     } catch (err) {
+
       console.error("Failed to fetch data:", err);
       setDataCameras([]);
     }
@@ -46,17 +86,45 @@ const FormSAIPage = () => {
   let payload;
 
   useEffect(() => {
+
+    // payload = {
+    //   header: { ...headerData },
+    //   ...lapangan,
+    //   fase: { ...faseApil }
+    // };
+
     payload = {
-      header: { ...headerData },
       ...lapangan,
       fase: { ...faseApil }
     };
-    console.log('Payload gabungan:', payload);
-  }, [lapangan, headerData, faseApil]);
+
+
+    console.log('Payload gabungan:', payload, headerData);
+    console.log('id:', selectedId);
+  }, [lapangan, headerData, faseApil, selectedId]);
+
 
   const submitData = () => {
     console.log(payload);
-  }
+
+    const existing = JSON.parse(localStorage.getItem('data')) || {
+      data: { headerData: [], sa1: {}, sa2: {}, sa3: {}, sa4: {}, sa5: {} }
+    };
+
+    const headerId = headerData?.id;
+
+    // Validasi id
+    if (headerId !== undefined && headerId !== null && headerId !== 0 && headerId !== '0') {
+      // Simpan payload ke sa1
+      existing.data.sa1[headerId] = payload;
+      localStorage.setItem('data', JSON.stringify(existing));
+      console.log('Data berhasil disimpan ke sa1 dengan id:', headerId);
+    } else {
+      console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
+    }
+  };
+
+
 
   const handleSubmit = () => {
     toast.info(
@@ -115,7 +183,7 @@ const FormSAIPage = () => {
       <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
-      <SurveyFormSAHeader setDataHeader={setHeader} />
+      <SurveyFormSAHeader setDataHeader={setHeader} setSelectedId={setSelectedId} onResetAll={handleResetAll} />
       <div className="lg:w-1/2 p-3">
         {/* <SurveyInfoTable /> */}
       </div>
@@ -127,8 +195,8 @@ const FormSAIPage = () => {
         <MapComponent title={""} onClick={handleCameraSelect} onClickSimpang={handleSimpangSelect} form />
       </Suspense>
       <Suspense fallback={<Loading />}>
-        <FaseLapanganTable setDataLapangan={setLapangan} />
-        <FaseApilTable setDataFaseApil={setFaseApil}/>
+        <FaseLapanganTable setDataLapangan={setLapangan} selectedId={selectedId} />
+        <FaseApilTable setDataFaseApil={setFaseApil} dataLapangan={lapangan} />
       </Suspense>
       <div className="w-full items-center flex p-6">
         <button onClick={handleSubmit} className="btn btn-sm w-full mx-auto btn-success">Submit</button>

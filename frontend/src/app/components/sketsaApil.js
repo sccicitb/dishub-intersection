@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   HiArrowUp,
   HiArrowDown,
@@ -80,6 +80,7 @@ export const SketsaAPILL = ({ directions, currentPhase = 'fase_1' }) => {
 
     return null;
   };
+  useEffect(() => { console.log(directions['barat']) }, [directions])
 
   return (
     <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
@@ -89,33 +90,37 @@ export const SketsaAPILL = ({ directions, currentPhase = 'fase_1' }) => {
         {/* Intersection center */}
 
         {/* Utara - Top */}
-        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-1">
-          <div className="text-xs font-semibold text-gray-700">U</div>
-          <div className="flex space-x-1">
-            {getArrowIcon('utara', 'bka', 20)}
-            {getArrowIcon('utara', 'lurus', 20)}
-            {getBelokKiriMovement('utara') && getArrowIcon('utara', getBelokKiriMovement('utara'), 20)}
+        {directions['utara'] && (
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-1">
+            <div className="text-xs font-semibold text-gray-700">U</div>
+            <div className="flex space-x-1">
+              {getArrowIcon('utara', 'bka', 20)}
+              {getArrowIcon('utara', 'lurus', 20)}
+              {getBelokKiriMovement('utara') && getArrowIcon('utara', getBelokKiriMovement('utara'), 20)}
+            </div>
+            <div className="text-xs text-gray-500">
+              {directions.utara?.tipe_pendekat?.terlindung && 'P'}
+              {directions.utara?.tipe_pendekat?.terlawan && 'O'}
+            </div>
           </div>
-          <div className="text-xs text-gray-500">
-            {directions.utara?.tipe_pendekat?.terlindung && 'P'}
-            {directions.utara?.tipe_pendekat?.terlawan && 'O'}
-          </div>
-        </div>
+        )}
 
         {/* Selatan - Bottom */}
-        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-1">
-          <div className="text-xs text-gray-500">
-            {directions.selatan?.tipe_pendekat?.terlindung && 'P'}
-            {directions.selatan?.tipe_pendekat?.terlawan && 'O'}
+        {directions['selatan'] && (
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-1">
+            <div className="text-xs text-gray-500">
+              {directions.selatan?.tipe_pendekat?.terlindung && 'P'}
+              {directions.selatan?.tipe_pendekat?.terlawan && 'O'}
+            </div>
+            <div className="flex space-x-1">
+              {getBelokKiriMovement('selatan') && getArrowIcon('selatan', getBelokKiriMovement('selatan'), 20)}
+              {getArrowIcon('selatan', 'lurus', 20)}
+              {getArrowIcon('selatan', 'bka', 20)}
+            </div>
+            <div className="text-xs font-semibold text-gray-700">S</div>
           </div>
-          <div className="flex space-x-1">
-            {getBelokKiriMovement('selatan') && getArrowIcon('selatan', getBelokKiriMovement('selatan'), 20)}
-            {getArrowIcon('selatan', 'lurus', 20)}
-            {getArrowIcon('selatan', 'bka', 20)}
-          </div>
-          <div className="text-xs font-semibold text-gray-700">S</div>
-        </div>
-
+        )}
+        
         {/* Timur - Right */}
         {directions["timur"] && (
           <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col items-center space-y-1">
