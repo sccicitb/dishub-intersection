@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { InputTable } from '@/app/components/ui/inputTable'
 import { Description } from "../ui/description";
 
-const EkuivalensiForm = ({ setEMP }) => {
+const EkuivalensiForm = ({ setEMP, selectedId }) => {
 
   const [dataEMP, setDataEMP] = useState({
     terlindung: { mp: '', ks: '', sm: '' },
@@ -22,9 +22,25 @@ const EkuivalensiForm = ({ setEMP }) => {
 
   useEffect(() => setEMP(dataEMP), [])
 
+  useEffect(() => {
+    const raw = localStorage.getItem('data');
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed?.data?.sa2[selectedId]) {
+      setDataEMP(parsed?.data?.sa2[selectedId].ekuivalensi)
+    } else {
+      setDataEMP(
+        {
+          terlindung: { mp: '', ks: '', sm: '' },
+          terlawan: { mp: '', ks: '', sm: '' }
+        }
+      )
+    }
+  }, [selectedId])
+
   return (
     <div>
-        <h2 className="text-lg mx-6 my-4">Ekuivalensi Mobil Penumpang</h2>
+      <h2 className="text-lg mx-6 my-4">Ekuivalensi Mobil Penumpang</h2>
       <Description style={'x5'}>
         <div className="overflow-x-auto p-5">
           <table className={`table table-xs border w-fit font-semibold`}>
