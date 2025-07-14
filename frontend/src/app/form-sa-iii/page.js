@@ -39,7 +39,6 @@ const FormSAIIIPage = () => {
 
   useEffect(() => {
     payload = {
-      header: { ...headerData },
       tabel_konflik: { ...dataKonflik }
     };
     console.log('Payload gabungan:', payload);
@@ -47,12 +46,29 @@ const FormSAIIIPage = () => {
 
   const submitData = () => {
     console.log(payload);
+
+    const existing = JSON.parse(localStorage.getItem('data')) || {
+      data: { headerData: [], sa1: {}, sa2: {}, sa3: {}, sa4: {}, sa5: {} }
+    };
+
+    const headerId = headerData?.id;
+
+    // Validasi id
+    if (headerId !== undefined && headerId !== null && headerId !== 0 && headerId !== '0') {
+      // Simpan payload ke sa1
+      existing.data.sa3[headerId] = payload;
+      localStorage.setItem('data', JSON.stringify(existing));
+      console.log('Data berhasil disimpan ke sa1 dengan id:', headerId);
+    } else {
+      console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
+    }
   }
 
 
   const [selectedId, setSelectedId] = useState(0);
 
   const handleResetAll = () => {
+    setDataKonflik({})
     setSelectedId(0);
     setHeader({
       id: 0,
@@ -125,7 +141,7 @@ const FormSAIIIPage = () => {
         <MapComponent title={""} onClick={handleCameraSelect} onClickSimpang={handleSimpangSelect} form />
       </Suspense>
       <Suspense fallback={<Loading />}>
-        <FaseKonflik setDataKonflik={setDataKonflik} />
+        <FaseKonflik setDataKonflik={setDataKonflik} selectedId={selectedId}/>
       </Suspense>
       <div className="w-full items-center flex p-6">
         <button onClick={handleSubmit} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
