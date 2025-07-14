@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 
-export default function VehicleDataTable ({ setDataKonflik }) {
+export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
   const [tableData, setTableData] = useState({
     whh: 0,
     dataFase: [
@@ -334,9 +334,109 @@ export default function VehicleDataTable ({ setDataKonflik }) {
     { key: 'lintasanPejalan', label: 'Lintasan Pejalan Kaki, L', sub: 'pk' }
   ];
 
+
+  // const loadSA3 = (id) => {
+  //   const existing = JSON.parse(localStorage.getItem('data'));
+  //   return existing?.data?.sa3?.[id] || null;
+  // };
+
+
+  // useEffect(() => {
+  //   console.log("test", selectedId)
+  //   if (selectedId === 0) {
+  //     setTableData({});
+  //     return;
+  //   }
+
+  //   if (!selectedId || selectedId === 0 || selectedId === '0') return;
+  //   const loadData = loadSA3(selectedId)
+  //   if (!loadData || !Array.isArray(loadData.tabel_konflik.dataFase)) {
+  //     console.warn("dataFase tidak valid:", loadData);
+  //     setTableData({});
+  //     return;
+  //   }
+
+  //   setTableData(loadData.tabel_konflik);
+  //   console.log("Loaded dataFase:", loadData.tabel_konflik);
+  // }, [selectedId]);
+
+  useEffect(() => {
+    if (!selectedId || selectedId === 0 || selectedId === '0') {
+      setTableData({});
+      return;
+    }
+
+    const existing = JSON.parse(localStorage.getItem('data'));
+
+    // Cek data SA3
+    const sa3 = existing?.data?.sa3?.[selectedId];
+
+    if (sa3 && Array.isArray(sa3.tabel_konflik?.dataFase)) {
+      setTableData(sa3.tabel_konflik);
+      return;
+    }
+
+    // Kalau tidak ada
+    const pendekatArr = existing?.data?.sa1?.[selectedId]?.pendekat;
+
+    if (!Array.isArray(pendekatArr)) {
+      console.warn("Pendekat SA1 tidak valid.");
+      return;
+    }
+
+    const pendekatMap = {
+      u: "U",
+      s: "S",
+      t: "T",
+      b: "B",
+    };
+
+    // Generate default struktur dataFase dari pendekat yang ada
+    const dataFaseBaru = pendekatArr.map((item, index) => {
+      const kode = pendekatMap[item.kodePendekat?.toLowerCase()];
+      if (!kode) return null;
+
+      return {
+        fase: index + 1,
+        kode,
+        whh: 0,
+        jarak: {
+          lintasanBerangkat: defaultJarak(),
+          panjangBerangkat: defaultJarak(),
+          lintasanDatang: defaultJarak(),
+          lintasanPejalan: defaultJarak(),
+        }
+      };
+    }).filter(Boolean);
+
+    // Set ke state
+    const generated = {
+      whh: 0,
+      dataFase: dataFaseBaru
+    };
+
+    setTableData(generated);
+
+  }, [selectedId]);
+
+  const defaultJarak = () => ({
+    pendekat: {
+      u: 0, s: 0, t: 0, b: 0
+    },
+    kecepatan: {
+      vkbr: 0, vkdt: 0, vpk: 0
+    },
+    waktuTempuh: 0,
+    wms: 0,
+    wmsDisesuaikan: 0,
+    wk: 0,
+    wah: 0
+  });
+
+
   useEffect(() => {
     const newData = { ...tableData };
-    const updatedDataFase = newData.dataFase.map((row) => {
+    const updatedDataFase = newData?.dataFase?.map((row) => {
       const newRow = { ...row };
 
       // iterasi semua jenis jarak (misalnya: 'lintasanBerangkat', 'pendekat', dst.)
@@ -354,10 +454,10 @@ export default function VehicleDataTable ({ setDataKonflik }) {
     setTableData(newData);
   }, []);
 
-  const totalRows = tableData.dataFase.length * jarakTypes.length;
+  const totalRows = tableData?.dataFase?.length * jarakTypes.length || 0;
 
   return (
-    <div className="p-6 bg-base-100 min-h-screen">
+    <div className="p-6 bg-base-100 min-h-fit">
       <div className="mb-6">
         <h2 className="text-[20px] text-base-content mb-2">
           Tabel Data Kendaraan
@@ -440,7 +540,7 @@ export default function VehicleDataTable ({ setDataKonflik }) {
             </tr>
           </thead>
           <tbody>
-            {tableData.dataFase.map((row, rowIndex) =>
+            {tableData?.dataFase?.map((row, rowIndex) =>
             (
               jarakTypes.map((jarakType, jarakIndex) => (
                 <tr key={`${rowIndex}-${jarakIndex}`} className="hover:bg-base-200">
@@ -724,77 +824,6 @@ export default function VehicleDataTable ({ setDataKonflik }) {
       </div>
 
       <div className="mt-6 flex gap-4">
-        <button
-          className="btn btn-primary btn-sm"
-          onClick={() => {
-            const newRow = {
-              fase: tableData.dataFase.length + 1,
-              kode: '',
-              whh: 0,
-              jarak: {
-                lintasanBerangkat: {
-                  pendekat: {
-                    u: 0, s: 0, t: 0, b: 0
-                  },
-                  kecepatan: {
-                    vkbr: 0, vkdt: 0, vpk: 0
-                  },
-                  waktuTempuh: 0,
-                  wms: 0,
-                  wmsDisesuaikan: 0,
-                  wk: 0,
-                  wah: 0,
-                },
-                panjangBerangkat: {
-                  pendekat: {
-                    u: 0, s: 0, t: 0, b: 0
-                  },
-                  kecepatan: {
-                    vkbr: 0, vkdt: 0, vpk: 0
-                  },
-                  waktuTempuh: 0,
-                  wms: 0,
-                  wmsDisesuaikan: 0,
-                  wk: 0,
-                  wah: 0,
-                },
-                lintasanDatang: {
-                  pendekat: {
-                    u: 0, s: 0, t: 0, b: 0
-                  },
-                  kecepatan: {
-                    vkbr: 0, vkdt: 0, vpk: 0
-                  },
-                  waktuTempuh: 0,
-                  wms: 0,
-                  wmsDisesuaikan: 0,
-                  wk: 0,
-                  wah: 0,
-                },
-                lintasanPejalan: {
-                  pendekat: {
-                    u: 0, s: 0, t: 0, b: 0
-                  },
-                  kecepatan: {
-                    vkbr: 0, vkdt: 0, vpk: 0
-                  },
-                  waktuTempuh: 0,
-                  wms: 0,
-                  wmsDisesuaikan: 0,
-                  wk: 0,
-                  wah: 0,
-                }
-              }
-            }
-            setTableData({
-              ...tableData,
-              dataFase: [...tableData.dataFase, newRow]
-            });
-          }}
-        >
-          Tambah Baris
-        </button>
-
         <button
           className="btn btn-sm btn-success"
           onClick={() => {
