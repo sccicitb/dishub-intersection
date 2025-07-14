@@ -669,7 +669,7 @@ export default function VehicleDataTable ({ setDataKonflik }) {
                   {rowIndex === 0 && jarakIndex === 0 && (
                     <td rowSpan={totalRows}>
                       <input
-                        value={tableData.whh === 0 || tableData.whh === '0' ? '' : tableData.whh === 0}
+                        value={tableData.whh === 0 || tableData.whh === '0' ? '' : tableData.whh}
                         readOnly
                         className="focus:outline-none appearance-none flex-1 p-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-full min-w-10 font-semibold border-0 focus:ring-0 text-center"
                       />

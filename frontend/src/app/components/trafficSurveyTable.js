@@ -2,53 +2,289 @@
 
 import React, { useEffect, useState } from 'react';
 
-const TrafficSurveyTable = ({ dataEMP }) => {
-  const [trafficData, setTrafficData] = useState(
-    {
-      surveyData: [
-        {
-          direction: 'U',
-          rows: [
-            {
-              type: "BKi / BKIJT",
-              mp: { kendjam: 500, terlindung: 0, terlawan: 0 },
-              ks: { kendjam: 100, terlindung: 0, terlawan: 0 },
-              sm: { kendjam: 120, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
-              total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
-              ktb: { rasio: 0, count: 0 },
-              rktb: 4
-            },
-            {
-              type: "Lurus",
-              mp: { kendjam: 100, terlindung: 0, terlawan: 0 },
-              ks: { kendjam: 250, terlindung: 0, terlawan: 0 },
-              sm: { kendjam: 220, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
-              total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
-              ktb: { rasio: 0, count: 2 },
-              rktb: null
-            },
-            {
-              type: "BKa",
-              mp: { kendjam: 140, terlindung: 0, terlawan: 0 },
-              ks: { kendjam: 80, terlindung: 0, terlawan: 0 },
-              sm: { kendjam: 50, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
-              total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
-              ktb: { rasio: 0, count: 0 },
-              rktb: null
-            }
-          ],
-          subtotal: {
-            mp: { kendjam: 0, terlindung: 0, terlawan: 0 },
-            ks: { kendjam: 0, terlindung: 0, terlawan: 0 },
-            sm: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
-            total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
-            ktb: 0,
-            rktb: 0
-          }
+const TrafficSurveyTable = ({ dataEMP, selectedId }) => {
+
+
+  const getKinerjaDataByDirectionAPI = async (direction) => {
+    try {
+      const res = await fetch(`/api/kinerja/${direction.toLowerCase()}`);
+      const json = await res.json();
+      return json.data; // asumsi BE kirim field `data` seperti contoh di atas
+    } catch (err) {
+      console.error("Gagal fetch kinerja:", err);
+      return [];
+    }
+  };
+  const getKinerjaDataByDirection = (direction) => {
+    const mock = {
+      u: {
+        mp: [500, 100, 140],
+        ks: [100, 250, 80],
+        sm: [120, 220, 50],
+        ktb: [0, 2, 0],
+        rktb: [4, null, null]
+      },
+      t: {
+        mp: [300, 120, 90],
+        ks: [80, 210, 70],
+        sm: [110, 200, 45],
+        ktb: [1, 1, 1],
+        rktb: [3, null, null]
+      },
+      // tambahkan untuk b, s jika perlu
+    };
+
+    return mock[direction.toLowerCase()] || {
+      mp: [0, 0, 0],
+      ks: [0, 0, 0],
+      sm: [0, 0, 0],
+      ktb: [0, 0, 0],
+      rktb: [null, null, null]
+    };
+  };
+
+  // const pendekatMap = {
+  //   u: "U",
+  //   s: "S",
+  //   t: "T",
+  //   b: "B"
+  // };
+
+  // const generateSurveyDataFromPendekat = (pendekatArray) => {
+  //   if (!Array.isArray(pendekatArray)) return [];
+
+  //   return pendekatArray
+  //     .map(item => {
+  //       const kode = item.kodePendekat?.toLowerCase();
+  //       const direction = pendekatMap[kode];
+
+  //       if (!direction) return null;
+
+  //       return {
+  //         direction,
+  //         rows: [
+  //           {
+  //             type: "BKi / BKIJT",
+  //             mp: { kendjam: 500, terlindung: 0, terlawan: 0 },
+  //             ks: { kendjam: 100, terlindung: 0, terlawan: 0 },
+  //             sm: { kendjam: 120, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+  //             total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+  //             ktb: { rasio: 0, count: 0 },
+  //             rktb: 4
+  //           },
+  //           {
+  //             type: "Lurus",
+  //             mp: { kendjam: 100, terlindung: 0, terlawan: 0 },
+  //             ks: { kendjam: 250, terlindung: 0, terlawan: 0 },
+  //             sm: { kendjam: 220, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+  //             total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+  //             ktb: { rasio: 0, count: 2 },
+  //             rktb: null
+  //           },
+  //           {
+  //             type: "BKa",
+  //             mp: { kendjam: 140, terlindung: 0, terlawan: 0 },
+  //             ks: { kendjam: 80, terlindung: 0, terlawan: 0 },
+  //             sm: { kendjam: 50, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+  //             total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+  //             ktb: { rasio: 0, count: 0 },
+  //             rktb: null
+  //           }
+  //         ],
+  //         subtotal: {
+  //           mp: { kendjam: 0, terlindung: 0, terlawan: 0 },
+  //           ks: { kendjam: 0, terlindung: 0, terlawan: 0 },
+  //           sm: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+  //           total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+  //           ktb: 0,
+  //           rktb: 0
+  //         }
+  //       };
+  //     })
+  //     .filter(Boolean);
+  // };
+
+  // const generateSurveyDataFromPendekat = async (pendekatArray) => {
+  //   const pendekatMap = { u: "U", s: "S", t: "T", b: "B" };
+
+  //   const results = await Promise.all(
+  //     pendekatArray.map(async (item) => {
+  //       const kode = item.kodePendekat?.toLowerCase();
+  //       const direction = pendekatMap[kode];
+  //       if (!direction) return null;
+
+  //       const dataRows = await getKinerjaDataByDirection(kode);
+
+  //       return {
+  //         direction,
+  //         rows: dataRows.map(row => ({
+  //           type: row.type,
+  //           mp: { kendjam: row.mp, terlindung: 0, terlawan: 0 },
+  //           ks: { kendjam: row.ks, terlindung: 0, terlawan: 0 },
+  //           sm: {
+  //             kendjam: row.sm,
+  //             terlindung: 0,
+  //             terlawan: 0,
+  //             smpTerlindung: 0,
+  //             smpTerlawan: 0
+  //           },
+  //           total: {
+  //             kendjam: 0,
+  //             terlindung: 0,
+  //             terlawan: 0,
+  //             smpTerlindung: 0,
+  //             smpTerlawan: 0
+  //           },
+  //           ktb: { rasio: 0, count: row.ktb },
+  //           rktb: row.rktb
+  //         })),
+  //         subtotal: {
+  //           mp: { kendjam: 0, terlindung: 0, terlawan: 0 },
+  //           ks: { kendjam: 0, terlindung: 0, terlawan: 0 },
+  //           sm: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+  //           total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+  //           ktb: 0,
+  //           rktb: 0
+  //         }
+  //       };
+  //     })
+  //   );
+
+  //   return results.filter(Boolean);
+  // };
+
+
+  const generateSurveyDataFromPendekat = (pendekatArray) => {
+    if (!Array.isArray(pendekatArray)) return [];
+
+    const pendekatMap = {
+      u: "U",
+      s: "S",
+      t: "T",
+      b: "B"
+    };
+
+    return pendekatArray.map((item) => {
+      const kode = item.kodePendekat?.toLowerCase();
+      const direction = pendekatMap[kode];
+      if (!direction) return null;
+
+      const kinerja = getKinerjaDataByDirection(kode);
+
+      return {
+        direction,
+        rows: ["BKi / BKIJT", "Lurus", "BKa"].map((type, index) => ({
+          type,
+          mp: { kendjam: kinerja.mp[index], terlindung: 0, terlawan: 0 },
+          ks: { kendjam: kinerja.ks[index], terlindung: 0, terlawan: 0 },
+          sm: {
+            kendjam: kinerja.sm[index],
+            terlindung: 0,
+            terlawan: 0,
+            smpTerlindung: 0,
+            smpTerlawan: 0
+          },
+          total: {
+            kendjam: 0,
+            terlindung: 0,
+            terlawan: 0,
+            smpTerlindung: 0,
+            smpTerlawan: 0
+          },
+          ktb: {
+            rasio: 0,
+            count: kinerja.ktb[index]
+          },
+          rktb: kinerja.rktb[index]
+        })),
+        subtotal: {
+          mp: { kendjam: 0, terlindung: 0, terlawan: 0 },
+          ks: { kendjam: 0, terlindung: 0, terlawan: 0 },
+          sm: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+          total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+          ktb: 0,
+          rktb: 0
         }
-      ]
+      };
+    }).filter(Boolean);
+  };
+
+  // const [trafficData, setTrafficData] = useState({ surveyData: [] });
+  const [trafficData, setTrafficData] = useState(
+    // {
+    //   surveyData: [
+    //     {
+    //       direction: 'U',
+    //       rows: [
+    //         {
+    //           type: "BKi / BKIJT",
+    //           mp: { kendjam: 500, terlindung: 0, terlawan: 0 },
+    //           ks: { kendjam: 100, terlindung: 0, terlawan: 0 },
+    //           sm: { kendjam: 120, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+    //           total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+    //           ktb: { rasio: 0, count: 0 },
+    //           rktb: 4
+    //         },
+    //         {
+    //           type: "Lurus",
+    //           mp: { kendjam: 100, terlindung: 0, terlawan: 0 },
+    //           ks: { kendjam: 250, terlindung: 0, terlawan: 0 },
+    //           sm: { kendjam: 220, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+    //           total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+    //           ktb: { rasio: 0, count: 2 },
+    //           rktb: null
+    //         },
+    //         {
+    //           type: "BKa",
+    //           mp: { kendjam: 140, terlindung: 0, terlawan: 0 },
+    //           ks: { kendjam: 80, terlindung: 0, terlawan: 0 },
+    //           sm: { kendjam: 50, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+    //           total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+    //           ktb: { rasio: 0, count: 0 },
+    //           rktb: null
+    //         }
+    //       ],
+    //       subtotal: {
+    //         mp: { kendjam: 0, terlindung: 0, terlawan: 0 },
+    //         ks: { kendjam: 0, terlindung: 0, terlawan: 0 },
+    //         sm: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+    //         total: { kendjam: 0, terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+    //         ktb: 0,
+    //         rktb: 0
+    //       }
+    //     }
+    //   ]
+    // }
+    {
+      surveyData : []
     }
   );
+
+  const getPendekatFromLocalStorage = (id) => {
+    const raw = localStorage.getItem('data');
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed?.data?.sa1[id]?.pendekat || [];
+    } catch (e) {
+      console.error('Gagal parse data:', e);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    console.log("testsa", selectedId)
+    if (selectedId === 0) {
+      setTrafficData({ surveyData: [] });
+      return;
+    }
+
+    if (!selectedId || selectedId === 0 || selectedId === '0') return;
+    const pendekatArr = getPendekatFromLocalStorage(selectedId);
+    const generated = generateSurveyDataFromPendekat(pendekatArr);
+    setTrafficData({ surveyData: generated });
+
+  }, [selectedId]);
 
   // Hitung SMP berdasarkan dataEMP
   useEffect(() => {

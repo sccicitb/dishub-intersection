@@ -49,6 +49,24 @@ const FormSAIIIPage = () => {
     console.log(payload);
   }
 
+
+  const [selectedId, setSelectedId] = useState(0);
+
+  const handleResetAll = () => {
+    setSelectedId(0);
+    setHeader({
+      id: 0,
+      tanggal: '',
+      kabupatenKota: '',
+      lokasi: '',
+      ruasJalanMayor: [''],
+      ruasJalanMinor: [''],
+      ukuranKota: '',
+      perihal: '',
+      periode: ''
+    });
+  }
+
   const handleSubmit = () => {
     toast.info(
       ({ closeToast }) => (
@@ -95,7 +113,7 @@ const FormSAIIIPage = () => {
       <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
-      <SurveyFormSAHeader setDataHeader={setHeader} />
+      <SurveyFormSAHeader setDataHeader={setHeader} setSelectedId={setSelectedId} onResetAll={handleResetAll} />
       <div className="lg:w-1/2 p-3">
         {/* <SurveyInfoTable /> */}
       </div>
