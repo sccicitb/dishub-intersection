@@ -247,23 +247,23 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
   }
 };
 
-// ✅ OPTIMIZED: Use application-level timezone conversion instead of SQL CONVERT_TZ
+// ✅ FIXED: Use Jakarta timezone (UTC+7) for proper hourly traffic data
 Vehicle.getRataPerJam = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
     const validSimpangIds = await getValidSimpangIds();
     
-    // ✅ OPTIMIZED: Use HOUR() on raw UTC waktu instead of CONVERT_TZ (10x faster)
-    // Application handles timezone offset in dateFilter, so we can use simple HOUR()
+    // ✅ FIXED: Use CONVERT_TZ to get correct hour in Jakarta timezone (UTC+7)
+    // This ensures traffic data shows at the correct local time
     const [rows] = await db.query(`
       SELECT
-        HOUR(waktu) AS jam,
+        HOUR(CONVERT_TZ(waktu, '+00:00', '+07:00')) AS jam,
         COUNT(CASE WHEN dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_IN,
         COUNT(CASE WHEN ke_arah IN ('east', 'west', 'north', 'south') AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
         AND ID_Simpang IN (${validSimpangIds.join(', ')})
-      GROUP BY HOUR(waktu)
+      GROUP BY HOUR(CONVERT_TZ(waktu, '+00:00', '+07:00'))
       ORDER BY jam;
     `);
     result(null, rows);
@@ -273,25 +273,25 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
   }
 };
 
-// ✅ OPTIMIZED: Eliminate CONVERT_TZ functions for massive performance improvement
+// ✅ FIXED: Use Jakarta timezone (UTC+7) for proper 15-minute interval traffic data
 Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
     const validSimpangIds = await getValidSimpangIds();
     
-    // ✅ OPTIMIZED: Use simple date/time functions on UTC waktu (10x faster)
-    // Application handles timezone offset in dateFilter, eliminating need for CONVERT_TZ
+    // ✅ FIXED: Use CONVERT_TZ to get correct date/time in Jakarta timezone (UTC+7)
+    // This ensures traffic data shows at the correct local time and date
     const [rows] = await db.query(`
       SELECT
-        CAST(waktu AS DATE) AS tanggal,
-        HOUR(waktu) AS jam,
-        FLOOR(MINUTE(waktu) / 15) * 15 AS menit,
+        CAST(CONVERT_TZ(waktu, '+00:00', '+07:00') AS DATE) AS tanggal,
+        HOUR(CONVERT_TZ(waktu, '+00:00', '+07:00')) AS jam,
+        FLOOR(MINUTE(CONVERT_TZ(waktu, '+00:00', '+07:00')) / 15) * 15 AS menit,
         COUNT(CASE WHEN dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_IN,
         COUNT(CASE WHEN ke_arah IN ('east', 'west', 'north', 'south') AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
         AND ID_Simpang IN (${validSimpangIds.join(', ')})
-      GROUP BY CAST(waktu AS DATE), HOUR(waktu), FLOOR(MINUTE(waktu) / 15)
+      GROUP BY CAST(CONVERT_TZ(waktu, '+00:00', '+07:00') AS DATE), HOUR(CONVERT_TZ(waktu, '+00:00', '+07:00')), FLOOR(MINUTE(CONVERT_TZ(waktu, '+00:00', '+07:00')) / 15)
       ORDER BY tanggal, jam, menit;
     `);
     result(null, rows);
