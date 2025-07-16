@@ -145,6 +145,63 @@ const getValidSimpangIds = async () => {
   }
 };
 
+/**
+ * ✅ NEW: Location-specific traffic flow rules helper
+ * Based on the official traffic flow rules for each intersection
+ */
+const getLocationSpecificFlowCases = () => {
+  return {
+    // Generate CASE statements for counting IN traffic
+    getInCases: () => `
+      CASE 
+        -- Prambanan (ID: 2) - Masuk rules
+        WHEN ID_Simpang = 2 AND dari_arah = 'east' AND ke_arah = 'south' THEN 1
+        WHEN ID_Simpang = 2 AND dari_arah = 'east' AND ke_arah = 'west' THEN 1
+        WHEN ID_Simpang = 2 AND dari_arah = 'south' AND ke_arah = 'west' THEN 1
+        WHEN ID_Simpang = 2 AND dari_arah = 'north' AND ke_arah = 'west' THEN 1
+        
+        -- Piyungan (ID: 4) - Masuk rules  
+        WHEN ID_Simpang = 4 AND dari_arah = 'east' AND ke_arah = 'west' THEN 1
+        
+        -- Demen Glagah (ID: 3) - Masuk rules
+        WHEN ID_Simpang = 3 AND dari_arah = 'south' AND ke_arah = 'east' THEN 1
+        WHEN ID_Simpang = 3 AND dari_arah = 'west' AND ke_arah = 'east' THEN 1
+        WHEN ID_Simpang = 3 AND dari_arah = 'north' AND ke_arah = 'south' THEN 1
+        
+        -- Tempel (ID: 5) - Masuk rules
+        WHEN ID_Simpang = 5 AND dari_arah = 'east' AND ke_arah = 'south' THEN 1
+        WHEN ID_Simpang = 5 AND dari_arah = 'west' AND ke_arah = 'south' THEN 1
+        
+        ELSE NULL
+      END
+    `,
+    
+    // Generate CASE statements for counting OUT traffic
+    getOutCases: () => `
+      CASE 
+        -- Prambanan (ID: 2) - Keluar rules
+        WHEN ID_Simpang = 2 AND dari_arah = 'south' AND ke_arah = 'east' THEN 1
+        WHEN ID_Simpang = 2 AND dari_arah = 'west' AND ke_arah = 'east' THEN 1
+        WHEN ID_Simpang = 2 AND dari_arah = 'north' AND ke_arah = 'east' THEN 1
+        
+        -- Piyungan (ID: 4) - Keluar rules
+        WHEN ID_Simpang = 4 AND dari_arah = 'west' AND ke_arah = 'east' THEN 1
+        
+        -- Demen Glagah (ID: 3) - Keluar rules  
+        WHEN ID_Simpang = 3 AND dari_arah = 'east' AND ke_arah = 'west' THEN 1
+        WHEN ID_Simpang = 3 AND dari_arah = 'south' AND ke_arah = 'west' THEN 1
+        
+        -- Tempel (ID: 5) - Keluar rules
+        WHEN ID_Simpang = 5 AND dari_arah = 'east' AND ke_arah = 'north' THEN 1
+        WHEN ID_Simpang = 5 AND dari_arah = 'south' AND ke_arah = 'north' THEN 1
+        WHEN ID_Simpang = 5 AND dari_arah = 'west' AND ke_arah = 'north' THEN 1
+        
+        ELSE NULL
+      END
+    `
+  };
+};
+
 Vehicle.getAll = async (result) => {
   try {
     const [rows] = await db.query('SELECT * FROM arus ORDER BY waktu DESC LIMIT 10');
@@ -155,16 +212,17 @@ Vehicle.getAll = async (result) => {
   }
 };
 
-// DYNAMIC: Use dynamic queries with simpang table validation for 100% coverage
+// ✅ FIXED: Use location-specific traffic flow rules instead of generic direction filtering
 Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
     const validSimpangIds = await getValidSimpangIds();
+    const flowRules = getLocationSpecificFlowCases();
     
     const [rows] = await db.query(`
       SELECT
-        COUNT(CASE WHEN dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_IN,
-        COUNT(CASE WHEN ke_arah IN ('east', 'west', 'north', 'south') AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_OUT
+        COUNT(${flowRules.getInCases()}) AS total_IN,
+        COUNT(${flowRules.getOutCases()}) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
         AND ID_Simpang IN (${validSimpangIds.join(', ')});
@@ -176,17 +234,18 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
   }
 };
 
-// DYNAMIC: Use dynamic queries with simpang table validation for 100% coverage
+// ✅ FIXED: Use location-specific traffic flow rules instead of generic direction filtering
 Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
     const validSimpangIds = await getValidSimpangIds();
+    const flowRules = getLocationSpecificFlowCases();
     
     const [rows] = await db.query(`
       SELECT
         SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB,
-        COUNT(CASE WHEN dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_IN,
-        COUNT(CASE WHEN ke_arah IN ('east', 'west', 'north', 'south') AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_OUT
+        COUNT(${flowRules.getInCases()}) AS total_IN,
+        COUNT(${flowRules.getOutCases()}) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
         AND ID_Simpang IN (${validSimpangIds.join(', ')})
@@ -200,27 +259,34 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
   }
 };
 
-// ✅ MAXIMUM OPTIMIZED: TRUE single table scan with CASE aggregation (10,000x faster!)
+// ✅ FIXED: Use location-specific traffic flow rules with direction breakdown
 Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
     const validSimpangIds = await getValidSimpangIds();
+    const flowRules = getLocationSpecificFlowCases();
     
-    // ✅ REVOLUTIONARY: Single scan, all directions calculated in one pass
+    // ✅ LOCATION-SPECIFIC: Calculate IN/OUT by direction using official traffic rules
     const [data] = await db.query(`
       SELECT 
-        COUNT(CASE WHEN dari_arah = 'east' THEN 1 END) AS east_total_IN,
-        COUNT(CASE WHEN ke_arah = 'east' AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS east_total_OUT,
-        COUNT(CASE WHEN dari_arah = 'north' THEN 1 END) AS north_total_IN,
-        COUNT(CASE WHEN ke_arah = 'north' AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS north_total_OUT,
-        COUNT(CASE WHEN dari_arah = 'south' THEN 1 END) AS south_total_IN,
-        COUNT(CASE WHEN ke_arah = 'south' AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS south_total_OUT,
-        COUNT(CASE WHEN dari_arah = 'west' THEN 1 END) AS west_total_IN,
-        COUNT(CASE WHEN ke_arah = 'west' AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS west_total_OUT
+        -- East direction - count traffic that comes TO east or goes FROM east based on rules
+        COUNT(CASE WHEN ke_arah = 'east' AND (${flowRules.getInCases()}) IS NOT NULL THEN 1 END) AS east_total_IN,
+        COUNT(CASE WHEN dari_arah = 'east' AND (${flowRules.getOutCases()}) IS NOT NULL THEN 1 END) AS east_total_OUT,
+        
+        -- North direction  
+        COUNT(CASE WHEN ke_arah = 'north' AND (${flowRules.getInCases()}) IS NOT NULL THEN 1 END) AS north_total_IN,
+        COUNT(CASE WHEN dari_arah = 'north' AND (${flowRules.getOutCases()}) IS NOT NULL THEN 1 END) AS north_total_OUT,
+        
+        -- South direction
+        COUNT(CASE WHEN ke_arah = 'south' AND (${flowRules.getInCases()}) IS NOT NULL THEN 1 END) AS south_total_IN,
+        COUNT(CASE WHEN dari_arah = 'south' AND (${flowRules.getOutCases()}) IS NOT NULL THEN 1 END) AS south_total_OUT,
+        
+        -- West direction
+        COUNT(CASE WHEN ke_arah = 'west' AND (${flowRules.getInCases()}) IS NOT NULL THEN 1 END) AS west_total_IN,
+        COUNT(CASE WHEN dari_arah = 'west' AND (${flowRules.getOutCases()}) IS NOT NULL THEN 1 END) AS west_total_OUT
       FROM arus
       WHERE ${dateFilter}
-        AND ID_Simpang IN (${validSimpangIds.join(', ')})
-        AND (dari_arah IN ('east', 'west', 'north', 'south') OR ke_arah IN ('east', 'west', 'north', 'south'));
+        AND ID_Simpang IN (${validSimpangIds.join(', ')});
     `);
     
     // Transform single row result to array format expected by frontend
@@ -238,19 +304,20 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
   }
 };
 
-// ✅ OPTIMIZED: Use DATE_ADD for Jakarta timezone (UTC+7) with better performance
+// ✅ FIXED: Use location-specific traffic flow rules with Jakarta timezone optimization
 Vehicle.getRataPerJam = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
     const validSimpangIds = await getValidSimpangIds();
+    const flowRules = getLocationSpecificFlowCases();
     
     // ✅ OPTIMIZED: Use DATE_ADD instead of CONVERT_TZ for 95% better performance
     // DATE_ADD(waktu, INTERVAL 7 HOUR) is much faster than CONVERT_TZ
     const [rows] = await db.query(`
       SELECT
         HOUR(DATE_ADD(waktu, INTERVAL 7 HOUR)) AS jam,
-        COUNT(CASE WHEN dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_IN,
-        COUNT(CASE WHEN ke_arah IN ('east', 'west', 'north', 'south') AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_OUT
+        COUNT(${flowRules.getInCases()}) AS total_IN,
+        COUNT(${flowRules.getOutCases()}) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
         AND ID_Simpang IN (${validSimpangIds.join(', ')})
@@ -264,11 +331,12 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
   }
 };
 
-// ✅ OPTIMIZED: Use DATE_ADD for Jakarta timezone (UTC+7) with better performance
+// ✅ FIXED: Use location-specific traffic flow rules with Jakarta timezone optimization
 Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
     const validSimpangIds = await getValidSimpangIds();
+    const flowRules = getLocationSpecificFlowCases();
     
     // ✅ OPTIMIZED: Use DATE_ADD instead of CONVERT_TZ for 95% better performance
     // DATE_ADD(waktu, INTERVAL 7 HOUR) is much faster than CONVERT_TZ
@@ -277,8 +345,8 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
         CAST(DATE_ADD(waktu, INTERVAL 7 HOUR) AS DATE) AS tanggal,
         HOUR(DATE_ADD(waktu, INTERVAL 7 HOUR)) AS jam,
         FLOOR(MINUTE(DATE_ADD(waktu, INTERVAL 7 HOUR)) / 15) * 15 AS menit,
-        COUNT(CASE WHEN dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_IN,
-        COUNT(CASE WHEN ke_arah IN ('east', 'west', 'north', 'south') AND dari_arah IN ('east', 'west', 'north', 'south') THEN 1 END) AS total_OUT
+        COUNT(${flowRules.getInCases()}) AS total_IN,
+        COUNT(${flowRules.getOutCases()}) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
         AND ID_Simpang IN (${validSimpangIds.join(', ')})
