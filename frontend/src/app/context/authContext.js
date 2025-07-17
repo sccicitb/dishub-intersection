@@ -2,93 +2,166 @@
 
 import { createContext, useState, useEffect, useContext } from "react";
 import Cookies from "js-cookie";
-import { usePathname, notFound } from "next/navigation";
-import {logout as LogoutExt} from "../auth/logout";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { logout as LogoutExt } from "../auth/logout";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AuthContext = createContext();
-export function AuthProvider({ children }) {
+
+export function AuthProvider ({ children }) {
   const router = useRouter();
-  const [token, setToken] = useState(null);
-  const [statusPath, setStatusPath] = useState(null);
-  const [loading, setLoading] = useState(false);
   const pathname = usePathname();
+
+  const [error, setError] = useState('')
+  const [token, setToken] = useState(null);
   const [idUser, setUserId] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [statusPath, setStatusPath] = useState(null);
+  const [user, setUser] = useState(null);
+
+  const protectedRoutes = [
+    "/", "/cctvTest", "/survei-proporsi", "/manajemen-kamera",
+    "/survei-pergerakan", "/survei-simpang", "/survei-lhrk",
+    "/trainning-export", "/form-sa-ii", "/form-sa-i", "/form-sa-iii",
+    "/form-sa-iv", "/form-sa-v"
+  ];
+
+  function parseJwt (token) {
+    try {
+      const parts = token.split(".");
+      if (parts.length !== 3) throw new Error("Token format is invalid");
+
+      const base64Url = parts[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+
+      const jsonPayload = atob(base64);
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error("Failed to parse JWT:", e);
+      return null;
+    }
+  }
+
+  function isTokenExpired (token) {
+    const decoded = parseJwt(token);
+    if (!decoded || !decoded.exp) return true;
+
+    const now = Date.now() / 1000;
+    return decoded.exp < now;
+  }
+
+  // Fungsi untuk validasi token
+  function validateToken (token) {
+    if (!token || typeof token !== "string") return false;
+
+    // Jika token adalah mock token, anggap valid
+    if (token === "mocked.jwt.token") return true;
+
+    // Untuk JWT token real, cek format dan expiry
+    if (token.includes(".")) {
+      return !isTokenExpired(token);
+    }
+
+    return false;
+  }
+
   useEffect(() => {
-    const userId = Cookies.get("id_user");
-    setUserId(userId)
-    function parseJwt(token) {
-      try {
-        const parts = token.split('.');
-        if (parts.length !== 3) {
-          throw new Error("Token format is invalid");
-        }
-    
-        const base64Url = parts[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-          atob(base64)
-            .split('')
-            .map((c) => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`)
-            .join('')
-        );
-    
-        return JSON.parse(jsonPayload);
-      } catch (e) {
-        console.error("Invalid token format:", e);
-        return null;
-      }
-    }
-    function formatTime(date){
-      return new Date(date).toLocaleString()
-    }
     const checkToken = async () => {
       const storedToken = Cookies.get("token");
-      // console.log("Stored Token:", storedToken);
-      
-      if (storedToken) {
+      const userId = Cookies.get("id_user");
+
+      setUserId(userId);
+
+      if (storedToken && validateToken(storedToken)) {
         setToken(storedToken);
-        if (pathname === "/auth" && storedToken) {
-          window.location.href = "/";
+        if (pathname === "/auth") {
+          router.push("/");
         }
-        // const decoded = parseJwt(storedToken)
-        // const currentTime = Date.now() / 1000;
-        
-        // // console.log(decoded.exp, currentTime)
-        // console.log(formatTime(decoded.exp * 1000), formatTime(currentTime * 1000))
-        // if (decoded?.exp && currentTime > decoded.exp){
-        //   LogoutExt()
-        // }
+      } else {
+        // Token tidak valid atau tidak ada
+        if (storedToken) {
+          // Jika ada token tapi tidak valid, hapus
+          LogoutExt();
+        }
+        setToken(null);
+        if (protectedRoutes.includes(pathname)) {
+          router.push("/auth");
+        }
       }
-      
-      await new Promise((resolve) => setTimeout(resolve, 0)); // Simulasi async agar `await` bisa dipakai
+
+      const storedUser = Cookies.get("user");
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+        } catch (e) {
+          console.error("Failed to parse user cookie:", e);
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
       setLoading(true);
     };
-  
+
     checkToken();
   }, [pathname]);
-  
+
+  // Handle routing error ke /not-found
   const isNotFound = pathname === "/not-found";
-  useEffect(()=>{
-    statusPath === "/not-found" && router.push("/not-found");
-  },[statusPath])
-  const login = (newToken) => {
-    Cookies.set("token", newToken, { expires: 0.5, path: "/" });
-    setToken(newToken);
+  useEffect(() => {
+    if (statusPath === "/not-found") {
+      router.push("/not-found");
+    }
+  }, [statusPath]);
+
+  const login = (newToken, user) => {
+    if (validateToken(newToken)) {
+      Cookies.set("token", newToken, { expires: 0.5, path: "/" });
+      Cookies.set("user", JSON.stringify(user), { expires: 0.5, path: "/" });
+      setToken(newToken);
+      // Redirect akan ditangani oleh useEffect di atas
+    } else {
+      // console.error("Invalid token provided to login function");
+      // setError("Invalid token provided to login function")
+      toast.error("Invalid token provided to login function", { position: 'top-right' });
+      // Bisa tambahkan error handling disini
+    }
   };
 
   const logout = () => {
     Cookies.remove("token");
+    Cookies.remove("id_user");
     setToken(null);
+    setUserId(0);
+    router.push("/auth");
   };
 
   return (
-    <AuthContext.Provider value={{ token, login, logout, pathname, isNotFound, setStatusPath, statusPath, loading, setLoading, setUserId, idUser }}>
+    <AuthContext.Provider
+      value={{
+        token,
+        user,
+        login,
+        logout,
+        pathname,
+        isNotFound,
+        setStatusPath,
+        statusPath,
+        loading,
+        setLoading,
+        setUserId,
+        idUser,
+        validateToken, // Export fungsi validasi jika dibutuhkan
+        error,
+        setError
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
+export function useAuth () {
   return useContext(AuthContext);
 }

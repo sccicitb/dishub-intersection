@@ -1,21 +1,20 @@
 'use client';
 
-import { authAPI } from '@/lib/apiAccess';
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { authApi } from '../../lib/apiService';
 import { useAuth } from '../context/authContext';
 
-export default function Auth() {
+export default function Auth () {
   const router = useRouter();
-  const { loading, setLoading, setUserId } = useAuth();
+  const { loading, setLoading, setUserId, login, error } = useAuth();
 
-  const [username, setUsername] = useState('viana@dishub.jogjaprov.go.id');
-  const [password, setPassword] = useState('password');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loaded, setLoaded] = useState(false);
-
+  const [errorMessage, setErrorMessage] = useState('');
   useEffect(() => {
     const storedToken = Cookies.get('token');
     if (storedToken) {
@@ -23,51 +22,31 @@ export default function Auth() {
     }
   }, []);
 
-  const handleSubmit = async (e) => {
+  // test login fetch api login to dashboard
+  const handleSubmitAPI = async (e) => {
     e.preventDefault();
+    // if (
+    //   username === 'viana@dishub.jogjaprov.go.id' &&
+    //   password === 'password'
+    // ) {
+    //   login(fakeToken)
+    //   router.push('/');
+    //   return;
+    // }
+
     setLoading(true);
-    setError('');
+    setErrorMessage('');
 
     try {
-      if (
-        username === 'viana@dishub.jogjaprov.go.id' &&
-        password === 'password'
-      ) {
-        const fakeToken = 'mocked.jwt.token';
-        Cookies.set('token', fakeToken, { expires: 0.5, path: '/' });
-        router.push('/');
-      } else {
-        setError('Invalid username or password');
-      }
-    } catch (err) {
-      console.error(err);
-      setError('Something went wrong');
-    } finally {
-      setLoading(false);
+      const response = await authApi.login({ email: username, password });
+      const { token, user } = response.data.data;
+      login(token, user)
+      router.push("/");
+    } catch (error) {
+      setErrorMessage("Invalid username or password");
     }
   };
 
-    // test login fetch api login to dashboard
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     const response = await authAPI.login({email: username, password: password});
-  //     const { token, userId } = response.data.data;
-  //     Cookies.set("token", token, { expires: 0.2, path: "/" }); // 0.2 hari
-  //     Cookies.set("id_user", userId, { expires: 0.2, path: "/" }); // 0.2 hari
-  //     router.push("/"); // Redirect setelah login
-  //     console.log(userId)
-  //     setUserId(userId)
-  //   } catch (error) {
-  //     if (error.response?.status === 401) {
-  //       setError("Invalid username or password");
-  //     } else if (error.response?.status) {
-  //       setError("Something went wrong");
-  //     } else {
-  //       setError("Cannot connect to server");
-  //     }
-  //   }
-  // };
   return (
     <div className="relative w-full min-h-screen">
       {/* Background image using next/image */}
@@ -86,7 +65,7 @@ export default function Auth() {
         </div>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmitAPI}
           className="p-6 bg-white/90 shadow-md backdrop-blur-2xl rounded-2xl w-96 gap-2 flex flex-col pt-5 pb-5 z-10"
         >
           <div className="text-left gap-2 flex flex-col">
@@ -97,9 +76,8 @@ export default function Auth() {
                 alt="Logo Viana"
                 width={80}
                 height={80}
-                className={`transition-opacity py-5 drop-shadow-2xl duration-500 ${
-                  loaded ? 'opacity-100' : 'opacity-0'
-                }`}
+                className={`transition-opacity py-5 drop-shadow-2xl duration-500 ${loaded ? 'opacity-100' : 'opacity-0'
+                  }`}
                 onLoadingComplete={() => setLoaded(true)}
               />
             </div>
@@ -138,7 +116,7 @@ export default function Auth() {
             {loading ? 'Loading...' : 'Login'}
           </button>
 
-          {error && <p className="text-red-500">{error}</p>}
+          {errorMessage && <p className="text-red-500">{errorMessage}</p>}
         </form>
       </div>
     </div>

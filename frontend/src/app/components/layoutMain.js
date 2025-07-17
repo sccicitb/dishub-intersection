@@ -15,6 +15,10 @@ import Breadcrumbs from "./breadcrumbs";
 import ProfileDropdown from "@/app/components/profileDropdown"
 import PageWrapper from "./wrapper";
 // import { redirect } from "next/navigation";
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 const Layout = ({ children }) => {
   const { token, pathname, idUser } = useAuth();
   const [mounted, setMounted] = useState(false);
@@ -38,11 +42,17 @@ const Layout = ({ children }) => {
   // }
 
   if (!token && pathname !== "/dashboard/mobility" || pathname === "/auth" || pathname === "/not-found") {
-    return <div>{children}</div>;
+    return (
+      <div>
+        <ToastContainer />
+        {children}
+      </div>
+    );
   }
-  
+
   return (
     <div className="h-screen flex flex-col">
+
       {/* <ClockBar /> */}
       <div className="drawer 2xl:drawer-open">
         <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
@@ -68,6 +78,7 @@ const Layout = ({ children }) => {
           </div>
           <div className="flex-1 overflow-auto">
             <PageWrapper>
+              <ToastContainer />
               {children}
             </PageWrapper>
           </div>
