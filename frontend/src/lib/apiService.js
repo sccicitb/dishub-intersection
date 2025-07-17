@@ -5,12 +5,15 @@ export const apiRequest = async (method, url, data = null) => {
   try {
     const config = { method, url }
     if (data) config.data = data
+    // console.log('API Request Config:', config);
     const response = await axiosInstance(config)
+    // console.log('API Response:', response.data);
     return response
   }
   catch (error) {
-    console.error("Failed to fetch data:", error);
-    throw error
+    if (error?.response?.status !== 401) {
+      console.error("Failed to fetch data:", error);
+    } throw error
   }
 }
 
@@ -19,6 +22,25 @@ export const deleteRequest = (url) => apiRequest('delete', url)
 export const updateRequest = (url, data) => apiRequest('put', url, data)
 export const createRequest = (url, data) => apiRequest('post', url, data)
 
+export const authApi = {
+  // (All Role)
+  updateProfile: () => updateRequest(`/auth/profile/`),
+  login: (data) => {
+    // console.log('Login data being sent:', data); // Debug log
+    return createRequest(`/auth/login/`, data);
+  },
+  logout: () => createRequest(`/auth/logout/`),
+
+  // User Management Endpoints (Admin Only)
+  getAllUser: () => getRequest(`/users`),
+  createNewUser: () => createRequest(`/users`),
+  getByIdUser: () => getRequest(`/users`),
+  deleteByIdUser: () => deleteRequest(`/users`),
+
+  // Assign role to user
+  addUserRole: (id, data) => createRequest(`/users/${id}/role`, data),
+  removeUserRole: (id, role_id) => deleteRequest(`/users/${id}/role/${role_id}`, { role_id: role_id }),
+}
 
 export const maps = {
   getAll: () => getRequest(`/maps/buildings`),
@@ -85,8 +107,8 @@ export const survey = {
 
     return getRequest(`/surveys/data-summary?${params.join('&')}`);
   },
-  
-   getAllKM: (simpang_id, date, interval, approach) => {
+
+  getAllKM: (simpang_id, date, interval, approach) => {
     // let params = [`simpang_id=${simpang_id}`, `date=${date}`];
     let params = [`simpang_id=${simpang_id}`, `date=${date}`];
 
