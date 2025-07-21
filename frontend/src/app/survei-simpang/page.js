@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense, lazy, useRef, useCallback } from 'react'
 import { io } from "socket.io-client";
 import { cameras, survey, maps } from '@/lib/apiService';
 import { getCuacaJogja } from '@/lib/weatherAccess';
+import { useAuth } from "@/app/context/authContext";
+
 const socket = io('https://sxe-data.layanancerdas.id', {
   autoConnect: false,
 });
@@ -18,6 +20,7 @@ const MapComponent = lazy(() => import("@/app/components/map"));
 const AdaptiveVideoPlayer = lazy(() => import('@/app/components/adaptiveCameraStream'));
 
 function SurveiSimpangPage () {
+  const { isEditor, isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
@@ -35,7 +38,7 @@ function SurveiSimpangPage () {
   const [camStandard, setCamStandard] = useState(0)
   const [dataSimpangById, setDataSimpangById] = useState({});
   const [Cuaca, setCuaca] = useState("")
-  
+
   const formatDateToInput = (date) => {
     if (!date) return "";
     const d = new Date(date);
@@ -76,8 +79,8 @@ function SurveiSimpangPage () {
 
   useEffect(() => {
     if (!activeSimpangId) return;
-    
-    
+
+
     const fetchData = async () => {
       try {
         const [cameraRes, simpangRes, surveyRes, mapsRes] = await Promise.all([
@@ -86,24 +89,24 @@ function SurveiSimpangPage () {
           survey.getAll(activeCamera, formatDateToYMDForAPI(dateInput)),
           maps.getById(activeSimpangId),
         ]);
-        
+
         const cameraData = Array.isArray(cameraRes?.data?.cameras) ? cameraRes.data.cameras : [];
         const simpangData = Array.isArray(simpangRes?.data?.buildings) ? simpangRes?.data?.buildings : [];
         const vehicleData = Array.isArray(surveyRes?.data?.vehicleData) ? surveyRes.data.vehicleData : [];
         const mapsData = Array.isArray(mapsRes?.data) ? mapsRes?.data : {};
-        
+
         setDataCamera(cameraData);
         let cuaca;
         if (cameraData.length > 0 && cameraData[0]?.id) {
           setActiveCamera(cameraData[0].id);
           setActiveSimpang(cameraData[0].name || '');
         }
-        
+
         if (simpangData.length > 0 || simpangData[0]?.id) {
           setActiveSimpangId(simpangData[0].id)
           cuaca = await getCuacaJogja(simpangData[0].location.latitude, simpangData[0].location.longitude)
         }
-        
+
         setCuaca(cuaca || "");
         setVehicleData(vehicleData);
         setDataSimpangById(mapsData);
@@ -409,7 +412,7 @@ function SurveiSimpangPage () {
         )}
         <div className="w-[95%] m-auto">
           <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
-            <RecentVehicle customCSS={'h-[320px]'} data={streamData[activeCamera]}/>
+            <RecentVehicle customCSS={'h-[320px]'} data={streamData[activeCamera]} />
             <div className="py-1 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
               <div className="w-full">
                 {renderCCTVStream()}
@@ -443,7 +446,7 @@ function SurveiSimpangPage () {
             <label className="mr-2 font-medium">Pilih Tanggal:</label>
             <input
               type="date"
-              className="border rounded px-2 py-1"  
+              className="border rounded px-2 py-1"
               value={dateInput}
               onChange={(e) => setDateInput(e.target.value)}
             />
@@ -451,7 +454,7 @@ function SurveiSimpangPage () {
 
           {loading ? (<div>Loading...</div>) :
             Array.isArray(vehicleData) && vehicleData.length > 0 && (
-              <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} />
+              <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} isEditor={isEditor}/>
             )}
           <ClasificationTable typeClass={activeClassification} />
         </div>

@@ -4,7 +4,7 @@ import { useAuth } from "@/app/context/authContext";
 const SurveyLalulintasExport = lazy(() => import('./exportPdf'));
 
 export default function SelectionButtons ({ pendekatan, interval, exportPdf, arahPergerakan, vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, setActivePergerakan, activeInterval, setActiveInterval, activeDirection, setActiveDirection, direction }) {
-  const { pathname } = useAuth();
+  const { pathname, isEditor } = useAuth();
 
   // Opsi untuk surveyor
   const surveyorOptions = ['VIANA', 'Manual', 'Semua'];
@@ -160,7 +160,7 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
         </div>
       </div>
       <Suspense fallback={<div className='w-full'>Loading...</div>}>
-        {exportPdf && (
+        {exportPdf && isEditor && (
 
           <div className='space-y-1'>
             <div className="w-full flex overflow-x-auto join pt-2 px-2">

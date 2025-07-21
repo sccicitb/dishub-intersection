@@ -20,7 +20,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Layout = ({ children }) => {
-  const { token, pathname, idUser } = useAuth();
+  const { token, pathname, idUser, user } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [menu, setMenu] = useState([]);
@@ -30,10 +30,44 @@ const Layout = ({ children }) => {
     // console.log(idUser)
   }, []);
 
+  const hasAccess = (menuItem) => {
+    // Jika user belum ter-load, return false untuk safety
+    if (!user) return false;
+
+    const userRoles = user.roles?.map(item => item.name.toLowerCase()) || [];
+    // console.log(userRoles)
+    const menuUrl = menuItem.url;
+
+    const roleBasedMenus = {
+      '/manajemen-user': ['admin'],
+      "/form-sa-i": ['admin', 'operator'],
+      "/form-sa-ii": ['admin', 'operator'],
+      "/form-sa-iii": ['admin', 'operator'],
+      "/form-sa-iv": ['admin', 'operator'],
+      "/form-sa-v": ['admin', 'operator'],
+    };
+
+    // Check jika menu memerlukan role khusus
+    const requiredRoles = roleBasedMenus[menuUrl];
+    if (requiredRoles) {
+      return requiredRoles.some(role => userRoles.includes(role));
+    }
+
+    return true;
+  }
+
+  const filterMenuByRole = (menuList) => {
+    if (!user || !menuList) return [];
+
+    return menuList.filter(item => hasAccess(item));
+  };
+
   useEffect(() => {
-    setMenu(pathname === "/dashboard/mobility" ? listMenuMobility : listMenu)
+    const baseMenu = pathname === "/dashboard/mobility" ? listMenuMobility : listMenu;
+    const filteredMenu = filterMenuByRole(baseMenu);
+    setMenu(filteredMenu);
     console.log("path")
-  }, [pathname])
+  }, [pathname, user])
 
   if (!mounted) return null;
 
@@ -112,6 +146,7 @@ const Layout = ({ children }) => {
                 } else if (!IconComponent && item.icon && RiIcons[item.icon]) {
                   IconComponent = RiIcons[item.icon]
                 }
+
                 return (
                   <li key={index} >
                     <a href={item.url} className={pathname === item.url ? `items-center bg-neutral-800/90 box-shadow rounded-xl text-white py-1.5` : `rounded-xl py-1.5 ` + `my-0.5 text-white`}>
