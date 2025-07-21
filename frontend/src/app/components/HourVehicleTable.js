@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import dataTable from '@/data/DataTableHour.json';
 import { ExportButton } from './exportExcel';
 
-const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification, customSize, pdf }) => {
+const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification, customSize, pdf, isEditor }) => {
   // Style khusus untuk PDF
   const pdfTableStyle = pdf ? {
     borderCollapse: 'collapse',
@@ -496,9 +496,11 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
   return (
     <div className="mx-auto p-4 overflow-x-auto gap-5 flex flex-col">
-      <div className={`w-full gap-5 flex overflow-x-auto join ${pdf ? 'hidden' : ''}`}>
-        <ExportButton vehicleData={vehicleData} fileName='Data_Kendaraan_perjam' classification={classification} />
-      </div>
+      {isEditor && (
+        <div className={`w-full gap-5 flex overflow-x-auto join ${pdf ? 'hidden' : ''}`}>
+          <ExportButton vehicleData={vehicleData} fileName='Data_Kendaraan_perjam' classification={classification} />
+        </div>
+      )}
       <table
         className={pdf ? '' : "table-auto border-collapse border border-base-300 w-full text-black"}
         style={pdf ? pdfTableStyle : {}}

@@ -137,6 +137,10 @@ export function AuthProvider ({ children }) {
     router.push("/auth");
   };
 
+  const userRoles = user?.roles?.map(item => item.name.toLowerCase()) || [];
+  const isAdmin = userRoles.includes('admin');
+  const isEditor = userRoles.some(role => ['admin', 'operator'].includes(role));
+
   return (
     <AuthContext.Provider
       value={{
@@ -154,7 +158,10 @@ export function AuthProvider ({ children }) {
         idUser,
         validateToken, // Export fungsi validasi jika dibutuhkan
         error,
-        setError
+        setError,
+        userRoles,
+        isAdmin,
+        isEditor
       }}
     >
       {children}

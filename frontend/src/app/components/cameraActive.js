@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { IoIosAdd } from "react-icons/io";
 
-const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inputSearch, searchValue }) => {
+const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inputSearch, searchValue, editorStatus }) => {
   const [optionSelect, setOptionSelect] = useState('peta');
   const activeOption = ["peta", "pratinjau", "daftar"]
 
@@ -37,31 +37,33 @@ const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inpu
         <div className="flex flex-col gap-3">
           <div className="w-full flex flex-wrap gap-4 items-center justify-between">
             <h3 className="text-lg font-semibold">Kamera Aktif</h3>
-            <div className="flex flex-wrap w-full gap-2">
-              <button className="btn btn-sm rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewMaps}><IoIosAdd className="text-xl" />Tambah Maps</button>
-              <button className="btn btn-sm rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewCamera}><IoIosAdd className="text-xl" />Tambah kamera</button>
-              <label className="input input-sm rounded-md bg-[#314385]/10 w-38">
-                <svg className="h-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <g
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                    strokeWidth="2.5"
-                    fill="none"
-                    stroke="currentColor"
-                  >
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.3-4.3"></path>
-                  </g>
-                </svg>
-                <input
-                  type="search"
-                  className="input input-sm focus:outline-0 focus:ring-0"
-                  placeholder="Search"
-                  onChange={inputSearch}
-                  value={searchValue}
-                />
-              </label>
-            </div>
+            {editorStatus && (
+              <div className="flex flex-wrap w-full gap-2">
+                <button className="btn btn-sm rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewMaps}><IoIosAdd className="text-xl" />Tambah Maps</button>
+                <button className="btn btn-sm rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewCamera}><IoIosAdd className="text-xl" />Tambah kamera</button>
+                <label className="input input-sm rounded-md bg-[#314385]/10 w-38">
+                  <svg className="h-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <g
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      strokeWidth="2.5"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <path d="m21 21-4.3-4.3"></path>
+                    </g>
+                  </svg>
+                  <input
+                    type="search"
+                    className="input input-sm focus:outline-0 focus:ring-0"
+                    placeholder="Search"
+                    onChange={inputSearch}
+                    value={searchValue}
+                  />
+                </label>
+              </div>
+            )}
           </div>
           <div className="join w-fit gap-2 flex flex-wrap overflow-x-auto pt-2">
             {activeOption.map((option) => (

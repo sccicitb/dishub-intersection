@@ -23,12 +23,12 @@ axiosInstance.interceptors.request.use(function (config) {
   }
 
   // Debug logging (remove in production)
-  console.log('API Request:', {
-    url: config.url,
-    method: config.method,
-    data: config.data,
-    headers: config.headers
-  });
+  // console.log('API Request:', {
+  //   url: config.url,
+  //   method: config.method,
+  //   data: config.data,
+  //   headers: config.headers
+  // });
 
   return config;
 }, function (error) {
