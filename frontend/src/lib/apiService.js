@@ -33,13 +33,14 @@ export const authApi = {
 
   // User Management Endpoints (Admin Only)
   getAllUser: () => getRequest(`/users`),
-  createNewUser: () => createRequest(`/users`),
+  createNewUser: (data) => createRequest(`/users`, data),
+  updateUser: (id, data) => updateRequest(`/users/${id}`, data),
   getByIdUser: () => getRequest(`/users`),
-  deleteByIdUser: () => deleteRequest(`/users`),
+  deleteByIdUser: (id) => deleteRequest(`/users/${id}`),
 
   // Assign role to user
   addUserRole: (id, data) => createRequest(`/users/${id}/role`, data),
-  removeUserRole: (id, role_id) => deleteRequest(`/users/${id}/role/${role_id}`, { role_id: role_id }),
+  deleteUserRole: (id, role_id) => deleteRequest(`/users/${id}/role/${role_id}`, { role_id: role_id }),
 }
 
 export const maps = {

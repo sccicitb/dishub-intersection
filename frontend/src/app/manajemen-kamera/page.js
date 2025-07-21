@@ -16,6 +16,7 @@ import { IoChevronBackSharp, IoChevronForwardSharp } from "react-icons/io5";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DialogFCamera from '../components/dialog/dialogFCamera';
+import { useAuth } from "@/app/context/authContext";
 
 
 const RecentVehicle = lazy(() => import('../components/recentVehicle'));
@@ -112,6 +113,9 @@ const useIsMobile = () => {
 };
 
 const ManajemenKamera = () => {
+  const { isEditor, isAdmin } = useAuth();
+  // const isStrictEditor = ['admin', 'operator'].every(role => userRoles.includes(role));
+
   const [layout, setLayout] = useState({ cols: 2, J: 4, bc: 0, rows: 0 });
   const [fullSize, setFullSize] = useState(false);
   const isMobile = useIsMobile();
@@ -186,6 +190,9 @@ const ManajemenKamera = () => {
   const [mergedCameraData, setMergedCameraData] = useState([]);
   const [videoStream, setVideoStream] = useState({})
 
+  useEffect(() => {
+    console.log(isAdmin, isEditor)
+  }, [isAdmin, isEditor])
   // Fetch API Calendar, Maps, Cameras
 
   //# Fetch GET Camera (Maps)
@@ -1120,6 +1127,7 @@ const ManajemenKamera = () => {
               inputSearch={changeInputSearch}
               addNewMaps={handleAddNewMaps}
               searchValue={inputValue}
+              editorStatus={isAdmin}
               addNewCamera={handleAddNewCamera}
             >
               <div className="h-[65vh] overflow-y-auto my-2">
@@ -1138,7 +1146,9 @@ const ManajemenKamera = () => {
                           {/* <th rowSpan={2}>Thumbnail</th> */}
                           <th rowSpan={2}>Resolution</th>
                           <th rowSpan={2}>Status</th>
-                          <th rowSpan={2}>Action</th>
+                          {isEditor && (
+                            <th rowSpan={2}>Action</th>
+                          )}
                         </tr>
                         <tr>
                           <td>Latitude</td>
@@ -1157,18 +1167,22 @@ const ManajemenKamera = () => {
                                 <tr key={`no-camera-${i}`} className="text-xs font-normal text-left">
                                   <td className="text-center">{rowNumber++}</td>
                                   <td className='cursor-pointer flex items-center gap-1'>
-                                    <button
-                                      className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                      onClick={() => handleSelectCameras(dataSimpang.id, 'edit_maps', dataSimpang)}
-                                    >
-                                      <FaPencil className="text-green-300 text-lg" />
-                                    </button>
-                                    <button
-                                      className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                      onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
-                                    >
-                                      <FaTrashCan className="text-red-300 text-lg" />
-                                    </button>
+                                    {isAdmin && (
+                                      <div>
+                                        <button
+                                          className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                          onClick={() => handleSelectCameras(dataSimpang.id, 'edit_maps', dataSimpang)}
+                                        >
+                                          <FaPencil className="text-green-300 text-lg" />
+                                        </button>
+                                        <button
+                                          className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                          onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
+                                        >
+                                          <FaTrashCan className="text-red-300 text-lg" />
+                                        </button>
+                                      </div>
+                                    )}
                                     <div className='text-nowrap'>{dataSimpang.Nama_Simpang}</div>
                                   </td>
                                   <td colSpan={3} className='text-left text-nowrap'>Tidak ada kamera</td>
@@ -1176,20 +1190,24 @@ const ManajemenKamera = () => {
                                   <td className='max-w-5 truncate'>{dataSimpang?.longitude || '-'}</td>
                                   <td className='text-center'>-</td>
                                   <td className='text-center'>-</td>
-                                  <td className='flex justify-center gap-1'>
-                                    <button
-                                      className={`p-1 hover:bg-transparent focus:outline-none btn-disabled cursor-not-allowed`}
-                                      onClick={() => { }}
-                                    >
-                                      <FaPencil className="text-green-300 text-lg" />
-                                    </button>
-                                    <button
-                                      className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                      onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
-                                    >
-                                      <FaTrashCan className="text-red-300 text-lg" />
-                                    </button>
-                                  </td>
+                                  {isEditor && (
+                                    <td className='flex justify-center gap-1'>
+                                      <button
+                                        className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                        onClick={() => { }}
+                                      >
+                                        <FaPencil className="text-green-300 text-lg" />
+                                      </button>
+                                      {isAdmin && (
+                                        <button
+                                          className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                          onClick={() => handleSelectCameras(dataSimpang.id, 'delete_cameras')}
+                                        >
+                                          <FaTrashCan className="text-red-300 text-lg" />
+                                        </button>
+                                      )}
+                                    </td>
+                                  )}
                                 </tr>
                               );
                             }
@@ -1198,18 +1216,22 @@ const ManajemenKamera = () => {
                               <tr key={`cam-${i}-${j}`} className="text-xs font-normal text-left items-center">
                                 <td className="text-center">{rowNumber++}</td>
                                 <td className='cursor-pointer flex items-center gap-1'>
-                                  <button
-                                    className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                    onClick={() => handleSelectCameras(dataSimpang.id, 'edit_maps', dataSimpang)}
-                                  >
-                                    <FaPencil className="text-green-300 text-lg" />
-                                  </button>
-                                  <button
-                                    className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                    onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
-                                  >
-                                    <FaTrashCan className="text-red-300 text-lg" />
-                                  </button>
+                                  {isAdmin && (
+                                    <div className='flex items-center gap-1'>
+                                      <button
+                                        className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                        onClick={() => handleSelectCameras(dataSimpang.id, 'edit_maps', dataSimpang)}
+                                      >
+                                        <FaPencil className="text-green-300 text-lg" />
+                                      </button>
+                                      <button
+                                        className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                        onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
+                                      >
+                                        <FaTrashCan className="text-red-300 text-lg" />
+                                      </button>
+                                    </div>
+                                  )}
                                   <div className='text-nowrap'>{dataSimpang.Nama_Simpang}</div>
                                 </td>
                                 <td colSpan={2} className='text-nowrap'>{cam.name}</td>
@@ -1225,25 +1247,30 @@ const ManajemenKamera = () => {
                                     onChange={(e) => handleToggle(cam.id, cam, e.target.checked)}
                                   />
                                 </td>
-                                <td>
-                                  <div className="flex gap-1 justify-center">
-                                    <button
-                                      className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                      onClick={() => handleSelectCameras(cam.id, 'edit_cameras', cam)}
-                                    >
-                                      <FaPencil className="text-green-300 text-lg" />
-                                    </button>
-                                    <button
-                                      className={`p-1 hover:bg-transparent focus:outline-none ${cam.socket_event === "not_yet_assign" ? "cursor-pointer" : "btn-disabled cursor-not-allowed"}`}
-                                      onClick={() => {
-                                        if (cam.socket_event !== "not_yet_assign") return;
-                                        handleSelectCameras(cam.id, 'delete_cameras');
-                                      }}
-                                    >
-                                      <FaTrashCan className="text-red-300 text-lg" />
-                                    </button>
-                                  </div>
-                                </td>
+                                {isEditor && (
+                                  <td>
+                                    <div className="flex gap-1 justify-center">
+                                      <button
+                                        className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                        onClick={() => handleSelectCameras(cam.id, 'edit_cameras', cam)}
+                                      >
+                                        <FaPencil className="text-green-300 text-lg" />
+                                      </button>
+                                      {isAdmin && (
+
+                                        <button
+                                          className={`p-1 hover:bg-transparent focus:outline-none ${cam.socket_event === "not_yet_assign" ? "cursor-pointer" : "btn-disabled cursor-not-allowed"}`}
+                                          onClick={() => {
+                                            if (cam.socket_event !== "not_yet_assign") return;
+                                            handleSelectCameras(cam.id, 'delete_cameras');
+                                          }}
+                                        >
+                                          <FaTrashCan className="text-red-300 text-lg" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </td>
+                                )}
                               </tr>
                             ));
                           });
@@ -1272,12 +1299,14 @@ const ManajemenKamera = () => {
                               }
                               onClick={() => handleClickCamera(dataCamera)}
                             />
-                            <input
-                              type="checkbox"
-                              className={`toggle absolute bg-white/50 bottom-2.5 right-2 ${firstCamera?.status ? 'toggle-success' : 'toggle-error'} toggle-xs`}
-                              checked={firstCamera?.status}
-                              onChange={(e) => handleToggle(firstCamera.id, dataCamera, e.target.checked)}
-                            />
+                            {isEditor && (
+                              <input
+                                type="checkbox"
+                                className={`toggle absolute bg-white/50 bottom-2.5 right-2 ${firstCamera?.status ? 'toggle-success' : 'toggle-error'} toggle-xs`}
+                                checked={firstCamera?.status}
+                                onChange={(e) => handleToggle(firstCamera.id, dataCamera, e.target.checked)}
+                              />
+                            )}
                           </div>
                         );
                       })
@@ -1294,12 +1323,14 @@ const ManajemenKamera = () => {
                                 title={`Video ${item.name}`}
                                 onClick={() => console.log(`Clicked on ${item.name}`)}
                               />
-                              <input
-                                type="checkbox"
-                                className={`toggle absolute bg-white/50 bottom-2.5 right-2 ${item.status ? 'toggle-success' : 'toggle-error'} toggle-xs`}
-                                checked={item.status}
-                                onChange={(e) => handleToggle(item.id, item, e.target.checked)}
-                              />
+                              {isEditor && (
+                                <input
+                                  type="checkbox"
+                                  className={`toggle absolute bg-white/50 bottom-2.5 right-2 ${item.status ? 'toggle-success' : 'toggle-error'} toggle-xs`}
+                                  checked={item.status}
+                                  onChange={(e) => handleToggle(item.id, item, e.target.checked)}
+                                />
+                              )}
                             </div>
                           );
                         })
@@ -1311,38 +1342,40 @@ const ManajemenKamera = () => {
           </div>
 
           {/* Recent Vehicle Section */}
-          <RecentVehicle hg={600} allData={filteredBuildings} streamData={streamData}/>
+          <RecentVehicle hg={600} allData={filteredBuildings} streamData={streamData} />
         </div>
 
         {/* Calendar Management Section */}
         <div>
           {/* File Upload Section */}
-          <div className="flex gap-2 w-full justify-end mt-5 flex-wrap">
-            <input
-              type="file"
-              accept=".xls,.xlsx"
-              onChange={handleFileChange}
-              className='block w-fit text-sm text-slate-500  bg-slate-50/50 hover:bg-slate-200 p-1 rounded-full
-                file:mr-4 file:py-2 file:px-4
+          {isAdmin && (
+            <div className="flex gap-2 w-full justify-end mt-5 flex-wrap">
+              <input
+                type="file"
+                accept=".xls,.xlsx"
+                onChange={handleFileChange}
+                className='block w-fit text-sm text-slate-500  bg-slate-50/50 hover:bg-slate-200 p-1 rounded-full
+              file:mr-4 file:py-2 file:px-4
                 file:hover:cursor-pointer
                 file:rounded-full file:border-0
                 file:text-sm file:font-semibold
                 file:bg-[#314385]/10 file:text-[#314385]/80
                 hover:file:bg-[#314385]/20'
-            />
-            <button
-              className={`btn btn-md rounded-md bg-[#314385]/80 text-white capitalize ${!file && 'btn-disabled'}`}
-              onClick={handleUpload}
-              disabled={!file}
-            >
-              <FiDownload />
-              Impor Data
-            </button>
-            <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize" onClick={() => { setShowDialogKalender(!showDialogKalender), setStatusDialogKalender(true) }}>
-              <IoIosAdd className="text-xl" />
-              Tambah Data
-            </button>
-          </div>
+              />
+              <button
+                className={`btn btn-md rounded-md bg-[#314385]/80 text-white capitalize ${!file && 'btn-disabled'}`}
+                onClick={handleUpload}
+                disabled={!file}
+              >
+                <FiDownload />
+                Impor Data
+              </button>
+              <button className="btn btn-md rounded-md bg-[#314385]/80 text-white capitalize" onClick={() => { setShowDialogKalender(!showDialogKalender), setStatusDialogKalender(true) }}>
+                <IoIosAdd className="text-xl" />
+                Tambah Data
+              </button>
+            </div>
+          )}
 
           {/* Upload Status */}
           {status && (
@@ -1360,7 +1393,9 @@ const ManajemenKamera = () => {
                   <th>Tanggal</th>
                   <th>Events</th>
                   <th>Keterangan</th>
-                  <th>Action</th>
+                  {isAdmin && (
+                    <th>Action</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -1378,16 +1413,18 @@ const ManajemenKamera = () => {
                       <td>{dataK.tanggal}</td>
                       <td>{dataK.events}</td>
                       <td>{dataK.keterangan}</td>
-                      <td>
-                        <div className="flex gap-2 justify-center">
-                          <button className="p-1 cursor-pointer hover:bg-gray-100 rounded" onClick={() => updateDataKalender(dataK)}>
-                            <FaPencil className="text-green-300 text-lg" />
-                          </button>
-                          <button className="p-1 cursor-pointer hover:bg-gray-100 rounded" onClick={() => deleteDataKalender(dataK.id)}>
-                            <FaTrashCan className="text-red-300 text-lg" />
-                          </button>
-                        </div>
-                      </td>
+                      {isAdmin && (
+                        <td>
+                          <div className="flex gap-2 justify-center">
+                            <button className="p-1 cursor-pointer hover:bg-gray-100 rounded" onClick={() => updateDataKalender(dataK)}>
+                              <FaPencil className="text-green-300 text-lg" />
+                            </button>
+                            <button className="p-1 cursor-pointer hover:bg-gray-100 rounded" onClick={() => deleteDataKalender(dataK.id)}>
+                              <FaTrashCan className="text-red-300 text-lg" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))
                 ) : (

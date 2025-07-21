@@ -30,6 +30,11 @@
     "icon": "RiCamera3Line"
   },
   {
+    "name": "Manajemen User",
+    "url": "/manajemen-user",
+    "icon": "FaShieldAlt"
+  },
+  {
     "name": "Form SA-I",
     "url": "/form-sa-i",
     "icon": "RiProgress6Line"
