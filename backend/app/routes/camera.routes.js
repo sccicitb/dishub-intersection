@@ -11,12 +11,14 @@ module.exports = function (app) {
 
   // Camera Status Management - Viewer+ for GET, Operator+ for POST
   router.post('/cameras/status-log', authenticateToken, requireOperatorOrAdmin, statusCameraController.createCameraStatusLog);
-  router.get('/cameras/:id/status-log', authenticateToken, requireViewerOrHigher, statusCameraController.getCameraStatusLogs);
-  router.get('/cameras/status-latest', authenticateToken, requireViewerOrHigher, statusCameraController.getLatestCameraStatus);
-  router.get('/cameras/down-today', authenticateToken, requireViewerOrHigher, statusCameraController.getCamerasDownToday);
+  // router.get('/cameras/:id/status-log', authenticateToken, requireViewerOrHigher, statusCameraController.getCameraStatusLogs);
+  router.get('/cameras/:id/status-log', statusCameraController.getCameraStatusLogs);
+  router.get('/cameras/status-latest', statusCameraController.getLatestCameraStatus);
+  router.get('/cameras/down-today', statusCameraController.getCamerasDownToday);
 
   // Camera CRUD Operations
-  router.get('/cameras', authenticateToken, requireViewerOrHigher, cameraController.getAllCameras);       // List semua kamera
+  // router.get('/cameras', authenticateToken, requireViewerOrHigher, cameraController.getAllCameras);       // List semua kamera
+  router.get('/cameras', cameraController.getAllCameras);
   router.get('/cameras/:id', authenticateToken, requireViewerOrHigher, cameraController.getCameraById);       // Get single camera
   router.delete('/cameras/:id', authenticateToken, requireAdmin, cameraController.deleteCameraById);  // Delete camera (admin only)
   router.post('/cameras', authenticateToken, requireOperatorOrAdmin, cameraController.createCamera);            // Create camera (operator+)
