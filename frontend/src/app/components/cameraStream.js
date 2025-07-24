@@ -97,7 +97,7 @@ const CameraStream = () => {
           b => b.status == 1
         );
         setDataCameras(detectedCameras);
-        console.log(detectedCameras)
+        // console.log(detectedCameras)
       } catch (err) {
         console.error("Failed to fetch cameras:", err);
       }
@@ -122,7 +122,7 @@ const CameraStream = () => {
     dataCameras.forEach(cam => {
       if (cam?.socket_event && cam?.id && cam?.socket_event !== "not_yet_assign") {
         socket.on(cam.socket_event, (data) => {
-          console.log(cam)
+          // console.log(cam)
           setStreamData(prev => ({ ...prev, [cam.id]: data }));
         });
       }

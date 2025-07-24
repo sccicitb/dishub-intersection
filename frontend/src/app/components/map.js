@@ -71,7 +71,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
         const buildingsData = buildingsRes.data.simpang || [];
         // const filtered = filterBuildingsByActiveCameras(buildingsData, data);
         const filtered = combineData(buildingsData, data);
-        console.log(filtered)
+        // console.log(filtered)
         setBuildings(filtered);
         setupMapData(filtered);
       } catch (err) {
@@ -109,14 +109,14 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    console.log(buildings)
-  }, [buildings])
+  // useEffect(() => {
+  //   console.log(buildings)
+  // }, [buildings])
 
   // Helper function to filter buildings by active cameras
   const filterBuildingsByActiveCameras = (buildings, camerasData) => {
     const activeCameraIds = new Set();
-    console.log(camerasData)
+    // console.log(camerasData)
 
     camerasData.forEach(camera => {
       if (camera.status === 1) {
@@ -124,7 +124,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
       }
     });
 
-    console.log(activeCameraIds)
+    // console.log(activeCameraIds)
     return buildings
       .filter(building => {
         // Check if building has cameras
@@ -244,7 +244,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
         zoom: 16,
         essential: true,
       });
-      console.log(building)
+      // console.log(building)
       !fState && onClickSimpang(building)
       // Handle cameras
       if (Array.isArray(building.cameras) && building.cameras.length > 0) {
@@ -300,9 +300,6 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
     );
   }
 
-  useEffect(() => {
-    console.log(buildings)
-  }, [buildings])
 
   const [lines, setLines] = useState([]);
   return (

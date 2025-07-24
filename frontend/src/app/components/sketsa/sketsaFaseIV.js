@@ -55,7 +55,7 @@ const TrafficPhaseDiagram = ({ tableData }) => {
               whi,
               wk,
               wms,
-              total: mf + whi + wk + wms
+              total: whi + wk + wms
             });
           }
         }
@@ -92,7 +92,7 @@ const TrafficPhaseDiagram = ({ tableData }) => {
         </h2>
         <p className="text-sm text-gray-600">
           {/* Visualisasi timing berurutan per fase (kiri ke kanan: U, S, T, B) */}
-           Visualisasi timing berurutan per fase (Pendekat: {dynamicApproachCodes.join(', ')})
+          Visualisasi timing berurutan per fase (Pendekat: {dynamicApproachCodes.join(', ')})
         </p>
       </div>
 
@@ -150,7 +150,7 @@ const TrafficPhaseDiagram = ({ tableData }) => {
                       {phaseInfo ? (
                         <div className="w-full h-full flex">
                           {/* MF segment */}
-                          {phaseInfo.mf > 0 && (
+                          {/* {phaseInfo.mf > 0 && (
                             <div
                               className="bg-blue-500 flex items-center justify-center text-white text-xs font-bold border-r border-white"
                               style={{
@@ -161,7 +161,7 @@ const TrafficPhaseDiagram = ({ tableData }) => {
                             >
                               {phaseInfo.mf > 3 && 'MF'}
                             </div>
-                          )}
+                          )} */}
 
                           {/* WHI segment */}
                           {phaseInfo.whi > 0 && (
@@ -245,6 +245,27 @@ const TrafficPhaseDiagram = ({ tableData }) => {
               </div>
             ))}
           </div>
+          <div className="relative flex mt-2 h-10 text-xs text-gray-600">
+            <div className="w-20"></div>
+            {activePhases.map(phaseKey => (
+              <div
+                key={phaseKey}
+                className="relative px-2"
+                style={{
+                  width: `${(phaseWidths[phaseKey] / totalWidth) * 100}%`,
+                  minWidth: '120px'
+                }}
+              >
+                {/* Tampilkan mf dari setiap pendekat dalam fase ini */}
+                {phaseData[phaseKey].approaches.map(app => (
+                  <div key={app.kode} className="text-center absolute w-fit -left-2 top-1/3">
+                    {app.mf}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
 
           {/* <div className="mt-6 flex justify-center space-x-6">
             <div className="flex items-center space-x-2">

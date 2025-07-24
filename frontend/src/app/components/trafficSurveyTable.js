@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-const TrafficSurveyTable = ({ dataEMP, selectedId }) => {
+const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic }) => {
 
 
   const getKinerjaDataByDirectionAPI = async (direction) => {
@@ -30,6 +30,20 @@ const TrafficSurveyTable = ({ dataEMP, selectedId }) => {
         sm: [110, 200, 45],
         ktb: [1, 1, 1],
         rktb: [3, null, null]
+      },
+      b: {
+        mp: [500, 620, 290],
+        ks: [80, 270, 420],
+        sm: [110, 110, 65],
+        ktb: [1, 5, 2],
+        rktb: [3, null, null]
+      },
+      s: {
+        mp: [312, 620, 290],
+        ks: [850, 270, 420],
+        sm: [160, 310, 65],
+        ktb: [1, 4, 2],
+        rktb: [2, null, null]
       },
       // tambahkan untuk b, s jika perlu
     };
@@ -256,7 +270,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId }) => {
     //   ]
     // }
     {
-      surveyData : []
+      surveyData: []
     }
   );
 
@@ -528,7 +542,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId }) => {
           <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.sm.kendjam}
           </td>
-          <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
+          <td className="border-r border-green-300 px-1 py-1 text-xs text-center font-semibold">
             {directionData.subtotal.sm.terlindung}
           </td>
           <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">
@@ -615,19 +629,19 @@ const TrafficSurveyTable = ({ dataEMP, selectedId }) => {
                   EMP<sub>terlindung</sub>
                 </th>
                 <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={1}>
-                  {dataEMP.terlindung?.mp || 0}
+                  {dataEMP?.terlindung?.mp || 0}
                 </th>
                 <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={2}>
                   EMP<sub>terlindung</sub>
                 </th>
                 <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={1}>
-                  {dataEMP.terlindung?.ks || 0}
+                  {dataEMP?.terlindung?.ks || 0}
                 </th>
                 <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={2}>
                   EMP<sub>terlindung</sub>
                 </th>
                 <th className="border border-gray-400 px-1 py-1 text-xs font-semibold" colSpan={1}>
-                  {dataEMP.terlindung?.sm || 0}
+                  {dataEMP?.terlindung?.sm || 0}
                 </th>
               </tr>
 
@@ -708,6 +722,9 @@ const TrafficSurveyTable = ({ dataEMP, selectedId }) => {
             </tbody>
           </table>
         </div>
+      </div>
+      <div className="w-full items-center flex">
+        <button className="btn btn-sm w-full m-auto btn-success" onClick={() => setDataTraffic(trafficData)}>Simpan</button>
       </div>
     </div>
   );

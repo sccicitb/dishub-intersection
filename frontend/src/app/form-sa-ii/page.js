@@ -14,8 +14,12 @@ const FormSAIIPage = () => {
   const [dataChart, setDataChart] = useState([]);
   const [dataTerlindung, setDataTerlindung] = useState([]);
   const [dataTerlawan, setDataTerlawan] = useState([]);
+  const [trafficData, setTrafficData] = useState([]);
   const [headerData, setHeader] = useState({});
-  const [dataEmp, setDataEmp] = useState({});
+  const [dataEmp, setDataEmp] = useState({
+    terlindung: { mp: '', ks: '', sm: '' },
+    terlawan: { mp: '', ks: '', sm: '' }
+  });
   const [selectedId, setSelectedId] = useState(0);
 
   useEffect(() => {
@@ -59,13 +63,14 @@ const FormSAIIPage = () => {
 
     payload = {
       ekuivalensi: { ...dataEmp },
+      ...trafficData
       // fase: { ...faseApil }
     };
 
 
     console.log('Payload gabungan:', payload, headerData);
     console.log('id:', selectedId);
-  }, [dataEmp, headerData, selectedId]);
+  }, [dataEmp, headerData, trafficData, selectedId]);
 
   const submitData = () => {
     console.log(payload);
@@ -129,7 +134,7 @@ const FormSAIIPage = () => {
       <SurveyFormSAHeader setDataHeader={setHeader} setSelectedId={setSelectedId} onResetAll={handleResetAll} />
       <EkuivalensiForm setEMP={setDataEmp} selectedId={selectedId} />
       <Suspense fallback={<div className="my-5 w-full text-center">Loading...</div>}>
-        <TrafficKinerjaTable dataEMP={dataEmp} selectedId={selectedId} />
+        <TrafficKinerjaTable dataEMP={dataEmp} selectedId={selectedId} setDataTraffic={setTrafficData} />
         <SimpangTrafficKinerja />
         <div className="w-full">
           <EkuivalensiChart data={dataTerlindung} />
