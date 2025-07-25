@@ -20,23 +20,45 @@ const EkuivalensiForm = ({ setEMP, selectedId }) => {
     }));
   };
 
-  useEffect(() => setEMP(dataEMP), [])
+  useEffect(() => setEMP(dataEMP), [dataEMP])
 
   useEffect(() => {
     const raw = localStorage.getItem('data');
     if (!raw) return;
-    const parsed = JSON.parse(raw);
-    if (parsed?.data?.sa2[selectedId]) {
-      setDataEMP(parsed?.data?.sa2[selectedId].ekuivalensi)
-    } else {
-      setDataEMP(
-        {
-          terlindung: { mp: '', ks: '', sm: '' },
-          terlawan: { mp: '', ks: '', sm: '' }
+
+    try {
+      const parsed = JSON.parse(raw);
+      const saved = parsed?.data?.sa2?.[selectedId]?.ekuivalensi;
+
+      const defaultEmp = {
+        terlindung: { mp: '', ks: '', sm: '' },
+        terlawan: { mp: '', ks: '', sm: '' }
+      };
+
+      // Pastikan struktur data aman
+      const safeEmp = {
+        terlindung: {
+          mp: saved?.terlindung?.mp ?? '',
+          ks: saved?.terlindung?.ks ?? '',
+          sm: saved?.terlindung?.sm ?? ''
+        },
+        terlawan: {
+          mp: saved?.terlawan?.mp ?? '',
+          ks: saved?.terlawan?.ks ?? '',
+          sm: saved?.terlawan?.sm ?? ''
         }
-      )
+      };
+
+      setDataEMP(safeEmp);
+    } catch (e) {
+      console.error("Gagal parsing ekuivalensi:", e);
+      setDataEMP({
+        terlindung: { mp: '', ks: '', sm: '' },
+        terlawan: { mp: '', ks: '', sm: '' }
+      });
     }
-  }, [selectedId])
+  }, [selectedId]);
+
 
   return (
     <div>
@@ -62,7 +84,7 @@ const EkuivalensiForm = ({ setEMP, selectedId }) => {
                     <InputTable
                       type="text"
                       style="medium"
-                      value={dataEMP.terlindung[tipe]}
+                      value={dataEMP?.terlindung?.[tipe] ?? ''}
                       onChange={handleChange('terlindung', tipe)}
                       width={'ds'}
                     />
@@ -71,11 +93,12 @@ const EkuivalensiForm = ({ setEMP, selectedId }) => {
                     <InputTable
                       type="text"
                       style="medium"
-                      value={dataEMP.terlawan[tipe]}
+                      value={dataEMP?.terlawan?.[tipe] ?? ''}
                       onChange={handleChange('terlawan', tipe)}
                       width={'ds'}
                     />
                   </td>
+
                 </tr>
               ))}
             </tbody>

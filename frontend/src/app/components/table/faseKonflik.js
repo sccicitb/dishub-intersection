@@ -359,7 +359,6 @@ export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
   //   setTableData(loadData.tabel_konflik);
   //   console.log("Loaded dataFase:", loadData.tabel_konflik);
   // }, [selectedId]);
-
   useEffect(() => {
     if (!selectedId || selectedId === 0 || selectedId === '0') {
       setTableData({});
@@ -367,22 +366,9 @@ export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
     }
 
     const existing = JSON.parse(localStorage.getItem('data'));
-
-    // Cek data SA3
+    const sa1 = existing?.data?.sa1?.[selectedId];
     const sa3 = existing?.data?.sa3?.[selectedId];
-
-    if (sa3 && Array.isArray(sa3.tabel_konflik?.dataFase)) {
-      setTableData(sa3.tabel_konflik);
-      return;
-    }
-
-    // Kalau tidak ada
-    const pendekatArr = existing?.data?.sa1?.[selectedId]?.pendekat;
-
-    if (!Array.isArray(pendekatArr)) {
-      console.warn("Pendekat SA1 tidak valid.");
-      return;
-    }
+    const faseData = sa1?.fase?.data || {};
 
     const pendekatMap = {
       u: "U",
@@ -391,47 +377,75 @@ export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
       b: "B",
     };
 
-    // Generate default struktur dataFase dari pendekat yang ada
-    const dataFaseBaru = pendekatArr.map((item, index) => {
-      const kode = pendekatMap[item.kodePendekat?.toLowerCase()];
-      if (!kode) return null;
+    const defaultJarak = () => ({
+      pendekat: { u: 0, s: 0, t: 0, b: 0 },
+      kecepatan: { vkbr: 0, vkdt: 0, vpk: 0 },
+      waktuTempuh: 0,
+      wms: 0,
+      wmsDisesuaikan: 0,
+      wk: 0,
+      wah: 0
+    });
 
-      return {
-        fase: index + 1,
-        kode,
-        whh: 0,
-        jarak: {
-          lintasanBerangkat: defaultJarak(),
-          panjangBerangkat: defaultJarak(),
-          lintasanDatang: defaultJarak(),
-          lintasanPejalan: defaultJarak(),
+    // Ambil data awal dari sa3 jika ada
+    const baseTableData = sa3?.tabel_konflik || { whh: 0, dataFase: [] };
+
+    // Buat Set semua fase yang AKTIF di sa1
+    const validFaseKeys = new Set();
+
+    Object.entries(faseData).forEach(([key, detail]) => {
+      const kode = pendekatMap[key.toLowerCase()?.charAt(0)] || '-';
+      const fasePendekat = detail?.fase || {};
+
+      Object.entries(fasePendekat).forEach(([faseKey, aktif]) => {
+        if (aktif) {
+          const faseNum = parseInt(faseKey.replace('fase_', ''));
+          const identifier = `fase_${faseNum}_${kode}`;
+          validFaseKeys.add(identifier);
         }
-      };
-    }).filter(Boolean);
+      });
+    });
 
-    // Set ke state
-    const generated = {
-      whh: 0,
-      dataFase: dataFaseBaru
-    };
+    // Filter dataFase lama dari sa3 — hanya simpan yang masih valid
+    const filteredExistingDataFase = (baseTableData.dataFase || []).filter(item => {
+      const identifier = `fase_${item.fase}_${item.kode}`;
+      return validFaseKeys.has(identifier);
+    });
 
-    setTableData(generated);
+    // Buat tambahanDataFase dari fase aktif di sa1 yang belum ada di sa3
+    const existingKeys = new Set(
+      filteredExistingDataFase.map(item => `fase_${item.fase}_${item.kode}`)
+    );
 
+    const tambahanDataFase = [];
+
+    validFaseKeys.forEach(identifier => {
+      if (!existingKeys.has(identifier)) {
+        const [_, faseNum, kode] = identifier.split('_');
+        tambahanDataFase.push({
+          fase: parseInt(faseNum),
+          kode,
+          whh: 0,
+          jarak: {
+            lintasanBerangkat: defaultJarak(),
+            panjangBerangkat: defaultJarak(),
+            lintasanDatang: defaultJarak(),
+            lintasanPejalan: defaultJarak(),
+          }
+        });
+      }
+    });
+
+    // Gabungkan dan urutkan berdasarkan fase
+    const combinedDataFase = [...filteredExistingDataFase, ...tambahanDataFase]
+      .sort((a, b) => a.fase - b.fase);
+
+    // Set ke tableData
+    setTableData({
+      ...baseTableData,
+      dataFase: combinedDataFase
+    });
   }, [selectedId]);
-
-  const defaultJarak = () => ({
-    pendekat: {
-      u: 0, s: 0, t: 0, b: 0
-    },
-    kecepatan: {
-      vkbr: 0, vkdt: 0, vpk: 0
-    },
-    waktuTempuh: 0,
-    wms: 0,
-    wmsDisesuaikan: 0,
-    wk: 0,
-    wah: 0
-  });
 
 
   useEffect(() => {
