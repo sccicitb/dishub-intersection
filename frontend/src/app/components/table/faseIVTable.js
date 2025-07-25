@@ -217,20 +217,6 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
     recalculateTableData(updatedTabel, tableData.foot);
   };
 
-
-
-  const getPendekatFromLocalStorage = (id) => {
-    const raw = localStorage.getItem('data');
-    if (!raw) return [];
-    try {
-      const parsed = JSON.parse(raw);
-      return parsed?.data?.sa1[id] || [];
-    } catch (e) {
-      console.error('Gagal parse data:', e);
-      return [];
-    }
-  };
-
   const getArahBerlawanan = (kode) => {
     const mapping = {
       U: 'S',
@@ -255,229 +241,352 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
     return totalPerArah;
   };
 
-  useEffect(() => {
-    if (!selectedId || selectedId === 0 || selectedId === '0') {
-      setTableData([]);
+ // ===== UTILITY FUNCTIONS =====
+
+// Function untuk mengambil dan memvalidasi data dari localStorage
+const getStoredData = (selectedId) => {
+  if (!selectedId || selectedId === 0 || selectedId === '0') {
+    return { isValid: false, error: 'ID tidak valid' };
+  }
+
+  const raw = localStorage.getItem('data');
+  if (!raw) {
+    return { isValid: false, error: 'Data tidak ditemukan di localStorage' };
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return { isValid: true, data: parsed };
+  } catch (e) {
+    return { isValid: false, error: 'Gagal parse data', details: e };
+  }
+};
+
+// Function untuk mengambil data SA1 (pendekat dan fase)
+const getSA1Data = (data, selectedId) => {
+  const sa1 = data?.data?.sa1?.[selectedId];
+  
+  if (!sa1) {
+    return { 
+      isValid: false, 
+      error: "Data Form SA 1 tidak ditemukan!" 
+    };
+  }
+
+  return {
+    isValid: true,
+    pendekats: sa1.pendekat || [],
+    faseData: sa1.fase?.data || {}
+  };
+};
+
+// Function untuk mengambil data SA2 (survey data)
+const getSA2Data = (data, selectedId) => {
+  const sa2 = data?.data?.sa2?.[selectedId];
+  
+  if (!sa2) {
+    return { 
+      isValid: false, 
+      error: "Data Form SA 2 tidak ditemukan!" 
+    };
+  }
+
+  return {
+    isValid: true,
+    surveyData: sa2.surveyData || []
+  };
+};
+
+// Function untuk mengambil data SA3 (konflik data)
+const getSA3Data = (data, selectedId) => {
+  const sa3 = data?.data?.sa3?.[selectedId];
+  
+  if (!sa3) {
+    return { 
+      isValid: false, 
+      error: "Data Form SA 3 tidak ditemukan!" 
+    };
+  }
+
+  return {
+    isValid: true,
+    tabelKonflik: sa3.tabel_konflik || {}
+  };
+};
+
+// Function untuk mengambil data SA4 (faktor penyesuaian)
+const getSA4Data = (data, selectedId) => {
+  const sa4 = data?.data?.sa4?.[selectedId];
+  
+  return {
+    isValid: true, // SA4 bersifat opsional
+    tableData: sa4?.SAIV?.tabel || []
+  };
+};
+
+// ===== DATA PROCESSING FUNCTIONS =====
+
+// Function untuk mendapatkan faktor penyesuaian
+const getFaktorPenyesuaian = (sa4TableData, kodePendekat, hijauFase) => {
+  const defaultFaktor = {
+    fhs: 1.0,
+    fux: 1.0,
+    fg: 1.0,
+    fp: 1.0,
+    fbki: 1.0,
+    fbka: 1.0
+  };
+
+  const existingRow = sa4TableData.find((row) =>
+    row.kodePendekat?.toUpperCase() === kodePendekat.toUpperCase() &&
+    row.hijauFase === hijauFase
+  );
+
+  if (existingRow?.faktorPenyesuaian) {
+    const faktor = {
+      fhs: existingRow.faktorPenyesuaian.fhs ?? 1.0,
+      fux: existingRow.faktorPenyesuaian.fux ?? 1.0,
+      fg: existingRow.faktorPenyesuaian.fg ?? 1.0,
+      fp: existingRow.faktorPenyesuaian.fp ?? 1.0,
+      fbki: existingRow.faktorPenyesuaian.fbki ?? 1.0,
+      fbka: existingRow.faktorPenyesuaian.fbka ?? 1.0
+    };
+    
+    console.log(`Found faktorPenyesuaian for ${kodePendekat} fase ${hijauFase}:`, faktor);
+    return faktor;
+  }
+
+  console.log(`No faktorPenyesuaian found for ${kodePendekat} fase ${hijauFase}, using default values`);
+  return defaultFaktor;
+};
+
+// Function untuk memproses data survey
+const processSurveyData = (surveyData, kode, arahBerlawananKode) => {
+  const surveyForDirection = Array.isArray(surveyData)
+    ? surveyData.find((item) => item.direction?.toUpperCase() === kode)
+    : null;
+
+  const surveyBerlawanan = Array.isArray(surveyData)
+    ? surveyData.find((item) => item.direction?.toUpperCase() === arahBerlawananKode)
+    : null;
+
+  const rasio = { rbkijt: '', rbki: '', rbka: '' };
+  const arus = { dariArahDitinjau: '', dariArahBerlawanan: '' };
+  let arusLaluLintas = 0;
+
+  // Proses survey untuk arah yang ditinjau
+  if (surveyForDirection?.rows?.length) {
+    surveyForDirection.rows.forEach((row) => {
+      const type = row?.type?.toLowerCase() || '';
+      const val = row?.ktb?.rasio ?? '';
+      const vals = row?.total?.terlawan ?? '';
+
+      if (type.includes('lurus')) rasio.rbkijt = val;
+      if (type.includes('bki / bkijt')) rasio.rbki = val;
+      if (type.includes('bka')) {
+        rasio.rbka = val;
+        arus.dariArahDitinjau = vals;
+      }
+      arusLaluLintas = row?.total?.terlindung || '';
+    });
+  }
+
+  // Proses survey untuk arah berlawanan
+  if (surveyBerlawanan?.rows?.length) {
+    surveyBerlawanan.rows.forEach((row) => {
+      const type = row?.type?.toLowerCase() || '';
+      const val = row?.total?.terlawan ?? '';
+
+      if (type.includes('bka')) {
+        arus.dariArahBerlawanan = val;
+      }
+    });
+  }
+
+  return { rasio, arus, arusLaluLintas };
+};
+
+// Function untuk mendapatkan fase aktif
+const getFaseAktif = (faseData, kode) => {
+  const arahKey = Object.keys(faseData).find((key) =>
+    key.toLowerCase().startsWith(kode.toLowerCase())
+  );
+
+  const fasePendekat = faseData[arahKey]?.fase || {};
+  return Object.entries(fasePendekat)
+    .filter(([_, isTrue]) => isTrue)
+    .map(([faseKey]) => parseInt(faseKey.replace('fase_', '')));
+};
+
+// Function untuk membuat row data tabel
+const createTableRow = (pendekat, fase, surveyResult, sa4TableData) => {
+  const kode = pendekat.kodePendekat?.toUpperCase();
+  const lebar = parseFloat(pendekat.lebarPendekat.awalLajur || 0);
+  const arusJenuhDasar = lebar * 600;
+
+  const faktorPenyesuaian = getFaktorPenyesuaian(sa4TableData, kode, fase);
+  
+  const totalFaktor = Object.values(faktorPenyesuaian).reduce(
+    (acc, val) => acc * (parseFloat(val) || 1),
+    1
+  );
+
+  const arusJenuh = arusJenuhDasar * totalFaktor;
+
+  return {
+    kodePendekat: kode,
+    hijauFase: fase,
+    tipependekat: 'P',
+    rasioKendaraanBelok: surveyResult.rasio,
+    arusBelokKanan: surveyResult.arus,
+    lebarEfektif: lebar,
+    arusJenuhDasar,
+    faktorPenyesuaian,
+    arusJenuhYangDisesuaikan: { j: Math.round(arusJenuh) },
+    arusLaluLintas: surveyResult.arusLaluLintas,
+    rasioArus: arusJenuh > 0 ? surveyResult.arusLaluLintas / arusJenuh : 0,
+    rasioFase: 0,
+    waktuHijauPerFase: 0,
+    kapasitas: 0,
+    derajatKejenuhan: 0
+  };
+};
+
+// Function untuk menghitung rasio fase dan nilai lainnya
+const calculateTableWithRasioFase = (newTable, totalRasio, tabelKonflik) => {
+  const uniqueKodePendekat = [...new Set(newTable.map((row) => row.kodePendekat))];
+  const rasTotal = uniqueKodePendekat.reduce((acc, kode) => {
+    const val = totalRasio[kode] || 0;
+    return acc + val;
+  }, 0);
+
+  const whh = tabelKonflik?.whh || 0;
+  const S = 100;
+  const ras = Number(rasTotal.toFixed(3));
+
+  const tableWithRasioFase = newTable.map((row) => {
+    const key = row.kodePendekat;
+    const total = totalRasio[key] || 0;
+    const arusJenuh = row.arusJenuhYangDisesuaikan?.j || 0;
+    const arusLaluLintas = row.arusLaluLintas || 0;
+    const rasioFase = ras > 0 ? Number((total / ras).toFixed(3)) : 0;
+    const hijauFase = ((S - whh) * rasioFase).toFixed(0);
+    const kapasitas = (arusJenuh * hijauFase) / S;
+    const derajatKejenuhan = kapasitas > 0 ? (arusLaluLintas / kapasitas).toFixed(3) : 0;
+    
+    return {
+      ...row,
+      rasioFase,
+      kapasitas,
+      waktuHijauPerFase: hijauFase,
+      derajatKejenuhan
+    };
+  });
+
+  const sbp = (((1.5 * whh) + 5) / (1 - ras)).toFixed(2);
+
+  return {
+    tableWithRasioFase,
+    footerData: { ras, whh, S, sbp }
+  };
+};
+
+// ===== MAIN USEEFFECT =====
+
+useEffect(() => {
+  // 1. Ambil dan validasi data dari localStorage
+  const storedResult = getStoredData(selectedId);
+  if (!storedResult.isValid) {
+    setTableData([]);
+    if (storedResult.error !== 'ID tidak valid') {
+      console.error(storedResult.error, storedResult.details);
+    }
+    return;
+  }
+
+  try {
+    // 2. Ambil data dari masing-masing SA
+    const sa1Result = getSA1Data(storedResult.data, selectedId);
+    const sa2Result = getSA2Data(storedResult.data, selectedId);
+    const sa3Result = getSA3Data(storedResult.data, selectedId);
+    const sa4Result = getSA4Data(storedResult.data, selectedId);
+
+    // 3. Validasi data wajib (SA1, SA2, SA3)
+    if (!sa1Result.isValid) {
+      setTableData({});
+      toast.error(sa1Result.error, { position: 'top-right' });
       return;
     }
 
-    const raw = localStorage.getItem('data');
-    if (!raw) return;
-
-    try {
-      const parsed = JSON.parse(raw);
-      const sa1 = parsed?.data?.sa1?.[selectedId];
-      const sa2 = parsed?.data?.sa2?.[selectedId];
-      const sa3 = parsed?.data?.sa3?.[selectedId];
-      const sa4 = parsed?.data?.sa4?.[selectedId];
-
-      if (!sa1) {
-        setTableData({})
-        toast.error("Data Form SA 1 tidak ditemukan!", { position: 'top-right' });
-        return;
-      }
-
-      if (!sa2) {
-        toast.error("Data Form SA 2 tidak ditemukan!", { position: 'top-right' });
-        setTableData({})
-        return;
-      }
-
-      if (!sa3) {
-        setTableData({})
-        toast.error("Data Form SA 3 tidak ditemukan!", { position: 'top-right' });
-        return;
-      }
-
-      const pendekats = sa1.pendekat || [];
-      const faseData = sa1.fase?.data || {};
-      const surveyData = sa2.surveyData || [];
-      const formsa3 = sa3.tabel_konflik || {};
-
-      // Ambil data tabel dari SA4 jika ada
-      const sa4TableData = sa4?.SAIV?.tabel || [];
-      console.log('SA4 table data:', sa4TableData);
-
-      const newTable = [];
-      pendekats.forEach((pendekat) => {
-        const kode = pendekat.kodePendekat?.toUpperCase();
-        const arahBerlawananKode = getArahBerlawanan(kode);
-        const arahKey = Object.keys(faseData).find((key) =>
-          key.toLowerCase().startsWith(kode.toLowerCase())
-        );
-
-        const fasePendekat = faseData[arahKey]?.fase || {};
-        const faseAktif = Object.entries(fasePendekat)
-          .filter(([_, isTrue]) => isTrue)
-          .map(([faseKey]) => parseInt(faseKey.replace('fase_', '')));
-
-        // Data survey pendekat saat ini
-        const surveyForDirection = Array.isArray(surveyData)
-          ? surveyData.find((item) => item.direction?.toUpperCase() === kode)
-          : null;
-
-        // Data survey dari arah berlawanan
-        const surveyBerlawanan = Array.isArray(surveyData)
-          ? surveyData.find((item) => item.direction?.toUpperCase() === arahBerlawananKode)
-          : null;
-
-        const rasio = {
-          rbkijt: '',
-          rbki: '',
-          rbka: ''
-        };
-
-        let arusLaluLintas = 0
-
-        const arus = {
-          dariArahDitinjau: '',
-          dariArahBerlawanan: ''
-        };
-
-        if (surveyForDirection?.rows?.length) {
-          surveyForDirection.rows.forEach((row) => {
-            const type = row?.type?.toLowerCase() || '';
-            const val = row?.ktb?.rasio ?? '';
-            const vals = row?.total?.terlawan ?? '';
-
-            if (type.includes('lurus')) rasio.rbkijt = val;
-            if (type.includes('bki / bkijt')) rasio.rbki = val;
-            if (type.includes('bka')) {
-              rasio.rbka = val;
-              arus.dariArahDitinjau = vals;
-            }
-            arusLaluLintas = row?.total?.terlindung || ''
-          });
-        }
-
-        if (surveyBerlawanan?.rows?.length) {
-          surveyBerlawanan.rows.forEach((row) => {
-            const type = row?.type?.toLowerCase() || '';
-            const val = row?.total?.terlawan ?? '';
-
-            if (type.includes('bka')) {
-              arus.dariArahBerlawanan = val;
-            }
-          });
-        }
-
-        faseAktif.forEach((fase) => {
-          const lebar = parseFloat(pendekat.lebarPendekat.awalLajur || 0);
-          const arusJenuhDasar = lebar * 600;
-
-          // Set nilai default faktorPenyesuaian
-          let faktorPenyesuaian = {
-            fhs: 1.0,
-            fux: 1.0,
-            fg: 1.0,
-            fp: 1.0,
-            fbki: 1.0,
-            fbka: 1.0
-          };
-
-          // Cari data faktorPenyesuaian dari SA4 berdasarkan kodePendekat dan hijauFase
-          const existingRow = sa4TableData.find((row) =>
-            row.kodePendekat?.toUpperCase() === kode &&
-            row.hijauFase === fase
-          );
-
-          if (existingRow?.faktorPenyesuaian) {
-            // Override dengan data dari SA4 jika ada
-            faktorPenyesuaian = {
-              fhs: existingRow.faktorPenyesuaian.fhs ?? 1.0,
-              fux: existingRow.faktorPenyesuaian.fux ?? 1.0,
-              fg: existingRow.faktorPenyesuaian.fg ?? 1.0,
-              fp: existingRow.faktorPenyesuaian.fp ?? 1.0,
-              fbki: existingRow.faktorPenyesuaian.fbki ?? 1.0,
-              fbka: existingRow.faktorPenyesuaian.fbka ?? 1.0
-            };
-            console.log(`Found faktorPenyesuaian for ${kode} fase ${fase}:`, faktorPenyesuaian);
-          } else {
-            console.log(`No faktorPenyesuaian found for ${kode} fase ${fase}, using default values`);
-          }
-
-          const totalFaktor = Object.values(faktorPenyesuaian).reduce(
-            (acc, val) => acc * (parseFloat(val) || 1),
-            1
-          );
-
-          const arusJenuh = arusJenuhDasar * totalFaktor;
-
-          newTable.push({
-            kodePendekat: kode,
-            hijauFase: fase,
-            tipependekat: 'P',
-            rasioKendaraanBelok: rasio,
-            arusBelokKanan: arus,
-            lebarEfektif: lebar,
-            arusJenuhDasar,
-            faktorPenyesuaian,
-            arusJenuhYangDisesuaikan: { j: Math.round(arusJenuh) },
-            arusLaluLintas,
-            rasioArus: arusJenuh > 0 ? arusLaluLintas / arusJenuh : 0,
-            rasioFase: 0,
-            waktuHijauPerFase: 0,
-            kapasitas: 0,
-            derajatKejenuhan: 0
-          });
-        });
-      });
-
-      console.log('Direction yang tersedia:', surveyData.map(d => d.direction));
-      console.log('new data', newTable);
-
-      const totalRasio = hitungTotalRasioArusPerPendekat(newTable);
-
-      // 1. Hitung total ras berdasarkan kode pendekat unik
-      const uniqueKodePendekat = [...new Set(newTable.map((row) => row.kodePendekat))];
-      console.log(uniqueKodePendekat, totalRasio);
-      const rasTotal = uniqueKodePendekat.reduce((acc, kode) => {
-        const val = totalRasio[kode] || 0;
-        return acc + val;
-      }, 0);
-
-      // 2. Baru hitung tableWithRasioFase berdasarkan rasTotal yang sudah dihitung
-      const whh = formsa3?.whh || 0;
-      const S = 100;
-      const ras = Number(rasTotal.toFixed(3));
-
-      const tableWithRasioFase = newTable.map((row) => {
-        const key = row.kodePendekat;
-        const total = totalRasio[key] || 0;
-        const arusJenuh = row.arusJenuhYangDisesuaikan?.j || 0;
-        const arusLaluLintas = row.arusLaluLintas || 0;
-        const rasioFase = ras > 0 ? Number((total / ras).toFixed(3)) : 0;
-        const hijauFase = ((S - whh) * rasioFase).toFixed(0);
-        const kapasitas = (arusJenuh * hijauFase) / S;
-        const derajatKejenuhan = kapasitas > 0 ? (arusLaluLintas / kapasitas).toFixed(3) : 0;
-        return {
-          ...row,
-          rasioFase,
-          kapasitas,
-          waktuHijauPerFase: hijauFase,
-          derajatKejenuhan
-        };
-      });
-
-      const sbp = (((1.5 * whh) + 5) / (1 - ras)).toFixed(2);
-
-      // 3. Update tableData sekaligus
-      setTableData((prev) => ({
-        ...prev,
-        tabel: tableWithRasioFase,
-        foot: {
-          ...prev.foot,
-          ras,
-          whh,
-          S,
-          sbp
-        }
-      }));
-
-    } catch (e) {
-      console.error('Gagal parse data:', e);
+    if (!sa2Result.isValid) {
+      setTableData({});
+      toast.error(sa2Result.error, { position: 'top-right' });
+      return;
     }
-  }, [selectedId]);
+
+    if (!sa3Result.isValid) {
+      setTableData({});
+      toast.error(sa3Result.error, { position: 'top-right' });
+      return;
+    }
+
+    console.log('SA4 table data:', sa4Result.tableData);
+
+    // 4. Proses data untuk membuat tabel
+    const newTable = [];
+    
+    sa1Result.pendekats.forEach((pendekat) => {
+      const kode = pendekat.kodePendekat?.toUpperCase();
+      const arahBerlawananKode = getArahBerlawanan(kode);
+      
+      // Dapatkan fase aktif untuk pendekat ini
+      const faseAktif = getFaseAktif(sa1Result.faseData, kode);
+      
+      // Proses data survey
+      const surveyResult = processSurveyData(
+        sa2Result.surveyData, 
+        kode, 
+        arahBerlawananKode
+      );
+
+      // Buat row untuk setiap fase aktif
+      faseAktif.forEach((fase) => {
+        const tableRow = createTableRow(
+          pendekat, 
+          fase, 
+          surveyResult, 
+          sa4Result.tableData
+        );
+        newTable.push(tableRow);
+      });
+    });
+
+    console.log('Direction yang tersedia:', sa2Result.surveyData.map(d => d.direction));
+    console.log('new data', newTable);
+
+    // 5. Hitung total rasio dan nilai akhir
+    const totalRasio = hitungTotalRasioArusPerPendekat(newTable);
+    const finalResult = calculateTableWithRasioFase(
+      newTable, 
+      totalRasio, 
+      sa3Result.tabelKonflik
+    );
+
+    // 6. Update state
+    setTableData((prev) => ({
+      ...prev,
+      tabel: finalResult.tableWithRasioFase,
+      foot: {
+        ...prev.foot,
+        ...finalResult.footerData
+      }
+    }));
+
+  } catch (e) {
+    console.error('Gagal memproses data:', e);
+    toast.error('Terjadi kesalahan saat memproses data', { position: 'top-right' });
+  }
+}, [selectedId]);
 
   const setToLocal = () => {
     setFormTableIV(tableData)
