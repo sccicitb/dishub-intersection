@@ -26,7 +26,7 @@ export default function CCTVStream ({ data, title, customLarge, large = false, o
 
   useEffect(() => {
     if (data?.message?.detections?.length > 0) {
-      console.log(data);
+      // console.log(data);
       // const filtered = data.filter(item => item.detections?.length > 0);
       // console.log('Data with detections:', filtered);
     }

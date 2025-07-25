@@ -5,8 +5,11 @@ import { GoPlus } from "react-icons/go";
 import { FaMinus } from "react-icons/fa6";
 import { Description } from '../ui/description';
 import { IoReloadOutline } from "react-icons/io5";
+import { useAuth } from '@/app/context/authContext';
 
 const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
+  const { pathname } = useAuth()
+  const [statusForm, setStatusForm] = useState(false);
   const [formData, setFormData] = useState({
     id: 0,
     tanggal: '',
@@ -18,6 +21,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
     perihal: '',
     periode: ''
   });
+  const [resetAll, setReset] = useState(false)
   const [optionSelect, setOptionSelect] = useState(0);
   const [dataLocalHead, setDataLocalHead] = useState([])
   const [statusHeader, setStatusHeader] = useState(false)
@@ -120,6 +124,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
   }
 
   const handleSelect = (e) => {
+    setReset(false)
     const selectedId = e.target.value;
     setOptionSelect(selectedId);
 
@@ -143,6 +148,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
 
   const handleReset = () => {
     onResetAll();
+    setReset(true)
     setFormData({
       id: 0,
       tanggal: '',
@@ -156,6 +162,14 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
     });
   }
 
+  useEffect(() => {
+    console.log(pathname)
+    if (pathname !== '/form-sa-i') {
+      setStatusForm(true)
+    } else {
+      setStatusForm(false)
+    }
+  }, [pathname])
   const renderArrayInput = (field, label, placeholder) => (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
@@ -165,6 +179,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
         <div key={index} className="flex items-center space-x-2">
           <input
             type="text"
+            readOnly={statusForm}
             value={value}
             onChange={(e) => handleArrayInputChange(field, index, e.target.value)}
             placeholder={`${placeholder} ${index + 1}`}
@@ -175,6 +190,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
             onClick={() => addRow(field)}
             className="btn btn-sm bg-blue-500/90 text-white rounded-md hover:bg-blue-500 transition-colors"
             title="Tambah baris"
+            disabled={statusForm}
           >
             <GoPlus size={16} />
           </button>
@@ -184,6 +200,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
               onClick={() => removeRow(field, index)}
               className="btn btn-sm bg-red-500/90 text-white rounded-md hover:bg-red-500 transition-colors"
               title="Hapus baris"
+              disabled={statusForm}
             >
               <FaMinus size={16} />
             </button>
@@ -209,14 +226,15 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
                 value={optionSelect}
                 onChange={handleSelect}
               >
-                <option value={0}>Pilih Data Header</option>
+                <option value={0} disabled={!resetAll && (optionSelect !== 0 || optionSelect !== '')}>Pilih Data Header</option>
                 {dataLocalHead.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.perihal} - {item.lokasi}
                   </option>
                 ))}
               </select>
-              <button className='btn btn-sm bg-transparent hover:drop-shadow-2xl hover:bg-transparent border-none ring-0' onClick={() => refreshData()}>
+              <button className='btn btn-sm bg-transparent hover:drop-shadow-2xl hover:bg-transparent border-none ring-0' onClick={() => refreshData()}
+              >
                 <IoReloadOutline className='text-xl text-success' />
               </button>
             </div>
@@ -224,7 +242,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
         </div>
       </Description >
       <div className='bg-base-200 p-5 rounded-md border border-base-300 grid grid-cols-1 lg:grid-cols-2 lg:space-x-10 w-full space-y-10'>
-        <div className="space-y-6 grid grid-cols-3 gap-2">
+        <div className="space-y-6 grid grid-cols-2 gap-2">
           {/* Tanggal */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -232,6 +250,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
             </label>
             <input
               type="date"
+              readOnly={statusForm}
               value={formData.tanggal}
               onChange={(e) => handleInputChange('tanggal', e.target.value)}
               className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
@@ -246,6 +265,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
               Perihal
             </label>
             <textarea
+              readOnly={statusForm}
               value={formData.perihal}
               onChange={(e) => handleInputChange('perihal', e.target.value)}
               rows={3}
@@ -260,6 +280,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
             </label>
             <input
               type="text"
+              readOnly={statusForm}
               value={formData.periode}
               onChange={(e) => handleInputChange('periode', e.target.value)}
               className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -273,6 +294,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
             </label>
             <input
               type="text"
+              readOnly={statusForm}
               value={formData.kabupatenKota}
               onChange={(e) => handleInputChange('kabupatenKota', e.target.value)}
               placeholder="Contoh: Sleman"
@@ -288,6 +310,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
             </label>
             <input
               type="text"
+              readOnly={statusForm}
               value={formData.lokasi}
               onChange={(e) => handleInputChange('lokasi', e.target.value)}
               placeholder="Contoh: Simpang Condongcatur"
@@ -309,6 +332,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
             </label>
             <input
               type="text"
+              readOnly={statusForm}
               value={formData.ukuranKota}
               onChange={(e) => handleInputChange('ukuranKota', e.target.value)}
               placeholder="Contoh: 8,3 juta jiwa"
@@ -361,6 +385,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
           type="button"
           onClick={handleSubmit}
           className="w-full btn-sm btn btn-success"
+          disabled={statusForm}
         >
           <span>Simpan</span>
         </button>

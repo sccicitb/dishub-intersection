@@ -1,41 +1,387 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DataSample from "@/data/DataFaseIVAnalisa.json"
 import SketsaFaseIV from '@/app/components/sketsa/sketsaFaseIV'
+import { ToastContainer, toast } from 'react-toastify';
 
-export default function TrafficPhaseTable () {
-  const [tableData, setTableData] = useState(DataSample.tableData);
+
+export default function TrafficPhaseTable ({ selectedId }) {
+  const [tableData, setTableData] = useState(
+    [
+      {
+        kodePendekat: "U",
+        tipePendekat: "P",
+        arah: "Terlindung",
+        pemisahanLurusRka: "",
+        arahDetail: {
+          bka: false,
+          bki: false,
+          bkijt: false,
+          lurus: false,
+        },
+        phases: {
+          f1: {
+            mf: 0,
+            whi: 0,
+            wAll: { wk: 0, wms: 0 }
+          },
+          f2: {
+            mf: 0,
+            whi: 0,
+            wAll: { wk: 0, wms: 0 }
+          },
+          f3: {
+            mf: 0,
+            whi: 0,
+            wAll: { wk: 0, wms: 0 }
+          },
+          f4: {
+            mf: 0,
+            whi: 0,
+            wAll: { wk: 0, wms: 0 }
+          }
+        },
+        whh: 0,
+        s: 0
+      },
+      {
+        kodePendekat: "S",
+        tipePendekat: "P",
+        arah: "Terlindung",
+        pemisahanLurusRka: "",
+        arahDetail: {
+          bka: false,
+          bki: false,
+          bkijt: false,
+          lurus: false,
+        },
+        phases: {
+          f1: {
+            mf: 0,
+            whi: 0,
+            wAll: { wk: 0, wms: 0 }
+          },
+          f2: {
+            mf: 0,
+            whi: 0,
+            wAll: { wk: 0, wms: 0 }
+          },
+          f3: {
+            mf: 0,
+            whi: 0,
+            wAll: { wk: 0, wms: 0 }
+          },
+          f4: {
+            mf: 0,
+            whi: 0,
+            wAll: { wk: 0, wms: 0 }
+          }
+        },
+        whh: 0,
+        s: 0
+      }
+    ]);
+
+
+  useEffect(() => {
+    if (!selectedId || selectedId === 0 || selectedId === '0') {
+      setTableData([]);
+      return;
+    }
+
+    const raw = localStorage.getItem('data');
+    if (!raw) return;
+
+    try {
+      const parsed = JSON.parse(raw);
+      const sa1 = parsed?.data?.sa1?.[selectedId];
+      const sa2 = parsed?.data?.sa2?.[selectedId];
+      const sa3 = parsed?.data?.sa3?.[selectedId];
+      const sa4 = parsed?.data?.sa4?.[selectedId];
+      const data_fase = sa3?.tabel_konflik?.dataFase
+      const saiv = sa4?.SAIV
+      if (!sa4) {
+        toast.error("Data SA 4 tidak ditemukan!", { position: 'top-right' });
+      }
+
+      if (!sa1 || !sa2 || !sa3) {
+        toast.error("Data SA 1 s/d SA 3 tidak lengkap!", { position: 'top-right' });
+        setTableData([]);
+        return;
+      }
+
+      const arahMap = {
+        utara: "U",
+        selatan: "S",
+        timur: "T",
+        barat: "B"
+      };
+
+      console.log(sa4)
+      // const newTableData = Object.entries(sa1.fase.data).map(([arah, detail]) => {
+      //   console.log(arah, detail)
+      //   const kodePendekat = arahMap[arah] || arah?.charAt(0)?.toUpperCase() || '-';
+      //   const tipePendekatRaw = detail?.tipe_pendekat || {};
+      //   const arahRaw = detail?.arah || {};
+      //   const faseRaw = detail?.fase || {};
+
+      //   // Tentukan arah
+      //   const arahLabel = (() => {
+      //     const terlawan = arahRaw?.terlawan;
+      //     const terlindung = arahRaw?.terlindung;
+      //     if (terlawan && terlindung) return "Terlindung/Terlawan";
+      //     if (terlawan) return "Terlawan";
+      //     if (terlindung) return "Terlindung";
+      //     return "-";
+      //   })();
+
+      //   // Tentukan tipe pendekat
+      //   const tipePendekatLabel = (() => {
+      //     const p = tipePendekatRaw?.terlindung;
+      //     const o = tipePendekatRaw?.terlawan;
+      //     if (p && o) return "P/O";
+      //     if (p) return "P";
+      //     if (o) return "O";
+      //     return "-";
+      //   })();
+
+      //   // Tentukan fase aktif
+      //   const phases = {
+      //     f1: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
+      //     f2: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
+      //     f3: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
+      //     f4: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } }
+      //   };
+
+      //   // Loop setiap fase dan hitung mf sebagai jumlah whi + wk + wms
+      //   const faseAktifSebelumnya = {
+      //     f1: {},
+      //     f2: {},
+      //     f3: {},
+      //     f4: {}
+      //   };
+
+      //   ['1', '2', '3', '4'].forEach(fKey => {
+      //     const faseData = data_fase?.find(
+      //       item => item.kode === kodePendekat && item.fase === parseInt(fKey)
+      //     );
+
+      //     const wk = Number(faseData?.wk || 0);
+      //     const wms = Number(faseData?.wms || 0);
+
+      //     const saivData = saiv?.tabel?.find(
+      //       item => item.kodePendekat === kodePendekat && item.hijauFase === parseInt(fKey)
+      //     );
+
+      //     const whi = saivData?.waktuHijauPerFase ? Number(saivData.waktuHijauPerFase) : 0;
+      //     console.log(whi)
+      //     const wkFinal = saivData ? 3 : wk;
+      //     const mf = whi + wkFinal + wms;
+
+      //     phases[`f${fKey}`] = {
+      //       mf,
+      //       whi,
+      //       wAll: { wk: wkFinal, wms }
+      //     };
+
+      //     if (mf > 0) {
+      //       faseAktifSebelumnya[`f${fKey}`][kodePendekat] = true;
+      //     }
+      //   });
+
+
+
+      //   return {
+      //     kodePendekat,
+      //     tipePendekat: tipePendekatLabel,
+      //     arah: arahLabel,
+      //     arahDetail: {
+      //       bka: detail?.arah?.bka || false,
+      //       bki: detail?.arah?.bki || false,
+      //       bkijt: detail?.arah?.bkijt || false,
+      //       lurus: detail?.arah?.lurus || false
+      //     },
+      //     pemisahanLurusRka: detail?.pemisahan_lurus_bka ?? "",
+      //     phases,
+      //     whi: 0,
+      //     s: 0
+      //   };
+
+      // });
+
+      // Kumpulkan data dari semua arah untuk semua fase terlebih dahulu
+      const allArahData = {};
+
+      // Loop semua arah untuk mengumpulkan data
+      Object.entries(sa1.fase.data).forEach(([arahKey, detail]) => {
+        const arahKode = arahMap[arahKey] || arahKey?.charAt(0)?.toUpperCase() || '-';
+        allArahData[arahKode] = [];
+
+        ['1', '2', '3', '4'].forEach(fKey => {
+          const faseData = data_fase?.find(
+            item => item.kode === arahKode && item.fase === parseInt(fKey)
+          );
+
+          const wk = Number(faseData?.wk || 0);
+          const wms = Number(faseData?.wmsDisesuaikan || 0);
+
+          const saivData = saiv?.tabel?.find(
+            item => item.kodePendekat === arahKode && item.hijauFase === parseInt(fKey)
+          );
+
+          const whi = saivData?.waktuHijauPerFase ? Number(saivData.waktuHijauPerFase) : 0;
+          const wkFinal = saivData ? 3 : wk;
+
+          allArahData[arahKode].push({
+            fase: fKey,
+            whi,
+            wk: wkFinal,
+            wms,
+            total: whi + wkFinal + wms
+          });
+        });
+      });
+
+      // Hitung akumulasi global untuk setiap fase (dari SEMUA arah)
+      const globalAccumulation = [0, 0, 0, 0]; // untuk fase 1, 2, 3, 4
+
+      for (let faseIndex = 1; faseIndex < 4; faseIndex++) { // fase 2, 3, 4
+        let totalForThisFase = 0;
+
+        // Akumulasi dari semua fase sebelumnya
+        for (let prevFaseIndex = 0; prevFaseIndex < faseIndex; prevFaseIndex++) {
+          // Jumlah dari SEMUA arah di fase sebelumnya
+          Object.values(allArahData).forEach(arahData => {
+            totalForThisFase += arahData[prevFaseIndex].total;
+          });
+        }
+
+        globalAccumulation[faseIndex] = totalForThisFase;
+      }
+
+      console.log("Global accumulation:", globalAccumulation);
+
+      // Sekarang proses untuk arah saat ini (dalam loop utama)
+      const newTableData = Object.entries(sa1.fase.data).map(([arah, detail]) => {
+        const kodePendekat = arahMap[arah] || arah?.charAt(0)?.toUpperCase() || '-';
+
+        console.log(arah, detail)
+        const tipePendekatRaw = detail?.tipe_pendekat || {};
+        const arahRaw = detail?.arah || {};
+        const faseRaw = detail?.fase || {};
+
+        // Tentukan arah
+        const arahLabel = (() => {
+          const terlawan = arahRaw?.terlawan;
+          const terlindung = arahRaw?.terlindung;
+          if (terlawan && terlindung) return "Terlindung/Terlawan";
+          if (terlawan) return "Terlawan";
+          if (terlindung) return "Terlindung";
+          return "-";
+        })();
+
+        // whh dari sa4
+        const whhFromSAIV = saiv?.foot?.whh || 0;
+        const SFromSAIV = saiv?.foot?.S || 0;
+        // Tentukan tipe pendekat
+        const tipePendekatLabel = (() => {
+          const p = tipePendekatRaw?.terlindung;
+          const o = tipePendekatRaw?.terlawan;
+          if (p && o) return "P/O";
+          if (p) return "P";
+          if (o) return "O";
+          return "-";
+        })();
+
+        const phases = {
+          f1: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
+          f2: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
+          f3: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
+          f4: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } }
+        };
+
+        ['1', '2', '3', '4'].forEach((fKey, index) => {
+          const faseData = data_fase?.find(
+            item => (item.kode === kodePendekat) && (item.fase === parseInt(fKey))
+          );
+
+          const wk = Number(faseData?.wk || 0);
+          const wms = Number(faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan || 0);
+          console.log(faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan)
+          const saivData = saiv?.tabel?.find(
+            item => item.kodePendekat === kodePendekat && item.hijauFase === parseInt(fKey)
+          );
+
+          const whi = saivData?.waktuHijauPerFase ? Number(saivData.waktuHijauPerFase) : 0;
+          const wkFinal = saivData ? 3 : wk;
+
+          // Cek apakah arah ini AKTIF di fase ini (ada data whi, wk, atau wms)
+          const isActive = (whi > 0 || wkFinal > 0 || wms > 0);
+
+          // Berikan mf hanya jika arah ini aktif, jika tidak aktif mf = 0
+          const mf = isActive ? globalAccumulation[index] : 0;
+
+          phases[`f${fKey}`] = {
+            mf,
+            whi,
+            wAll: { wk: wkFinal, wms: wms }
+          };
+        });
+
+        return {
+          kodePendekat,
+          tipePendekat: tipePendekatLabel,
+          arah: arahLabel,
+          arahDetail: {
+            bka: detail?.arah?.bka || false,
+            bki: detail?.arah?.bki || false,
+            bkijt: detail?.arah?.bkijt || false,
+            lurus: detail?.arah?.lurus || false
+          },
+          pemisahanLurusRka: detail?.pemisahan_lurus_bka ?? "",
+          phases,
+          whi: 0,
+          s: SFromSAIV,
+          whh: whhFromSAIV
+        };
+      });
+
+      setTableData(newTableData);
+      console.log(newTableData)
+    } catch (e) {
+      console.error('Gagal parse data:', e);
+    }
+  }, [selectedId]);
+
+
   const handleInputChange = (rowIndex, field, subField, phaseKey, value) => {
     const newData = [...tableData];
 
     if (field === 'phases' && phaseKey && subField) {
       if (subField === 'wAll') {
-        // For nested wAll object
         const [wAllField, wAllSubField] = value.split('.');
         if (wAllSubField) {
           newData[rowIndex][field][phaseKey][subField][wAllField] = wAllSubField;
         } else {
-          // Direct wAll field update
           newData[rowIndex][field][phaseKey][subField][wAllField] = value.value;
         }
       } else {
-        // For direct phase fields like mf, whi
         newData[rowIndex][field][phaseKey][subField] = value;
       }
     } else if (field && subField) {
-      // For nested fields not in phases
+      // Untuk nested object seperti arah.bka, arah.lurus, dsb
       if (!newData[rowIndex][field]) {
         newData[rowIndex][field] = {};
       }
       newData[rowIndex][field][subField] = value;
     } else {
-      // For direct fields
       newData[rowIndex][field] = value;
     }
 
     setTableData(newData);
   };
+
 
   const handlePhaseWAllChange = (rowIndex, phaseKey, wAllField, value) => {
     const newData = [...tableData];
@@ -72,7 +418,7 @@ export default function TrafficPhaseTable () {
                 Arah
               </th>
               <th rowSpan={4} className="border border-gray-300 p-2 text-center font-semibold min-w-[80px] text-wrap">
-                Pemisahan<br />Lurus - RKa
+                Pemisahan<br />Lurus - BKa
               </th>
               <th colSpan={4} className="border border-gray-300 p-2 text-center font-semibold">
                 F1
@@ -138,242 +484,290 @@ export default function TrafficPhaseTable () {
           </thead>
 
           <tbody>
-            {tableData.map((row, rowIndex) => (
-              <tr key={rowIndex} className="hover:bg-gray-50">
-                {/* Kode Pendekat */}
-                <td className="border border-gray-300 text-center ">
-                  <div className="flex items-center justify-center p-2">
-                    {/* <input type="checkbox" className="checkbox checkbox-xs mr-1" defaultChecked /> */}
-                    <span className="font-semibold">{row.kodePendekat}</span>
-                  </div>
-                </td>
-
-                {/* Tipe Pendekat */}
-                <td className="border border-gray-300 text-center p-2 font-semibold">
-                  {row.tipePendekat}
-                </td>
-
-                {/* Arah */}
-                <td className="border border-gray-300 p-2">
-                  <div className="">
-                    <div className="flex items-center text-xs">
-                      <input type="checkbox" className="mr-1 mb-0.5 checkbox checkbox-xs" />
-                      <span>BKI / BKIJT</span>
-                      <input type="checkbox" className="ml-2" defaultChecked={row.pemisahanLurusRka === 1} />
+            {tableData.map((row, rowIndex) => {
+              const index = rowIndex;
+              return (
+                <tr key={rowIndex} className="hover:bg-gray-50">
+                  {/* Kode Pendekat */}
+                  <td className="border border-gray-300 text-center ">
+                    <div className="flex items-center justify-center p-2">
+                      {/* <input type="checkbox" className="checkbox checkbox-xs mr-1" defaultChecked /> */}
+                      <span className="font-semibold">{row.kodePendekat}</span>
                     </div>
-                    <div className="flex items-center text-xs">
-                      <input type="checkbox" className="mr-1 mb-0.5 checkbox checkbox-xs" defaultChecked />
-                      <span>Lurus</span>
+                  </td>
+
+                  {/* Tipe Pendekat */}
+                  <td className="border border-gray-300 text-center p-2 font-semibold">
+                    {row.tipePendekat}
+                  </td>
+
+                  {/* Arah */}
+                  <td className="border border-gray-300 p-2">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2 text-xs">
+                        <input
+                          type="checkbox"
+                          className="mr-1 mb-0.5 checkbox checkbox-xs"
+                          checked={row.arahDetail.bki || false}
+                          onChange={(e) => handleInputChange(rowIndex, "arahDetail", "bki", null, e.target.checked)}
+                        />
+                        <span className='text-nowrap'>BKI / BKIJT</span>
+                        <input
+                          type="checkbox"
+                          className="mr-1 mb-0.5 checkbox checkbox-xs"
+                          checked={row.pemisahanLurusRka === 1}
+                          onChange={(e) =>
+                            handleInputChange(rowIndex, "arahDetail", null, null, e.target.checked ? 1 : 0)
+                          }
+                        />
+                      </div>
+                      <div className="flex items-center text-xs">
+                        <input
+                          type="checkbox"
+                          className="mr-1 mb-0.5 checkbox checkbox-xs"
+                          checked={row.arahDetail.lurus || false}
+                          onChange={(e) => handleInputChange(rowIndex, "arahDetail", "lurus", null, e.target.checked)}
+                        />
+                        <span>Lurus</span>
+                      </div>
+                      <div className="flex items-center text-xs">
+                        <input
+                          type="checkbox"
+                          className="mr-1 mb-0.5 checkbox checkbox-xs"
+                          checked={row.arahDetail.bka || false}
+                          onChange={(e) => handleInputChange(rowIndex, "arahDetail", "bka", null, e.target.checked)}
+                        />
+                        <span>BKa</span>
+                      </div>
                     </div>
-                    <div className="flex items-center text-xs">
-                      <input type="checkbox" className="mr-1 mb-0.5 checkbox checkbox-xs" />
-                      <span>BKa</span>
+                  </td>
+
+
+                  {/* Pemisahan Lurus - RKa */}
+                  <td className="border border-gray-300 text-center p-2">
+                    <input type="checkbox" className="checkbox checkbox-xs" defaultChecked={row.pemisahanLurusRka === 1} />
+                  </td>
+
+                  {/* F1 */}
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f1.mf}
+                        onChange={(e) => handleInputChange(rowIndex, 'phases', 'mf', 'f1', e.target.value)}
+                      />
                     </div>
-                  </div>
-                </td>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f1.whi}
+                        onChange={(e) => handleInputChange(rowIndex, 'phases', 'whi', 'f1', e.target.value)}
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f1.wAll.wk}
+                        onChange={(e) => handlePhaseWAllChange(rowIndex, 'f1', 'wk', e.target.value)}
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f1.wAll.wms}
+                        onChange={(e) => handlePhaseWAllChange(rowIndex, 'f1', 'wms', e.target.value)}
+                      />
+                    </div>
+                  </td>
 
-                {/* Pemisahan Lurus - RKa */}
-                <td className="border border-gray-300 text-center p-2">
-                  <input type="checkbox" className="checkbox checkbox-xs" defaultChecked={row.pemisahanLurusRka === 1} />
-                </td>
+                  {/* F2 */}
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f2.mf}
+                        onChange={(e) => handleInputChange(rowIndex, 'phases', 'mf', 'f2', e.target.value)}
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f2.whi}
+                        onChange={(e) => handleInputChange(rowIndex, 'phases', 'whi', 'f2', e.target.value)}
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f2.wAll.wk}
+                        onChange={(e) => handlePhaseWAllChange(rowIndex, 'f2', 'wk', e.target.value)}
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f2.wAll.wms}
+                        onChange={(e) => handlePhaseWAllChange(rowIndex, 'f2', 'wms', e.target.value)}
+                      />
+                    </div>
+                  </td>
 
-                {/* F1 */}
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                      value={row.phases.f1.mf}
-                      onChange={(e) => handleInputChange(rowIndex, 'phases', 'mf', 'f1', e.target.value)}
-                    />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                      value={row.phases.f1.whi}
-                      onChange={(e) => handleInputChange(rowIndex, 'phases', 'whi', 'f1', e.target.value)}
-                    />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f1.wAll.wk}
-                    onChange={(e) => handlePhaseWAllChange(rowIndex, 'f1', 'wk', e.target.value)}
-                  />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f1.wAll.wms}
-                    onChange={(e) => handlePhaseWAllChange(rowIndex, 'f1', 'wms', e.target.value)}
-                  />
-                  </div>
-                </td>
+                  {/* F3 */}
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f3.mf}
+                        onChange={(e) => handleInputChange(rowIndex, 'phases', 'mf', 'f3', e.target.value)}
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f3.whi}
+                        onChange={(e) => handleInputChange(rowIndex, 'phases', 'whi', 'f3', e.target.value)}
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f3.wAll.wk}
+                        onChange={(e) => handlePhaseWAllChange(rowIndex, 'f3', 'wk', e.target.value)}
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f3.wAll.wms}
+                        onChange={(e) => handlePhaseWAllChange(rowIndex, 'f3', 'wms', e.target.value)}
+                      />
+                    </div>
+                  </td>
 
-                {/* F2 */}
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f2.mf}
-                    onChange={(e) => handleInputChange(rowIndex, 'phases', 'mf', 'f2', e.target.value)}
-                  />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f2.whi}
-                    onChange={(e) => handleInputChange(rowIndex, 'phases', 'whi', 'f2', e.target.value)}
-                  />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f2.wAll.wk}
-                    onChange={(e) => handlePhaseWAllChange(rowIndex, 'f2', 'wk', e.target.value)}
-                  />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f2.wAll.wms}
-                    onChange={(e) => handlePhaseWAllChange(rowIndex, 'f2', 'wms', e.target.value)}
-                  />
-                  </div>
-                </td>
+                  {/* F4 */}
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f4.mf}
+                        onChange={(e) => handleInputChange(rowIndex, 'phases', 'mf', 'f4', e.target.value)}
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f4.whi}
+                        onChange={(e) => handleInputChange(rowIndex, 'phases', 'whi', 'f4', e.target.value)}
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f4.wAll.wk}
+                        onChange={(e) => handlePhaseWAllChange(rowIndex, 'f4', 'wk', e.target.value)}
+                      />
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-0">
+                    <div className="flex h-full min-h-[2rem]">
+                      <input
+                        type="text"
+                        readOnly={true}
+                        className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                        value={row.phases.f4.wAll.wms}
+                        onChange={(e) => handlePhaseWAllChange(rowIndex, 'f4', 'wms', e.target.value)}
+                      />
+                    </div>
+                  </td>
 
-                {/* F3 */}
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f3.mf}
-                    onChange={(e) => handleInputChange(rowIndex, 'phases', 'mf', 'f3', e.target.value)}
-                  />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f3.whi}
-                    onChange={(e) => handleInputChange(rowIndex, 'phases', 'whi', 'f3', e.target.value)}
-                  />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f3.wAll.wk}
-                    onChange={(e) => handlePhaseWAllChange(rowIndex, 'f3', 'wk', e.target.value)}
-                  />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f3.wAll.wms}
-                    onChange={(e) => handlePhaseWAllChange(rowIndex, 'f3', 'wms', e.target.value)}
-                  />
-                  </div>
-                </td>
-
-                {/* F4 */}
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f4.mf}
-                    onChange={(e) => handleInputChange(rowIndex, 'phases', 'mf', 'f4', e.target.value)}
-                  />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f4.whi}
-                    onChange={(e) => handleInputChange(rowIndex, 'phases', 'whi', 'f4', e.target.value)}
-                  />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f4.wAll.wk}
-                    onChange={(e) => handlePhaseWAllChange(rowIndex, 'f4', 'wk', e.target.value)}
-                  />
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.phases.f4.wAll.wms}
-                    onChange={(e) => handlePhaseWAllChange(rowIndex, 'f4', 'wms', e.target.value)}
-                  />
-                  </div>
-                </td>
-
-                {/* WHI */}
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.whi}
-                    onChange={(e) => handleInputChange(rowIndex, 'whi', null, null, e.target.value)}
-                  />
-                  </div>
-                </td>
-
-                {/* S */}
-                <td className="border border-gray-300 p-0">
-                  <div className="flex h-full min-h-[2rem]">
-                    <input
-                      type="text"
-                      className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
-                    value={row.s}
-                    onChange={(e) => handleInputChange(rowIndex, 's', null, null, e.target.value)}
-                  />
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  {/* Render kolom whh hanya di baris pertama dari 3 (index 0) */}
+                  {/* WHI */}
+                  {index % 3 === 0 && (
+                    <td className="border border-gray-300 p-0" rowSpan={3}>
+                      <div className="flex h-full min-h-[2rem]">
+                        <input
+                          type="text"
+                          readOnly={true}
+                          className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                          value={row.whh}
+                          onChange={(e) => handleInputChange(rowIndex, 'whi', null, null, e.target.value)}
+                        />
+                      </div>
+                    </td>
+                  )}
+                  {/* S */}
+                  {index % 3 === 0 && (
+                    <td className="border border-gray-300 p-0" rowSpan={3}>
+                      <div className="flex h-full min-h-[2rem]">
+                        <input
+                          type="text"
+                          readOnly={true}
+                          className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-1 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-16 border-0"
+                          value={row.s}
+                          onChange={(e) => handleInputChange(rowIndex, 's', null, null, e.target.value)}
+                        />
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
-      </div>
-      <SketsaFaseIV dataSketsa={tableData}/>
+      </div >
+      <SketsaFaseIV dataSketsa={tableData} />
       {/* 
       <div className="mt-6 flex gap-4">
         <button
@@ -409,6 +803,6 @@ export default function TrafficPhaseTable () {
           Tambah Baris
         </button>
       </div> */}
-    </div>
+    </div >
   );
 }
