@@ -10,11 +10,11 @@ import { useAuth } from '../context/authContext';
 export default function Auth () {
   const router = useRouter();
   const { loading, setLoading, setUserId, login, error } = useAuth();
-
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const fakeToken = "mocked.jwt.token"
   useEffect(() => {
     const storedToken = Cookies.get('token');
     if (storedToken) {
@@ -25,14 +25,14 @@ export default function Auth () {
   // test login fetch api login to dashboard
   const handleSubmitAPI = async (e) => {
     e.preventDefault();
-    // if (
-    //   username === 'viana@dishub.jogjaprov.go.id' &&
-    //   password === 'password'
-    // ) {
-    //   login(fakeToken)
-    //   router.push('/');
-    //   return;
-    // }
+    if (
+      username === 'viana@dishub.jogjaprov.go.id' &&
+      password === 'password'
+    ) {
+      login(fakeToken)
+      router.push('/');
+      return;
+    }
 
     setLoading(true);
     setErrorMessage('');

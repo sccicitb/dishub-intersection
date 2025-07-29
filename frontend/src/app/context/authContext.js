@@ -91,12 +91,24 @@ export function AuthProvider ({ children }) {
       }
 
       const storedUser = Cookies.get("user");
-      if (storedUser) {
+
+      if (!storedUser) {
+        console.warn("User cookie not found.");
+        setUser(null);
+      } else {
         try {
           const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+          if (parsedUser && typeof parsedUser === "object") {
+            setUser(parsedUser);
+          } else {
+            console.warn("Invalid user cookie data.");
+            Cookies.remove("user"); // optional cleanup
+            setUser(null);
+          }
         } catch (e) {
           console.error("Failed to parse user cookie:", e);
+          Cookies.remove("user"); // optional cleanup
+          setUser(null);
         }
       }
 

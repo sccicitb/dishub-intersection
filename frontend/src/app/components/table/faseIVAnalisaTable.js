@@ -119,96 +119,6 @@ export default function TrafficPhaseTable ({ selectedId }) {
       };
 
       console.log(sa4)
-      // const newTableData = Object.entries(sa1.fase.data).map(([arah, detail]) => {
-      //   console.log(arah, detail)
-      //   const kodePendekat = arahMap[arah] || arah?.charAt(0)?.toUpperCase() || '-';
-      //   const tipePendekatRaw = detail?.tipe_pendekat || {};
-      //   const arahRaw = detail?.arah || {};
-      //   const faseRaw = detail?.fase || {};
-
-      //   // Tentukan arah
-      //   const arahLabel = (() => {
-      //     const terlawan = arahRaw?.terlawan;
-      //     const terlindung = arahRaw?.terlindung;
-      //     if (terlawan && terlindung) return "Terlindung/Terlawan";
-      //     if (terlawan) return "Terlawan";
-      //     if (terlindung) return "Terlindung";
-      //     return "-";
-      //   })();
-
-      //   // Tentukan tipe pendekat
-      //   const tipePendekatLabel = (() => {
-      //     const p = tipePendekatRaw?.terlindung;
-      //     const o = tipePendekatRaw?.terlawan;
-      //     if (p && o) return "P/O";
-      //     if (p) return "P";
-      //     if (o) return "O";
-      //     return "-";
-      //   })();
-
-      //   // Tentukan fase aktif
-      //   const phases = {
-      //     f1: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
-      //     f2: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
-      //     f3: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
-      //     f4: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } }
-      //   };
-
-      //   // Loop setiap fase dan hitung mf sebagai jumlah whi + wk + wms
-      //   const faseAktifSebelumnya = {
-      //     f1: {},
-      //     f2: {},
-      //     f3: {},
-      //     f4: {}
-      //   };
-
-      //   ['1', '2', '3', '4'].forEach(fKey => {
-      //     const faseData = data_fase?.find(
-      //       item => item.kode === kodePendekat && item.fase === parseInt(fKey)
-      //     );
-
-      //     const wk = Number(faseData?.wk || 0);
-      //     const wms = Number(faseData?.wms || 0);
-
-      //     const saivData = saiv?.tabel?.find(
-      //       item => item.kodePendekat === kodePendekat && item.hijauFase === parseInt(fKey)
-      //     );
-
-      //     const whi = saivData?.waktuHijauPerFase ? Number(saivData.waktuHijauPerFase) : 0;
-      //     console.log(whi)
-      //     const wkFinal = saivData ? 3 : wk;
-      //     const mf = whi + wkFinal + wms;
-
-      //     phases[`f${fKey}`] = {
-      //       mf,
-      //       whi,
-      //       wAll: { wk: wkFinal, wms }
-      //     };
-
-      //     if (mf > 0) {
-      //       faseAktifSebelumnya[`f${fKey}`][kodePendekat] = true;
-      //     }
-      //   });
-
-
-
-      //   return {
-      //     kodePendekat,
-      //     tipePendekat: tipePendekatLabel,
-      //     arah: arahLabel,
-      //     arahDetail: {
-      //       bka: detail?.arah?.bka || false,
-      //       bki: detail?.arah?.bki || false,
-      //       bkijt: detail?.arah?.bkijt || false,
-      //       lurus: detail?.arah?.lurus || false
-      //     },
-      //     pemisahanLurusRka: detail?.pemisahan_lurus_bka ?? "",
-      //     phases,
-      //     whi: 0,
-      //     s: 0
-      //   };
-
-      // });
 
       // Kumpulkan data dari semua arah untuk semua fase terlebih dahulu
       const allArahData = {};
@@ -218,13 +128,15 @@ export default function TrafficPhaseTable ({ selectedId }) {
         const arahKode = arahMap[arahKey] || arahKey?.charAt(0)?.toUpperCase() || '-';
         allArahData[arahKode] = [];
 
+        let currentMF = 0; // Mulai dari 0 untuk setiap arah
+
         ['1', '2', '3', '4'].forEach(fKey => {
           const faseData = data_fase?.find(
             item => item.kode === arahKode && item.fase === parseInt(fKey)
           );
-
+          console.log(faseData)
           const wk = Number(faseData?.wk || 0);
-          const wms = Number(faseData?.wmsDisesuaikan || 0);
+          const wms = Number(faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan || 0 );
 
           const saivData = saiv?.tabel?.find(
             item => item.kodePendekat === arahKode && item.hijauFase === parseInt(fKey)
@@ -233,15 +145,23 @@ export default function TrafficPhaseTable ({ selectedId }) {
           const whi = saivData?.waktuHijauPerFase ? Number(saivData.waktuHijauPerFase) : 0;
           const wkFinal = saivData ? 3 : wk;
 
+          // Total waktu fase ini
+          console.log({wk: wk,wms: wms, whi: whi, wkFinal: wkFinal})
+          const total = whi + wkFinal + wms;
+
           allArahData[arahKode].push({
             fase: fKey,
+            mf: currentMF,
             whi,
             wk: wkFinal,
             wms,
-            total: whi + wkFinal + wms
+            total: total
           });
+
+          currentMF += total; // Update mf untuk fase berikutnya
         });
       });
+
 
       // Hitung akumulasi global untuk setiap fase (dari SEMUA arah)
       const globalAccumulation = [0, 0, 0, 0]; // untuk fase 1, 2, 3, 4
