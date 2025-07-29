@@ -48,6 +48,11 @@ const TrafficPhaseDiagram = ({ tableData }) => {
           const wk = parseInt(phase.wAll.wk) || 0;
           const wms = parseInt(phase.wAll.wms) || 0;
 
+          // console.log({
+          //   mf, whi, wk, wms,
+          //   total: mf + whi + wk + wms
+          // });
+
           if (mf > 0 || whi > 0 || wk > 0 || wms > 0) {
             phaseData[phaseKey].approaches.push({
               kode: row.kodePendekat,
@@ -55,7 +60,7 @@ const TrafficPhaseDiagram = ({ tableData }) => {
               whi,
               wk,
               wms,
-              total: whi + wk + wms
+              total: mf + whi + wk + wms
             });
           }
         }
