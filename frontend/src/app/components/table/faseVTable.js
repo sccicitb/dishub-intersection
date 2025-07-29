@@ -15,12 +15,13 @@ export default function FormSAVTable ({ selectedId }) {
     row_4: 1,
     qbkijt: 0,
     total_tundaan: 0,
-    tingkat_polusi: 0,
-    biaya_kemacetan: 0,
     tkt: 0,
     pol: 1,
     rkt: 0,
     bkijt: 0,
+    los: '',
+    polution: 0,
+    loss: 0,
     data: [
       {
         kode: 'U',
@@ -240,6 +241,7 @@ export default function FormSAVTable ({ selectedId }) {
 
     const Faktor_baru = 0.775 + (tableData.pol - 1) * 0.0165
     console.log(Faktor_baru, tableData.pol)
+
     return {
       kode: kodePendekat.toUpperCase(),
       q: sa4Data.totalArusLaluLintas,
@@ -375,6 +377,18 @@ export default function FormSAVTable ({ selectedId }) {
       };
     });
   };
+
+  const kriteriaLos = (derajatKejenuhan) => {
+    if (derajatKejenuhan < 0.60) return { los: 'A', kondisi: 'Sangat Lancar' };
+    if (derajatKejenuhan < 0.70) return { los: 'B', kondisi: 'Lancar' };
+    if (derajatKejenuhan < 0.80) return { los: 'C', kondisi: 'Cukup Lancar' };
+    if (derajatKejenuhan < 0.90) return { los: 'D', kondisi: 'Mulai Padat' };
+    if (derajatKejenuhan <= 1.00) return { los: 'E', kondisi: 'Padat' };
+    return { los: 'F', kondisi: 'Macet Total' };
+  };
+
+
+
 
   const handleInputChange2 = (field, value) => {
     if (field === 'pol') {
@@ -551,7 +565,10 @@ export default function FormSAVTable ({ selectedId }) {
           tkt: 0,
           rkt: 0,
           rkhrata: 0,
-          totalrata: 0
+          totalrata: 0,
+          polution: 0,
+          loss: 0,
+          los: ''
         });
         setLoading(false);
         return;
@@ -562,9 +579,10 @@ export default function FormSAVTable ({ selectedId }) {
         setLoading(false);
         return;
       }
-      
+
       let totalKTBCount = 0;
       let qtotalarus = 0;
+
       // 3. Validasi data wajib (SA1 minimal harus ada untuk mendapatkan kode pendekat)
       if (!sa1Result.isValid) {
         setError(sa1Result.error);
@@ -635,7 +653,6 @@ export default function FormSAVTable ({ selectedId }) {
 
               totalKTBCount += nilaiKTB;
             }
-
           }
 
           console.log(`Pendekat ${kodePendekat}: `);
@@ -654,8 +671,9 @@ export default function FormSAVTable ({ selectedId }) {
         const totalKendaraanTerhenti = newData.reduce((sum, row) => {
           return sum + (Number(row.nqh) ?? 0);
         }, 0);
-
+        
         const totalArah = newData.length;
+        const derajatKejenuhan = Math.max(...newData.map(data => data.dj));
 
         const bkijt = parseInt(totalKTBCount);
         const qtotal = bkijt + parseInt(qtotalarus);
@@ -669,8 +687,11 @@ export default function FormSAVTable ({ selectedId }) {
         const rkt = (tkt / qtotal)
         const rkhrata = (Number(totalKendaraanTerhenti) / totalArah).toFixed(0)
         const totalrata = (qtotal / totalArah / 3600).toFixed(2);
+        const polution = qtotal * 0.02
+        // const loss = total_tundaan * qtotal * 30
+        const loss = total_tundaan * 250
+        const los = kriteriaLos(derajatKejenuhan).los
 
-        console.log(rkt)
         setTableData(prev => ({
           ...prev,
           row_1,
@@ -685,7 +706,10 @@ export default function FormSAVTable ({ selectedId }) {
           tkt,
           rkt,
           rkhrata,
-          totalrata
+          totalrata,
+          polution,
+          loss,
+          los
         }));
 
 
@@ -1270,12 +1294,12 @@ export default function FormSAVTable ({ selectedId }) {
         </div>
       </div>
       {/* <SketsaSimpangV data={tableData} /> */}
-      <div className='w-full overflow-x-auto'>
-        <div className="min-w-[800px] flex flex-col w-fit bg-[#bec1ce] mx-auto font-semibold text-sm text-gray-800">
+      <div className='w-full overflow-x-auto text-sm'>
+        <div className="min-w-[900px] flex flex-col w-fit bg-[#bec1ce] mx-auto font-semibold text-sm text-gray-800">
           {/* North */}
           <div className="grid grid-cols-3">
             <div className='p-2 text-xl text-left flex flex-col justify-end'>B</div>
-            <div className='min-h-60 items-center flex bg-stone-200 justify-center'>
+            <div className='min-h-64 items-center flex bg-stone-200 justify-center'>
               {(Array.isArray(tableData?.data) ? tableData.data : []).filter(data => data.kode === "U").map((data, i) => (
                 <table key={i} className="border-collapse">
                   <tbody>
@@ -1308,24 +1332,24 @@ export default function FormSAVTable ({ selectedId }) {
                 </table>
               ))}
             </div>
-            <div className='min-h-60 items-center flex justify-center'>
+            <div className='min-h-64 items-center flex justify-center'>
               <div className="m-auto">
                 <div className='text-white bg-red-500 p-1 text-xl mb-2 text-center w-fit mx-auto'>
-                  LOS : E
+                  LOS : {tableData.los}
                 </div>
-                <table className="border-collapse">
+                <table className="border-collapse text-sm">
                   <tbody>
-                    <tr><td className="px-1">Total rata-rata</td><td className="px-1">= {formattingAngka(tableData.totalrata)} detik/SMP</td></tr>
-                    <tr><td className="px-1">R<sub>KH</sub> rata-rata</td><td className="px-1">= {formattingAngka(tableData.rkhrata)}</td></tr>
-                    <tr><td className="px-1">q<sub>total</sub></td><td className="px-1">= {tableData.qtotal} SMP/jam</td></tr>
-                    <tr><td className="px-1">q<sub>bkijt</sub></td><td className="px-1">= {tableData.bkijt} SMP/jam</td></tr>
-                    <tr><td className="px-1">Tingkat polusi</td><td className="px-1">= {tableData.tingkat_polusi} μg/m<sup>3</sup></td></tr>
-                    <tr><td className="px-1">Biaya kemacetan</td><td className="px-1">= {tableData.biaya_kemacetan} SMP/jam</td></tr>
+                    <tr className='text-sm'><td className="px-1">Total rata-rata</td><td className="px-1">= {formattingAngka(tableData.totalrata)} detik/SMP</td></tr>
+                    <tr className='text-sm'><td className="px-1">R<sub>KH</sub> rata-rata</td><td className="px-1">= {formattingAngka(tableData.rkhrata)}</td></tr>
+                    <tr className='text-sm'><td className="px-1">q<sub>total</sub></td><td className="px-1">= {tableData.qtotal} SMP/jam</td></tr>
+                    <tr className='text-sm'><td className="px-1">q<sub>bkijt</sub></td><td className="px-1">= {tableData.bkijt} SMP/jam</td></tr>
+                    <tr className='text-sm'><td className="px-1">Tingkat polusi</td><td className="px-1">= {tableData.polution} μg/m<sup>3</sup></td></tr>
+                    <tr className='text-sm'><td className="px-1">Biaya kemacetan</td><td className="px-1">= Rp.{tableData.loss > 0 || tableData.loss === '' ? formattingAngka(tableData.loss) : 0}.00</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
-            <div className='min-h-60 items-center flex bg-stone-200 justify-center'>
+            <div className='min-h-64 items-center flex bg-stone-200 justify-center'>
               {(Array.isArray(tableData?.data) ? tableData.data : []).filter(data => data.kode === "T").map((data, i) => (
                 <table key={i} className="border-collapse">
                   <tbody>
@@ -1344,7 +1368,7 @@ export default function FormSAVTable ({ selectedId }) {
           {/* South */}
           <div className="grid grid-cols-3">
             <div className='p-2 text-xl text-right'>S</div>
-            <div className='min-h-60 items-center flex bg-stone-200 justify-center'>
+            <div className='min-h-64 items-center flex bg-stone-200 justify-center'>
               {(Array.isArray(tableData?.data) ? tableData.data : []).filter(data => data.kode === "S").map((data, i) => (
                 <table key={i} className="border-collapse">
                   <tbody>

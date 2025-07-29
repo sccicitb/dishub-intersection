@@ -86,6 +86,7 @@ const FaseIVPage = () => {
   };
 
   useEffect(() => { console.log(headerData) }, [headerData])
+  
   return (
     <div>
       <div className="w-full p-8 text-xl">

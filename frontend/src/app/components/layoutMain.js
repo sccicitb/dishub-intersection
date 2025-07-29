@@ -66,7 +66,8 @@ const Layout = ({ children }) => {
     const baseMenu = pathname === "/dashboard/mobility" ? listMenuMobility : listMenu;
     const filteredMenu = filterMenuByRole(baseMenu);
     setMenu(filteredMenu);
-    console.log("path")
+    // setMenu(listMenu);
+    console.log("path", filteredMenu)
   }, [pathname, user])
 
   if (!mounted) return null;
