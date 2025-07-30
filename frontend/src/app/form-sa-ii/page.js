@@ -21,13 +21,18 @@ const FormSAIIPage = () => {
     terlawan: { mp: '', ks: '', sm: '' }
   });
   const [selectedId, setSelectedId] = useState(0);
+  // const [payloadData, setPayloadData] = useState({})
 
   useEffect(() => {
-    import('@/data/DataEkuivalensi.json').then((data) => {
-      setDataChart(data.default)
-      setDataTerlindung(data.default.filter((item) => item.type === "terlindungi" ? data.default.data : []))
-      setDataTerlawan(data.default.filter((item) => item.type === "terlawanan" ? data.default.data : []))
-    })
+    // import('@/data/DataEkuivalensi.json').then((data) => {
+    //   setDataChart(data.default)
+    //   setDataTerlindung(data.default.filter((item) => item.type === "terlindungi" ? data.default.data : []))
+    //   setDataTerlawan(data.default.filter((item) => item.type === "terlawanan" ? data.default.data : []))
+    // })
+    setDataChart(DataEkuivalensi);
+    setDataTerlindung(DataEkuivalensi.filter(item => item.type.toLowerCase() === "terlindungi"));
+    setDataTerlawan(DataEkuivalensi.filter(item => item.type.toLowerCase() === "terlawanan"));
+    console.log(DataEkuivalensi);
   }, [])
 
   useEffect(() => {
@@ -66,7 +71,7 @@ const FormSAIIPage = () => {
       ...trafficData
       // fase: { ...faseApil }
     };
-
+    // setPayloadData(payload)
 
     console.log('Payload gabungan:', payload, headerData);
     console.log('id:', selectedId);
@@ -143,6 +148,12 @@ const FormSAIIPage = () => {
         <div className="w-full items-center flex p-6">
           <button onClick={handleSubmit} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
         </div>
+        {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
+          <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>
+          <pre className="text-xs whitespace-pre-wrap break-all max-h-[800px] overflow-auto bg-white p-2 rounded border border-gray-300">
+            {JSON.stringify(payloadData, null, 2)}
+          </pre>
+        </div> */}
       </Suspense>
     </div>
   )
