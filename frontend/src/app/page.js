@@ -8,6 +8,7 @@ const LintasChart = lazy(() => import("@/app/components/lintasChart"));
 const TotalChart = lazy(() => import("@/app/components/totalChart"));
 const GrafikRoad = lazy(() => import("@/app/components/roadChart"));
 const ChordDiagram = lazy(() => import("@/app/components/diagram/chord"))
+const OptionSelectMaps = lazy(() => import("@/app/components/simpang/optionSelectMaps"))
 // import CameraStatusTimeline from "@/app/components/cameraStatusTime";
 const CameraStream = lazy(() => import("@/app/components/cameraStream"));
 const MapComponent = lazy(() => import("@/app/components/map"));
@@ -101,6 +102,12 @@ export default function Home () {
     format: 'unit'
   });
 
+  const [selectedLocation, setSelectedLocation] = useState(null);
+
+  const handleSelectLocation = (location) => {
+    console.log("Lokasi dipilih:", location); // bisa access id, nama, lat, lon, dll
+    setSelectedLocation(location);
+  };
 
   // const incomingVehiclesBar2 = {
   //   labels: ['Utara', 'Selatan', 'Timur', 'Barat'],
@@ -672,30 +679,41 @@ export default function Home () {
           </table>
         </div>
       </div> */}
-      <div className="w-full sm:flex overflow-x-auto place-items-center">
-        <div className="w-fit block m-auto">
-          <ChordDiagram matrix={dataChord?.chordDiagram?.matrix || {}} categories={dataChord?.chordDiagram?.categories || {}} />
-        </div>
-        <div className="p-6 max-w-4xl mx-auto">
-          <TableComponent
-            title="Matriks Asal - Tujuan (kendaraan)"
-            matrix={dataChord?.vehicleMatrix?.matrix}
-            rowLabels={dataChord?.vehicleMatrix?.rowLabels}
-            colLabels={dataChord?.vehicleMatrix?.colLabels}
-            totalsRow={dataChord?.vehicleMatrix?.totalsRow}
-            totalsCol={dataChord?.vehicleMatrix?.totalsCol}
-            grandTotal={dataChord?.vehicleMatrix?.grandTotal}
-          />
 
-          <TableComponent
-            title="Matriks Arah Pergerakan (kendaraan)"
-            matrix={dataChord?.movementMatrix?.matrix}
-            rowLabels={dataChord?.movementMatrix?.rowLabels}
-            colLabels={dataChord?.movementMatrix?.colLabels}
-            totalsRow={dataChord?.movementMatrix?.totalsRow}
-            totalsCol={dataChord?.movementMatrix?.totalsCol}
-            grandTotal={dataChord?.movementMatrix?.grandTotal}
-          />
+      <div className="w-[90%] py-10 block bg-base-200 rounded-xl">
+        <div className="w-full px-10">
+          <OptionSelectMaps onSelect={handleSelectLocation} />
+        </div>
+        {/* {selectedLocation && (
+          <div className="mt-4 text-sm text-green-600">
+            <strong>Lokasi dipilih:</strong> {selectedLocation.Nama_Simpang}
+          </div>
+        )} */}
+        <div className="w-full sm:flex overflow-x-auto place-items-center">
+          <div className="w-fit block m-auto">
+            <ChordDiagram matrix={dataChord?.chordDiagram?.matrix || {}} categories={dataChord?.chordDiagram?.categories || {}} />
+          </div>
+          <div className="p-6 max-w-4xl mx-auto">
+            <TableComponent
+              title="Matriks Asal - Tujuan (kendaraan)"
+              matrix={dataChord?.vehicleMatrix?.matrix}
+              rowLabels={dataChord?.vehicleMatrix?.rowLabels}
+              colLabels={dataChord?.vehicleMatrix?.colLabels}
+              totalsRow={dataChord?.vehicleMatrix?.totalsRow}
+              totalsCol={dataChord?.vehicleMatrix?.totalsCol}
+              grandTotal={dataChord?.vehicleMatrix?.grandTotal}
+            />
+
+            <TableComponent
+              title="Matriks Arah Pergerakan (kendaraan)"
+              matrix={dataChord?.movementMatrix?.matrix}
+              rowLabels={dataChord?.movementMatrix?.rowLabels}
+              colLabels={dataChord?.movementMatrix?.colLabels}
+              totalsRow={dataChord?.movementMatrix?.totalsRow}
+              totalsCol={dataChord?.movementMatrix?.totalsCol}
+              grandTotal={dataChord?.movementMatrix?.grandTotal}
+            />
+          </div>
         </div>
       </div>
 
