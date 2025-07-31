@@ -7,7 +7,7 @@ import SocketConnection from "./components/testingSocket";
 const LintasChart = lazy(() => import("@/app/components/lintasChart"));
 const TotalChart = lazy(() => import("@/app/components/totalChart"));
 const GrafikRoad = lazy(() => import("@/app/components/roadChart"));
-
+const ChordDiagram = lazy(() => import("@/app/components/diagram/chord"))
 // import CameraStatusTimeline from "@/app/components/cameraStatusTime";
 const CameraStream = lazy(() => import("@/app/components/cameraStream"));
 const MapComponent = lazy(() => import("@/app/components/map"));
@@ -130,52 +130,52 @@ export default function Home () {
   const getPeriodDisplayText = (filter) => {
     const now = new Date();
     const options = { timeZone: 'Asia/Jakarta' };
-    
+
     switch (filter) {
       case 'day':
-        return now.toLocaleDateString('id-ID', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
+        return now.toLocaleDateString('id-ID', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
           day: 'numeric',
-          ...options 
+          ...options
         });
-        
+
       case 'week':
         // Get Monday of current week
         const currentDay = now.getDay();
         const monday = new Date(now);
         monday.setDate(now.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
-        
+
         // Get Sunday of current week
         const sunday = new Date(monday);
         sunday.setDate(monday.getDate() + 6);
-        
+
         const mondayStr = monday.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', ...options });
         const sundayStr = sunday.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', ...options });
-        
+
         return `${mondayStr} - ${sundayStr}`;
-        
+
       case 'month':
-        return now.toLocaleDateString('id-ID', { 
-          month: 'long', 
+        return now.toLocaleDateString('id-ID', {
+          month: 'long',
           year: 'numeric',
-          ...options 
+          ...options
         });
-        
+
       case 'quarter':
         const quarter = Math.floor(now.getMonth() / 3) + 1;
         const quarterMonths = {
           1: 'Januari - Maret',
-          2: 'April - Juni', 
+          2: 'April - Juni',
           3: 'Juli - September',
           4: 'Oktober - Desember'
         };
         return `Q${quarter} ${quarterMonths[quarter]} ${now.getFullYear()}`;
-        
+
       case 'year':
         return now.getFullYear().toString();
-        
+
       default:
         return '';
     }
@@ -442,6 +442,102 @@ export default function Home () {
     setPeriodDisplayText(getPeriodDisplayText(activeFilter));
   }, [])
 
+
+  const [dataChord, setDataChord] = useState([]);
+
+  useEffect(() => {
+    import("@/data/DataChord.json").then((data) => setDataChord(data.default || []))
+  }, []);
+
+  // const matrix = [
+  //   // U   T   B   S
+  //   [0, 10, 30, 15], // U (dari U ke T, B, S)
+  //   [25, 0, 5, 20], // T
+  //   [10, 15, 0, 10], // B
+  //   [20, 10, 15, 0], // S
+  // ];
+
+  // const categories = ["U", "T", "B", "S"];
+
+  // // Data dari gambar pertama - Matriks Asal-Tujuan (Kendaraan)
+  // const vehicleMatrix = [
+  //   //  ke_arah: barat, selatan, timur, utara
+  //   [0, 137, 4, 0],     // barat
+  //   [864, 0, 16, 0],    // selatan  
+  //   [950, 145, 0, 14],  // timur
+  //   [890, 121, 0, 0],   // utara
+  // ];
+
+  // const vehicleCategories = ["barat", "selatan", "timur", "utara"];
+  // const vehicleTotalsRow = [2704, 403, 20, 14]; // Total kolom
+  // const vehicleTotalsCol = [141, 880, 1109, 1011]; // Total baris
+  // const vehicleGrandTotal = 3141;
+
+  // // Data dari gambar kedua - Matriks Arah Pergerakan (Kendaraan)
+  // const movementMatrix = [
+  //   //        barat, selatan, timur, utara
+  //   [0, 137, 14, 0],      // Belok Kiri (890 total)
+  //   [950, 121, 16, 0],    // Lurus (1087 total)
+  //   [864, 145, 4, 0],     // Belok Kanan (1013 total - dari gambar terlihat 864+145+4)
+  // ];
+
+  // const movementCategories = ["barat", "selatan", "timur", "utara"];
+  // const movementLabels = ["Belok Kiri", "Lurus", "Belok Kanan"];
+  // const movementTotalsRow = [2704, 403, 34, 0]; // Total kolom (sama dengan tabel pertama)
+  // const movementTotalsCol = [1041, 1087, 1013]; // Total baris
+  // const movementGrandTotal = 3141;
+
+  const TableComponent = ({ title, matrix, rowLabels, colLabels, totalsRow, totalsCol, grandTotal }) => (
+    <div className="mb-8">
+      <h3 className="text-lg font-bold mb-4 text-center">{title}</h3>
+      <div className="w-full">
+        <table className="text-sm w-full border border-gray-400 mx-auto">
+          <thead>
+            <tr>
+              <th className="border border-gray-400 p-1.5 bg-gray-100 font-bold">
+                {title.includes("Asal") ? "ke_arah" : "arah_pergerakan"}
+              </th>
+              {colLabels?.map((cat, i) => (
+                <th key={i} className="border border-gray-400 p-1.5 bg-gray-100 font-bold">
+                  {cat}
+                </th>
+              ))}
+              <th className="border border-gray-400 p-1.5 bg-gray-100 font-bold">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {matrix?.map((row, fromIdx) => (
+              <tr key={fromIdx}>
+                <td className="border border-gray-400 p-1.5 font-bold bg-gray-50">
+                  {rowLabels[fromIdx]}
+                </td>
+                {row.map((val, toIdx) => (
+                  <td key={toIdx} className="border border-gray-400 p-1.5 text-center">
+                    {val === 0 ? "" : val.toLocaleString()}
+                  </td>
+                ))}
+                <td className="border border-gray-400 p-1.5 text-center font-bold">
+                  {totalsCol[fromIdx].toLocaleString()}
+                </td>
+              </tr>
+            ))}
+            <tr className="bg-gray-100">
+              <td className="border border-gray-400 p-1.5 font-bold">Total</td>
+              {totalsRow?.map((total, i) => (
+                <td key={i} className="border border-gray-400 p-1.5 text-center font-bold">
+                  {total === 0 ? "" : total.toLocaleString()}
+                </td>
+              ))}
+              <td className="border border-gray-400 p-1.5 text-center font-bold">
+                {grandTotal.toLocaleString()}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   if (!isClient) return null;
 
   return (
@@ -497,7 +593,7 @@ export default function Home () {
             >
               Tahun Ini
             </button>
-            
+
             {/* Period Display - appears after filter buttons */}
             {periodDisplayText && (
               <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap">
@@ -505,7 +601,7 @@ export default function Home () {
               </div>
             )}
           </div>
-          
+
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="font-medium">Loading chart data...</div>
@@ -546,6 +642,63 @@ export default function Home () {
           </div>
         )}
       </Suspense>
+      {/* <div className="flex gap-6">
+        <div className="w-fit">
+          <ChordDiagram matrix={matrix} categories={categories} />
+        </div>
+
+        <div className="overflow-auto">
+          <table className="text-sm border border-gray-300">
+            <thead>
+              <tr>
+                <th className="border px-2 py-1 bg-gray-100">Dari / Ke</th>
+                {categories.map((cat, i) => (
+                  <th key={i} className="border px-2 py-1 bg-gray-100">{cat}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {matrix.map((row, fromIdx) => (
+                <tr key={fromIdx}>
+                  <td className="border px-2 py-1 font-medium bg-gray-100">{categories[fromIdx]}</td>
+                  {row.map((val, toIdx) => (
+                    <td key={toIdx} className="border px-2 py-1 text-center">
+                      {fromIdx === toIdx ? "-" : val}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div> */}
+      <div className="w-full sm:flex overflow-x-auto place-items-center">
+        <div className="w-fit block m-auto">
+          <ChordDiagram matrix={dataChord?.chordDiagram?.matrix || {}} categories={dataChord?.chordDiagram?.categories || {}} />
+        </div>
+        <div className="p-6 max-w-4xl mx-auto">
+          <TableComponent
+            title="Matriks Asal - Tujuan (kendaraan)"
+            matrix={dataChord?.vehicleMatrix?.matrix}
+            rowLabels={dataChord?.vehicleMatrix?.rowLabels}
+            colLabels={dataChord?.vehicleMatrix?.colLabels}
+            totalsRow={dataChord?.vehicleMatrix?.totalsRow}
+            totalsCol={dataChord?.vehicleMatrix?.totalsCol}
+            grandTotal={dataChord?.vehicleMatrix?.grandTotal}
+          />
+
+          <TableComponent
+            title="Matriks Arah Pergerakan (kendaraan)"
+            matrix={dataChord?.movementMatrix?.matrix}
+            rowLabels={dataChord?.movementMatrix?.rowLabels}
+            colLabels={dataChord?.movementMatrix?.colLabels}
+            totalsRow={dataChord?.movementMatrix?.totalsRow}
+            totalsCol={dataChord?.movementMatrix?.totalsCol}
+            grandTotal={dataChord?.movementMatrix?.grandTotal}
+          />
+        </div>
+      </div>
+
       <div className="w-[90%]">
         <div className="w-full bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">CCTV Live Stream & Model Deteksi Kendaraan</div>
         <CameraStream />
