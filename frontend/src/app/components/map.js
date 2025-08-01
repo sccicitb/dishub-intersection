@@ -6,7 +6,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import Map, { NavigationControl, Marker, Source, Layer } from "@vis.gl/react-maplibre";
 import * as turf from "@turf/turf";
 import { FaMapMarkerAlt, FaAngleDown } from "react-icons/fa";
-import ruangan from "@/data/ruangan.json";
+// import ruangan from "@/data/ruangan.json";
 // import { useAuth } from "../context/authContext";
 import { maps, cameras } from '@/lib/apiService';
 import { FaRulerHorizontal } from "react-icons/fa";

@@ -20,6 +20,7 @@ const FormSAIPage = () => {
   const [headerData, setHeader] = useState({});
   const [faseApil, setFaseApil] = useState({});
   const [selectedId, setSelectedId] = useState(0);
+  // const [PayloadData, setPayload] = useState({});
 
   const handleResetAll = () => {
     setSelectedId(0);
@@ -97,7 +98,7 @@ const FormSAIPage = () => {
       ...lapangan,
       fase: { ...faseApil }
     };
-
+    // setPayload(payload)
 
     console.log('Payload gabungan:', payload, headerData);
     console.log('id:', selectedId);
@@ -201,6 +202,12 @@ const FormSAIPage = () => {
       <div className="w-full items-center flex p-6">
         <button onClick={handleSubmit} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
       </div>
+      {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
+        <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>
+        <pre className="text-xs whitespace-pre-wrap break-all max-h-96 overflow-auto bg-white p-2 rounded border border-gray-300">
+          {JSON.stringify(PayloadData, null, 2)}
+        </pre>
+      </div> */}
     </div>
   )
 }

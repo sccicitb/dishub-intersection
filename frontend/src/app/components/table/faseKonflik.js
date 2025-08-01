@@ -359,6 +359,7 @@ export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
   //   setTableData(loadData.tabel_konflik);
   //   console.log("Loaded dataFase:", loadData.tabel_konflik);
   // }, [selectedId]);
+
   useEffect(() => {
     if (!selectedId || selectedId === 0 || selectedId === '0') {
       setTableData({});
@@ -445,6 +446,14 @@ export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
       ...baseTableData,
       dataFase: combinedDataFase
     });
+
+    setDataKonflik(
+      {
+        ...baseTableData,
+        dataFase: combinedDataFase
+      }
+    )
+
   }, [selectedId]);
 
 
