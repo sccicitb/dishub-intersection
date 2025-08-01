@@ -21,12 +21,17 @@ ChartJS.register(
   Legend
 );
 
-const RainfallChart = ({data}) => {
+const RainfallChart = ({ data }) => {
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!data || data.length === 0) {
+        setLoading(false);
+        return;
+      }
+      
       try {
         const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const directions = ['Utara', 'Timur', 'Selatan', 'Barat'];

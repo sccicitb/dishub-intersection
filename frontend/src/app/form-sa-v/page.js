@@ -19,11 +19,12 @@ const FaseIVPage = () => {
   const [selectCameras, setSelectCameras] = useState();
   const [headerData, setHeader] = useState({});
   const [selectedId, setSelectedId] = useState(0);
-  const [dataFaseV, setDataFaseV] = useState([]);
+  const [dataSAV, setDataSAV] = useState([]);
+  const [payloadData, setPayloadData] = useState({});
 
   const handleResetAll = () => {
     setSelectedId(0);
-    setDataFaseV([])
+    setDataSAV([])
     setHeader({
       id: 0,
       tanggal: '',
@@ -53,16 +54,21 @@ const FaseIVPage = () => {
   useEffect(() => {
 
     payload = {
-      SAIV: { ...dataFaseV },
+      SAV: { ...dataSAV },
       // fase: { ...faseApil }
     };
 
-
+    setPayloadData(payload)
     console.log('Payload gabungan:', payload, headerData);
     console.log('id:', selectedId);
-  }, [dataFaseV, headerData, selectedId]);
+  }, [dataSAV, headerData, selectedId]);
 
   const handleSubmit = () => {
+    payload = {
+      SAV: { ...dataSAV },
+      // fase: { ...faseApil }
+    };
+
     console.log(payload);
 
     const existing = JSON.parse(localStorage.getItem('data')) || {
@@ -79,14 +85,14 @@ const FaseIVPage = () => {
       // Simpan payload ke sa1
       existing.data.sa5[headerId] = payload;
       localStorage.setItem('data', JSON.stringify(existing));
-      console.log('Data berhasil disimpan ke sa1 dengan id:', headerId);
+      console.log('Data berhasil disimpan ke sa5 dengan id:', headerId);
     } else {
       console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
     }
   };
 
   useEffect(() => { console.log(headerData) }, [headerData])
-  
+
   return (
     <div>
       <div className="w-full p-8 text-xl">
@@ -100,11 +106,17 @@ const FaseIVPage = () => {
         <h2>Form SA-V</h2>
       </div>
       <Suspense fallback={<Loading />}>
-        <FaseVTable selectedId={selectedId}/>
+        <FaseVTable selectedId={selectedId} setDataSAV={setDataSAV} />
       </Suspense>
       <div className="w-full items-center flex p-6">
         <button onClick={handleSubmit} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
       </div>
+      {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
+        <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>
+        <pre className="text-xs whitespace-pre-wrap break-all max-h-[800px] overflow-auto bg-white p-2 rounded border border-gray-300">
+          {JSON.stringify(payloadData, null, 2)}
+        </pre>
+      </div> */}
     </div>
   )
 }

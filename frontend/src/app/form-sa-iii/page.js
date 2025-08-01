@@ -19,6 +19,8 @@ const FormSAIIIPage = () => {
   const [selectCameras, setSelectCameras] = useState();
   const [headerData, setHeader] = useState({});
   const [dataKonflik, setDataKonflik] = useState([]);
+  const [payloadData, setPayloadData] = useState({})
+
   const fetchData = async () => {
     try {
       const camerasRes = await cameras.getAll();
@@ -42,6 +44,7 @@ const FormSAIIIPage = () => {
       tabel_konflik: { ...dataKonflik }
     };
     console.log('Payload gabungan:', payload);
+    setPayloadData(payload);
   }, [dataKonflik, headerData]);
 
   const submitData = () => {
@@ -141,7 +144,7 @@ const FormSAIIIPage = () => {
         <MapComponent title={""} onClick={handleCameraSelect} onClickSimpang={handleSimpangSelect} form />
       </Suspense>
       <Suspense fallback={<Loading />}>
-        <FaseKonflik setDataKonflik={setDataKonflik} selectedId={selectedId}/>
+        <FaseKonflik setDataKonflik={setDataKonflik} selectedId={selectedId} />
       </Suspense>
       <div className="w-full items-center flex p-6">
         <button onClick={handleSubmit} className="btn btn-sm w-full mx-auto btn-success">Submit</button>

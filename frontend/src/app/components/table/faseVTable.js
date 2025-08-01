@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
-export default function FormSAVTable ({ selectedId }) {
+export default function FormSAVTable ({ selectedId, setDataSAV }) {
   const [tableData, setTableData] = useState({
     trata: 0,
     totalrata: 0,
@@ -269,7 +269,7 @@ export default function FormSAVTable ({ selectedId }) {
 
     return {
       isValid: true, // SA5 bersifat opsional
-      existingData: sa5 || null
+      existingData: sa5?.SAV || null
     };
   };
 
@@ -671,7 +671,7 @@ export default function FormSAVTable ({ selectedId }) {
         const totalKendaraanTerhenti = newData.reduce((sum, row) => {
           return sum + (Number(row.nqh) ?? 0);
         }, 0);
-        
+
         const totalArah = newData.length;
         const derajatKejenuhan = Math.max(...newData.map(data => data.dj));
 
@@ -1292,6 +1292,16 @@ export default function FormSAVTable ({ selectedId }) {
             </tbody>
           </table>
         </div>
+      </div>
+      <div className="my-6 flex gap-4 w-full px-2 justify-center">
+        <button
+          className="btn btn-sm btn-success w-full"
+          onClick={() => {
+            setDataSAV(tableData)
+          }}
+        >
+          Simpan
+        </button>
       </div>
       {/* <SketsaSimpangV data={tableData} /> */}
       <div className='w-full overflow-x-auto text-sm'>

@@ -46,7 +46,6 @@ const FaseIVPage = () => {
       // fase: { ...faseApil }
     };
 
-
     console.log('Payload gabungan:', payload, headerData);
     console.log('id:', selectedId);
   }, [dataTableSAIV, headerData, selectedId]);
@@ -59,7 +58,7 @@ const FaseIVPage = () => {
     };
 
     const headerId = headerData?.id;
-    
+
     if (!existing.data.sa4) {
       existing.data.sa4 = {};
     }
