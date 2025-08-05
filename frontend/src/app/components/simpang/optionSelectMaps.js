@@ -90,7 +90,7 @@ const OptionSelectMaps = ({ onSelect, onDateSelect }) => {
   //     // Sesuaikan dengan field tanggal yang ada di data Anda
   //     const dateA = new Date(a.created_at || a.updated_at || a.tanggal || 0);
   //     const dateB = new Date(b.created_at || b.updated_at || b.tanggal || 0);
-      
+
   //     if (order === 'newest') {
   //       return dateB - dateA; // Terbaru ke terlama
   //     } else {
@@ -102,12 +102,12 @@ const OptionSelectMaps = ({ onSelect, onDateSelect }) => {
   // Fungsi untuk filter berdasarkan tanggal
   const filterBuildingsByDate = (buildings, targetDate) => {
     if (!targetDate) return buildings;
-    
+
     return buildings.filter(building => {
       // Sesuaikan dengan field tanggal yang ada di data Anda
       const buildingDate = building.created_at || building.updated_at || building.tanggal;
       if (!buildingDate) return false;
-      
+
       const buildingDateOnly = new Date(buildingDate).toISOString().split('T')[0];
       return buildingDateOnly === targetDate;
     });
@@ -131,12 +131,24 @@ const OptionSelectMaps = ({ onSelect, onDateSelect }) => {
         const camerasRes = await cameras.getAll();
         const data = camerasRes.data.cameras || [];
         setCamerasData(data);
-        
+
         const buildingsRes = await maps.getAllSimpang();
         const buildingsData = buildingsRes.data.simpang || [];
-        
+
         const filtered = combineData(buildingsData, data);
-        setBuildings(filtered);;
+
+        console.log(filtered);
+        const validation = filtered
+          .map(item => ({
+            ...item,
+            cameras: (item.cameras || []).filter(
+              cam => cam?.socket_event && cam?.socket_event !== "not_yet_assign"
+            )
+          }))
+          .filter(item => item.cameras.length > 0); // hanya simpang yang punya kamera valid
+
+
+        setBuildings(validation);
       } catch (err) {
         console.error("Failed to fetch data:", err);
         setBuildings([]);
@@ -202,7 +214,7 @@ const OptionSelectMaps = ({ onSelect, onDateSelect }) => {
           onClearDate={handleClearDate}
         />
         <div className="px-3 py-2 text-xs text-gray-500">
-          {selectedDate 
+          {selectedDate
             ? `Menampilkan ${filteredBuildings.length} lokasi pada tanggal ${formatDateLabel(selectedDate)}`
             : `Total ${buildings.length} lokasi tersedia`
           }
@@ -248,7 +260,7 @@ const OptionSelectMaps = ({ onSelect, onDateSelect }) => {
         ) : (
           <div className="px-4 py-2">
             <p className="text-xs text-gray-400 italic">
-              {selectedDate 
+              {selectedDate
                 ? `Tidak ada lokasi pada tanggal ${formatDateLabel(selectedDate)}`
                 : "Tidak ada lokasi tersedia"
               }
