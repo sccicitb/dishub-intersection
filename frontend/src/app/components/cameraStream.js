@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 // import VideoStream from '../components/videoStream';
-import CCTVStream from '../components/cctvStream';
+// import CCTVStream from '../components/cctvStream';
 import CameraStatusTimeline from "@/app/components/cameraStatusTime";
 import { maps, cameras, logCamera } from '@/lib/apiService';
 import AdaptiveVideoPlayer from './adaptiveCameraStream';
@@ -14,6 +14,44 @@ const CameraStream = () => {
   const [activeCamera, setActiveCamera] = useState('');
   const [dataCameras, setDataCameras] = useState([]);
   const [cameraLogs, setCameraLogs] = useState({});
+
+  // Sample images mapping untuk simpang
+  const sampleImages = {
+    'camera 1': '/image/sample/glagah.png',
+    'camera 2': '/image/sample/piyungan.png',
+    'camera 3': '/image/sample/other.png',
+    'camera 4': '/image/sample/tempel.png'
+  };
+
+  const descriptionCamera = {
+    'camera 1': 'Glagah',
+    'camera 2': 'Piyungan',
+    'camera 3': 'Prambanan',
+    'camera 4': 'Tempel'
+  };
+
+  // Function untuk mendapatkan sample image berdasarkan nama kamera
+  const getSampleImage = (cameraName) => {
+    const name = cameraName.toLowerCase();
+    for (const [key, imagePath] of Object.entries(sampleImages)) {
+      if (name.includes(key)) {
+        return imagePath;
+      }
+    }
+    // Default fallback ke glagah jika tidak ada yang cocok
+    return sampleImages.glagah;
+  };
+
+  const getSampleTitle = (cameraName) => {
+    const name = cameraName.toLowerCase();
+    for (const [key, imagePath] of Object.entries(descriptionCamera)) {
+      if (name.includes(key)) {
+        return imagePath;
+      }
+    }
+    // Default fallback ke glagah jika tidak ada yang cocok
+    return descriptionCamera.glagah;
+  };
 
   // Utility functions
   const formatDateToInput = (date) => {
@@ -115,7 +153,7 @@ const CameraStream = () => {
     });
 
     socket.on('disconnect', () => {
-      console.log('Socket disconnected'); 
+      console.log('Socket disconnected');
       setSocketConnected(false);
     });
 
@@ -176,33 +214,44 @@ const CameraStream = () => {
           </div>
         </div>
       )})} */}
-        {videoStreamCameras.map((cam) => {
-          return (
-            <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
-              <AdaptiveVideoPlayer
-                videoUrl={cam.url}
-                title={`Video ${cam.name}`}
-                large
-                onClick={() => console.log(`Clicked on ${cam.name}`)}
-              />
-            </div>
-          )
-        })}
+
       </div>
-              <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100 my-2" />
+      <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100 my-2" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-5">
-        {/* CCTV Streams - untuk kamera dengan socket_event selain "not_yet_assign" */}
+        {/* CCTV Streams - sementara diganti dengan sample images */}
         {cctvStreamCameras.map((cam) => {
           // console.log(dateInput);
           return (
             <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
-              <CCTVStream
+              {/* CCTVStream diganti dengan sample image */}
+              {/* <CCTVStream
                 data={streamData[cam.id]}
                 title={`CCTV ${cam.name}`}
                 large
                 onClick={() => setActiveCamera(cam.camera?.id || cam.id)}
-              />
+              /> */}
+
+              {/* Sample Image Display */}
+              <div
+                className="relative w-full aspect-video bg-black cursor-pointer"
+                onClick={() => setActiveCamera(cam.camera?.id || cam.id)}
+              >
+                <img
+                  src={getSampleImage(cam.name)}
+                  alt={`Sample CCTV ${cam.name}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback jika gambar tidak ditemukan
+                    e.target.src = sampleImages.glagah;
+                  }}
+                />
+                <div className="absolute flex items-center gap-2 place-items-center top-2 left-2 bg-black bg-opacity-70 px-2 py-1 rounded-md font-semibold text-neutral-50 text-xs">
+                  CCTV Simpang {getSampleTitle(cam.name)}
+                  <div className="w-3 h-3 rounded-full bg-green-600"></div>
+                </div>
+              </div>
+
               <CameraStatusTimeline
                 cameraStatusData={cameraLogs[cam.id]?.all || []}
                 selectedDate={dateInput}
@@ -211,9 +260,8 @@ const CameraStream = () => {
           );
         })}
       </div>
-    </div>
+    </div >
   );
 };
-
 
 export default CameraStream;
