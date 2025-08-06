@@ -8,17 +8,21 @@ var router = require("express").Router();
 // Create a complete SA-II survey
 router.post("/", saIIController.createCompleteSurvey);
 
-// Get complete SA-II survey with all related data
-router.get("/:surveyId", saIIController.getCompleteSurvey);
-
-// Update a complete SA-II survey
-router.put("/:surveyId", saIIController.updateCompleteSurvey);
-
 // =====================================================
 // EMP CONFIGURATION ROUTES
 // =====================================================
 
 // Get EMP configurations
 router.get("/emp-configurations", saIIController.getEMPConfigurations);
+
+// =====================================================
+// SURVEY ROUTES
+// =====================================================
+
+// Get complete SA-II survey with all related data
+router.get("/:surveyId", saIIController.getCompleteSurvey);
+
+// Update a complete SA-II survey
+router.put("/:surveyId", saIIController.updateCompleteSurvey);
 
 module.exports = router; 

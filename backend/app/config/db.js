@@ -12,4 +12,4 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-module.exports = pool.promise(); // Gunakan `promise()` agar bisa pakai async/await
+module.exports = pool; // Use callback-style for compatibility with existing models

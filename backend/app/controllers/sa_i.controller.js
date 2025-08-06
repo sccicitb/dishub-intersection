@@ -16,7 +16,7 @@ exports.createCompleteSurvey = (req, res) => {
     return;
   }
 
-  const { header, pendekat, fase } = req.body;
+  const { surveyHeader, pendekat, fase } = req.body;
 
   // Start database transaction
   const sql = require("../config/db.js");
@@ -41,10 +41,10 @@ exports.createCompleteSurvey = (req, res) => {
       try {
         // 1. Create main survey record
         const surveyData = {
-          simpang_id: header.simpang_id,
+          simpang_id: surveyHeader.simpang_id,
           survey_type: 'SA-I',
-          tanggal: header.tanggal,
-          perihal: header.perihal,
+          tanggal: surveyHeader.tanggal,
+          perihal: surveyHeader.perihal,
           status: 'draft'
         };
 
@@ -62,17 +62,17 @@ exports.createCompleteSurvey = (req, res) => {
           for (const pendekatItem of pendekat) {
             const pendekatData = {
               survey_id: surveyId,
-              kode_pendekat: pendekatItem.kodePendekat,
-              tipe_lingkungan_jalan: pendekatItem.tipeLingkunganJalan,
-              kelas_hambatan_samping: pendekatItem.kelasHambatanSamping,
+              kode_pendekat: pendekatItem.kode_pendekat,
+              tipe_lingkungan_jalan: pendekatItem.tipe_lingkungan_jalan,
+              kelas_hambatan_samping: pendekatItem.kelas_hambatan_samping,
               median: pendekatItem.median,
-              kelandaian_pendekat: pendekatItem.kelandaianPendekat,
+              kelandaian_pendekat: pendekatItem.kelandaian_pendekat,
               bkjt: pendekatItem.bkjt,
-              jarak_ke_kendaraan_parkir: pendekatItem.jarakKeKendaraanParkir,
-              lebar_awal_lajur: pendekatItem.lebarAwalLajur,
-              lebar_garis_henti: pendekatItem.lebarGarisHenti,
-              lebar_lajur_bki: pendekatItem.lebarLajurBki,
-              lebar_lajur_keluar: pendekatItem.lebarLajurKeluar
+              jarak_ke_kendaraan_parkir: pendekatItem.jarak_ke_kendaraan_parkir,
+              lebar_awal_lajur: pendekatItem.lebar_awal_lajur,
+              lebar_garis_henti: pendekatItem.lebar_garis_henti,
+              lebar_lajur_bki: pendekatItem.lebar_lajur_bki,
+              lebar_lajur_keluar: pendekatItem.lebar_lajur_keluar
             };
 
             await new Promise((resolve, reject) => {
