@@ -19,7 +19,7 @@ const CameraStream = () => {
   const sampleImages = {
     'camera 1': '/image/sample/glagah.png',
     'camera 2': '/image/sample/piyungan.png',
-    'camera 3': '/image/sample/other.png',
+    'camera 3': '/image/sample/prambanan.png',
     'camera 4': '/image/sample/tempel.png'
   };
 
