@@ -7,7 +7,7 @@ const SaIFaseApil = require("../models/sa_i_fase_apil.model.js");
 // =====================================================
 
 // Create a complete SA-I survey in a single transaction
-exports.createCompleteSurvey = (req, res) => {
+exports.createCompleteSurvey = async (req, res) => {
   // Validate request
   if (!req.body) {
     res.status(400).send({
@@ -21,131 +21,92 @@ exports.createCompleteSurvey = (req, res) => {
   // Start database transaction
   const sql = require("../config/db.js");
   
-  sql.getConnection((err, connection) => {
-    if (err) {
-      res.status(500).send({
-        message: "Database connection error"
-      });
-      return;
-    }
+  let connection;
+  try {
+    connection = await sql.getConnection();
+    
+    await connection.beginTransaction();
 
-    connection.beginTransaction(async (err) => {
-      if (err) {
-        connection.release();
-        res.status(500).send({
-          message: "Transaction start error"
-        });
-        return;
-      }
+    // 1. Create main survey record
+    const surveyData = {
+      simpang_id: surveyHeader.simpang_id,
+      survey_type: 'SA-I',
+      tanggal: surveyHeader.tanggal,
+      perihal: surveyHeader.perihal,
+      status: 'draft'
+    };
 
-      try {
-        // 1. Create main survey record
-        const surveyData = {
-          simpang_id: surveyHeader.simpang_id,
-          survey_type: 'SA-I',
-          tanggal: surveyHeader.tanggal,
-          perihal: surveyHeader.perihal,
-          status: 'draft'
+    const [surveyResult] = await connection.query("INSERT INTO sa_surveys SET ?", surveyData);
+    const surveyId = surveyResult.insertId;
+
+    // 2. Create pendekat records
+    if (pendekat && Array.isArray(pendekat)) {
+      for (const pendekatItem of pendekat) {
+        const pendekatData = {
+          survey_id: surveyId,
+          kode_pendekat: pendekatItem.kodePendekat,
+          tipe_lingkungan_jalan: pendekatItem.tipeLingkunganJalan,
+          kelas_hambatan_samping: pendekatItem.kelasHambatanSamping,
+          median: pendekatItem.median,
+          kelandaian_pendekat: pendekatItem.kelandaianPendekat,
+          bkjt: pendekatItem.bkjt,
+          jarak_ke_kendaraan_parkir: pendekatItem.jarakKeKendaraanParkir,
+          lebar_awal_lajur: pendekatItem.lebarAwalLajur,
+          lebar_garis_henti: pendekatItem.lebarGarisHenti,
+          lebar_lajur_bki: pendekatItem.lebarLajurBki,
+          lebar_lajur_keluar: pendekatItem.lebarLajurKeluar
         };
 
-        const surveyResult = await new Promise((resolve, reject) => {
-          connection.query("INSERT INTO sa_surveys SET ?", surveyData, (err, result) => {
-            if (err) reject(err);
-            else resolve(result);
-          });
-        });
-
-        const surveyId = surveyResult.insertId;
-
-        // 2. Create pendekat records
-        if (pendekat && Array.isArray(pendekat)) {
-          for (const pendekatItem of pendekat) {
-            const pendekatData = {
-              survey_id: surveyId,
-              kode_pendekat: pendekatItem.kode_pendekat,
-              tipe_lingkungan_jalan: pendekatItem.tipe_lingkungan_jalan,
-              kelas_hambatan_samping: pendekatItem.kelas_hambatan_samping,
-              median: pendekatItem.median,
-              kelandaian_pendekat: pendekatItem.kelandaian_pendekat,
-              bkjt: pendekatItem.bkjt,
-              jarak_ke_kendaraan_parkir: pendekatItem.jarak_ke_kendaraan_parkir,
-              lebar_awal_lajur: pendekatItem.lebar_awal_lajur,
-              lebar_garis_henti: pendekatItem.lebar_garis_henti,
-              lebar_lajur_bki: pendekatItem.lebar_lajur_bki,
-              lebar_lajur_keluar: pendekatItem.lebar_lajur_keluar
-            };
-
-            await new Promise((resolve, reject) => {
-              connection.query("INSERT INTO sa_i_pendekat SET ?", pendekatData, (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-              });
-            });
-          }
-        }
-
-        // 3. Create fase APIL records
-        if (fase && typeof fase === 'object') {
-          const directions = ['utara', 'selatan', 'timur', 'barat'];
-          const directionMap = { 'utara': 'U', 'selatan': 'S', 'timur': 'T', 'barat': 'B' };
-
-          for (const direction of directions) {
-            if (fase[direction]) {
-              const faseData = {
-                survey_id: surveyId,
-                pendekatan: directionMap[direction],
-                tipe_pendekat_terlindung: fase[direction].tipe_pendekat?.terlindung || false,
-                tipe_pendekat_terlawan: fase[direction].tipe_pendekat?.terlawan || false,
-                arah_bki: fase[direction].arah?.bki || false,
-                arah_bkijt: fase[direction].arah?.bkijt || false,
-                arah_lurus: fase[direction].arah?.lurus || false,
-                arah_bka: fase[direction].arah?.bka || false,
-                pemisahan_lurus_bka: fase[direction].pemisahan_lurus_bka || false,
-                fase_1: fase[direction].fase?.fase_1 || false,
-                fase_2: fase[direction].fase?.fase_2 || false,
-                fase_3: fase[direction].fase?.fase_3 || false,
-                fase_4: fase[direction].fase?.fase_4 || false
-              };
-
-              await new Promise((resolve, reject) => {
-                connection.query("INSERT INTO sa_i_fase_apil SET ?", faseData, (err, result) => {
-                  if (err) reject(err);
-                  else resolve(result);
-                });
-              });
-            }
-          }
-        }
-
-        // Commit transaction
-        connection.commit((err) => {
-          if (err) {
-            connection.rollback(() => {
-              connection.release();
-              res.status(500).send({
-                message: "Transaction commit error"
-              });
-            });
-            return;
-          }
-
-          connection.release();
-          res.send({
-            surveyId: surveyId,
-            message: "SA-I Survey created successfully"
-          });
-        });
-
-      } catch (error) {
-        connection.rollback(() => {
-          connection.release();
-          res.status(500).send({
-            message: "Error creating SA-I survey: " + error.message
-          });
-        });
+        await connection.query("INSERT INTO sa_i_pendekat SET ?", pendekatData);
       }
+    }
+
+    // 3. Create fase APIL records
+    if (fase && typeof fase === 'object') {
+      const directions = ['utara', 'selatan', 'timur', 'barat'];
+      const directionMap = { 'utara': 'U', 'selatan': 'S', 'timur': 'T', 'barat': 'B' };
+
+      for (const direction of directions) {
+        if (fase[direction]) {
+          const faseData = {
+            survey_id: surveyId,
+            pendekatan: directionMap[direction],
+            tipe_pendekat_terlindung: fase[direction].tipe_pendekat?.terlindung || false,
+            tipe_pendekat_terlawan: fase[direction].tipe_pendekat?.terlawan || false,
+            arah_bki: fase[direction].arah?.bki || false,
+            arah_bkijt: fase[direction].arah?.bkijt || false,
+            arah_lurus: fase[direction].arah?.lurus || false,
+            arah_bka: fase[direction].arah?.bka || false,
+            pemisahan_lurus_bka: fase[direction].pemisahan_lurus_bka || false,
+            fase_1: fase[direction].fase?.fase_1 || false,
+            fase_2: fase[direction].fase?.fase_2 || false,
+            fase_3: fase[direction].fase?.fase_3 || false,
+            fase_4: fase[direction].fase?.fase_4 || false
+          };
+
+          await connection.query("INSERT INTO sa_i_fase_apil SET ?", faseData);
+        }
+      }
+    }
+
+    // Commit transaction
+    await connection.commit();
+    
+    connection.release();
+    res.send({
+      surveyId: surveyId,
+      message: "SA-I Survey created successfully"
     });
-  });
+
+  } catch (error) {
+    if (connection) {
+      await connection.rollback();
+      connection.release();
+    }
+    res.status(500).send({
+      message: "Error creating SA-I survey: " + error.message
+    });
+  }
 };
 
 // Get complete SA-I survey with all related data

@@ -45,14 +45,9 @@ SaVDelayAnalysis.findById = (id, result) => {
   });
 };
 
-SaVDelayAnalysis.findBySurveyId = (surveyId, result) => {
-  sql.query(`SELECT * FROM sa_v_delay_analysis WHERE survey_id = ${surveyId} ORDER BY kode_pendekat`, (err, res) => {
-    if (err) {
-      result(err, null);
-      return;
-    }
-    result(null, res);
-  });
+SaVDelayAnalysis.findBySurveyId = async (surveyId) => {
+  const [rows] = await sql.query(`SELECT * FROM sa_v_delay_analysis WHERE survey_id = ? ORDER BY kode_pendekat`, [surveyId]);
+  return rows;
 };
 
 SaVDelayAnalysis.findBySurveyAndPendekat = (surveyId, kodePendekat, result) => {
