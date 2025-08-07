@@ -103,10 +103,12 @@ export default function Home () {
   });
 
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
 
-  const handleSelectLocation = (location) => {
-    console.log("Lokasi dipilih:", location); // bisa access id, nama, lat, lon, dll
+  const handleSelectOption = (location, date) => {
+    console.log("Lokasi dipilih dan tanggal:", location, date); // bisa access id, nama, lat, lon, dll
     setSelectedLocation(location);
+    setSelectedDate(date)
   };
 
   // const incomingVehiclesBar2 = {
@@ -495,47 +497,47 @@ export default function Home () {
   // const movementGrandTotal = 3141;
 
   const TableComponent = ({ title, matrix, rowLabels, colLabels, totalsRow, totalsCol, grandTotal }) => (
-    <div className="mb-8">
-      <h3 className="text-lg font-bold mb-4 text-center">{title}</h3>
+    <div className="mb-5 bg-base-100 rounded-xl shadow-xs shadow-base-300 p-5">
+      <h3 className="text-lg font-semibold mb-4 text-center">{title}</h3>
       <div className="w-full">
-        <table className="text-sm w-full border border-gray-400 mx-auto">
+        <table className="text-sm table-sm w-full border border-base-300 mx-auto">
           <thead>
             <tr>
-              <th className="border border-gray-400 p-1.5 bg-gray-100 font-bold">
+              <th className="border border-base-300 p-1.5 bg-base-200 font-semibold">
                 {title.includes("Asal") ? "ke_arah" : "arah_pergerakan"}
               </th>
               {colLabels?.map((cat, i) => (
-                <th key={i} className="border border-gray-400 p-1.5 bg-gray-100 font-bold">
+                <th key={i} className="border border-base-300 p-1.5 bg-base-200 font-semibold">
                   {cat}
                 </th>
               ))}
-              <th className="border border-gray-400 p-1.5 bg-gray-100 font-bold">Total</th>
+              <th className="border border-base-300 p-1.5 bg-base-200 font-semibold">Total</th>
             </tr>
           </thead>
           <tbody>
             {matrix?.map((row, fromIdx) => (
               <tr key={fromIdx}>
-                <td className="border border-gray-400 p-1.5 font-bold bg-gray-50">
+                <td className="border border-base-300 p-1.5 font-semibold bg-base-50">
                   {rowLabels[fromIdx]}
                 </td>
                 {row.map((val, toIdx) => (
-                  <td key={toIdx} className="border border-gray-400 p-1.5 text-center">
+                  <td key={toIdx} className="border border-base-300 p-1.5 text-center">
                     {val === 0 ? "" : val.toLocaleString()}
                   </td>
                 ))}
-                <td className="border border-gray-400 p-1.5 text-center font-bold">
+                <td className="border border-base-300 p-1.5 text-center font-semibold">
                   {totalsCol[fromIdx].toLocaleString()}
                 </td>
               </tr>
             ))}
-            <tr className="bg-gray-100">
-              <td className="border border-gray-400 p-1.5 font-bold">Total</td>
+            <tr className="bg-base-200">
+              <td className="border border-base-300 p-1.5 font-semibold">Total</td>
               {totalsRow?.map((total, i) => (
-                <td key={i} className="border border-gray-400 p-1.5 text-center font-bold">
+                <td key={i} className="border border-base-300 p-1.5 text-center font-semibold">
                   {total === 0 ? "" : total.toLocaleString()}
                 </td>
               ))}
-              <td className="border border-gray-400 p-1.5 text-center font-bold">
+              <td className="border border-base-300 p-1.5 text-center font-semibold">
                 {grandTotal.toLocaleString()}
               </td>
             </tr>
@@ -658,16 +660,16 @@ export default function Home () {
           <table className="text-sm border border-gray-300">
             <thead>
               <tr>
-                <th className="border px-2 py-1 bg-gray-100">Dari / Ke</th>
+                <th className="border px-2 py-1 bg-base-200">Dari / Ke</th>
                 {categories.map((cat, i) => (
-                  <th key={i} className="border px-2 py-1 bg-gray-100">{cat}</th>
+                  <th key={i} className="border px-2 py-1 bg-base-200">{cat}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {matrix.map((row, fromIdx) => (
                 <tr key={fromIdx}>
-                  <td className="border px-2 py-1 font-medium bg-gray-100">{categories[fromIdx]}</td>
+                  <td className="border px-2 py-1 font-medium bg-base-200">{categories[fromIdx]}</td>
                   {row.map((val, toIdx) => (
                     <td key={toIdx} className="border px-2 py-1 text-center">
                       {fromIdx === toIdx ? "-" : val}
@@ -680,9 +682,12 @@ export default function Home () {
         </div>
       </div> */}
 
-      <div className="w-[90%] py-10 block bg-base-200 rounded-xl">
-        <div className="w-full px-10">
-          <OptionSelectMaps onSelect={handleSelectLocation} />
+      <div className="w-[90%] py-5 block bg-base-200 rounded-xl">
+        <div className="w-full px-5">
+          <OptionSelectMaps
+            onSelect={(selectedLocation) => handleSelectOption(selectedLocation, selectedDate)}
+            onDateSelect={(selectedDate) => handleSelectOption(selectedLocation, selectedDate)}
+          />
         </div>
         {/* {selectedLocation && (
           <div className="mt-4 text-sm text-green-600">
@@ -693,7 +698,7 @@ export default function Home () {
           <div className="w-fit block m-auto">
             <ChordDiagram matrix={dataChord?.chordDiagram?.matrix || {}} categories={dataChord?.chordDiagram?.categories || {}} />
           </div>
-          <div className="p-6 max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <TableComponent
               title="Matriks Asal - Tujuan (kendaraan)"
               matrix={dataChord?.vehicleMatrix?.matrix}
