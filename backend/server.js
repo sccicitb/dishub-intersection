@@ -61,12 +61,37 @@ require('./app/routes/camera.routes.js')(app);
 require("./app/routes/survey.routes.js")(app);
 require('./app/routes/simpang.routes')(app);
 
+// Register the new survey routes
+const saSurveyRoutes = require('./app/routes/sa_surveys.routes.js');
+app.use('/api/sa-surveys', saSurveyRoutes);
+
+// Register SA-I specific routes
+const saIRoutes = require('./app/routes/sa_i.routes.js');
+app.use('/api/sa-surveys/sa-i', saIRoutes);
+
+// Register SA-II specific routes
+const saIIRoutes = require('./app/routes/sa_ii.routes.js');
+app.use('/api/sa-surveys/sa-ii', saIIRoutes);
+
+// Register SA-III specific routes
+const saIIIRoutes = require('./app/routes/sa_iii.routes.js');
+app.use('/api/sa-surveys/sa-iii', saIIIRoutes);
+
+// Register SA-IV specific routes
+const saIVRoutes = require('./app/routes/sa_iv.routes.js');
+app.use('/api/sa-surveys/sa-iv', saIVRoutes);
+
+// Register SA-V specific routes
+const saVRoutes = require('./app/routes/sa_v.routes.js');
+app.use('/api/sa-surveys/sa-v', saVRoutes);
+
 // Authentication and User Management Routes
 const authRoutes = require('./app/routes/auth.routes');
 const userRoutes = require('./app/routes/user.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+
 // Simpan instance listen di variabel
 const PORT = process.env.PORT || 8080;
 
