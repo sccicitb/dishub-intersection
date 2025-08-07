@@ -85,6 +85,13 @@ app.use('/api/sa-surveys/sa-iv', saIVRoutes);
 const saVRoutes = require('./app/routes/sa_v.routes.js');
 app.use('/api/sa-surveys/sa-v', saVRoutes);
 
+// Authentication and User Management Routes
+const authRoutes = require('./app/routes/auth.routes');
+const userRoutes = require('./app/routes/user.routes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+
 // Simpan instance listen di variabel
 const PORT = process.env.PORT || 8080;
 
