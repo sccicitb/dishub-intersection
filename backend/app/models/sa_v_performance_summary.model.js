@@ -35,18 +35,9 @@ SaVPerformanceSummary.findById = (id, result) => {
   });
 };
 
-SaVPerformanceSummary.findBySurveyId = (surveyId, result) => {
-  sql.query(`SELECT * FROM sa_v_performance_summary WHERE survey_id = ${surveyId}`, (err, res) => {
-    if (err) {
-      result(err, null);
-      return;
-    }
-    if (res.length) {
-      result(null, res[0]);
-      return;
-    }
-    result({ kind: "not_found" }, null);
-  });
+SaVPerformanceSummary.findBySurveyId = async (surveyId) => {
+  const [rows] = await sql.query(`SELECT * FROM sa_v_performance_summary WHERE survey_id = ?`, [surveyId]);
+  return rows.length > 0 ? rows[0] : null;
 };
 
 SaVPerformanceSummary.updateById = (id, performanceSummary, result) => {

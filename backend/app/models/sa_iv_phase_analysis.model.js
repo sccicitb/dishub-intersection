@@ -36,14 +36,9 @@ SaIVPhaseAnalysis.findById = (id, result) => {
   });
 };
 
-SaIVPhaseAnalysis.findBySurveyId = (surveyId, result) => {
-  sql.query(`SELECT * FROM sa_iv_phase_analysis WHERE survey_id = ${surveyId} ORDER BY kode_pendekat`, (err, res) => {
-    if (err) {
-      result(err, null);
-      return;
-    }
-    result(null, res);
-  });
+SaIVPhaseAnalysis.findBySurveyId = async (surveyId) => {
+  const [rows] = await sql.query(`SELECT * FROM sa_iv_phase_analysis WHERE survey_id = ? ORDER BY kode_pendekat`, [surveyId]);
+  return rows;
 };
 
 SaIVPhaseAnalysis.findBySurveyAndPendekat = (surveyId, kodePendekat, result) => {

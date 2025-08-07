@@ -10,7 +10,7 @@
 CREATE TABLE IF NOT EXISTS `sa_surveys` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `simpang_id` bigint unsigned NOT NULL,
-  `survey_type` enum('SA-I','SA-II','SA-III','SA-IV','SA-V') NOT NULL,
+  `survey_type` enum('SA-I','SA-II','SA-III','SA-IV','SA-V') NULL COMMENT 'NULL for headers, enum value for form data',
   `tanggal` date NOT NULL,
   `perihal` text,
   `status` enum('draft','completed','approved') DEFAULT 'draft',

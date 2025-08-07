@@ -152,4 +152,38 @@ SaIVCalculationConfig.getDefaultConfig = (simpangId, result) => {
   });
 };
 
+// Get formatted configuration for frontend
+SaIVCalculationConfig.getFormattedConfig = async () => {
+  const [rows] = await sql.query("SELECT * FROM sa_iv_calculation_config");
+  
+  // Format the data as expected by frontend
+  const formatted = {
+    base_saturation_flow: 6900,
+    adjustment_factors: {
+      fus: 1.05,  // Faktor hambatan samping
+      fuk: 0.95,  // Faktor ukuran kota
+      fug: 1.00,  // Faktor gradien
+      fup: 1.00,  // Faktor parkir
+      fbki: 1.00, // Faktor belok kiri
+      fbka: 0.99  // Faktor belok kanan
+    },
+    calculation_rules: {
+      capacity_formula: "C = (J * WHI) / S",
+      saturation_formula: "J = LE * FUS * FUK * FUG * FUP * FBKI * FBKA",
+      flow_ratio_formula: "Rq/j = q / J",
+      phase_ratio_formula: "RF = Rq/j / Rig",
+      degree_of_saturation_formula: "DJ = q / C"
+    }
+  };
+  
+  if (rows.length > 0) {
+    const config = rows[0];
+    formatted.base_saturation_flow = config.base_saturation_flow || 6900;
+    formatted.adjustment_factors = JSON.parse(config.adjustment_factors || '{}');
+    formatted.calculation_rules = JSON.parse(config.calculation_rules || '{}');
+  }
+  
+  return formatted;
+};
+
 module.exports = SaIVCalculationConfig; 

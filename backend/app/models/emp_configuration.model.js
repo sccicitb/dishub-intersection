@@ -95,27 +95,22 @@ EMPConfiguration.remove = (id, result) => {
 };
 
 // Get EMP configurations in the format expected by frontend
-EMPConfiguration.getFormattedConfig = (result) => {
-  sql.query("SELECT * FROM emp_configurations WHERE is_active = true", (err, res) => {
-    if (err) {
-      result(err, null);
-      return;
+EMPConfiguration.getFormattedConfig = async () => {
+  const [rows] = await sql.query("SELECT * FROM emp_configurations WHERE is_active = true");
+  
+  // Format the data as expected by frontend
+  const formatted = {
+    terlindung: {},
+    terlawan: {}
+  };
+  
+  rows.forEach(row => {
+    if (!formatted[row.condition_type][row.vehicle_type]) {
+      formatted[row.condition_type][row.vehicle_type] = row.emp_value;
     }
-    
-    // Format the data as expected by frontend
-    const formatted = {
-      terlindung: {},
-      terlawan: {}
-    };
-    
-    res.forEach(row => {
-      if (!formatted[row.condition_type][row.vehicle_type]) {
-        formatted[row.condition_type][row.vehicle_type] = row.emp_value;
-      }
-    });
-    
-    result(null, formatted);
   });
+  
+  return formatted;
 };
 
 module.exports = EMPConfiguration; 

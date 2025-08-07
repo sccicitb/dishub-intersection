@@ -35,14 +35,9 @@ SaIIIMeasurements.findById = (id, result) => {
   });
 };
 
-SaIIIMeasurements.findBySurveyId = (surveyId, result) => {
-  sql.query(`SELECT * FROM sa_iii_measurements WHERE survey_id = ${surveyId} ORDER BY created_at`, (err, res) => {
-    if (err) {
-      result(err, null);
-      return;
-    }
-    result(null, res);
-  });
+SaIIIMeasurements.findBySurveyId = async (surveyId) => {
+  const [rows] = await sql.query(`SELECT * FROM sa_iii_measurements WHERE survey_id = ? ORDER BY created_at`, [surveyId]);
+  return rows;
 };
 
 SaIIIMeasurements.updateById = (id, measurement, result) => {
