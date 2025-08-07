@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Form SA APIs - Traffic Intersection Analysis",
-    "description": "Complete API collection for testing all Form SA (SA-I through SA-V) endpoints. Includes Requirements.md payload examples for frontend integration testing.",
+    "name": "Form SA API Collection",
+    "description": "Complete API collection for Form SA (SA-I through SA-V) traffic intersection analysis",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -13,139 +13,8 @@
   ],
   "item": [
     {
-      "name": "📋 Requirements.md Test Cases",
-      "description": "Test cases matching exact payload structures from Requirements.md",
-      "item": [
-        {
-          "name": "SA-I Header (Requirements.md Format)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"simpang_id\": 1,\n  \"survey_type\": \"SA-I\",\n  \"tanggal\": \"2025-07-16\",\n  \"perihal\": \"Testing 3\",\n  \"status\": \"draft\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/sa-surveys",
-              "host": ["{{base_url}}"],
-              "path": ["sa-surveys"]
-            }
-          }
-        },
-        {
-          "name": "SA-I Complete (Requirements.md Format)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"surveyHeader\": {\n    \"simpang_id\": 1,\n    \"tanggal\": \"2025-07-16\",\n    \"perihal\": \"Testing 3\",\n    \"status\": \"draft\"\n  },\n  \"pendekat\": [\n    {\n      \"kode_pendekat\": \"u\",\n      \"tipe_lingkungan_jalan\": \"kom\",\n      \"kelas_hambatan_samping\": \"t\",\n      \"median\": \"Ada\",\n      \"kelandaian_pendekat\": 5,\n      \"bkjt\": true,\n      \"jarak_ke_kendaraan_parkir\": 16,\n      \"lebar_awal_lajur\": 1,\n      \"lebar_garis_henti\": 2,\n      \"lebar_lajur_bki\": 1,\n      \"lebar_lajur_keluar\": 1\n    }\n  ],\n  \"fase\": {\n    \"lokasi\": \"\",\n    \"data\": {\n      \"utara\": {\n        \"tipe_pendekat\": {\n          \"terlindung\": true,\n          \"terlawan\": false\n        },\n        \"arah\": {\n          \"bki\": true,\n          \"bkijt\": false,\n          \"lurus\": true,\n          \"bka\": true\n        },\n        \"pemisahan_lurus_bka\": true,\n        \"fase\": {\n          \"fase_1\": true,\n          \"fase_2\": false,\n          \"fase_3\": false,\n          \"fase_4\": false\n        }\n      }\n    }\n  }\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/sa-surveys/sa-i",
-              "host": ["{{base_url}}"],
-              "path": ["sa-surveys", "sa-i"]
-            }
-          }
-        },
-        {
-          "name": "SA-II Complete (Requirements.md Format)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"header\": {\n    \"simpang_id\": 1,\n    \"tanggal\": \"2025-07-16\",\n    \"perihal\": \"SA-II Testing\",\n    \"status\": \"draft\"\n  },\n  \"ekuivalensi\": {\n    \"terlindung\": {\n      \"mp\": 2,\n      \"ks\": 2,\n      \"sm\": 3\n    },\n    \"terlawan\": {\n      \"mp\": 1,\n      \"ks\": 2.5,\n      \"sm\": 1.5\n    }\n  },\n  \"surveyData\": [\n    {\n      \"direction\": \"B\",\n      \"rows\": [\n        {\n          \"type\": \"BKi / BKIJT\",\n          \"mp\": {\n            \"terlindung\": 1000,\n            \"terlawan\": 500,\n            \"smpTerlindung\": 2000,\n            \"smpTerlawan\": 500\n          },\n          \"ks\": {\n            \"terlindung\": 160,\n            \"terlawan\": 200,\n            \"smpTerlindung\": 320,\n            \"smpTerlawan\": 500\n          },\n          \"sm\": {\n            \"terlindung\": 330,\n            \"terlawan\": 165,\n            \"smpTerlindung\": 990,\n            \"smpTerlawan\": 247.5\n          },\n          \"total\": {\n            \"terlindung\": 1490,\n            \"terlawan\": 865,\n            \"smpTerlindung\": 3310,\n            \"smpTerlawan\": 1247.5,\n            \"kendjam\": 690\n          },\n          \"ktb\": {\n            \"rasio\": 0.28,\n            \"count\": 1\n          },\n          \"rktb\": 3\n        }\n      ]\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/sa-surveys/sa-ii",
-              "host": ["{{base_url}}"],
-              "path": ["sa-surveys", "sa-ii"]
-            }
-          }
-        },
-        {
-          "name": "SA-III Complete (Requirements.md Format)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"header\": {\n    \"simpang_id\": 1,\n    \"tanggal\": \"2025-07-16\",\n    \"perihal\": \"SA-III Testing\",\n    \"status\": \"draft\"\n  },\n  \"phaseData\": [\n    {\n      \"fase_number\": 1,\n      \"kode_pendekat\": \"U\",\n      \"jarak_type\": \"lintasanBerangkat\",\n      \"pendekat_u\": 0,\n      \"pendekat_s\": 0,\n      \"pendekat_t\": 0,\n      \"pendekat_b\": 0,\n      \"kecepatan_berangkat\": 0,\n      \"kecepatan_datang\": 0,\n      \"kecepatan_pejalan_kaki\": 0,\n      \"waktu_tempuh\": 0,\n      \"w_ms\": 0,\n      \"w_ms_disesuaikan\": 0,\n      \"w_k\": 0,\n      \"w_ah\": 0,\n      \"w_hh\": 0\n    }\n  ],\n  \"measurements\": [\n    {\n      \"measurement_label\": \"Test Measurement\",\n      \"start_longitude\": 110.3700,\n      \"start_latitude\": -7.7971,\n      \"end_longitude\": 110.3701,\n      \"end_latitude\": -7.7972,\n      \"distance_meters\": 15.5\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/sa-surveys/sa-iii",
-              "host": ["{{base_url}}"],
-              "path": ["sa-surveys", "sa-iii"]
-            }
-          }
-        },
-        {
-          "name": "SA-IV Complete (Requirements.md Format)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"surveyHeader\": {\n    \"simpang_id\": 1,\n    \"tanggal\": \"2025-07-16\",\n    \"perihal\": \"SA-IV Testing\",\n    \"status\": \"draft\"\n  },\n  \"capacityAnalysis\": [\n    {\n      \"kode_pendekat\": \"B\",\n      \"tipe_pendekat\": \"P\",\n      \"rasio_kendaraan_belok\": {\n        \"rbkijt\": 0.41,\n        \"rbki\": 0.28,\n        \"rbka\": 0.31\n      },\n      \"arus_belok_kanan\": {\n        \"dari_arah_ditinjau\": 1437.5,\n        \"dari_arah_berlawanan\": 332.5\n      },\n      \"lebar_efektif\": 5,\n      \"arus_jenuh_dasar\": 3000,\n      \"faktor_penyesuaian\": {\n        \"fhs\": 2,\n        \"fuk\": 1,\n        \"fg\": 1,\n        \"fp\": 1,\n        \"fbki\": 1,\n        \"fbka\": 1\n      },\n      \"arus_jenuh_yang_disesuaikan\": 6000,\n      \"arus_lalu_lintas\": 1615,\n      \"rasio_arus\": 0.269,\n      \"rasio_fase\": 0.158,\n      \"waktu_hijau_per_fase\": 13,\n      \"kapasitas\": 780,\n      \"derajat_kejenuhan\": 2.071\n    }\n  ],\n  \"phaseAnalysis\": [\n    {\n      \"kode_pendekat\": \"B\",\n      \"tipe_pendekat\": \"P\",\n      \"arah\": \"Terlindung\",\n      \"pemisahan_lurus_rka\": false,\n      \"phases\": {\n        \"f1\": {\n          \"mf\": 1.0,\n          \"whi\": 30,\n          \"w_all\": {\n            \"wk\": 3,\n            \"wms\": 2\n          }\n        }\n      },\n      \"whi_total\": 30,\n      \"cycle_time\": 100\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/sa-surveys/sa-iv",
-              "host": ["{{base_url}}"],
-              "path": ["sa-surveys", "sa-iv"]
-            }
-          }
-        },
-        {
-          "name": "SA-V Complete (Requirements.md Format)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"header\": {\n    \"simpang_id\": 1,\n    \"tanggal\": \"2025-07-16\",\n    \"perihal\": \"SA-V Testing\",\n    \"status\": \"draft\"\n  },\n  \"delayData\": [\n    {\n      \"kode_pendekat\": \"B\",\n      \"arus_lalu_lintas\": 3230,\n      \"kapasitas\": 1170,\n      \"derajat_kejenuhan\": 6.212,\n      \"rasio_hijau\": 0.260,\n      \"nq1\": 261,\n      \"nq2\": -108,\n      \"nq\": 153,\n      \"nq_max\": 242,\n      \"panjang_antrian\": 4840,\n      \"rasio_kendaraan_terhenti\": 1.535,\n      \"jumlah_kendaraan_terhenti\": 4958,\n      \"tundaan_lalu_lintas\": 759,\n      \"tundaan_geometri\": 6,\n      \"tundaan_rata_rata\": 765,\n      \"tundaan_total\": 2470950\n    }\n  ],\n  \"performanceSummary\": {\n    \"total_kendaraan_terhenti\": 7451,\n    \"rasio_kendaraan_terhenti_rata\": 1.097,\n    \"total_tundaan\": 3274870,\n    \"tundaan_simpang_rata\": 482.308,\n    \"level_of_service\": \"F\",\n    \"performance_evaluation\": \"Poor performance - requires immediate attention\"\n  }\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/sa-surveys/sa-v",
-              "host": ["{{base_url}}"],
-              "path": ["sa-surveys", "sa-v"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "📋 Core Survey Management",
+      "name": "🚀 NEW: Survey Header Management",
+      "description": "New APIs for managing survey headers that can be reused across multiple forms",
       "item": [
         {
           "name": "Create Survey Header",
@@ -159,12 +28,129 @@
             ],
             "body": {
               "mode": "raw",
+              "raw": "{\n  \"simpang_id\": 1,\n  \"tanggal\": \"2025-01-15\",\n  \"perihal\": \"Traffic analysis for intersection optimization\",\n  \"status\": \"draft\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sa-surveys/headers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sa-surveys", "headers"]
+            }
+          }
+        },
+        {
+          "name": "Get All Survey Headers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/sa-surveys/headers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sa-surveys", "headers"]
+            }
+          }
+        },
+        {
+          "name": "Get Survey Header by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/sa-surveys/headers/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sa-surveys", "headers", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Survey Header",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"simpang_id\": 1,\n  \"tanggal\": \"2025-01-15\",\n  \"perihal\": \"Updated traffic analysis\",\n  \"status\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sa-surveys/headers/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sa-surveys", "headers", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Survey Header",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/sa-surveys/headers/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sa-surveys", "headers", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get All Forms for Header",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/sa-surveys/headers/1/forms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sa-surveys", "headers", "1", "forms"]
+            }
+          }
+        },
+        {
+          "name": "Add Form to Header",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"form_type\": \"SA-I\",\n  \"status\": \"draft\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sa-surveys/headers/1/forms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sa-surveys", "headers", "1", "forms"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Core Survey Management",
+      "description": "Basic survey CRUD operations",
+      "item": [
+        {
+          "name": "Create Survey",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
               "raw": "{\n  \"simpang_id\": 1,\n  \"survey_type\": \"SA-I\",\n  \"tanggal\": \"2025-01-15\",\n  \"perihal\": \"Traffic analysis for intersection optimization\",\n  \"status\": \"draft\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/sa-surveys",
+              "raw": "{{base_url}}/api/sa-surveys",
               "host": ["{{base_url}}"],
-              "path": ["sa-surveys"]
+              "path": ["api", "sa-surveys"]
             }
           }
         },
@@ -174,9 +160,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/sa-surveys/survey?id=1",
+              "raw": "{{base_url}}/api/sa-surveys/survey?id=1",
               "host": ["{{base_url}}"],
-              "path": ["sa-surveys", "survey"],
+              "path": ["api", "sa-surveys", "survey"],
               "query": [
                 {
                   "key": "id",
@@ -192,9 +178,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/sa-surveys",
+              "raw": "{{base_url}}/api/sa-surveys",
               "host": ["{{base_url}}"],
-              "path": ["sa-surveys"]
+              "path": ["api", "sa-surveys"]
             }
           }
         },
@@ -213,9 +199,9 @@
               "raw": "{\n  \"perihal\": \"Updated traffic analysis description\",\n  \"status\": \"completed\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/sa-surveys/survey?id=1",
+              "raw": "{{base_url}}/api/sa-surveys/survey?id=1",
               "host": ["{{base_url}}"],
-              "path": ["sa-surveys", "survey"],
+              "path": ["api", "sa-surveys", "survey"],
               "query": [
                 {
                   "key": "id",
@@ -231,9 +217,9 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/sa-surveys/survey?id=1",
+              "raw": "{{base_url}}/api/sa-surveys/survey?id=1",
               "host": ["{{base_url}}"],
-              "path": ["sa-surveys", "survey"],
+              "path": ["api", "sa-surveys", "survey"],
               "query": [
                 {
                   "key": "id",

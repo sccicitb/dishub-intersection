@@ -1,4 +1,4 @@
-const SaSurvey = require("../models/sa_survey.model.js");
+const SaSurveyHeader = require("../models/sa_survey_header.model.js");
 const SaIVCapacityAnalysis = require("../models/sa_iv_capacity_analysis.model.js");
 const SaIVPhaseAnalysis = require("../models/sa_iv_phase_analysis.model.js");
 const SaIVCalculationConfig = require("../models/sa_iv_calculation_config.model.js");

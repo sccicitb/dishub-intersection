@@ -61,9 +61,9 @@ require('./app/routes/camera.routes.js')(app);
 require("./app/routes/survey.routes.js")(app);
 require('./app/routes/simpang.routes')(app);
 
-// Register the new survey routes
-const saSurveyRoutes = require('./app/routes/sa_surveys.routes.js');
-app.use('/api/sa-surveys', saSurveyRoutes);
+// Register the survey header routes
+const saSurveyHeaderRoutes = require('./app/routes/sa_survey_headers.routes.js');
+app.use('/api/sa-surveys', saSurveyHeaderRoutes);
 
 // Register SA-I specific routes
 const saIRoutes = require('./app/routes/sa_i.routes.js');

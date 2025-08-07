@@ -1,4 +1,4 @@
-const SaSurvey = require("../models/sa_survey.model.js");
+const SaSurveyHeader = require("../models/sa_survey_header.model.js");
 const SaIPendekat = require("../models/sa_i_pendekat.model.js");
 const SaIFaseApil = require("../models/sa_i_fase_apil.model.js");
 

@@ -1,4 +1,4 @@
-const SaSurvey = require("../models/sa_survey.model.js");
+const SaSurveyHeader = require("../models/sa_survey_header.model.js");
 const SaIIVehicleData = require("../models/sa_ii_vehicle_data.model.js");
 const SaIIKTBData = require("../models/sa_ii_ktb_data.model.js");
 const EMPConfiguration = require("../models/emp_configuration.model.js");

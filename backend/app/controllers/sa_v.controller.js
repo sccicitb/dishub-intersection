@@ -1,4 +1,4 @@
-const SaSurvey = require("../models/sa_survey.model.js");
+const SaSurveyHeader = require("../models/sa_survey_header.model.js");
 const SaVDelayAnalysis = require("../models/sa_v_delay_analysis.model.js");
 const SaVPerformanceSummary = require("../models/sa_v_performance_summary.model.js");
 

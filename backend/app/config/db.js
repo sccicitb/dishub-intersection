@@ -12,4 +12,4 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-module.exports = pool; // Use callback-style for compatibility with existing models
+module.exports = pool.promise(); // Use promise-style for compatibility with existing models
