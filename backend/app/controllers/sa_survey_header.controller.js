@@ -1,6 +1,22 @@
 const SaSurveyHeader = require("../models/sa_survey_header.model.js");
 const sql = require("../config/db.js");
 
+// Helper function to safely parse JSON
+const safeJsonParse = (jsonString, defaultValue = ['Default Road']) => {
+  try {
+    if (typeof jsonString === 'string') {
+      return JSON.parse(jsonString);
+    } else if (Array.isArray(jsonString)) {
+      return jsonString;
+    } else {
+      return defaultValue;
+    }
+  } catch (error) {
+    console.warn('JSON parse error:', error.message, 'for value:', jsonString);
+    return defaultValue;
+  }
+};
+
 // Create a new survey header
 exports.createHeader = async (req, res) => {
   try {
@@ -11,20 +27,47 @@ exports.createHeader = async (req, res) => {
       });
     }
 
-    // Create a header (without survey_type initially)
+    // Validate required fields
+    if (!req.body.tanggal) {
+      return res.status(400).send({
+        message: "tanggal is required!"
+      });
+    }
+
+    // Create a header with new structure
     const header = new SaSurveyHeader({
-      simpang_id: req.body.simpang_id,
       tanggal: req.body.tanggal,
       perihal: req.body.perihal,
-      status: req.body.status || 'draft'
+      kabupaten_kota: req.body.kabupatenKota || req.body.kabupaten_kota,
+      lokasi: req.body.lokasi,
+      ruas_jalan_mayor: req.body.ruasJalanMayor || req.body.ruas_jalan_mayor,
+      ruas_jalan_minor: req.body.ruasJalanMinor || req.body.ruas_jalan_minor,
+      ukuran_kota: req.body.ukuranKota || req.body.ukuran_kota,
+      periode: req.body.periode
     });
 
     // Save header in the database
     const data = await SaSurveyHeader.create(header);
+    
+    // Format response to match API documentation
+    const response = {
+      id: data.id,
+      tanggal: data.tanggal,
+      kabupatenKota: data.kabupaten_kota,
+      lokasi: data.lokasi,
+      ruasJalanMayor: safeJsonParse(data.ruas_jalan_mayor),
+      ruasJalanMinor: safeJsonParse(data.ruas_jalan_minor),
+      ukuranKota: data.ukuran_kota,
+      perihal: data.perihal,
+      periode: data.periode,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+
     res.send({
       success: true,
       message: "Survey header created successfully",
-      data: data
+      data: response
     });
   } catch (err) {
     res.status(500).send({
@@ -37,14 +80,32 @@ exports.createHeader = async (req, res) => {
 exports.getAllHeaders = async (req, res) => {
   try {
     const params = {
-      simpang_id: req.query.simpang_id,
-      status: req.query.status
+      kabupaten_kota: req.query.kabupatenKota || req.query.kabupaten_kota,
+      lokasi: req.query.lokasi,
+      periode: req.query.periode,
+      tanggal: req.query.tanggal
     };
 
     const data = await SaSurveyHeader.getAll(params);
+    
+    // Format response to match API documentation
+    const formattedData = data.map(header => ({
+      id: header.id,
+      tanggal: header.tanggal,
+      kabupatenKota: header.kabupaten_kota,
+      lokasi: header.lokasi,
+      ruasJalanMayor: safeJsonParse(header.ruas_jalan_mayor),
+      ruasJalanMinor: safeJsonParse(header.ruas_jalan_minor),
+      ukuranKota: header.ukuran_kota,
+      perihal: header.perihal,
+      periode: header.periode,
+      createdAt: header.created_at,
+      updatedAt: header.updated_at
+    }));
+
     res.send({
       success: true,
-      data: data
+      data: formattedData
     });
   } catch (err) {
     res.status(500).send({
@@ -57,9 +118,25 @@ exports.getAllHeaders = async (req, res) => {
 exports.getHeaderById = async (req, res) => {
   try {
     const data = await SaSurveyHeader.findById(req.params.id);
+    
+    // Format response to match API documentation
+    const response = {
+      id: data.id,
+      tanggal: data.tanggal,
+      kabupatenKota: data.kabupaten_kota,
+      lokasi: data.lokasi,
+      ruasJalanMayor: safeJsonParse(data.ruas_jalan_mayor),
+      ruasJalanMinor: safeJsonParse(data.ruas_jalan_minor),
+      ukuranKota: data.ukuran_kota,
+      perihal: data.perihal,
+      periode: data.periode,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+
     res.send({
       success: true,
-      data: data
+      data: response
     });
   } catch (err) {
     if (err.kind === "not_found") {
@@ -84,17 +161,36 @@ exports.updateHeader = async (req, res) => {
       });
     }
 
-    const data = await SaSurveyHeader.updateById(req.params.id, {
-      simpang_id: req.body.simpang_id,
+    const updateData = {
       tanggal: req.body.tanggal,
       perihal: req.body.perihal,
-      status: req.body.status
-    });
+      kabupaten_kota: req.body.kabupatenKota || req.body.kabupaten_kota,
+      lokasi: req.body.lokasi,
+      ruas_jalan_mayor: req.body.ruasJalanMayor || req.body.ruas_jalan_mayor,
+      ruas_jalan_minor: req.body.ruasJalanMinor || req.body.ruas_jalan_minor,
+      ukuran_kota: req.body.ukuranKota || req.body.ukuran_kota,
+      periode: req.body.periode
+    };
+
+    const data = await SaSurveyHeader.updateById(req.params.id, updateData);
+    
+    // Format response to match API documentation
+    const response = {
+      id: data.id,
+      tanggal: data.tanggal,
+      kabupatenKota: data.kabupaten_kota,
+      lokasi: data.lokasi,
+      ruasJalanMayor: safeJsonParse(data.ruas_jalan_mayor),
+      ruasJalanMinor: safeJsonParse(data.ruas_jalan_minor),
+      ukuranKota: data.ukuran_kota,
+      perihal: data.perihal,
+      periode: data.periode
+    };
 
     res.send({
       success: true,
       message: "Survey header updated successfully",
-      data: data
+      data: response
     });
   } catch (err) {
     if (err.kind === "not_found") {
@@ -133,54 +229,54 @@ exports.deleteHeader = async (req, res) => {
 // Get all forms for a specific header
 exports.getFormsByHeaderId = async (req, res) => {
   try {
-    const data = await SaSurveyHeader.getFormsByHeaderId(req.params.id);
+    // Check if header exists first
+    const header = await SaSurveyHeader.findById(req.params.id);
+    if (!header) {
+      return res.status(404).send({
+        message: `Survey header with id ${req.params.id} not found.`
+      });
+    }
+
+    // Get all related forms by checking each SA table
+    const forms = [];
+    
+    // Check SA-I forms
+    const [saIForms] = await sql.query("SELECT COUNT(*) as count FROM sa_i_pendekat WHERE survey_id = ?", [req.params.id]);
+    if (saIForms[0].count > 0) {
+      forms.push({ form_type: "SA-I", count: saIForms[0].count });
+    }
+    
+    // Check SA-II forms
+    const [saIIForms] = await sql.query("SELECT COUNT(*) as count FROM sa_ii_vehicle_data WHERE survey_id = ?", [req.params.id]);
+    if (saIIForms[0].count > 0) {
+      forms.push({ form_type: "SA-II", count: saIIForms[0].count });
+    }
+    
+    // Check SA-III forms
+    const [saIIIForms] = await sql.query("SELECT COUNT(*) as count FROM sa_iii_phase_data WHERE survey_id = ?", [req.params.id]);
+    if (saIIIForms[0].count > 0) {
+      forms.push({ form_type: "SA-III", count: saIIIForms[0].count });
+    }
+    
+    // Check SA-IV forms
+    const [saIVForms] = await sql.query("SELECT COUNT(*) as count FROM sa_iv_capacity_analysis WHERE survey_id = ?", [req.params.id]);
+    if (saIVForms[0].count > 0) {
+      forms.push({ form_type: "SA-IV", count: saIVForms[0].count });
+    }
+    
+    // Check SA-V forms
+    const [saVForms] = await sql.query("SELECT COUNT(*) as count FROM sa_v_delay_analysis WHERE survey_id = ?", [req.params.id]);
+    if (saVForms[0].count > 0) {
+      forms.push({ form_type: "SA-V", count: saVForms[0].count });
+    }
+
     res.send({
       success: true,
-      data: data
+      data: forms
     });
   } catch (err) {
     res.status(500).send({
       message: err.message || "Some error occurred while retrieving forms."
     });
-  }
-};
-
-// Add form data to existing header
-exports.addFormToHeader = async (req, res) => {
-  try {
-    if (!req.body.form_type) {
-      return res.status(400).send({
-        message: "form_type is required!"
-      });
-    }
-
-    // Check if header exists
-    const headerData = await SaSurveyHeader.findById(req.params.id);
-
-    // Create a new survey record with the form type
-    const surveyData = {
-      simpang_id: headerData.simpang_id,
-      survey_type: req.body.form_type,
-      tanggal: headerData.tanggal,
-      perihal: headerData.perihal,
-      status: req.body.status || 'draft'
-    };
-
-    const [result] = await sql.query("INSERT INTO sa_surveys SET ?", surveyData);
-    res.send({
-      success: true,
-      message: `Form ${req.body.form_type} added to header successfully`,
-      data: { id: result.insertId, ...surveyData }
-    });
-  } catch (err) {
-    if (err.kind === "not_found") {
-      res.status(404).send({
-        message: `Survey header with id ${req.params.id} not found.`
-      });
-    } else {
-      res.status(500).send({
-        message: err.message || "Some error occurred while adding form to header."
-      });
-    }
   }
 }; 

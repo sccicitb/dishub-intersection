@@ -2,6 +2,22 @@ const SaSurveyHeader = require("../models/sa_survey_header.model.js");
 const SaVDelayAnalysis = require("../models/sa_v_delay_analysis.model.js");
 const SaVPerformanceSummary = require("../models/sa_v_performance_summary.model.js");
 
+// Helper function to safely parse JSON
+const safeJsonParse = (jsonString, defaultValue = ['Default Road']) => {
+  try {
+    if (typeof jsonString === 'string') {
+      return JSON.parse(jsonString);
+    } else if (Array.isArray(jsonString)) {
+      return jsonString;
+    } else {
+      return defaultValue;
+    }
+  } catch (error) {
+    console.warn('JSON parse error:', error.message, 'for value:', jsonString);
+    return defaultValue;
+  }
+};
+
 // =====================================================
 // SA-V COMPLETE SURVEY OPERATIONS (Phase 6 - 3 APIs)
 // =====================================================
@@ -16,7 +32,7 @@ exports.createCompleteSurvey = async (req, res) => {
     return;
   }
 
-  const { header, delayData, performanceSummary } = req.body;
+  const { surveyHeader, delayData, performanceSummary } = req.body;
 
   // Start database transaction
   const sql = require("../config/db.js");
@@ -27,23 +43,30 @@ exports.createCompleteSurvey = async (req, res) => {
     
     await connection.beginTransaction();
 
-    // 1. Create main survey record
-    const surveyDataRecord = {
-      simpang_id: header.simpang_id,
-      survey_type: 'SA-V',
-      tanggal: header.tanggal,
-      perihal: header.perihal,
-      status: 'draft'
+    // 1. Create main survey header record
+    const headerData = {
+      tanggal: surveyHeader.tanggal,
+      perihal: surveyHeader.perihal,
+      kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota || 'Default City',
+      lokasi: surveyHeader.lokasi || 'Default Location',
+      ruas_jalan_mayor: Array.isArray(surveyHeader.ruasJalanMayor) 
+        ? JSON.stringify(surveyHeader.ruasJalanMayor) 
+        : JSON.stringify(['Default Road']),
+      ruas_jalan_minor: Array.isArray(surveyHeader.ruasJalanMinor) 
+        ? JSON.stringify(surveyHeader.ruasJalanMinor) 
+        : JSON.stringify(['Default Road']),
+      ukuran_kota: surveyHeader.ukuranKota || surveyHeader.ukuran_kota || '0',
+      periode: surveyHeader.periode || 'Pertama'
     };
 
-    const [surveyResult] = await connection.query("INSERT INTO sa_surveys SET ?", surveyDataRecord);
-    const surveyId = surveyResult.insertId;
+    const [headerResult] = await connection.query("INSERT INTO sa_survey_headers SET ?", headerData);
+    const headerId = headerResult.insertId;
 
     // 2. Create delay analysis records
     if (delayData && Array.isArray(delayData)) {
       for (const delay of delayData) {
         const delayRecord = {
-          survey_id: surveyId,
+          survey_id: headerId,
           kode_pendekat: delay.kode,
           arus_lalu_lintas: delay.q,
           kapasitas: delay.c,
@@ -69,7 +92,7 @@ exports.createCompleteSurvey = async (req, res) => {
     // 3. Create performance summary record
     if (performanceSummary) {
       const summaryRecord = {
-        survey_id: surveyId,
+        survey_id: headerId,
         total_kendaraan_terhenti: performanceSummary.totalKendaraanTerhenti,
         rasio_kendaraan_terhenti_rata: performanceSummary.rasioKendaraanTerhentiRata,
         total_tundaan: performanceSummary.totalTundaan,
@@ -86,7 +109,7 @@ exports.createCompleteSurvey = async (req, res) => {
     
     connection.release();
     res.send({
-      surveyId: surveyId,
+      headerId: headerId,
       message: "SA-V Survey created successfully"
     });
 
@@ -96,42 +119,50 @@ exports.createCompleteSurvey = async (req, res) => {
       connection.release();
     }
     res.status(500).send({
-      message: "Error creating SA-V survey: " + error.message
+      message: error.message || "Some error occurred while creating the SA-V survey."
     });
   }
 };
 
 // Get complete SA-V survey with all related data
 exports.getCompleteSurvey = async (req, res) => {
-  const surveyId = req.params.surveyId;
+  const headerId = req.params.surveyId;
+  const sql = require("../config/db.js");
   
   try {
-    // Get main survey data
-    const [surveys] = await SaSurveyHeader.findById(surveyId);
-    if (surveys.length === 0) {
-      res.status(404).send({
-        message: `Survey with id ${surveyId} not found.`
+    // Get main header data
+    const [headerRows] = await sql.query("SELECT * FROM sa_survey_headers WHERE id = ?", [headerId]);
+    if (headerRows.length === 0) {
+      return res.status(404).send({
+        message: `Survey header with id ${headerId} not found.`
       });
-      return;
     }
 
-    const survey = surveys[0];
+    const header = headerRows[0];
 
     // Get delay analysis data
-    const delayData = await SaVDelayAnalysis.findBySurveyId(surveyId);
+    const [delayRows] = await sql.query("SELECT * FROM sa_v_delay_analysis WHERE survey_id = ?", [headerId]);
     
     // Get performance summary data
-    const performanceSummary = await SaVPerformanceSummary.findBySurveyId(surveyId);
+    const [summaryRows] = await sql.query("SELECT * FROM sa_v_performance_summary WHERE survey_id = ?", [headerId]);
 
-    // Transform data to match expected format
-    const header = {
-      simpang_id: survey.simpang_id,
-      tanggal: survey.tanggal,
-      perihal: survey.perihal
+    // Transform header data to match expected format
+    const surveyHeader = {
+      id: header.id,
+      tanggal: header.tanggal,
+      kabupatenKota: header.kabupaten_kota,
+      lokasi: header.lokasi,
+      ruasJalanMayor: safeJsonParse(header.ruas_jalan_mayor),
+      ruasJalanMinor: safeJsonParse(header.ruas_jalan_minor),
+      ukuranKota: header.ukuran_kota,
+      perihal: header.perihal,
+      periode: header.periode,
+      createdAt: header.created_at,
+      updatedAt: header.updated_at
     };
 
     // Transform delay data
-    const transformedDelayData = delayData.map(item => ({
+    const transformedDelayData = delayRows.map(item => ({
       kode: item.kode_pendekat,
       q: item.arus_lalu_lintas,
       c: item.kapasitas,
@@ -151,27 +182,27 @@ exports.getCompleteSurvey = async (req, res) => {
     }));
 
     // Transform performance summary data
-    const transformedPerformanceSummary = performanceSummary ? {
-      totalKendaraanTerhenti: performanceSummary.total_kendaraan_terhenti,
-      rasioKendaraanTerhentiRata: performanceSummary.rasio_kendaraan_terhenti_rata,
-      totalTundaan: performanceSummary.total_tundaan,
-      tundaanSimpangRata: performanceSummary.tundaan_simpang_rata,
-      levelOfService: performanceSummary.level_of_service,
-      performanceEvaluation: performanceSummary.performance_evaluation
+    const transformedPerformanceSummary = summaryRows.length > 0 ? {
+      totalKendaraanTerhenti: summaryRows[0].total_kendaraan_terhenti,
+      rasioKendaraanTerhentiRata: summaryRows[0].rasio_kendaraan_terhenti_rata,
+      totalTundaan: summaryRows[0].total_tundaan,
+      tundaanSimpangRata: summaryRows[0].tundaan_simpang_rata,
+      levelOfService: summaryRows[0].level_of_service,
+      performanceEvaluation: summaryRows[0].performance_evaluation
     } : null;
 
-    // Combine all data into the expected format
-    const completeSurvey = {
-      header,
-      delayData: transformedDelayData,
-      performanceSummary: transformedPerformanceSummary
-    };
-
-    res.send(completeSurvey);
+    res.send({
+      success: true,
+      data: {
+        surveyHeader,
+        delayData: transformedDelayData,
+        performanceSummary: transformedPerformanceSummary
+      }
+    });
 
   } catch (error) {
     res.status(500).send({
-      message: "Error retrieving SA-V survey: " + error.message
+      message: error.message || "Some error occurred while retrieving the SA-V survey."
     });
   }
 };
@@ -186,8 +217,8 @@ exports.updateCompleteSurvey = async (req, res) => {
     return;
   }
 
-  const surveyId = req.params.surveyId;
-  const { header, delayData, performanceSummary } = req.body;
+  const headerId = req.params.surveyId;
+  const { surveyHeader, delayData, performanceSummary } = req.body;
 
   // Start database transaction
   const sql = require("../config/db.js");
@@ -198,25 +229,35 @@ exports.updateCompleteSurvey = async (req, res) => {
     
     await connection.beginTransaction();
 
-    // 1. Update main survey record
-    const surveyDataRecord = {
-      simpang_id: header.simpang_id,
-      tanggal: header.tanggal,
-      perihal: header.perihal,
-      status: 'draft'
-    };
+    // 1. Update main header record
+    if (surveyHeader) {
+      const headerData = {
+        tanggal: surveyHeader.tanggal,
+        perihal: surveyHeader.perihal,
+        kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota,
+        lokasi: surveyHeader.lokasi,
+        ruas_jalan_mayor: Array.isArray(surveyHeader.ruasJalanMayor) 
+          ? JSON.stringify(surveyHeader.ruasJalanMayor) 
+          : surveyHeader.ruasJalanMayor,
+        ruas_jalan_minor: Array.isArray(surveyHeader.ruasJalanMinor) 
+          ? JSON.stringify(surveyHeader.ruasJalanMinor) 
+          : surveyHeader.ruasJalanMinor,
+        ukuran_kota: surveyHeader.ukuranKota || surveyHeader.ukuran_kota,
+        periode: surveyHeader.periode
+      };
 
-    await connection.query("UPDATE sa_surveys SET ? WHERE id = ?", [surveyDataRecord, surveyId]);
+      await connection.query("UPDATE sa_survey_headers SET ? WHERE id = ?", [headerData, headerId]);
+    }
 
     // 2. Delete existing data
-    await connection.query("DELETE FROM sa_v_delay_analysis WHERE survey_id = ?", [surveyId]);
-    await connection.query("DELETE FROM sa_v_performance_summary WHERE survey_id = ?", [surveyId]);
+    await connection.query("DELETE FROM sa_v_delay_analysis WHERE survey_id = ?", [headerId]);
+    await connection.query("DELETE FROM sa_v_performance_summary WHERE survey_id = ?", [headerId]);
 
     // 3. Create new delay analysis records
     if (delayData && Array.isArray(delayData)) {
       for (const delay of delayData) {
         const delayRecord = {
-          survey_id: surveyId,
+          survey_id: headerId,
           kode_pendekat: delay.kode,
           arus_lalu_lintas: delay.q,
           kapasitas: delay.c,
@@ -242,7 +283,7 @@ exports.updateCompleteSurvey = async (req, res) => {
     // 4. Create new performance summary record
     if (performanceSummary) {
       const summaryRecord = {
-        survey_id: surveyId,
+        survey_id: headerId,
         total_kendaraan_terhenti: performanceSummary.totalKendaraanTerhenti,
         rasio_kendaraan_terhenti_rata: performanceSummary.rasioKendaraanTerhentiRata,
         total_tundaan: performanceSummary.totalTundaan,
@@ -259,6 +300,7 @@ exports.updateCompleteSurvey = async (req, res) => {
     
     connection.release();
     res.send({
+      success: true,
       message: "SA-V Survey updated successfully"
     });
 
@@ -268,7 +310,7 @@ exports.updateCompleteSurvey = async (req, res) => {
       connection.release();
     }
     res.status(500).send({
-      message: "Error updating SA-V survey: " + error.message
+      message: error.message || "Some error occurred while updating the SA-V survey."
     });
   }
 }; 

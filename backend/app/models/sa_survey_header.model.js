@@ -1,24 +1,50 @@
 const sql = require("../config/db.js");
 
 const SaSurveyHeader = function(header) {
-  this.simpang_id = header.simpang_id;
   this.tanggal = header.tanggal;
   this.perihal = header.perihal;
-  this.status = header.status || 'draft';
+  this.kabupaten_kota = header.kabupaten_kota || 'Default City';
+  this.lokasi = header.lokasi || 'Default Location';
+  this.ruas_jalan_mayor = header.ruas_jalan_mayor || JSON.stringify(['Default Road']);
+  this.ruas_jalan_minor = header.ruas_jalan_minor || JSON.stringify(['Default Road']);
+  this.ukuran_kota = header.ukuran_kota || '0';
+  this.periode = header.periode || 'Pertama';
+};
+
+// Helper function to safely parse JSON
+const safeJsonParse = (jsonString, defaultValue = ['Default Road']) => {
+  try {
+    if (typeof jsonString === 'string') {
+      return JSON.parse(jsonString);
+    } else if (Array.isArray(jsonString)) {
+      return jsonString;
+    } else {
+      return defaultValue;
+    }
+  } catch (error) {
+    console.warn('JSON parse error:', error.message, 'for value:', jsonString);
+    return defaultValue;
+  }
 };
 
 SaSurveyHeader.create = async (newHeader) => {
   try {
-    // For headers, don't set survey_type
     const headerData = {
-      simpang_id: newHeader.simpang_id,
       tanggal: newHeader.tanggal,
       perihal: newHeader.perihal,
-      status: newHeader.status || 'draft'
-      // survey_type is intentionally omitted for headers
+      kabupaten_kota: newHeader.kabupaten_kota || 'Default City',
+      lokasi: newHeader.lokasi || 'Default Location',
+      ruas_jalan_mayor: Array.isArray(newHeader.ruas_jalan_mayor) 
+        ? JSON.stringify(newHeader.ruas_jalan_mayor) 
+        : JSON.stringify(['Default Road']),
+      ruas_jalan_minor: Array.isArray(newHeader.ruas_jalan_minor) 
+        ? JSON.stringify(newHeader.ruas_jalan_minor) 
+        : JSON.stringify(['Default Road']),
+      ukuran_kota: newHeader.ukuran_kota || '0',
+      periode: newHeader.periode || 'Pertama'
     };
     
-    const [result] = await sql.query("INSERT INTO sa_surveys SET ?", headerData);
+    const [result] = await sql.query("INSERT INTO sa_survey_headers SET ?", headerData);
     return { id: result.insertId, ...headerData };
   } catch (err) {
     throw err;
@@ -27,9 +53,15 @@ SaSurveyHeader.create = async (newHeader) => {
 
 SaSurveyHeader.findById = async (id) => {
   try {
-    const [rows] = await sql.query(`SELECT * FROM sa_surveys WHERE id = ?`, [id]);
+    const [rows] = await sql.query(`SELECT * FROM sa_survey_headers WHERE id = ?`, [id]);
     if (rows.length) {
-      return rows[0];
+      const header = rows[0];
+      // Parse JSON fields for response
+      return {
+        ...header,
+        ruas_jalan_mayor: safeJsonParse(header.ruas_jalan_mayor),
+        ruas_jalan_minor: safeJsonParse(header.ruas_jalan_minor)
+      };
     }
     throw { kind: "not_found" };
   } catch (err) {
@@ -39,26 +71,42 @@ SaSurveyHeader.findById = async (id) => {
 
 SaSurveyHeader.getAll = async (params) => {
   try {
-    let query = "SELECT * FROM sa_surveys WHERE survey_type IS NULL";
+    let query = "SELECT * FROM sa_survey_headers";
     const conditions = [];
     const values = [];
 
     if (params) {
-      if (params.simpang_id) {
-        conditions.push(`simpang_id = ?`);
-        values.push(params.simpang_id);
+      if (params.kabupaten_kota) {
+        conditions.push(`kabupaten_kota = ?`);
+        values.push(params.kabupaten_kota);
       }
-      if (params.status) {
-        conditions.push(`status = ?`);
-        values.push(params.status);
+      if (params.lokasi) {
+        conditions.push(`lokasi = ?`);
+        values.push(params.lokasi);
+      }
+      if (params.periode) {
+        conditions.push(`periode = ?`);
+        values.push(params.periode);
+      }
+      if (params.tanggal) {
+        conditions.push(`tanggal = ?`);
+        values.push(params.tanggal);
       }
       if (conditions.length > 0) {
-        query += " AND " + conditions.join(" AND ");
+        query += " WHERE " + conditions.join(" AND ");
       }
     }
 
+    query += " ORDER BY created_at DESC";
+
     const [rows] = await sql.query(query, values);
-    return rows;
+    
+    // Parse JSON fields for all headers
+    return rows.map(header => ({
+      ...header,
+      ruas_jalan_mayor: safeJsonParse(header.ruas_jalan_mayor),
+      ruas_jalan_minor: safeJsonParse(header.ruas_jalan_minor)
+    }));
   } catch (err) {
     throw err;
   }
@@ -66,15 +114,30 @@ SaSurveyHeader.getAll = async (params) => {
 
 SaSurveyHeader.updateById = async (id, header) => {
   try {
+    const updateData = {
+      tanggal: header.tanggal,
+      perihal: header.perihal,
+      kabupaten_kota: header.kabupaten_kota,
+      lokasi: header.lokasi,
+      ruas_jalan_mayor: Array.isArray(header.ruas_jalan_mayor) 
+        ? JSON.stringify(header.ruas_jalan_mayor) 
+        : header.ruas_jalan_mayor,
+      ruas_jalan_minor: Array.isArray(header.ruas_jalan_minor) 
+        ? JSON.stringify(header.ruas_jalan_minor) 
+        : header.ruas_jalan_minor,
+      ukuran_kota: header.ukuran_kota,
+      periode: header.periode
+    };
+    
     const [result] = await sql.query(
-      "UPDATE sa_surveys SET simpang_id = ?, tanggal = ?, perihal = ?, status = ? WHERE id = ?",
-      [header.simpang_id, header.tanggal, header.perihal, header.status, id]
+      "UPDATE sa_survey_headers SET ? WHERE id = ?",
+      [updateData, id]
     );
     
     if (result.affectedRows == 0) {
       throw { kind: "not_found" };
     }
-    return { id: id, ...header };
+    return { id: id, ...updateData };
   } catch (err) {
     throw err;
   }
@@ -82,7 +145,7 @@ SaSurveyHeader.updateById = async (id, header) => {
 
 SaSurveyHeader.remove = async (id) => {
   try {
-    const [result] = await sql.query("DELETE FROM sa_surveys WHERE id = ?", [id]);
+    const [result] = await sql.query("DELETE FROM sa_survey_headers WHERE id = ?", [id]);
     if (result.affectedRows == 0) {
       throw { kind: "not_found" };
     }
@@ -95,7 +158,7 @@ SaSurveyHeader.remove = async (id) => {
 // Get all forms for a specific header
 SaSurveyHeader.getFormsByHeaderId = async (headerId) => {
   try {
-    // First get the header to get simpang_id and tanggal
+    // First get the header to get tanggal
     const header = await SaSurveyHeader.findById(headerId);
     if (!header) {
       throw { kind: "not_found" };
@@ -104,8 +167,8 @@ SaSurveyHeader.getFormsByHeaderId = async (headerId) => {
     const [rows] = await sql.query(`
       SELECT survey_type as form_type, created_at, updated_at 
       FROM sa_surveys 
-      WHERE simpang_id = ? AND tanggal = ? AND survey_type IS NOT NULL
-    `, [header.simpang_id, header.tanggal]);
+      WHERE tanggal = ? AND survey_type IS NOT NULL
+    `, [header.tanggal]);
     return rows;
   } catch (err) {
     throw err;

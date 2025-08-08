@@ -3,6 +3,22 @@ const SaIIVehicleData = require("../models/sa_ii_vehicle_data.model.js");
 const SaIIKTBData = require("../models/sa_ii_ktb_data.model.js");
 const EMPConfiguration = require("../models/emp_configuration.model.js");
 
+// Helper function to safely parse JSON
+const safeJsonParse = (jsonString, defaultValue = ['Default Road']) => {
+  try {
+    if (typeof jsonString === 'string') {
+      return JSON.parse(jsonString);
+    } else if (Array.isArray(jsonString)) {
+      return jsonString;
+    } else {
+      return defaultValue;
+    }
+  } catch (error) {
+    console.warn('JSON parse error:', error.message, 'for value:', jsonString);
+    return defaultValue;
+  }
+};
+
 // =====================================================
 // SA-II COMPLETE SURVEY OPERATIONS (Phase 3 - 4 APIs)
 // =====================================================
@@ -17,7 +33,7 @@ exports.createCompleteSurvey = async (req, res) => {
     return;
   }
 
-  const { header, ekuivalensi, surveyData } = req.body;
+  const { surveyHeader, vehicleData, ktbData } = req.body;
 
   // Start database transaction
   const sql = require("../config/db.js");
@@ -28,89 +44,55 @@ exports.createCompleteSurvey = async (req, res) => {
     
     await connection.beginTransaction();
 
-    // 1. Create main survey record
-    const surveyDataRecord = {
-      simpang_id: header.simpang_id,
-      survey_type: 'SA-II',
-      tanggal: header.tanggal,
-      perihal: header.perihal,
-      status: 'draft'
+    // 1. Create main survey header record
+    const headerData = {
+      tanggal: surveyHeader.tanggal,
+      perihal: surveyHeader.perihal,
+      kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota || 'Default City',
+      lokasi: surveyHeader.lokasi || 'Default Location',
+      ruas_jalan_mayor: Array.isArray(surveyHeader.ruasJalanMayor) 
+        ? JSON.stringify(surveyHeader.ruasJalanMayor) 
+        : JSON.stringify(['Default Road']),
+      ruas_jalan_minor: Array.isArray(surveyHeader.ruasJalanMinor) 
+        ? JSON.stringify(surveyHeader.ruasJalanMinor) 
+        : JSON.stringify(['Default Road']),
+      ukuran_kota: surveyHeader.ukuranKota || surveyHeader.ukuran_kota || '0',
+      periode: surveyHeader.periode || 'Pertama'
     };
 
-    const [surveyResult] = await connection.query("INSERT INTO sa_surveys SET ?", surveyDataRecord);
-    const surveyId = surveyResult.insertId;
+    const [headerResult] = await connection.query("INSERT INTO sa_survey_headers SET ?", headerData);
+    const headerId = headerResult.insertId;
 
     // 2. Create vehicle data records
-    if (surveyData && Array.isArray(surveyData)) {
-      const directionMap = { 'utara': 'U', 'selatan': 'S', 'timur': 'T', 'barat': 'B' };
-      
-      for (const dataItem of surveyData) {
-        if (dataItem.rows && Array.isArray(dataItem.rows)) {
-          for (const row of dataItem.rows) {
-            const mappedDirection = directionMap[dataItem.direction] || dataItem.direction;
-            
-            // Process MP (Mobil Penumpang)
-            if (row.mp) {
-              const mpData = {
-                survey_id: surveyId,
-                direction: mappedDirection,
-                movement_type: row.type,
-                vehicle_type: 'MP',
-                count_terlindung: row.mp.terlindung || 0,
-                count_terlawan: row.mp.terlawan || 0,
-                smp_terlindung: row.mp.smpTerlindung || 0,
-                smp_terlawan: row.mp.smpTerlawan || 0
-              };
+    if (vehicleData && Array.isArray(vehicleData)) {
+      for (const dataItem of vehicleData) {
+        const vehicleRecord = {
+          survey_id: headerId,
+          direction: dataItem.direction,
+          movement_type: dataItem.movement_type,
+          vehicle_type: dataItem.vehicle_type,
+          count_terlindung: dataItem.count_terlindung || 0,
+          count_terlawan: dataItem.count_terlawan || 0,
+          smp_terlindung: dataItem.smp_terlindung || 0,
+          smp_terlawan: dataItem.smp_terlawan || 0
+        };
 
-              await connection.query("INSERT INTO sa_ii_vehicle_data SET ?", mpData);
-            }
+        await connection.query("INSERT INTO sa_ii_vehicle_data SET ?", vehicleRecord);
+      }
+    }
 
-            // Process KS (Kendaraan Sedang)
-            if (row.ks) {
-              const ksData = {
-                survey_id: surveyId,
-                direction: mappedDirection,
-                movement_type: row.type,
-                vehicle_type: 'KS',
-                count_terlindung: row.ks.terlindung || 0,
-                count_terlawan: row.ks.terlawan || 0,
-                smp_terlindung: row.ks.smpTerlindung || 0,
-                smp_terlawan: row.ks.smpTerlawan || 0
-              };
+    // 3. Create KTB data records
+    if (ktbData && Array.isArray(ktbData)) {
+      for (const ktbItem of ktbData) {
+        const ktbRecord = {
+          survey_id: headerId,
+          direction: ktbItem.direction,
+          ktb_count: ktbItem.ktb_count || 0,
+          turn_ratio: ktbItem.turn_ratio || 0,
+          rktb_value: ktbItem.rktb_value || 0
+        };
 
-              await connection.query("INSERT INTO sa_ii_vehicle_data SET ?", ksData);
-            }
-
-            // Process SM (Sepeda Motor)
-            if (row.sm) {
-              const smData = {
-                survey_id: surveyId,
-                direction: mappedDirection,
-                movement_type: row.type,
-                vehicle_type: 'SM',
-                count_terlindung: row.sm.terlindung || 0,
-                count_terlawan: row.sm.terlawan || 0,
-                smp_terlindung: row.sm.smpTerlindung || 0,
-                smp_terlawan: row.sm.smpTerlawan || 0
-              };
-
-              await connection.query("INSERT INTO sa_ii_vehicle_data SET ?", smData);
-            }
-
-            // Process KTB (Kendaraan Tak Bermotor)
-            if (row.ktb) {
-              const ktbData = {
-                survey_id: surveyId,
-                direction: mappedDirection,
-                ktb_count: row.ktb.count || 0,
-                turn_ratio: row.ktb.rasio || 0,
-                rktb_value: row.rktb || 0
-              };
-
-              await connection.query("INSERT INTO sa_ii_ktb_data SET ?", ktbData);
-            }
-          }
-        }
+        await connection.query("INSERT INTO sa_ii_ktb_data SET ?", ktbRecord);
       }
     }
 
@@ -119,7 +101,7 @@ exports.createCompleteSurvey = async (req, res) => {
     
     connection.release();
     res.send({
-      surveyId: surveyId,
+      headerId: headerId,
       message: "SA-II Survey created successfully"
     });
 
@@ -129,120 +111,79 @@ exports.createCompleteSurvey = async (req, res) => {
       connection.release();
     }
     res.status(500).send({
-      message: "Error creating SA-II survey: " + error.message
+      message: error.message || "Some error occurred while creating the SA-II survey."
     });
   }
 };
 
 // Get complete SA-II survey with all related data
 exports.getCompleteSurvey = async (req, res) => {
-  const surveyId = req.params.surveyId;
+  const headerId = req.params.surveyId;
+  const sql = require("../config/db.js");
   
   try {
-    // Get main survey data
-    const [surveys] = await SaSurveyHeader.findById(surveyId);
-    if (surveys.length === 0) {
-      res.status(404).send({
-        message: `Survey with id ${surveyId} not found.`
+    // Get main header data
+    const [headerRows] = await sql.query("SELECT * FROM sa_survey_headers WHERE id = ?", [headerId]);
+    if (headerRows.length === 0) {
+      return res.status(404).send({
+        message: `Survey header with id ${headerId} not found.`
       });
-      return;
     }
 
-    const survey = surveys[0];
+    const header = headerRows[0];
 
     // Get vehicle data
-    const vehicleData = await SaIIVehicleData.findBySurveyId(surveyId);
+    const [vehicleRows] = await sql.query("SELECT * FROM sa_ii_vehicle_data WHERE survey_id = ?", [headerId]);
     
     // Get KTB data
-    const ktbData = await SaIIKTBData.findBySurveyId(surveyId);
+    const [ktbRows] = await sql.query("SELECT * FROM sa_ii_ktb_data WHERE survey_id = ?", [headerId]);
 
-    // Transform data to match expected format
-    const header = {
-      simpang_id: survey.simpang_id,
-      tanggal: survey.tanggal,
-      perihal: survey.perihal
+    // Transform header data to match expected format
+    const surveyHeader = {
+      id: header.id,
+      tanggal: header.tanggal,
+      kabupatenKota: header.kabupaten_kota,
+      lokasi: header.lokasi,
+      ruasJalanMayor: safeJsonParse(header.ruas_jalan_mayor),
+      ruasJalanMinor: safeJsonParse(header.ruas_jalan_minor),
+      ukuranKota: header.ukuran_kota,
+      perihal: header.perihal,
+      periode: header.periode,
+      createdAt: header.created_at,
+      updatedAt: header.updated_at
     };
 
-    // Group vehicle data by direction and movement type
-    const surveyData = [];
-    const directions = ['utara', 'selatan', 'timur', 'barat'];
-    
-    for (const direction of directions) {
-      const directionData = vehicleData.filter(item => item.direction === direction);
-      if (directionData.length > 0) {
-        const movementTypes = [...new Set(directionData.map(item => item.movement_type))];
-        const rows = [];
+    // Transform vehicle data to match expected format
+    const vehicleData = vehicleRows.map(item => ({
+      direction: item.direction,
+      movement_type: item.movement_type,
+      vehicle_type: item.vehicle_type,
+      count_terlindung: item.count_terlindung,
+      count_terlawan: item.count_terlawan,
+      smp_terlindung: item.smp_terlindung,
+      smp_terlawan: item.smp_terlawan
+    }));
 
-        for (const movementType of movementTypes) {
-          const movementData = directionData.filter(item => item.movement_type === movementType);
-          
-          if (movementData.length > 0) {
-            const row = { type: movementType };
+    // Transform KTB data to match expected format
+    const ktbData = ktbRows.map(item => ({
+      direction: item.direction,
+      ktb_count: item.ktb_count,
+      turn_ratio: item.turn_ratio,
+      rktb_value: item.rktb_value
+    }));
 
-            // Process vehicle types
-            movementData.forEach(item => {
-              if (item.vehicle_type === 'MP') {
-                row.mp = {
-                  terlindung: item.count_terlindung,
-                  terlawan: item.count_terlawan,
-                  smpTerlindung: item.smp_terlindung,
-                  smpTerlawan: item.smp_terlawan
-                };
-              } else if (item.vehicle_type === 'KS') {
-                row.ks = {
-                  terlindung: item.count_terlindung,
-                  terlawan: item.count_terlawan,
-                  smpTerlindung: item.smp_terlindung,
-                  smpTerlawan: item.smp_terlawan
-                };
-              } else if (item.vehicle_type === 'SM') {
-                row.sm = {
-                  terlindung: item.count_terlindung,
-                  terlawan: item.count_terlawan,
-                  smpTerlindung: item.smp_terlindung,
-                  smpTerlawan: item.smp_terlawan
-                };
-              }
-            });
-
-            // Add KTB data
-            const ktbItem = ktbData.find(item => item.direction === direction);
-            if (ktbItem) {
-              row.ktb = {
-                count: ktbItem.ktb_count,
-                rasio: ktbItem.turn_ratio
-              };
-              row.rktb = ktbItem.rktb_value;
-            }
-
-            rows.push(row);
-          }
-        }
-
-        if (rows.length > 0) {
-          surveyData.push({
-            direction: direction,
-            rows: rows
-          });
-        }
+    res.send({
+      success: true,
+      data: {
+        surveyHeader,
+        vehicleData,
+        ktbData
       }
-    }
-
-    // Get EMP configurations
-    const empConfig = await EMPConfiguration.getFormattedConfig();
-
-    // Combine all data into the expected format
-    const completeSurvey = {
-      header,
-      ekuivalensi: empConfig,
-      surveyData
-    };
-
-    res.send(completeSurvey);
+    });
 
   } catch (error) {
     res.status(500).send({
-      message: "Error retrieving SA-II survey: " + error.message
+      message: error.message || "Some error occurred while retrieving the SA-II survey."
     });
   }
 };
@@ -257,8 +198,8 @@ exports.updateCompleteSurvey = async (req, res) => {
     return;
   }
 
-  const surveyId = req.params.surveyId;
-  const { header, ekuivalensi, surveyData } = req.body;
+  const headerId = req.params.surveyId;
+  const { surveyHeader, vehicleData, ktbData } = req.body;
 
   // Start database transaction
   const sql = require("../config/db.js");
@@ -269,91 +210,60 @@ exports.updateCompleteSurvey = async (req, res) => {
     
     await connection.beginTransaction();
 
-    // 1. Update main survey record
-    const surveyDataRecord = {
-      simpang_id: header.simpang_id,
-      tanggal: header.tanggal,
-      perihal: header.perihal,
-      status: 'draft'
-    };
+    // 1. Update main header record
+    if (surveyHeader) {
+      const headerData = {
+        tanggal: surveyHeader.tanggal,
+        perihal: surveyHeader.perihal,
+        kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota,
+        lokasi: surveyHeader.lokasi,
+        ruas_jalan_mayor: Array.isArray(surveyHeader.ruasJalanMayor) 
+          ? JSON.stringify(surveyHeader.ruasJalanMayor) 
+          : surveyHeader.ruasJalanMayor,
+        ruas_jalan_minor: Array.isArray(surveyHeader.ruasJalanMinor) 
+          ? JSON.stringify(surveyHeader.ruasJalanMinor) 
+          : surveyHeader.ruasJalanMinor,
+        ukuran_kota: surveyHeader.ukuranKota || surveyHeader.ukuran_kota,
+        periode: surveyHeader.periode
+      };
 
-    await connection.query("UPDATE sa_surveys SET ? WHERE id = ?", [surveyDataRecord, surveyId]);
+      await connection.query("UPDATE sa_survey_headers SET ? WHERE id = ?", [headerData, headerId]);
+    }
 
-    // 2. Delete existing vehicle data
-    await connection.query("DELETE FROM sa_ii_vehicle_data WHERE survey_id = ?", [surveyId]);
-    await connection.query("DELETE FROM sa_ii_ktb_data WHERE survey_id = ?", [surveyId]);
+    // 2. Delete existing vehicle data and KTB data
+    await connection.query("DELETE FROM sa_ii_vehicle_data WHERE survey_id = ?", [headerId]);
+    await connection.query("DELETE FROM sa_ii_ktb_data WHERE survey_id = ?", [headerId]);
 
     // 3. Create new vehicle data records
-    if (surveyData && Array.isArray(surveyData)) {
-      const directionMap = { 'utara': 'U', 'selatan': 'S', 'timur': 'T', 'barat': 'B' };
-      
-      for (const dataItem of surveyData) {
-        if (dataItem.rows && Array.isArray(dataItem.rows)) {
-          for (const row of dataItem.rows) {
-            const mappedDirection = directionMap[dataItem.direction] || dataItem.direction;
-            
-            // Process MP (Mobil Penumpang)
-            if (row.mp) {
-              const mpData = {
-                survey_id: surveyId,
-                direction: mappedDirection,
-                movement_type: row.type,
-                vehicle_type: 'MP',
-                count_terlindung: row.mp.terlindung || 0,
-                count_terlawan: row.mp.terlawan || 0,
-                smp_terlindung: row.mp.smpTerlindung || 0,
-                smp_terlawan: row.mp.smpTerlawan || 0
-              };
+    if (vehicleData && Array.isArray(vehicleData)) {
+      for (const dataItem of vehicleData) {
+        const vehicleRecord = {
+          survey_id: headerId,
+          direction: dataItem.direction,
+          movement_type: dataItem.movement_type,
+          vehicle_type: dataItem.vehicle_type,
+          count_terlindung: dataItem.count_terlindung || 0,
+          count_terlawan: dataItem.count_terlawan || 0,
+          smp_terlindung: dataItem.smp_terlindung || 0,
+          smp_terlawan: dataItem.smp_terlawan || 0
+        };
 
-              await connection.query("INSERT INTO sa_ii_vehicle_data SET ?", mpData);
-            }
+        await connection.query("INSERT INTO sa_ii_vehicle_data SET ?", vehicleRecord);
+      }
+    }
 
-            // Process KS (Kendaraan Sedang)
-            if (row.ks) {
-              const ksData = {
-                survey_id: surveyId,
-                direction: mappedDirection,
-                movement_type: row.type,
-                vehicle_type: 'KS',
-                count_terlindung: row.ks.terlindung || 0,
-                count_terlawan: row.ks.terlawan || 0,
-                smp_terlindung: row.ks.smpTerlindung || 0,
-                smp_terlawan: row.ks.smpTerlawan || 0
-              };
+    // 4. Create new KTB data records
+    if (ktbData && Array.isArray(ktbData)) {
+      for (const ktbItem of ktbData) {
+        const ktbRecord = {
+          survey_id: headerId,
+          direction: ktbItem.direction,
+          ktb_count: ktbItem.ktb_count || 0,
+          turn_ratio: ktbItem.turn_ratio || 0,
+          rktb_value: ktbItem.rktb_value || 0
+        };
 
-              await connection.query("INSERT INTO sa_ii_vehicle_data SET ?", ksData);
-            }
-
-            // Process SM (Sepeda Motor)
-            if (row.sm) {
-              const smData = {
-                survey_id: surveyId,
-                direction: mappedDirection,
-                movement_type: row.type,
-                vehicle_type: 'SM',
-                count_terlindung: row.sm.terlindung || 0,
-                count_terlawan: row.sm.terlawan || 0,
-                smp_terlindung: row.sm.smpTerlindung || 0,
-                smp_terlawan: row.sm.smpTerlawan || 0
-              };
-
-              await connection.query("INSERT INTO sa_ii_vehicle_data SET ?", smData);
-            }
-
-            // Process KTB (Kendaraan Tak Bermotor)
-            if (row.ktb) {
-              const ktbData = {
-                survey_id: surveyId,
-                direction: mappedDirection,
-                ktb_count: row.ktb.count || 0,
-                turn_ratio: row.ktb.rasio || 0,
-                rktb_value: row.rktb || 0
-              };
-
-              await connection.query("INSERT INTO sa_ii_ktb_data SET ?", ktbData);
-            }
-          }
-        }
+        await connection.query("INSERT INTO sa_ii_ktb_data SET ?", ktbRecord);
       }
     }
 
@@ -362,6 +272,7 @@ exports.updateCompleteSurvey = async (req, res) => {
     
     connection.release();
     res.send({
+      success: true,
       message: "SA-II Survey updated successfully"
     });
 
@@ -371,7 +282,7 @@ exports.updateCompleteSurvey = async (req, res) => {
       connection.release();
     }
     res.status(500).send({
-      message: "Error updating SA-II survey: " + error.message
+      message: error.message || "Some error occurred while updating the SA-II survey."
     });
   }
 };

@@ -3,6 +3,22 @@ const SaIVCapacityAnalysis = require("../models/sa_iv_capacity_analysis.model.js
 const SaIVPhaseAnalysis = require("../models/sa_iv_phase_analysis.model.js");
 const SaIVCalculationConfig = require("../models/sa_iv_calculation_config.model.js");
 
+// Helper function to safely parse JSON
+const safeJsonParse = (jsonString, defaultValue = ['Default Road']) => {
+  try {
+    if (typeof jsonString === 'string') {
+      return JSON.parse(jsonString);
+    } else if (Array.isArray(jsonString)) {
+      return jsonString;
+    } else {
+      return defaultValue;
+    }
+  } catch (error) {
+    console.warn('JSON parse error:', error.message, 'for value:', jsonString);
+    return defaultValue;
+  }
+};
+
 // Create complete SA-IV survey
 exports.createCompleteSurvey = async (req, res) => {
   const { surveyHeader, capacityAnalysis, phaseAnalysis } = req.body;
@@ -24,21 +40,28 @@ exports.createCompleteSurvey = async (req, res) => {
     await connection.beginTransaction();
 
     // Create survey header
-    const surveyData = {
-      simpang_id: surveyHeader.simpang_id,
-      survey_type: 'SA-IV',
+    const headerData = {
       tanggal: surveyHeader.tanggal,
       perihal: surveyHeader.perihal,
-      status: surveyHeader.status || 'draft'
+      kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota || 'Default City',
+      lokasi: surveyHeader.lokasi || 'Default Location',
+      ruas_jalan_mayor: Array.isArray(surveyHeader.ruasJalanMayor) 
+        ? JSON.stringify(surveyHeader.ruasJalanMayor) 
+        : JSON.stringify(['Default Road']),
+      ruas_jalan_minor: Array.isArray(surveyHeader.ruasJalanMinor) 
+        ? JSON.stringify(surveyHeader.ruasJalanMinor) 
+        : JSON.stringify(['Default Road']),
+      ukuran_kota: surveyHeader.ukuranKota || surveyHeader.ukuran_kota || '0',
+      periode: surveyHeader.periode || 'Pertama'
     };
 
-    const [surveyResult] = await connection.query("INSERT INTO sa_surveys SET ?", surveyData);
-    const surveyId = surveyResult.insertId;
+    const [headerResult] = await connection.query("INSERT INTO sa_survey_headers SET ?", headerData);
+    const headerId = headerResult.insertId;
 
     // Insert capacity analysis data
     for (const analysis of capacityAnalysis) {
       const capacityData = {
-        survey_id: surveyId,
+        survey_id: headerId,
         kode_pendekat: analysis.kode_pendekat,
         rasio_kendaraan_belok: JSON.stringify(analysis.rasio_kendaraan_belok),
         arus_belok_kanan: JSON.stringify(analysis.arus_belok_kanan),
@@ -54,7 +77,7 @@ exports.createCompleteSurvey = async (req, res) => {
     // Insert phase analysis data
     for (const analysis of phaseAnalysis) {
       const phaseData = {
-        survey_id: surveyId,
+        survey_id: headerId,
         kode_pendekat: analysis.kode_pendekat,
         phases: JSON.stringify(analysis.phases),
         cycle_time: analysis.cycle_time
@@ -69,7 +92,7 @@ exports.createCompleteSurvey = async (req, res) => {
     connection.release();
     res.json({
       success: true,
-      surveyId: surveyId,
+      headerId: headerId,
       message: "SA-IV Survey created successfully"
     });
 
@@ -80,56 +103,64 @@ exports.createCompleteSurvey = async (req, res) => {
     }
     res.status(500).json({
       success: false,
-      error: "Error creating SA-IV survey: " + error.message
+      error: error.message || "Some error occurred while creating the SA-IV survey."
     });
   }
 };
 
 // Get complete SA-IV survey
 exports.getCompleteSurvey = async (req, res) => {
-  const surveyId = req.params.surveyId;
+  const headerId = req.params.surveyId;
+  const sql = require("../config/db.js");
 
   try {
-    // Get main survey data
-    const [surveys] = await SaSurveyHeader.findById(surveyId);
-    if (surveys.length === 0) {
+    // Get main header data
+    const [headerRows] = await sql.query("SELECT * FROM sa_survey_headers WHERE id = ?", [headerId]);
+    if (headerRows.length === 0) {
       return res.status(404).json({
         success: false,
-        error: `Survey with id ${surveyId} not found.`
+        error: `Survey header with id ${headerId} not found.`
       });
     }
 
-    const survey = surveys[0];
+    const header = headerRows[0];
 
     // Get capacity analysis data
-    const capacityAnalysis = await SaIVCapacityAnalysis.findBySurveyId(surveyId);
+    const [capacityRows] = await sql.query("SELECT * FROM sa_iv_capacity_analysis WHERE survey_id = ?", [headerId]);
     
     // Get phase analysis data
-    const phaseAnalysis = await SaIVPhaseAnalysis.findBySurveyId(surveyId);
+    const [phaseRows] = await sql.query("SELECT * FROM sa_iv_phase_analysis WHERE survey_id = ?", [headerId]);
 
-    // Transform data to match expected format
+    // Transform header data to match expected format
     const surveyHeader = {
-      simpang_id: survey.simpang_id,
-      tanggal: survey.tanggal,
-      perihal: survey.perihal,
-      status: survey.status
+      id: header.id,
+      tanggal: header.tanggal,
+      kabupatenKota: header.kabupaten_kota,
+      lokasi: header.lokasi,
+      ruasJalanMayor: safeJsonParse(header.ruas_jalan_mayor),
+      ruasJalanMinor: safeJsonParse(header.ruas_jalan_minor),
+      ukuranKota: header.ukuran_kota,
+      perihal: header.perihal,
+      periode: header.periode,
+      createdAt: header.created_at,
+      updatedAt: header.updated_at
     };
 
     // Transform capacity analysis data
-    const transformedCapacityAnalysis = capacityAnalysis.map(item => ({
+    const transformedCapacityAnalysis = capacityRows.map(item => ({
       kode_pendekat: item.kode_pendekat,
-      rasio_kendaraan_belok: JSON.parse(item.rasio_kendaraan_belok),
-      arus_belok_kanan: JSON.parse(item.arus_belok_kanan),
+      rasio_kendaraan_belok: safeJsonParse(item.rasio_kendaraan_belok),
+      arus_belok_kanan: safeJsonParse(item.arus_belok_kanan),
       arus_jenuh_dasar: item.arus_jenuh_dasar,
-      faktor_penyesuaian: JSON.parse(item.faktor_penyesuaian),
+      faktor_penyesuaian: safeJsonParse(item.faktor_penyesuaian),
       kapasitas: item.kapasitas,
       derajat_kejenuhan: item.derajat_kejenuhan
     }));
 
     // Transform phase analysis data
-    const transformedPhaseAnalysis = phaseAnalysis.map(item => ({
+    const transformedPhaseAnalysis = phaseRows.map(item => ({
       kode_pendekat: item.kode_pendekat,
-      phases: JSON.parse(item.phases),
+      phases: safeJsonParse(item.phases),
       cycle_time: item.cycle_time
     }));
 
@@ -148,14 +179,14 @@ exports.getCompleteSurvey = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: "Error retrieving SA-IV survey: " + error.message
+      error: error.message || "Some error occurred while retrieving the SA-IV survey."
     });
   }
 };
 
 // Update complete SA-IV survey
 exports.updateCompleteSurvey = async (req, res) => {
-  const surveyId = req.params.surveyId;
+  const headerId = req.params.surveyId;
   const { surveyHeader, capacityAnalysis, phaseAnalysis } = req.body;
 
   if (!surveyHeader || !capacityAnalysis || !phaseAnalysis) {
@@ -175,23 +206,33 @@ exports.updateCompleteSurvey = async (req, res) => {
     await connection.beginTransaction();
 
     // Update survey header
-    const surveyData = {
-      simpang_id: surveyHeader.simpang_id,
-      tanggal: surveyHeader.tanggal,
-      perihal: surveyHeader.perihal,
-      status: surveyHeader.status || 'draft'
-    };
+    if (surveyHeader) {
+      const headerData = {
+        tanggal: surveyHeader.tanggal,
+        perihal: surveyHeader.perihal,
+        kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota,
+        lokasi: surveyHeader.lokasi,
+        ruas_jalan_mayor: Array.isArray(surveyHeader.ruasJalanMayor) 
+          ? JSON.stringify(surveyHeader.ruasJalanMayor) 
+          : surveyHeader.ruasJalanMayor,
+        ruas_jalan_minor: Array.isArray(surveyHeader.ruasJalanMinor) 
+          ? JSON.stringify(surveyHeader.ruasJalanMinor) 
+          : surveyHeader.ruasJalanMinor,
+        ukuran_kota: surveyHeader.ukuranKota || surveyHeader.ukuran_kota,
+        periode: surveyHeader.periode
+      };
 
-    await connection.query("UPDATE sa_surveys SET ? WHERE id = ?", [surveyData, surveyId]);
+      await connection.query("UPDATE sa_survey_headers SET ? WHERE id = ?", [headerData, headerId]);
+    }
 
     // Delete existing data
-    await connection.query("DELETE FROM sa_iv_capacity_analysis WHERE survey_id = ?", [surveyId]);
-    await connection.query("DELETE FROM sa_iv_phase_analysis WHERE survey_id = ?", [surveyId]);
+    await connection.query("DELETE FROM sa_iv_capacity_analysis WHERE survey_id = ?", [headerId]);
+    await connection.query("DELETE FROM sa_iv_phase_analysis WHERE survey_id = ?", [headerId]);
 
     // Insert new capacity analysis data
     for (const analysis of capacityAnalysis) {
       const capacityData = {
-        survey_id: surveyId,
+        survey_id: headerId,
         kode_pendekat: analysis.kode_pendekat,
         rasio_kendaraan_belok: JSON.stringify(analysis.rasio_kendaraan_belok),
         arus_belok_kanan: JSON.stringify(analysis.arus_belok_kanan),
@@ -207,7 +248,7 @@ exports.updateCompleteSurvey = async (req, res) => {
     // Insert new phase analysis data
     for (const analysis of phaseAnalysis) {
       const phaseData = {
-        survey_id: surveyId,
+        survey_id: headerId,
         kode_pendekat: analysis.kode_pendekat,
         phases: JSON.stringify(analysis.phases),
         cycle_time: analysis.cycle_time
@@ -232,7 +273,7 @@ exports.updateCompleteSurvey = async (req, res) => {
     }
     res.status(500).json({
       success: false,
-      error: "Error updating SA-IV survey: " + error.message
+      error: error.message || "Some error occurred while updating the SA-IV survey."
     });
   }
 };
