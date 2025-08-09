@@ -13,19 +13,23 @@ This API documentation directly supports the frontend requirements from `Require
 
 **Frontend Requirement**: Survey header with date, location, period selection
 **API Endpoints**:
-- `POST /api/sa-surveys/headers` - Create survey header
-- `GET /api/sa-surveys/headers` - Get all survey headers
-- `GET /api/sa-surveys/headers/:id` - Get specific survey header
-- `PUT /api/sa-surveys/headers/:id` - Update survey header
-- `DELETE /api/sa-surveys/headers/:id` - Delete survey header
+- `POST /api/sa-surveys/header` - Create survey header
+- `GET /api/sa-surveys/header` - Get all survey headers
+- `GET /api/sa-surveys/header/:id` - Get specific survey header
+- `PUT /api/sa-surveys/header/:id` - Update survey header
+- `DELETE /api/sa-surveys/header/:id` - Delete survey header
 
 **Payload Structure**:
 ```json
 {
-  "simpang_id": 1,
   "tanggal": "2025-01-15",
+  "kabupatenKota": "Yogyakarta",
+  "lokasi": "Test Intersection",
+  "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+  "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+  "ukuranKota": "1",
   "perihal": "Traffic analysis for intersection optimization",
-  "status": "draft"
+  "periode": "Pertama"
 }
 ```
 
@@ -33,27 +37,27 @@ This API documentation directly supports the frontend requirements from `Require
 
 **Frontend Requirement**: Multiple forms (SA-I to SA-V) for same survey header
 **API Endpoints**:
-- `GET /api/sa-surveys/headers/:id/forms` - Get all forms for a header
-- `POST /api/sa-surveys/headers/:id/forms` - Add form to existing header
-
-**Payload Structure**:
-```json
-{
-  "form_type": "SA-I",
-  "status": "draft"
-}
-```
+- `GET /api/sa-surveys/header/:id/forms` - Get all forms for a header
+- `POST /api/sa-surveys/sa-i/` - Create SA-I form (auto-creates header if needed)
+- `POST /api/sa-surveys/sa-ii/` - Create SA-II form (auto-creates header if needed)
+- `POST /api/sa-surveys/sa-iii/` - Create SA-III form (auto-creates header if needed)
+- `POST /api/sa-surveys/sa-iv/` - Create SA-IV form (auto-creates header if needed)
+- `POST /api/sa-surveys/sa-v/` - Create SA-V form (auto-creates header if needed)
 
 ## 🚀 **SURVEY HEADER MANAGEMENT APIs**
 
 ### **1. Create Survey Header**
-**POST** `/api/sa-surveys/headers`
+**POST** `/api/sa-surveys/header`
 ```json
 {
-  "simpang_id": 1,
   "tanggal": "2025-01-15",
+  "kabupatenKota": "Yogyakarta",
+  "lokasi": "Test Intersection",
+  "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+  "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+  "ukuranKota": "1",
   "perihal": "Traffic analysis for intersection optimization",
-  "status": "draft"
+  "periode": "Pertama"
 }
 ```
 
@@ -63,21 +67,29 @@ This API documentation directly supports the frontend requirements from `Require
   "success": true,
   "message": "Survey header created successfully",
   "data": {
-    "id": 1,
-    "simpang_id": 1,
+    "id": 183,
     "tanggal": "2025-01-15",
+    "kabupatenKota": "Yogyakarta",
+    "lokasi": "Test Intersection",
+    "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+    "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+    "ukuranKota": "1",
     "perihal": "Traffic analysis for intersection optimization",
-    "status": "draft"
+    "periode": "Pertama",
+    "createdAt": "2025-01-15T10:00:00Z",
+    "updatedAt": "2025-01-15T10:00:00Z"
   }
 }
 ```
 
 ### **2. Get All Survey Headers**
-**GET** `/api/sa-surveys/headers`
+**GET** `/api/sa-surveys/header`
 
 **Query Parameters**:
-- `simpang_id` (optional) - Filter by intersection
-- `status` (optional) - Filter by status
+- `kabupatenKota` (optional) - Filter by city
+- `lokasi` (optional) - Filter by location
+- `periode` (optional) - Filter by period
+- `tanggal` (optional) - Filter by date
 
 **Response**:
 ```json
@@ -85,49 +97,65 @@ This API documentation directly supports the frontend requirements from `Require
   "success": true,
   "data": [
     {
-      "id": 1,
-      "simpang_id": 1,
+      "id": 183,
       "tanggal": "2025-01-15",
+      "kabupatenKota": "Yogyakarta",
+      "lokasi": "Test Intersection",
+      "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+      "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+      "ukuranKota": "1",
       "perihal": "Traffic analysis",
-      "status": "draft"
+      "periode": "Pertama",
+      "createdAt": "2025-01-15T10:00:00Z",
+      "updatedAt": "2025-01-15T10:00:00Z"
     }
   ]
 }
 ```
 
 ### **3. Get Survey Header by ID**
-**GET** `/api/sa-surveys/headers/:id`
+**GET** `/api/sa-surveys/header/:id`
 
 **Response**:
 ```json
 {
   "success": true,
   "data": {
-    "id": 1,
-    "simpang_id": 1,
+    "id": 183,
     "tanggal": "2025-01-15",
+    "kabupatenKota": "Yogyakarta",
+    "lokasi": "Test Intersection",
+    "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+    "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+    "ukuranKota": "1",
     "perihal": "Traffic analysis",
-    "status": "draft"
+    "periode": "Pertama",
+    "createdAt": "2025-01-15T10:00:00Z",
+    "updatedAt": "2025-01-15T10:00:00Z"
   }
 }
 ```
 
 ### **4. Update Survey Header**
-**PUT** `/api/sa-surveys/headers/:id`
+**PUT** `/api/sa-surveys/header/:id`
 ```json
 {
-  "simpang_id": 1,
   "tanggal": "2025-01-15",
+  "kabupatenKota": "Yogyakarta",
+  "lokasi": "Updated Test Intersection",
+  "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+  "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+  "ukuranKota": "1",
   "perihal": "Updated traffic analysis",
-  "status": "completed"
+  "periode": "Pertama"
 }
 ```
 
 ### **5. Delete Survey Header**
-**DELETE** `/api/sa-surveys/headers/:id`
+**DELETE** `/api/sa-surveys/header/:id`
 
 ### **6. Get All Forms for a Header**
-**GET** `/api/sa-surveys/headers/:id/forms`
+**GET** `/api/sa-surveys/header/:id/forms`
 
 **Response**:
 ```json
@@ -136,75 +164,14 @@ This API documentation directly supports the frontend requirements from `Require
   "data": [
     {
       "form_type": "SA-I",
-      "created_at": "2025-01-15T10:00:00Z",
-      "updated_at": "2025-01-15T10:00:00Z"
+      "count": 1
     },
     {
-      "form_type": "SA-II", 
-      "created_at": "2025-01-15T11:00:00Z",
-      "updated_at": "2025-01-15T11:00:00Z"
+      "form_type": "SA-II",
+      "count": 1
     }
   ]
 }
-```
-
-### **7. Add Form to Existing Header**
-**POST** `/api/sa-surveys/headers/:id/forms`
-```json
-{
-  "form_type": "SA-II",
-  "status": "draft"
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "message": "Form SA-II added to header successfully",
-  "data": {
-    "id": 2,
-    "simpang_id": 1,
-    "survey_type": "SA-II",
-    "tanggal": "2025-01-15",
-    "perihal": "Traffic analysis",
-    "status": "draft"
-  }
-}
-```
-
-## 📋 **WORKFLOW EXAMPLE**
-
-### **Step 1: Create Survey Header**
-```bash
-POST /api/sa-surveys/headers
-{
-  "simpang_id": 1,
-  "tanggal": "2025-01-15",
-  "perihal": "Traffic analysis for intersection optimization",
-  "status": "draft"
-}
-```
-
-### **Step 2: Add SA-I Form Data**
-```bash
-POST /api/sa-surveys/headers/1/forms
-{
-  "form_type": "SA-I"
-}
-```
-
-### **Step 3: Add SA-II Form Data**
-```bash
-POST /api/sa-surveys/headers/1/forms
-{
-  "form_type": "SA-II"
-}
-```
-
-### **Step 4: Check All Forms**
-```bash
-GET /api/sa-surveys/headers/1/forms
 ```
 
 ## 📊 **FORM-SPECIFIC APIs**
@@ -218,33 +185,47 @@ GET /api/sa-surveys/headers/1/forms
 ```json
 {
   "surveyHeader": {
-    "simpang_id": 1,
+    "id": 183,
     "tanggal": "2025-01-15",
-    "perihal": "SA-I Traffic Analysis"
+    "kabupatenKota": "Yogyakarta",
+    "lokasi": "Test Intersection",
+    "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+    "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+    "ukuranKota": "1",
+    "perihal": "SA-I Traffic Analysis",
+    "periode": "Pertama"
   },
   "pendekat": [
     {
       "kodePendekat": "U",
       "tipeLingkunganJalan": "KOM",
-      "kelasHambatanSamping": "T",
-      "median": "Yes",
-      "kelandaianPendekat": 2.5,
-      "bkjt": true,
-      "jarakKeKendaraanParkir": 5.0,
-      "lebarAwalLajur": 3.5,
-      "lebarGarisHenti": 0.3,
-      "lebarLajurBki": 3.2,
-      "lebarLajurKeluar": 3.0
+      "kelasHambatanSamping": "R",
+      "median": "Ada",
+      "kelandaianPendekat": 0.00,
+      "bkjt": 1,
+      "jarakKeKendaraanParkir": 5.00,
+      "lebarAwalLajur": 3.50,
+      "lebarGarisHenti": 3.50,
+      "lebarLajurBki": 3.50,
+      "lebarLajurKeluar": 3.50
     }
   ],
   "fase": {
     "utara": {
       "tipe_pendekat": { "terlindung": true, "terlawan": false },
-      "arah": { "bki": true, "bkijt": true, "lurus": true, "bka": true },
+      "arah": { "bki": true, "bkijt": false, "lurus": true, "bka": false },
       "pemisahan_lurus_bka": false,
-      "fase": { "fase_1": false, "fase_2": true, "fase_3": false, "fase_4": false }
+      "fase": { "fase_1": true, "fase_2": false, "fase_3": false, "fase_4": false }
     }
   }
+}
+```
+
+**Response**:
+```json
+{
+  "headerId": 184,
+  "message": "SA-I Survey created successfully"
 }
 ```
 
@@ -263,9 +244,15 @@ GET /api/sa-surveys/headers/1/forms
 ```json
 {
   "surveyHeader": {
-    "simpang_id": 1,
+    "id": 183,
     "tanggal": "2025-01-15",
-    "perihal": "SA-II Vehicle Analysis"
+    "kabupatenKota": "Yogyakarta",
+    "lokasi": "Test Intersection",
+    "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+    "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+    "ukuranKota": "1",
+    "perihal": "SA-II Vehicle Analysis",
+    "periode": "Pertama"
   },
   "vehicleData": [
     {
@@ -289,27 +276,11 @@ GET /api/sa-surveys/headers/1/forms
 }
 ```
 
-#### **Get EMP Configurations**
-**GET** `/api/sa-surveys/sa-ii/emp-configurations`
-
 **Response**:
 ```json
 {
-  "success": true,
-  "data": [
-    {
-      "vehicle_type": "MP",
-      "condition_type": "terlindung",
-      "emp_value": 1.0,
-      "is_active": true
-    },
-    {
-      "vehicle_type": "KS",
-      "condition_type": "terlindung", 
-      "emp_value": 1.3,
-      "is_active": true
-    }
-  ]
+  "headerId": 185,
+  "message": "SA-II Survey created successfully"
 }
 ```
 
@@ -328,40 +299,52 @@ GET /api/sa-surveys/headers/1/forms
 ```json
 {
   "surveyHeader": {
-    "simpang_id": 1,
+    "id": 183,
     "tanggal": "2025-01-15",
-    "perihal": "SA-III Sketch Analysis"
+    "kabupatenKota": "Yogyakarta",
+    "lokasi": "Test Intersection",
+    "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+    "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+    "ukuranKota": "1",
+    "perihal": "SA-III Sketch Analysis",
+    "periode": "Pertama"
   },
   "phaseData": [
     {
-      "fase_number": 1,
-      "kode_pendekat": "U",
-      "jarak_type": "lintasanBerangkat",
-      "pendekat_u": 15.5,
-      "pendekat_s": 0,
-      "pendekat_t": 0,
-      "pendekat_b": 0,
-      "kecepatan_berangkat": 10.0,
-      "kecepatan_datang": 5.0,
-      "kecepatan_pejalan_kaki": 1.2,
-      "waktu_tempuh": 1.62,
-      "w_ms": 0.57,
-      "w_ms_disesuaikan": 1.0,
-      "w_k": 3,
-      "w_ah": 4,
-      "w_hh": 30
+      "fase": 1,
+      "kode": "U",
+      "jarak": [
+        {
+          "type": "lintasanBerangkat",
+          "pendekat": { "u": 100.00, "s": 0.00, "t": 0.00, "b": 0.00 },
+          "kecepatan": { "berangkat": 40.00, "datang": 0.00, "pejalanKaki": 0.00 },
+          "waktuTempuh": 15.00,
+          "wws": 30.00,
+          "wusDisarankan": 25.00,
+          "wk": 3,
+          "wAll": 60,
+          "wHijau": 30
+        }
+      ]
     }
   ],
   "measurements": [
     {
-      "measurement_label": "Intersection Width",
-      "start_longitude": 110.123456,
-      "start_latitude": -7.123456,
-      "end_longitude": 110.123789,
-      "end_latitude": -7.123789,
-      "distance_meters": 25.5
+      "id": 1,
+      "label": "Measurement 1",
+      "start": { "lat": "-7.7971", "lng": "110.3708" },
+      "end": { "lat": "-7.7972", "lng": "110.3709" },
+      "distance": 150
     }
   ]
+}
+```
+
+**Response**:
+```json
+{
+  "headerId": 186,
+  "message": "SA-III Survey created successfully"
 }
 ```
 
@@ -380,9 +363,15 @@ GET /api/sa-surveys/headers/1/forms
 ```json
 {
   "surveyHeader": {
-    "simpang_id": 1,
+    "id": 183,
     "tanggal": "2025-01-15",
-    "perihal": "SA-IV Capacity Analysis"
+    "kabupatenKota": "Yogyakarta",
+    "lokasi": "Test Intersection",
+    "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+    "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+    "ukuranKota": "1",
+    "perihal": "SA-IV Capacity Analysis",
+    "periode": "Pertama"
   },
   "capacityAnalysis": [
     {
@@ -421,8 +410,14 @@ GET /api/sa-surveys/headers/1/forms
 }
 ```
 
-#### **Get Calculation Configuration**
-**GET** `/api/sa-surveys/sa-iv/calculation-config/:simpangId`
+**Response**:
+```json
+{
+  "success": true,
+  "headerId": 187,
+  "message": "SA-IV Survey created successfully"
+}
+```
 
 #### **Get Complete SA-IV Survey**
 **GET** `/api/sa-surveys/sa-iv/:surveyId`
@@ -439,11 +434,17 @@ GET /api/sa-surveys/headers/1/forms
 ```json
 {
   "surveyHeader": {
-    "simpang_id": 1,
+    "id": 183,
     "tanggal": "2025-01-15",
-    "perihal": "SA-V Delay Analysis"
+    "kabupatenKota": "Yogyakarta",
+    "lokasi": "Test Intersection",
+    "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+    "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+    "ukuranKota": "1",
+    "perihal": "SA-V Delay Analysis",
+    "periode": "Pertama"
   },
-  "delayAnalysis": [
+  "delayData": [
     {
       "kode_pendekat": "U",
       "arus_lalu_lintas": 1254,
@@ -474,6 +475,14 @@ GET /api/sa-surveys/headers/1/forms
 }
 ```
 
+**Response**:
+```json
+{
+  "headerId": 188,
+  "message": "SA-V Survey created successfully"
+}
+```
+
 #### **Get Complete SA-V Survey**
 **GET** `/api/sa-surveys/sa-v/:surveyId`
 
@@ -482,27 +491,39 @@ GET /api/sa-surveys/headers/1/forms
 
 ## 🔄 **DATABASE STRUCTURE**
 
-The APIs use the `sa_surveys` table with the following structure:
+The APIs use the `sa_survey_headers` table with the following structure:
 
 ```sql
 -- Survey header (reusable across forms)
-sa_surveys {
-  id: 1,
-  simpang_id: 1,
-  survey_type: NULL,  -- Initially NULL for header
+sa_survey_headers {
+  id: 183,
   tanggal: "2025-01-15",
+  kabupaten_kota: "Yogyakarta",
+  lokasi: "Test Intersection",
+  ruas_jalan_mayor: JSON_ARRAY("Jl. Malioboro", "Jl. Sudirman"),
+  ruas_jalan_minor: JSON_ARRAY("Jl. Kecil 1", "Jl. Kecil 2"),
+  ukuran_kota: "1",
   perihal: "Traffic analysis",
-  status: "draft"
+  periode: "Pertama",
+  created_at: "2025-01-15T10:00:00Z",
+  updated_at: "2025-01-15T10:00:00Z"
 }
 
--- Form data (linked to header)
-sa_surveys {
-  id: 2,
-  simpang_id: 1,
-  survey_type: "SA-I",  -- Form type
-  tanggal: "2025-01-15",
-  perihal: "Traffic analysis", 
-  status: "draft"
+-- Form data (linked to header via survey_id)
+sa_i_pendekat {
+  id: 1,
+  survey_id: 183,
+  kode_pendekat: "U",
+  tipe_lingkungan_jalan: "KOM",
+  kelas_hambatan_samping: "R",
+  median: "Ada",
+  kelandaian_pendekat: 0.00,
+  bkjt: 1,
+  jarak_ke_kendaraan_parkir: 5.00,
+  lebar_awal_lajur: 3.50,
+  lebar_garis_henti: 3.50,
+  lebar_lajur_bki: 3.50,
+  lebar_lajur_keluar: 3.50
 }
 ```
 
@@ -511,23 +532,40 @@ sa_surveys {
 1. **Header Reusability**: One header can have multiple forms
 2. **Better Organization**: Clear separation between header and form data
 3. **Flexible Workflow**: Add forms incrementally to existing headers
-4. **Clean API Design**: `form_type` instead of confusing `survey_type`
+4. **Clean API Design**: Consistent endpoint structure
 5. **Comprehensive Coverage**: All Form SA requirements supported
+6. **Google Maps Integration**: Coordinate fields support VARCHAR(25) for flexibility
 
 ## 📝 **VALIDATION RULES**
 
 ### **Survey Header Validation**
-- `simpang_id`: Required, must exist in `simpang` table
 - `tanggal`: Required, valid date format (YYYY-MM-DD)
-- `perihal`: Optional, text field
-- `status`: Optional, enum('draft','completed','approved'), defaults to 'draft'
-
-### **Form Type Validation**
-- `form_type`: Required, enum('SA-I','SA-II','SA-III','SA-IV','SA-V')
-- `status`: Optional, enum('draft','completed','approved'), defaults to 'draft'
+- `kabupatenKota`: Required, string field
+- `lokasi`: Required, string field
+- `ruasJalanMayor/ruasJalanMinor`: Required, JSON arrays
+- `ukuranKota`: Required, string field
+- `periode`: Required, enum('Pertama','Kedua','Ketiga','Keempat')
 
 ### **Form-Specific Validation**
-Each form type has its own validation rules as defined in the respective analysis documents.
+
+#### **SA-I Validation**
+- `kodePendekat`: Required, enum('U','T','S','B')
+- `tipeLingkunganJalan`: Required, enum('KOM','KIM','AT')
+- `kelasHambatanSamping`: Required, enum('R','T','S')
+- `bkjt`: Required, boolean (0 or 1)
+- `kelandaianPendekat`: Required, decimal
+- `jarakKeKendaraanParkir`: Required, decimal
+- `lebarAwalLajur`: Required, decimal
+- `lebarGarisHenti`: Required, decimal
+- `lebarLajurBki`: Required, decimal
+- `lebarLajurKeluar`: Required, decimal
+
+#### **SA-III Validation**
+- Coordinate fields: VARCHAR(25) for Google Maps compatibility
+- `start_longitude`: -180.000000 to +180.000000
+- `start_latitude`: -90.000000 to +90.000000
+- `end_longitude`: -180.000000 to +180.000000
+- `end_latitude`: -90.000000 to +90.000000
 
 ## 🚨 **ERROR HANDLING**
 
@@ -539,8 +577,8 @@ Each form type has its own validation rules as defined in the respective analysi
   "success": false,
   "message": "Validation error",
   "errors": {
-    "simpang_id": "Simpang ID is required",
-    "tanggal": "Invalid date format"
+    "tanggal": "Tanggal is required",
+    "kabupatenKota": "Kabupaten Kota is required"
   }
 }
 ```
@@ -566,23 +604,77 @@ Each form type has its own validation rules as defined in the respective analysi
 ### **Complete Workflow Test**
 ```bash
 # 1. Create header
-curl -X POST http://localhost:3000/api/sa-surveys/headers \
+curl -X POST http://localhost:8080/api/sa-surveys/header \
   -H "Content-Type: application/json" \
-  -d '{"simpang_id": 1, "tanggal": "2025-01-15", "perihal": "Test survey", "status": "draft"}'
+  -d '{
+    "tanggal": "2025-01-15",
+    "kabupatenKota": "Yogyakarta",
+    "lokasi": "Test Intersection",
+    "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+    "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+    "ukuranKota": "1",
+    "perihal": "Test survey",
+    "periode": "Pertama"
+  }'
 
-# 2. Add SA-I form
-curl -X POST http://localhost:3000/api/sa-surveys/headers/1/forms \
+# 2. Create SA-I form
+curl -X POST http://localhost:8080/api/sa-surveys/sa-i \
   -H "Content-Type: application/json" \
-  -d '{"form_type": "SA-I", "status": "draft"}'
+  -d '{
+    "surveyHeader": {
+      "id": 183,
+      "tanggal": "2025-01-15",
+      "kabupatenKota": "Yogyakarta",
+      "lokasi": "Test Intersection",
+      "ruasJalanMayor": ["Jl. Malioboro", "Jl. Sudirman"],
+      "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
+      "ukuranKota": "1",
+      "perihal": "SA-I Test",
+      "periode": "Pertama"
+    },
+    "pendekat": [{
+      "kodePendekat": "U",
+      "tipeLingkunganJalan": "KOM",
+      "kelasHambatanSamping": "R",
+      "median": "Ada",
+      "kelandaianPendekat": 0.00,
+      "bkjt": 1,
+      "jarakKeKendaraanParkir": 5.00,
+      "lebarAwalLajur": 3.50,
+      "lebarGarisHenti": 3.50,
+      "lebarLajurBki": 3.50,
+      "lebarLajurKeluar": 3.50
+    }],
+    "fase": {
+      "utara": {
+        "tipe_pendekat": { "terlindung": true, "terlawan": false },
+        "arah": { "bki": true, "bkijt": false, "lurus": true, "bka": false },
+        "pemisahan_lurus_bka": false,
+        "fase": { "fase_1": true, "fase_2": false, "fase_3": false, "fase_4": false }
+      }
+    }
+  }'
 
-# 3. Add SA-II form  
-curl -X POST http://localhost:3000/api/sa-surveys/headers/1/forms \
-  -H "Content-Type: application/json" \
-  -d '{"form_type": "SA-II", "status": "draft"}'
-
-# 4. Get all forms
-curl -X GET http://localhost:3000/api/sa-surveys/headers/1/forms
+# 3. Get all forms for header
+curl -X GET http://localhost:8080/api/sa-surveys/header/183/forms
 ```
+
+## 🔧 **WORKFLOW SCENARIOS**
+
+### **Scenario 1: Header-First Approach**
+1. Create header first
+2. Add forms to existing header
+3. Multiple forms can share same header
+
+### **Scenario 2: Form-First Approach**
+1. Create form directly (auto-creates header)
+2. Add more forms to auto-created header
+3. System tracks form-header relationships
+
+### **Scenario 3: Mixed Approach**
+1. Combine both header-first and form-first
+2. Flexible workflow based on user preference
+3. All forms properly linked to headers
 
 ---
 
