@@ -155,39 +155,64 @@
   ```
 - butuh _GET_, _POST_, dan _UPDATE_. (get by id yang udh dibuat termasuk header nya juga)
 
-## Sample Response (Form SA-II Diagram Terlindung dan Terlawan)
+## Sample Response (Form SA-II Arus Kendaraan berdasarkan Lokasi Simpang)
 
 ```
-[
   {
-    "type": "terlindungi",
-    "data": {
-      "Utara": [90, 110, 120, 130, 160, 140, 130, 125, 110, 95, 85, 70],
-      "Timur": [80, 90, 100, 120, 140, 160, 170, 165, 140, 120, 100, 85],
-      "Selatan": [100, 120, 130, 140, 135, 130, 125, 120, 110, 95, 85, 70],
-      "Barat": [70, 80, 90, 100, 110, 120, 125, 130, 135, 130, 120, 110]
-    }
-  },
-  {
-    "type": "terlawanan",
-    "data": {
-      "Utara": [100, 110, 130, 150, 160, 160, 150, 135, 130, 105, 95, 90],
-      "Timur": [90, 95, 105, 120, 140, 160, 170, 155, 140, 120, 100, 85],
-      "Selatan": [100, 120, 140, 150, 145, 140, 130, 125, 115, 100, 90, 75],
-      "Barat": [80, 90, 100, 110, 120, 130, 135, 140, 145, 135, 125, 115]
-    }
+      u: {
+        mp: [500, 100, 140],
+        ks: [100, 250, 80],
+        sm: [120, 220, 50],
+        ktb: [0, 2, 0],
+        rktb: [4, null, null]
+      },
+      t: {
+        mp: [300, 120, 90],
+        ks: [80, 210, 70],
+        sm: [110, 200, 45],
+        ktb: [1, 1, 1],
+        rktb: [3, null, null]
+      },
+      b: {
+        mp: [500, 620, 290],
+        ks: [80, 270, 420],
+        sm: [110, 110, 65],
+        ktb: [1, 5, 2],
+        rktb: [3, null, null]
+      },
+      s: {
+        mp: [312, 620, 290],
+        ks: [850, 270, 420],
+        sm: [160, 310, 65],
+        ktb: [1, 4, 2],
+        rktb: [2, null, null]
+      }
   }
-]
 ```
 
 ### Note:
-
-- butuh _GET_ hanya menampilkan data kendaraan semua jenis _per bulan dalam satu tahun_
+- butuh _GET_ by id yaitu jumlah kendaraan semua jenis kendaraan ada mp, ks, sm, ktb. dan rktb.
+- u, t dsb => dari jalan simpang.
+-  ```mp: [500, 100, 140],``` jumlah 3 jenis awal untuk urutan awal ada bki/ bkijt, kedua ada lurus, dan ketiga bka.
 
 ## Sample Payload atau Response (Form SA-II)
 
 ```
 {
+  "surveyHeader": {
+    "id": 0,
+    "tanggal": '',
+    "kabupatenKota": '',
+    "lokasi": '',
+    "simpang_id": 0,
+    "survey_type": "",
+    "ruasJalanMayor": [''],
+    "ruasJalanMinor": [''],
+    "ukuranKota": '',
+    "perihal": '',
+    "periode": '',
+    "status": ''
+  },
   "ekuivalensi": {
     "terlindung": {
       "mp": "2",
@@ -338,6 +363,209 @@
 ### Note:
 
 - butuh _GET_, _POST_, dan _UPDATE_. (get by id yang udh dibuat termasuk header nya juga)
+- 
+```
+  ...
+    "surveyHeader": {
+      "id": 0,
+      "tanggal": '',
+      "kabupatenKota": '',
+      "lokasi": '',
+      "simpang_id": 0,
+      "survey_type": "",
+      "ruasJalanMayor": [''],
+      "ruasJalanMinor": [''],
+      "ukuranKota": '',
+      "perihal": '',
+      "periode": '',
+      "status": ''
+    },
+  ...
+```
+disini untuk header nya
+
+```
+  ...
+    "ekuivalensi": {
+      "terlindung": {
+        "mp": "2",
+        "ks": "2",
+        "sm": "3"
+      },
+      "terlawan": {
+        "mp": "1",
+        "ks": "2.5",
+        "sm": "1.5"
+      }
+    },
+  ...
+```
+disini untuk ekuivalensi tabel mp, ks, sm nantinya dihtung di dalam tabel
+
+```
+ "surveyData": [
+    {
+      "direction": "B",
+      "rows": [
+        {
+          "type": "BKi / BKIJT",
+          "mp": {
+            "kendjam": 500,
+            "terlindung": 1000,
+            "terlawan": 500
+          },
+          "ks": {
+            "kendjam": 80,
+            "terlindung": 160,
+            "terlawan": 200
+          },
+          "sm": {
+            "kendjam": 110,
+            "terlindung": 330,
+            "terlawan": 165,
+            "smpTerlindung": 0,
+            "smpTerlawan": 0
+          },
+          "total": {
+            "terlindung": 1490,
+            "terlawan": 865,
+            "smpTerlindung": 1490,
+            "smpTerlawan": 865,
+            "kendjam": 690
+          },
+          "ktb": {
+            "rasio": 0.28,
+            "count": 1
+          },
+          "rktb": 3
+        },
+        {
+          "type": "Lurus",
+          "mp": {
+            "kendjam": 620,
+            "terlindung": 1240,
+            "terlawan": 620
+          },
+          "ks": {
+            "kendjam": 270,
+            "terlindung": 540,
+            "terlawan": 675
+          },
+          "sm": {
+            "kendjam": 110,
+            "terlindung": 330,
+            "terlawan": 165,
+            "smpTerlindung": 0,
+            "smpTerlawan": 0
+          },
+          "total": {
+            "terlindung": 2110,
+            "terlawan": 1460,
+            "smpTerlindung": 2110,
+            "smpTerlawan": 1460,
+            "kendjam": 1000
+          },
+          "ktb": {
+            "rasio": 0.41,
+            "count": 5
+          },
+          "rktb": null
+        },
+        {
+          "type": "BKa",
+          "mp": {
+            "kendjam": 290,
+            "terlindung": 580,
+            "terlawan": 290
+          },
+          "ks": {
+            "kendjam": 420,
+            "terlindung": 840,
+            "terlawan": 1050
+          },
+          "sm": {
+            "kendjam": 65,
+            "terlindung": 195,
+            "terlawan": 97.5,
+            "smpTerlindung": 0,
+            "smpTerlawan": 0
+          },
+          "total": {
+            "terlindung": 1615,
+            "terlawan": 1437.5,
+            "smpTerlindung": 1615,
+            "smpTerlawan": 1437.5,
+            "kendjam": 775
+          },
+          "ktb": {
+            "rasio": 0.31,
+            "count": 2
+          },
+          "rktb": null
+        }
+      ],
+      "subtotal": {
+        "mp": {
+          "kendjam": 1410,
+          "terlindung": 2820,
+          "terlawan": 1410
+        },
+        "ks": {
+          "kendjam": 770,
+          "terlindung": 1540,
+          "terlawan": 1925
+        },
+        "sm": {
+          "kendjam": 285,
+          "terlindung": 855,
+          "terlawan": 428,
+          "smpTerlindung": 0,
+          "smpTerlawan": 0
+        },
+        "total": {
+          "kendjam": 2465,
+          "terlindung": 5215,
+          "terlawan": 3763,
+          "smpTerlindung": 5215,
+          "smpTerlawan": 3763
+        },
+        "ktb": 8,
+        "rktb": 0.003
+      }
+    },
+    ...
+  ]
+```
+disini ada survey data untuk tabel yang sudah dihitung juga
+
+## Sample Response (Form SA-II Diagram Terlindung dan Terlawan)
+
+```
+[
+  {
+    "type": "terlindungi",
+    "data": {
+      "Utara": [90, 110, 120, 130, 160, 140, 130, 125, 110, 95, 85, 70],
+      "Timur": [80, 90, 100, 120, 140, 160, 170, 165, 140, 120, 100, 85],
+      "Selatan": [100, 120, 130, 140, 135, 130, 125, 120, 110, 95, 85, 70],
+      "Barat": [70, 80, 90, 100, 110, 120, 125, 130, 135, 130, 120, 110]
+    }
+  },
+  {
+    "type": "terlawanan",
+    "data": {
+      "Utara": [100, 110, 130, 150, 160, 160, 150, 135, 130, 105, 95, 90],
+      "Timur": [90, 95, 105, 120, 140, 160, 170, 155, 140, 120, 100, 85],
+      "Selatan": [100, 120, 140, 150, 145, 140, 130, 125, 115, 100, 90, 75],
+      "Barat": [80, 90, 100, 110, 120, 130, 135, 140, 145, 135, 125, 115]
+    }
+  }
+]
+```
+
+### Note:
+
+- butuh _GET_ hanya menampilkan data kendaraan semua jenis _per bulan dalam satu tahun_
 
 ## Sample Response (Sketsa Simpang Form SA-II)
 
