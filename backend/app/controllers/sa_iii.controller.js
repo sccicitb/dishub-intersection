@@ -2,6 +2,22 @@ const SaSurveyHeader = require("../models/sa_survey_header.model.js");
 const SaIIIPhaseData = require("../models/sa_iii_phase_data.model.js");
 const SaIIIMeasurements = require("../models/sa_iii_measurements.model.js");
 
+// Helper function to safely parse JSON
+const safeJsonParse = (jsonString, defaultValue = ['Default Road']) => {
+  try {
+    if (typeof jsonString === 'string') {
+      return JSON.parse(jsonString);
+    } else if (Array.isArray(jsonString)) {
+      return jsonString;
+    } else {
+      return defaultValue;
+    }
+  } catch (error) {
+    console.warn('JSON parse error:', error.message, 'for value:', jsonString);
+    return defaultValue;
+  }
+};
+
 // =====================================================
 // SA-III COMPLETE SURVEY OPERATIONS (Phase 4 - 3 APIs)
 // =====================================================
@@ -16,7 +32,7 @@ exports.createCompleteSurvey = async (req, res) => {
     return;
   }
 
-  const { header, phaseData, measurements } = req.body;
+  const { surveyHeader, phaseData, measurements } = req.body;
 
   // Start database transaction
   const sql = require("../config/db.js");
@@ -27,17 +43,24 @@ exports.createCompleteSurvey = async (req, res) => {
     
     await connection.beginTransaction();
 
-    // 1. Create main survey record
-    const surveyDataRecord = {
-      simpang_id: header.simpang_id,
-      survey_type: 'SA-III',
-      tanggal: header.tanggal,
-      perihal: header.perihal,
-      status: 'draft'
+    // 1. Create main survey header record
+    const headerData = {
+      tanggal: surveyHeader.tanggal,
+      perihal: surveyHeader.perihal,
+      kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota || 'Default City',
+      lokasi: surveyHeader.lokasi || 'Default Location',
+      ruas_jalan_mayor: Array.isArray(surveyHeader.ruasJalanMayor) 
+        ? JSON.stringify(surveyHeader.ruasJalanMayor) 
+        : JSON.stringify(['Default Road']),
+      ruas_jalan_minor: Array.isArray(surveyHeader.ruasJalanMinor) 
+        ? JSON.stringify(surveyHeader.ruasJalanMinor) 
+        : JSON.stringify(['Default Road']),
+      ukuran_kota: surveyHeader.ukuranKota || surveyHeader.ukuran_kota || '0',
+      periode: surveyHeader.periode || 'Pertama'
     };
 
-    const [surveyResult] = await connection.query("INSERT INTO sa_surveys SET ?", surveyDataRecord);
-    const surveyId = surveyResult.insertId;
+    const [headerResult] = await connection.query("INSERT INTO sa_survey_headers SET ?", headerData);
+    const headerId = headerResult.insertId;
 
     // 2. Create phase data records
     if (phaseData && Array.isArray(phaseData)) {
@@ -53,7 +76,7 @@ exports.createCompleteSurvey = async (req, res) => {
           for (const jarak of phase.jarak) {
             const mappedJarakType = jarakTypeMap[jarak.type] || jarak.type;
             const phaseDataRecord = {
-              survey_id: surveyId,
+              survey_id: headerId,
               fase_number: phase.fase,
               kode_pendekat: phase.kode,
               jarak_type: mappedJarakType,
@@ -82,7 +105,7 @@ exports.createCompleteSurvey = async (req, res) => {
     if (measurements && Array.isArray(measurements)) {
       for (const measurement of measurements) {
         const measurementRecord = {
-          survey_id: surveyId,
+          survey_id: headerId,
           measurement_label: measurement.label || `Measurement ${measurement.id}`,
           start_longitude: measurement.start.lng,
           start_latitude: measurement.start.lat,
@@ -103,7 +126,7 @@ exports.createCompleteSurvey = async (req, res) => {
     
     connection.release();
     res.send({
-      surveyId: surveyId,
+      headerId: headerId,
       message: "SA-III Survey created successfully"
     });
 
@@ -113,45 +136,53 @@ exports.createCompleteSurvey = async (req, res) => {
       connection.release();
     }
     res.status(500).send({
-      message: "Error creating SA-III survey: " + error.message
+      message: error.message || "Some error occurred while creating the SA-III survey."
     });
   }
 };
 
 // Get complete SA-III survey with all related data
 exports.getCompleteSurvey = async (req, res) => {
-  const surveyId = req.params.surveyId;
+  const headerId = req.params.surveyId;
+  const sql = require("../config/db.js");
   
   try {
-    // Get main survey data
-    const [surveys] = await SaSurveyHeader.findById(surveyId);
-    if (surveys.length === 0) {
-      res.status(404).send({
-        message: `Survey with id ${surveyId} not found.`
+    // Get main header data
+    const [headerRows] = await sql.query("SELECT * FROM sa_survey_headers WHERE id = ?", [headerId]);
+    if (headerRows.length === 0) {
+      return res.status(404).send({
+        message: `Survey header with id ${headerId} not found.`
       });
-      return;
     }
 
-    const survey = surveys[0];
+    const header = headerRows[0];
 
     // Get phase data
-    const phaseData = await SaIIIPhaseData.findBySurveyId(surveyId);
+    const [phaseRows] = await sql.query("SELECT * FROM sa_iii_phase_data WHERE survey_id = ?", [headerId]);
     
     // Get measurements
-    const measurements = await SaIIIMeasurements.findBySurveyId(surveyId);
+    const [measurementRows] = await sql.query("SELECT * FROM sa_iii_measurements WHERE survey_id = ?", [headerId]);
 
-    // Transform data to match expected format
-    const header = {
-      simpang_id: survey.simpang_id,
-      tanggal: survey.tanggal,
-      perihal: survey.perihal
+    // Transform header data to match expected format
+    const surveyHeader = {
+      id: header.id,
+      tanggal: header.tanggal,
+      kabupatenKota: header.kabupaten_kota,
+      lokasi: header.lokasi,
+      ruasJalanMayor: safeJsonParse(header.ruas_jalan_mayor),
+      ruasJalanMinor: safeJsonParse(header.ruas_jalan_minor),
+      ukuranKota: header.ukuran_kota,
+      perihal: header.perihal,
+      periode: header.periode,
+      createdAt: header.created_at,
+      updatedAt: header.updated_at
     };
 
     // Group phase data by fase and kode
     const transformedPhaseData = [];
     const phases = {};
     
-    phaseData.forEach(item => {
+    phaseRows.forEach(item => {
       const key = `${item.fase_number}_${item.kode_pendekat}`;
       if (!phases[key]) {
         phases[key] = {
@@ -189,7 +220,7 @@ exports.getCompleteSurvey = async (req, res) => {
     });
 
     // Transform measurements data
-    const transformedMeasurements = measurements.map(item => ({
+    const transformedMeasurements = measurementRows.map(item => ({
       id: item.id,
       label: item.measurement_label,
       start: {
@@ -203,18 +234,18 @@ exports.getCompleteSurvey = async (req, res) => {
       distance: item.distance_meters
     }));
 
-    // Combine all data into the expected format
-    const completeSurvey = {
-      header,
-      phaseData: transformedPhaseData,
-      measurements: transformedMeasurements
-    };
-
-    res.send(completeSurvey);
+    res.send({
+      success: true,
+      data: {
+        surveyHeader,
+        phaseData: transformedPhaseData,
+        measurements: transformedMeasurements
+      }
+    });
 
   } catch (error) {
     res.status(500).send({
-      message: "Error retrieving SA-III survey: " + error.message
+      message: error.message || "Some error occurred while retrieving the SA-III survey."
     });
   }
 };
@@ -229,8 +260,8 @@ exports.updateCompleteSurvey = async (req, res) => {
     return;
   }
 
-  const surveyId = req.params.surveyId;
-  const { header, phaseData, measurements } = req.body;
+  const headerId = req.params.surveyId;
+  const { surveyHeader, phaseData, measurements } = req.body;
 
   // Start database transaction
   const sql = require("../config/db.js");
@@ -241,19 +272,29 @@ exports.updateCompleteSurvey = async (req, res) => {
     
     await connection.beginTransaction();
 
-    // 1. Update main survey record
-    const surveyDataRecord = {
-      simpang_id: header.simpang_id,
-      tanggal: header.tanggal,
-      perihal: header.perihal,
-      status: 'draft'
-    };
+    // 1. Update main header record
+    if (surveyHeader) {
+      const headerData = {
+        tanggal: surveyHeader.tanggal,
+        perihal: surveyHeader.perihal,
+        kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota,
+        lokasi: surveyHeader.lokasi,
+        ruas_jalan_mayor: Array.isArray(surveyHeader.ruasJalanMayor) 
+          ? JSON.stringify(surveyHeader.ruasJalanMayor) 
+          : surveyHeader.ruasJalanMayor,
+        ruas_jalan_minor: Array.isArray(surveyHeader.ruasJalanMinor) 
+          ? JSON.stringify(surveyHeader.ruasJalanMinor) 
+          : surveyHeader.ruasJalanMinor,
+        ukuran_kota: surveyHeader.ukuranKota || surveyHeader.ukuran_kota,
+        periode: surveyHeader.periode
+      };
 
-    await connection.query("UPDATE sa_surveys SET ? WHERE id = ?", [surveyDataRecord, surveyId]);
+      await connection.query("UPDATE sa_survey_headers SET ? WHERE id = ?", [headerData, headerId]);
+    }
 
     // 2. Delete existing phase and measurement data
-    await connection.query("DELETE FROM sa_iii_phase_data WHERE survey_id = ?", [surveyId]);
-    await connection.query("DELETE FROM sa_iii_measurements WHERE survey_id = ?", [surveyId]);
+    await connection.query("DELETE FROM sa_iii_phase_data WHERE survey_id = ?", [headerId]);
+    await connection.query("DELETE FROM sa_iii_measurements WHERE survey_id = ?", [headerId]);
 
     // 3. Create new phase data records
     if (phaseData && Array.isArray(phaseData)) {
@@ -269,7 +310,7 @@ exports.updateCompleteSurvey = async (req, res) => {
           for (const jarak of phase.jarak) {
             const mappedJarakType = jarakTypeMap[jarak.type] || jarak.type;
             const phaseDataRecord = {
-              survey_id: surveyId,
+              survey_id: headerId,
               fase_number: phase.fase,
               kode_pendekat: phase.kode,
               jarak_type: mappedJarakType,
@@ -298,7 +339,7 @@ exports.updateCompleteSurvey = async (req, res) => {
     if (measurements && Array.isArray(measurements)) {
       for (const measurement of measurements) {
         const measurementRecord = {
-          survey_id: surveyId,
+          survey_id: headerId,
           measurement_label: measurement.label || `Measurement ${measurement.id}`,
           start_longitude: measurement.start.lng,
           start_latitude: measurement.start.lat,
@@ -319,6 +360,7 @@ exports.updateCompleteSurvey = async (req, res) => {
     
     connection.release();
     res.send({
+      success: true,
       message: "SA-III Survey updated successfully"
     });
 
@@ -328,7 +370,7 @@ exports.updateCompleteSurvey = async (req, res) => {
       connection.release();
     }
     res.status(500).send({
-      message: "Error updating SA-III survey: " + error.message
+      message: error.message || "Some error occurred while updating the SA-III survey."
     });
   }
 }; 
