@@ -33,14 +33,9 @@ SaIIKTBData.findById = (id, result) => {
   });
 };
 
-SaIIKTBData.findBySurveyId = (surveyId, result) => {
-  sql.query(`SELECT * FROM sa_ii_ktb_data WHERE survey_id = ${surveyId}`, (err, res) => {
-    if (err) {
-      result(err, null);
-      return;
-    }
-    result(null, res);
-  });
+SaIIKTBData.findBySurveyId = async (surveyId) => {
+  const [rows] = await sql.query(`SELECT * FROM sa_ii_ktb_data WHERE survey_id = ?`, [surveyId]);
+  return rows;
 };
 
 SaIIKTBData.updateById = (id, ktbData, result) => {

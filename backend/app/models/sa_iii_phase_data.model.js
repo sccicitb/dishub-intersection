@@ -45,14 +45,9 @@ SaIIIPhaseData.findById = (id, result) => {
   });
 };
 
-SaIIIPhaseData.findBySurveyId = (surveyId, result) => {
-  sql.query(`SELECT * FROM sa_iii_phase_data WHERE survey_id = ${surveyId} ORDER BY fase_number, kode_pendekat, jarak_type`, (err, res) => {
-    if (err) {
-      result(err, null);
-      return;
-    }
-    result(null, res);
-  });
+SaIIIPhaseData.findBySurveyId = async (surveyId) => {
+  const [rows] = await sql.query(`SELECT * FROM sa_iii_phase_data WHERE survey_id = ? ORDER BY fase_number, kode_pendekat, jarak_type`, [surveyId]);
+  return rows;
 };
 
 SaIIIPhaseData.findBySurveyAndFase = (surveyId, faseNumber, result) => {

@@ -43,14 +43,9 @@ SaIVCapacityAnalysis.findById = (id, result) => {
   });
 };
 
-SaIVCapacityAnalysis.findBySurveyId = (surveyId, result) => {
-  sql.query(`SELECT * FROM sa_iv_capacity_analysis WHERE survey_id = ${surveyId} ORDER BY kode_pendekat`, (err, res) => {
-    if (err) {
-      result(err, null);
-      return;
-    }
-    result(null, res);
-  });
+SaIVCapacityAnalysis.findBySurveyId = async (surveyId) => {
+  const [rows] = await sql.query(`SELECT * FROM sa_iv_capacity_analysis WHERE survey_id = ? ORDER BY kode_pendekat`, [surveyId]);
+  return rows;
 };
 
 SaIVCapacityAnalysis.findBySurveyAndPendekat = (surveyId, kodePendekat, result) => {

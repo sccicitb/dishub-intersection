@@ -36,14 +36,9 @@ SaIIVehicleData.findById = (id, result) => {
   });
 };
 
-SaIIVehicleData.findBySurveyId = (surveyId, result) => {
-  sql.query(`SELECT * FROM sa_ii_vehicle_data WHERE survey_id = ${surveyId}`, (err, res) => {
-    if (err) {
-      result(err, null);
-      return;
-    }
-    result(null, res);
-  });
+SaIIVehicleData.findBySurveyId = async (surveyId) => {
+  const [rows] = await sql.query(`SELECT * FROM sa_ii_vehicle_data WHERE survey_id = ?`, [surveyId]);
+  return rows;
 };
 
 SaIIVehicleData.updateById = (id, vehicleData, result) => {
