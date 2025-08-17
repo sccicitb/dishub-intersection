@@ -9,6 +9,7 @@ const SaSurveyHeader = function(header) {
   this.ruas_jalan_minor = header.ruas_jalan_minor || JSON.stringify(['Default Road']);
   this.ukuran_kota = header.ukuran_kota || '0';
   this.periode = header.periode || 'Pertama';
+  this.status = header.status || 'draft';
 };
 
 // Helper function to safely parse JSON
@@ -41,7 +42,8 @@ SaSurveyHeader.create = async (newHeader) => {
         ? JSON.stringify(newHeader.ruas_jalan_minor) 
         : JSON.stringify(['Default Road']),
       ukuran_kota: newHeader.ukuran_kota || '0',
-      periode: newHeader.periode || 'Pertama'
+      periode: newHeader.periode || 'Pertama',
+      status: newHeader.status || 'draft'
     };
     
     const [result] = await sql.query("INSERT INTO sa_survey_headers SET ?", headerData);
@@ -126,7 +128,8 @@ SaSurveyHeader.updateById = async (id, header) => {
         ? JSON.stringify(header.ruas_jalan_minor) 
         : header.ruas_jalan_minor,
       ukuran_kota: header.ukuran_kota,
-      periode: header.periode
+      periode: header.periode,
+      status: header.status || 'draft'
     };
     
     const [result] = await sql.query(
