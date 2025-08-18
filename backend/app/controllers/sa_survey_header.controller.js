@@ -36,6 +36,7 @@ exports.createHeader = async (req, res) => {
 
     // Create a header with new structure
     const header = new SaSurveyHeader({
+      simpang_id: req.body.simpangId || req.body.simpang_id || 0,
       tanggal: req.body.tanggal,
       perihal: req.body.perihal,
       kabupaten_kota: req.body.kabupatenKota || req.body.kabupaten_kota,
@@ -53,6 +54,7 @@ exports.createHeader = async (req, res) => {
     // Format response to match API documentation
     const response = {
       id: data.id,
+      simpangId: data.simpang_id,
       tanggal: data.tanggal,
       kabupatenKota: data.kabupaten_kota,
       lokasi: data.lokasi,
@@ -93,6 +95,7 @@ exports.getAllHeaders = async (req, res) => {
     // Format response to match API documentation
     const formattedData = data.map(header => ({
       id: header.id,
+      simpangId: header.simpang_id,
       tanggal: header.tanggal,
       kabupatenKota: header.kabupaten_kota,
       lokasi: header.lokasi,
@@ -125,6 +128,7 @@ exports.getHeaderById = async (req, res) => {
     // Format response to match API documentation
     const response = {
       id: data.id,
+      simpangId: data.simpang_id,
       tanggal: data.tanggal,
       kabupatenKota: data.kabupaten_kota,
       lokasi: data.lokasi,
@@ -166,6 +170,7 @@ exports.updateHeader = async (req, res) => {
     }
 
     const updateData = {
+      simpang_id: req.body.simpangId || req.body.simpang_id || 0,
       tanggal: req.body.tanggal,
       perihal: req.body.perihal,
       kabupaten_kota: req.body.kabupatenKota || req.body.kabupaten_kota,
@@ -182,6 +187,7 @@ exports.updateHeader = async (req, res) => {
     // Format response to match API documentation
     const response = {
       id: data.id,
+      simpangId: data.simpang_id,
       tanggal: data.tanggal,
       kabupatenKota: data.kabupaten_kota,
       lokasi: data.lokasi,

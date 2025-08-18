@@ -1,6 +1,7 @@
 const sql = require("../config/db.js");
 
 const SaSurveyHeader = function(header) {
+  this.simpang_id = header.simpang_id || 0;
   this.tanggal = header.tanggal;
   this.perihal = header.perihal;
   this.kabupaten_kota = header.kabupaten_kota || 'Default City';
@@ -31,6 +32,7 @@ const safeJsonParse = (jsonString, defaultValue = ['Default Road']) => {
 SaSurveyHeader.create = async (newHeader) => {
   try {
     const headerData = {
+      simpang_id: newHeader.simpang_id || 0,
       tanggal: newHeader.tanggal,
       perihal: newHeader.perihal,
       kabupaten_kota: newHeader.kabupaten_kota || 'Default City',
@@ -117,6 +119,7 @@ SaSurveyHeader.getAll = async (params) => {
 SaSurveyHeader.updateById = async (id, header) => {
   try {
     const updateData = {
+      simpang_id: header.simpang_id || 0,
       tanggal: header.tanggal,
       perihal: header.perihal,
       kabupaten_kota: header.kabupaten_kota,
