@@ -24,62 +24,52 @@ const safeJsonParse = (jsonString, defaultValue = ['Default Road']) => {
 
 // Create a complete SA-III survey in a single transaction
 exports.createCompleteSurvey = async (req, res) => {
-  // Validate request
   if (!req.body) {
-    res.status(400).send({
-      message: "Content can not be empty!"
-    });
-    return;
+    return res.status(400).send({ message: "Content can not be empty!" });
   }
 
   const { surveyHeader, phaseData, measurements } = req.body;
 
-  // Start database transaction
   const sql = require("../config/db.js");
-  
   let connection;
   try {
     connection = await sql.getConnection();
-    
     await connection.beginTransaction();
 
-    // 1. Create main survey header record
-    const headerData = {
-      tanggal: surveyHeader.tanggal,
-      perihal: surveyHeader.perihal,
-      kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota || 'Default City',
-      lokasi: surveyHeader.lokasi || 'Default Location',
-      ruas_jalan_mayor: Array.isArray(surveyHeader.ruasJalanMayor) 
-        ? JSON.stringify(surveyHeader.ruasJalanMayor) 
-        : JSON.stringify(['Default Road']),
-      ruas_jalan_minor: Array.isArray(surveyHeader.ruasJalanMinor) 
-        ? JSON.stringify(surveyHeader.ruasJalanMinor) 
-        : JSON.stringify(['Default Road']),
-      ukuran_kota: surveyHeader.ukuranKota || surveyHeader.ukuran_kota || '0',
-      periode: surveyHeader.periode || 'Pertama'
-    };
+    // 1. Insert header
+    // const headerData = {
+    //   tanggal: surveyHeader.tanggal,
+    //   perihal: surveyHeader.perihal,
+    //   kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota || 'Default City',
+    //   lokasi: surveyHeader.lokasi || 'Default Location',
+    //   ruas_jalan_mayor: Array.isArray(surveyHeader.ruasJalanMayor)
+    //     ? JSON.stringify(surveyHeader.ruasJalanMayor)
+    //     : JSON.stringify(['Default Road']),
+    //   ruas_jalan_minor: Array.isArray(surveyHeader.ruasJalanMinor)
+    //     ? JSON.stringify(surveyHeader.ruasJalanMinor)
+    //     : JSON.stringify(['Default Road']),
+    //   ukuran_kota: surveyHeader.ukuranKota || surveyHeader.ukuran_kota || '0',
+    //   periode: surveyHeader.periode || 'Pertama'
+    // };
 
-    const [headerResult] = await connection.query("INSERT INTO sa_survey_headers SET ?", headerData);
-    const headerId = headerResult.insertId;
+    // const [headerResult] = await connection.query(
+    //   "INSERT INTO sa_survey_headers SET ?",
+    //   headerData
+    // );
+    // const headerId = headerResult.insertId;
+    const headerId = surveyHeader.id;
 
-    // 2. Create phase data records
+    // 2. Insert phase data
+    let phaseInsertCount = 0;
     if (phaseData && Array.isArray(phaseData)) {
-      const jarakTypeMap = {
-        'BKi': 'lintasanBerangkat',
-        'Lurus': 'panjangBerangkat', 
-        'BKa': 'lintasanDatang',
-        'Pejalan': 'lintasanPejalan'
-      };
-      
       for (const phase of phaseData) {
         if (phase.jarak && Array.isArray(phase.jarak)) {
           for (const jarak of phase.jarak) {
-            const mappedJarakType = jarakTypeMap[jarak.type] || jarak.type;
             const phaseDataRecord = {
               survey_id: headerId,
               fase_number: phase.fase,
               kode_pendekat: phase.kode,
-              jarak_type: mappedJarakType,
+              jarak_type: jarak.type, // langsung pakai type
               pendekat_u: jarak.pendekat?.u || null,
               pendekat_s: jarak.pendekat?.s || null,
               pendekat_t: jarak.pendekat?.t || null,
@@ -100,30 +90,23 @@ exports.createCompleteSurvey = async (req, res) => {
         }
       }
     }
-
-    // 3. Create measurement records
     if (measurements && Array.isArray(measurements)) {
       for (const measurement of measurements) {
         const measurementRecord = {
           survey_id: headerId,
           measurement_label: measurement.label || `Measurement ${measurement.id}`,
-          start_longitude: measurement.start.lng,
-          start_latitude: measurement.start.lat,
-          end_longitude: measurement.end.lng,
-          end_latitude: measurement.end.lat,
-          distance_meters: measurement.distance || SaIIIMeasurements.calculateDistance(
-            measurement.start.lat, measurement.start.lng,
-            measurement.end.lat, measurement.end.lng
-          )
+          start_longitude: measurement.start?.lng || null,
+          start_latitude: measurement.start?.lat || null,
+          end_longitude: measurement.end?.lng || null,
+          end_latitude: measurement.end?.lat || null,
+          distance_meters: measurement.distance || null
         };
 
         await connection.query("INSERT INTO sa_iii_measurements SET ?", measurementRecord);
       }
     }
 
-    // Commit transaction
     await connection.commit();
-    
     connection.release();
     res.send({
       headerId: headerId,
@@ -145,7 +128,6 @@ exports.createCompleteSurvey = async (req, res) => {
 exports.getCompleteSurvey = async (req, res) => {
   const headerId = req.params.surveyId;
   const sql = require("../config/db.js");
-  
   try {
     // Get main header data
     const [headerRows] = await sql.query("SELECT * FROM sa_survey_headers WHERE id = ?", [headerId]);
@@ -159,7 +141,6 @@ exports.getCompleteSurvey = async (req, res) => {
 
     // Get phase data
     const [phaseRows] = await sql.query("SELECT * FROM sa_iii_phase_data WHERE survey_id = ?", [headerId]);
-    
     // Get measurements
     const [measurementRows] = await sql.query("SELECT * FROM sa_iii_measurements WHERE survey_id = ?", [headerId]);
 
@@ -181,7 +162,7 @@ exports.getCompleteSurvey = async (req, res) => {
     // Group phase data by fase and kode
     const transformedPhaseData = [];
     const phases = {};
-    
+
     phaseRows.forEach(item => {
       const key = `${item.fase_number}_${item.kode_pendekat}`;
       if (!phases[key]) {
@@ -191,7 +172,7 @@ exports.getCompleteSurvey = async (req, res) => {
           jarak: []
         };
       }
-      
+
       phases[key].jarak.push({
         type: item.jarak_type,
         pendekat: {
@@ -265,11 +246,9 @@ exports.updateCompleteSurvey = async (req, res) => {
 
   // Start database transaction
   const sql = require("../config/db.js");
-  
   let connection;
   try {
     connection = await sql.getConnection();
-    
     await connection.beginTransaction();
 
     // 1. Update main header record
@@ -304,7 +283,6 @@ exports.updateCompleteSurvey = async (req, res) => {
         'BKa': 'lintasanDatang',
         'Pejalan': 'lintasanPejalan'
       };
-      
       for (const phase of phaseData) {
         if (phase.jarak && Array.isArray(phase.jarak)) {
           for (const jarak of phase.jarak) {
@@ -357,7 +335,6 @@ exports.updateCompleteSurvey = async (req, res) => {
 
     // Commit transaction
     await connection.commit();
-    
     connection.release();
     res.send({
       success: true,

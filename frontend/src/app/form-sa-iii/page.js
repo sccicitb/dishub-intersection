@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { cameras } from '@/lib/apiService';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { apiSAIIIForm } from '@/lib/apiService'
 
 const FaseApilTable = lazy(() => import("@/app/components/table/faseApilTable"));
 const FaseLapanganTable = lazy(() => import("@/app/components/table/faseLapanganTable"));
@@ -12,7 +13,6 @@ const SurveyFormSAHeader = lazy(() => import('@/app/components/form/formSurveyHe
 const FaseKonflik = lazy(() => import('@/app/components/table/faseKonflik'))
 
 export const Loading = () => { return (<div className="w-full h-full m-auto text-center p-2">Loading ...</div>) }
-
 
 const FormSAIIIPage = () => {
   const [dataCameras, setDataCameras] = useState([]);
@@ -39,34 +39,47 @@ const FormSAIIIPage = () => {
 
   let payload;
 
-  useEffect(() => {
-    payload = {
-      tabel_konflik: { ...dataKonflik }
+  function transformData (data) {
+    return {
+      whh: data?.whh,
+      phaseData: data?.dataFase?.map(faseItem => {
+        const jarakArray = Object.entries(faseItem.jarak).map(([type, detail]) => {
+          return {
+            type,
+            pendekat: detail.pendekat,
+            kecepatan: {
+              berangkat: detail.kecepatan.vkbr,
+              datang: detail.kecepatan.vkdt,
+              pejalanKaki: detail.kecepatan.vpk
+            },
+            waktuTempuh: detail.waktuTempuh,
+            wws: detail.wms,
+            wusDisarankan: detail.wmsDisesuaikan,
+            wk: detail.wk,
+            wAll: detail.wah,
+            wHijau: data.whh // << nilai whh dimasukkan di setiap item
+          };
+        });
+
+        return {
+          fase: faseItem.fase,
+          kode: faseItem.kode,
+          jarak: jarakArray
+        };
+      })
     };
+  }
+
+
+  useEffect(() => {
+    // payload = {
+    //   tabel_konflik: { ...dataKonflik }
+    // };
+    dataKonflik ? payload = { surveyHeader: headerData, ...transformData(dataKonflik) } : {}
+
     console.log('Payload gabungan:', payload);
     setPayloadData(payload);
   }, [dataKonflik, headerData]);
-
-  const submitData = () => {
-    console.log(payload);
-
-    const existing = JSON.parse(localStorage.getItem('data')) || {
-      data: { headerData: [], sa1: {}, sa2: {}, sa3: {}, sa4: {}, sa5: {} }
-    };
-
-    const headerId = headerData?.id;
-
-    // Validasi id
-    if (headerId !== undefined && headerId !== null && headerId !== 0 && headerId !== '0') {
-      // Simpan payload ke sa1
-      existing.data.sa3[headerId] = payload;
-      localStorage.setItem('data', JSON.stringify(existing));
-      console.log('Data berhasil disimpan ke sa1 dengan id:', headerId);
-    } else {
-      console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
-    }
-  }
-
 
   const [selectedId, setSelectedId] = useState(0);
 
@@ -78,45 +91,16 @@ const FormSAIIIPage = () => {
       tanggal: '',
       kabupatenKota: '',
       lokasi: '',
+      simpang_id: 0,
+      survey_type: "",
       ruasJalanMayor: [''],
       ruasJalanMinor: [''],
       ukuranKota: '',
       perihal: '',
-      periode: ''
+      periode: '',
+      status: ''
     });
   }
-
-  const handleSubmit = () => {
-    toast.info(
-      ({ closeToast }) => (
-        <div>
-          <p className="text-sm">Yakin ingin mengirim data?</p>
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={() => {
-                submitData(); // fungsi kirim API
-                toast.dismiss(); // tutup semua toast
-              }}
-              className="btn btn-sm text-white font-light btn-success"
-            >
-              Ya
-            </button>
-            <button
-              onClick={() => toast.dismiss()}
-              className="btn btn-sm text-white font-light btn-error"
-            >
-              Batal
-            </button>
-          </div>
-        </div>
-      ),
-      {
-        autoClose: false,
-        closeOnClick: false,
-        draggable: false,
-      }
-    );
-  };
 
   const handleSimpangSelect = () => {
 
@@ -125,6 +109,100 @@ const FormSAIIIPage = () => {
   const handleCameraSelect = () => {
 
   }
+
+  const fetchCreateSAIII = async () => {
+    let payloadAPI
+    dataKonflik ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, ...transformData(dataKonflik) } : {}
+
+
+    try {
+      const res = await apiSAIIIForm.createSAIII(payloadAPI)
+      if (res.status !== 200) {
+        toast.error('Data Gagal Ditambahkan!', {
+          position: 'top-center'
+        })
+        return;
+      }
+      toast.success(res.data.message, { position: 'top-center' })
+      // payloadAPI = {}
+      // handleResetAll()
+    } catch (error) {
+      console.error(`${error}`)
+    }
+  }
+
+  const fetchUpdateSAIII = async (id) => {
+    let payloadAPI;
+    dataKonflik ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, ...transformData(dataKonflik) } : {}
+
+
+    try {
+      const res = await apiSAIIIForm.updateByIdSAIII(id, payloadAPI)
+      console.log(res)
+      if (res.status !== 200) {
+        toast.error('Data Gagal Dirubah!', { position: 'top-center' })
+        return;
+      }
+      toast.success(res.data.message, { position: 'top-center' })
+      // payloadAPI = {}
+      // handleResetAll()
+    } catch (error) {
+      console.error(`${error}`)
+    }
+  }
+  const submitData = () => {
+    // selectedId != 0 ? createSAIII() : fetchCreateSAIII(selectedId)
+    toast.info(
+      ({ closeToast }) => (
+        <div>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => {
+                closeToast();
+                if (selectedId === 0) {
+                  fetchCreateSAIII();
+                } else {
+                  fetchUpdateSAIII(selectedId);
+                }
+                toast.dismiss();
+              }}
+              style={{
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              Ya
+            </button>
+            <button
+              onClick={closeToast}
+              style={{
+                backgroundColor: '#f44336',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        position: 'top-center',
+        autoClose: false,
+        closeOnClick: false,
+        closeButton: false,
+        draggable: false,
+      }
+    );
+  };
 
   return (
     <div>
@@ -147,7 +225,7 @@ const FormSAIIIPage = () => {
         <FaseKonflik setDataKonflik={setDataKonflik} selectedId={selectedId} />
       </Suspense>
       <div className="w-full items-center flex p-6">
-        <button onClick={handleSubmit} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
+        <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
       </div>
     </div>
   )

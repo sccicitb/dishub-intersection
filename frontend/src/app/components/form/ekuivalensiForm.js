@@ -2,9 +2,11 @@
 import { useEffect, useState } from "react"
 import { InputTable } from '@/app/components/ui/inputTable'
 import { Description } from "../ui/description";
+import { useAuth } from "@/app/context/authContext";
+import { apiSAIIForm } from "@/lib/apiService";
 
 const EkuivalensiForm = ({ setEMP, selectedId }) => {
-
+  const { setLoading } = useAuth();
   const [dataEMP, setDataEMP] = useState({
     terlindung: { mp: '', ks: '', sm: '' },
     terlawan: { mp: '', ks: '', sm: '' }
@@ -19,44 +21,65 @@ const EkuivalensiForm = ({ setEMP, selectedId }) => {
       }
     }));
   };
-
+  const fetchDataSAII = async (id) => {
+    try {
+      setLoading(true);
+      const response = await apiSAIIForm.getByIdSAII(id);
+      if (response && response.data) {
+        const data = response.data.data.ekuivalensi;
+        console.log(data)
+        return data;
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      setLoading(false);
+      return saved = parsed?.data?.sa2?.[selectedId]?.ekuivalensi;
+    }
+  };
   useEffect(() => setEMP(dataEMP), [dataEMP])
 
   useEffect(() => {
-    const raw = localStorage.getItem('data');
-    if (!raw) return;
-
-    try {
-      const parsed = JSON.parse(raw);
-      const saved = parsed?.data?.sa2?.[selectedId]?.ekuivalensi;
-
-      const defaultEmp = {
-        terlindung: { mp: '', ks: '', sm: '' },
-        terlawan: { mp: '', ks: '', sm: '' }
-      };
-
-      // Pastikan struktur data aman
-      const safeEmp = {
-        terlindung: {
-          mp: saved?.terlindung?.mp ?? '',
-          ks: saved?.terlindung?.ks ?? '',
-          sm: saved?.terlindung?.sm ?? ''
-        },
-        terlawan: {
-          mp: saved?.terlawan?.mp ?? '',
-          ks: saved?.terlawan?.ks ?? '',
-          sm: saved?.terlawan?.sm ?? ''
-        }
-      };
-
-      setDataEMP(safeEmp);
-    } catch (e) {
-      console.error("Gagal parsing ekuivalensi:", e);
-      setDataEMP({
-        terlindung: { mp: '', ks: '', sm: '' },
-        terlawan: { mp: '', ks: '', sm: '' }
-      });
+    // const raw = localStorage.getItem('data');
+    // if (!raw) return;
+    if (!selectedId || selectedId === 0 || selectedId === '0') {
+      setDataEMP({});
+      return;
     }
+    const loadData = async () => {
+      try {
+        // const parsed = JSON.parse(raw);
+        // const saved = parsed?.data?.sa2?.[selectedId]?.ekuivalensi;
+        const saved = await fetchDataSAII(selectedId);
+
+        const defaultEmp = {
+          terlindung: { mp: '', ks: '', sm: '' },
+          terlawan: { mp: '', ks: '', sm: '' }
+        };
+
+        // Pastikan struktur data aman
+        const safeEmp = {
+          terlindung: {
+            mp: saved?.terlindung?.mp ?? '',
+            ks: saved?.terlindung?.ks ?? '',
+            sm: saved?.terlindung?.sm ?? ''
+          },
+          terlawan: {
+            mp: saved?.terlawan?.mp ?? '',
+            ks: saved?.terlawan?.ks ?? '',
+            sm: saved?.terlawan?.sm ?? ''
+          }
+        };
+
+        setDataEMP(safeEmp);
+      } catch (e) {
+        console.error("Gagal parsing ekuivalensi:", e);
+        setDataEMP({
+          terlindung: { mp: '', ks: '', sm: '' },
+          terlawan: { mp: '', ks: '', sm: '' }
+        });
+      }
+    }
+    loadData();
   }, [selectedId]);
 
 

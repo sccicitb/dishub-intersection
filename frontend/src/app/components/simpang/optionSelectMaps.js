@@ -7,10 +7,10 @@ import { FaAngleDown, FaMapMarkerAlt, FaSortAmountDown, FaSortAmountUp, FaCalend
 const Dropdown = ({ isOpen, onToggle, label, children, className = "" }) => (
   <div className={`relative ${className}`}>
     <div
-      className="rounded-xl text-xs w-fit shadow-xs bg-base-100/90 flex justify-end p-1 cursor-pointer"
+      className="w-full px-3 input input-sm cursor-pointer border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
       onClick={onToggle}
     >
-      <button className="btn btn-xs btn-ghost text-xs bg-transparent border-none hover:shadow-none flex items-center gap-3 font-semibold">
+      <button className="flex w-full justify-between btn btn-xs focus:outline-0 btn-ghost text-xs bg-transparent border-none hover:shadow-none items-center gap-3 font-semibold">
         {label}
         <FaAngleDown className={`${isOpen ? "rotate-180" : ""} text-neutral-600`} />
       </button>
@@ -59,7 +59,7 @@ const DatePicker = ({ selectedDate, onDateChange, onClearDate }) => (
 );
 
 // Komponen utama
-const OptionSelectMaps = ({ onSelect, onDateSelect }) => {
+const OptionSelectMaps = ({ onSelect, onDateSelect, optionMap = false, optionDate = false }) => {
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
@@ -202,25 +202,26 @@ const OptionSelectMaps = ({ onSelect, onDateSelect }) => {
   return (
     <div className="flex gap-2 flex-wrap">
       {/* Dropdown untuk filter tanggal */}
-      <Dropdown
-        isOpen={isDateDropdownOpen}
-        onToggle={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
-        label={selectedDate ? `Tanggal: ${formatDateLabel(selectedDate)}` : "Filter Tanggal"}
-        className="min-w-fit"
-      >
-        <DatePicker
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          onClearDate={handleClearDate}
-        />
-        <div className="px-3 py-2 text-xs text-gray-500">
-          {selectedDate
-            ? `Menampilkan ${filteredBuildings.length} lokasi pada tanggal ${formatDateLabel(selectedDate)}`
-            : `Total ${buildings.length} lokasi tersedia`
-          }
-        </div>
-      </Dropdown>
-
+      {optionDate && (
+        <Dropdown
+          isOpen={isDateDropdownOpen}
+          onToggle={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
+          label={selectedDate ? `Tanggal: ${formatDateLabel(selectedDate)}` : "Filter Tanggal"}
+          className="min-w-fit"
+        >
+          <DatePicker
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            onClearDate={handleClearDate}
+          />
+          <div className="px-3 py-2 text-xs text-gray-500">
+            {selectedDate
+              ? `Menampilkan ${filteredBuildings.length} lokasi pada tanggal ${formatDateLabel(selectedDate)}`
+              : `Total ${buildings.length} lokasi tersedia`
+            }
+          </div>
+        </Dropdown>
+      )}
       {/* Dropdown untuk sorting */}
       {/* <Dropdown
         isOpen={isSortDropdownOpen}
@@ -242,40 +243,42 @@ const OptionSelectMaps = ({ onSelect, onDateSelect }) => {
       </Dropdown> */}
 
       {/* Dropdown untuk pilih lokasi */}
-      <Dropdown
-        isOpen={isLocationDropdownOpen}
-        onToggle={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
-        label={getLocationDropdownLabel()}
-        className="min-w-fit"
-      >
-        {Array.isArray(filteredBuildings) && filteredBuildings.length > 0 ? (
-          filteredBuildings.map((building) => (
-            <DropdownItem
-              key={building.id}
-              label={building.Nama_Simpang}
-              icon={<FaMapMarkerAlt />}
-              onClick={() => handleLocationSelect(building)}
-            />
-          ))
-        ) : (
-          <div className="px-4 py-2">
-            <p className="text-xs text-gray-400 italic">
-              {selectedDate
-                ? `Tidak ada lokasi pada tanggal ${formatDateLabel(selectedDate)}`
-                : "Tidak ada lokasi tersedia"
-              }
-            </p>
-            {selectedDate && (
-              <button
-                onClick={handleClearDate}
-                className="text-xs text-blue-500 hover:text-blue-700 mt-1"
-              >
-                Reset filter tanggal
-              </button>
-            )}
-          </div>
-        )}
-      </Dropdown>
+      {optionMap && (
+        <Dropdown
+          isOpen={isLocationDropdownOpen}
+          onToggle={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
+          label={getLocationDropdownLabel()}
+          className="min-w-full"
+        >
+          {Array.isArray(filteredBuildings) && filteredBuildings.length > 0 ? (
+            filteredBuildings.map((building) => (
+              <DropdownItem
+                key={building.id}
+                label={building.Nama_Simpang}
+                icon={<FaMapMarkerAlt />}
+                onClick={() => handleLocationSelect(building)}
+              />
+            ))
+          ) : (
+            <div className="px-4 py-2">
+              <p className="text-xs text-gray-400 italic">
+                {selectedDate
+                  ? `Tidak ada lokasi pada tanggal ${formatDateLabel(selectedDate)}`
+                  : "Tidak ada lokasi tersedia"
+                }
+              </p>
+              {selectedDate && (
+                <button
+                  onClick={handleClearDate}
+                  className="text-xs text-blue-500 hover:text-blue-700 mt-1"
+                >
+                  Reset filter tanggal
+                </button>
+              )}
+            </div>
+          )}
+        </Dropdown>
+      )}
     </div>
   );
 };

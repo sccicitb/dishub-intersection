@@ -96,18 +96,88 @@ CREATE TABLE IF NOT EXISTS `sa_ii_vehicle_data` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- SA-II KTB Data (Non-motorized vehicles)
-CREATE TABLE IF NOT EXISTS `sa_ii_ktb_data` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `survey_id` int(11) NOT NULL,
-  `direction` enum('U','S','T','B') NOT NULL,
-  `ktb_count` int(11) DEFAULT 0 COMMENT 'Kendaraan Tak Bermotor count',
-  `turn_ratio` decimal(5,3) DEFAULT 0.000 COMMENT 'Turn ratio calculations',
-  `rktb_value` decimal(8,3) DEFAULT 0.000 COMMENT 'Rasio Kendaraan Tak Bermotor',
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+-- CREATE TABLE IF NOT EXISTS `sa_ii_ktb_data` (
+--   `id` int(11) NOT NULL AUTO_INCREMENT,
+--   `survey_id` int(11) NOT NULL,
+--   `direction` enum('U','S','T','B') NOT NULL,
+--   `ktb_count` int(11) DEFAULT 0 COMMENT 'Kendaraan Tak Bermotor count',
+--   `turn_ratio` decimal(5,3) DEFAULT 0.000 COMMENT 'Turn ratio calculations',
+--   `rktb_value` decimal(8,3) DEFAULT 0.000 COMMENT 'Rasio Kendaraan Tak Bermotor',
+--   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+--   PRIMARY KEY (`id`),
+--   UNIQUE KEY `unique_survey_direction` (`survey_id`, `direction`),
+--   KEY `idx_survey_id` (`survey_id`),
+--   CONSTRAINT `fk_sa_ii_ktb_data_survey` FOREIGN KEY (`survey_id`) REFERENCES `sa_surveys` (`id`) ON DELETE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `sa_ii_equivalences` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `survey_id` INT(11) NOT NULL COMMENT 'Relasi ke tabel sa_survey_headers',
+
+  -- Nilai ekuivalensi
+  `type` ENUM('terlindung','terlawan') NOT NULL COMMENT 'Terlindung atau Terlawan',
+  `mp` DECIMAL(5,2) DEFAULT 0 COMMENT 'Ekuivalensi Motor Pribadi',
+  `ks` DECIMAL(5,2) DEFAULT 0 COMMENT 'Ekuivalensi Kendaraan Sedang',
+  `sm` DECIMAL(5,2) DEFAULT 0 COMMENT 'Ekuivalensi Sepeda Motor',
+
+  -- Timestamp
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Waktu pembuatan data',
+
   PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_survey_direction` (`survey_id`, `direction`),
-  KEY `idx_survey_id` (`survey_id`),
-  CONSTRAINT `fk_sa_ii_ktb_data_survey` FOREIGN KEY (`survey_id`) REFERENCES `sa_surveys` (`id`) ON DELETE CASCADE
+  KEY `idx_survey_equivalence` (`survey_id`, `type`),
+  CONSTRAINT `fk_sa_ii_equivalences_survey` FOREIGN KEY (`survey_id`)
+    REFERENCES `sa_survey_headers` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `sa_ii_vehicle_data` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
+  `survey_id` INT(11) NOT NULL COMMENT 'Relasi ke tabel sa_survey_headers',
+
+  -- Identitas data
+  `direction` ENUM('U','S','T','B') NOT NULL COMMENT 'Arah pendekat: Utara (U), Selatan (S), Timur (T), Barat (B)',
+  `record_type` ENUM('row','subtotal') NOT NULL DEFAULT 'row' COMMENT 'row = detail per gerakan, subtotal = rekap per arah',
+  `movement_type` VARCHAR(50) DEFAULT NULL COMMENT 'Jenis gerakan: Lurus, BKa, BKi, BKaJT, BKiJT, dll (NULL untuk subtotal)',
+
+  -- Nilai MP (Motor Pribadi)
+  `mp_kendjam` INT DEFAULT 0 COMMENT 'Kendaraan/jam MP',
+  `mp_terlindung` INT DEFAULT 0 COMMENT 'Terlindung MP',
+  `mp_terlawan` INT DEFAULT 0 COMMENT 'Terlawan MP',
+
+  -- Nilai KS (Kendaraan Sedang)
+  `ks_kendjam` INT DEFAULT 0 COMMENT 'Kendaraan/jam KS',
+  `ks_terlindung` INT DEFAULT 0 COMMENT 'Terlindung KS',
+  `ks_terlawan` INT DEFAULT 0 COMMENT 'Terlawan KS',
+
+  -- Nilai SM (Sepeda Motor)
+  `sm_kendjam` INT DEFAULT 0 COMMENT 'Kendaraan/jam SM',
+  `sm_terlindung` INT DEFAULT 0 COMMENT 'Terlindung SM',
+  `sm_terlawan` INT DEFAULT 0 COMMENT 'Terlawan SM',
+  `sm_smp_terlindung` DECIMAL(10,2) DEFAULT 0 COMMENT 'SMP terlindung SM',
+  `sm_smp_terlawan` DECIMAL(10,2) DEFAULT 0 COMMENT 'SMP terlawan SM',
+
+  -- Nilai TOTAL
+  `total_kendjam` INT DEFAULT 0 COMMENT 'Total kendaraan/jam',
+  `total_terlindung` INT DEFAULT 0 COMMENT 'Total terlindung',
+  `total_terlawan` INT DEFAULT 0 COMMENT 'Total terlawan',
+  `total_smp_terlindung` DECIMAL(10,2) DEFAULT 0 COMMENT 'Total SMP terlindung',
+  `total_smp_terlawan` DECIMAL(10,2) DEFAULT 0 COMMENT 'Total SMP terlawan',
+
+  -- Nilai KTB & RKTB untuk detail gerakan
+  `ktb_count` INT DEFAULT 0 COMMENT 'Count KTB untuk row detail',
+  `ktb_ratio` DECIMAL(8,3) DEFAULT 0 COMMENT 'Turn ratio per gerakan',
+  `rktb_value` DECIMAL(8,3) DEFAULT 0 COMMENT 'Rasio KTB per gerakan',
+
+  -- Nilai total untuk subtotal ekuivalensi
+  `ktb_total` INT DEFAULT 0 COMMENT 'Total KTB untuk subtotal per arah',
+  `rktb_total` DECIMAL(8,3) DEFAULT 0 COMMENT 'Total RKTB untuk subtotal per arah',
+
+  -- Timestamp
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Waktu pembuatan data',
+
+  PRIMARY KEY (`id`),
+  KEY `idx_survey_direction` (`survey_id`, `direction`),
+  CONSTRAINT `fk_sa_ii_vehicle_data_survey` FOREIGN KEY (`survey_id`)
+    REFERENCES `sa_survey_headers` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- EMP Configuration (Equivalent Motor Passenger multipliers)
@@ -175,29 +245,29 @@ CREATE TABLE IF NOT EXISTS `sa_iii_measurements` (
 -- =====================================================
 
 -- SA-IV Capacity Analysis
-CREATE TABLE IF NOT EXISTS `sa_iv_capacity_analysis` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `survey_id` int(11) NOT NULL,
-  `kode_pendekat` enum('U','S','T','B') NOT NULL,
-  `tipe_pendekat` enum('P','O','P/O') DEFAULT NULL COMMENT 'P=Protected, O=Opposed, P/O=Mixed',
-  `rasio_kendaraan_belok` json DEFAULT NULL COMMENT 'Turn ratio data as JSON',
-  `arus_belok_kanan` json DEFAULT NULL COMMENT 'Right turn flow data as JSON',
-  `lebar_efektif` decimal(8,2) DEFAULT 0.00 COMMENT 'Effective width in meters',
-  `arus_jenuh_dasar` decimal(10,2) DEFAULT 0.00,
-  `faktor_penyesuaian` json DEFAULT NULL COMMENT 'Adjustment factors as JSON',
-  `arus_jenuh_disesuaikan` decimal(10,2) DEFAULT 0.00 COMMENT 'Adjusted saturated flow',
-  `arus_lalu_lintas` decimal(10,2) DEFAULT 0.00 COMMENT 'Traffic flow (SMP/jam)',
-  `rasio_arus` decimal(8,3) DEFAULT 0.000 COMMENT 'Flow ratio',
-  `rasio_fase` decimal(8,3) DEFAULT 0.000 COMMENT 'Phase ratio',
-  `waktu_hijau_per_fase` int(11) DEFAULT 0 COMMENT 'Green time per phase (seconds)',
-  `kapasitas` decimal(10,2) DEFAULT 0.00,
-  `derajat_kejenuhan` decimal(8,3) DEFAULT 0.000,
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_survey_pendekat` (`survey_id`, `kode_pendekat`),
-  KEY `idx_survey_id` (`survey_id`),
-  CONSTRAINT `fk_sa_iv_capacity_analysis_survey` FOREIGN KEY (`survey_id`) REFERENCES `sa_surveys` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- CREATE TABLE IF NOT EXISTS `sa_iv_capacity_analysis` (
+--   `id` int(11) NOT NULL AUTO_INCREMENT,
+--   `survey_id` int(11) NOT NULL,
+--   `kode_pendekat` enum('U','S','T','B') NOT NULL,
+--   `tipe_pendekat` enum('P','O','P/O') DEFAULT NULL COMMENT 'P=Protected, O=Opposed, P/O=Mixed',
+--   `rasio_kendaraan_belok` json DEFAULT NULL COMMENT 'Turn ratio data as JSON',
+--   `arus_belok_kanan` json DEFAULT NULL COMMENT 'Right turn flow data as JSON',
+--   `lebar_efektif` decimal(8,2) DEFAULT 0.00 COMMENT 'Effective width in meters',
+--   `arus_jenuh_dasar` decimal(10,2) DEFAULT 0.00,
+--   `faktor_penyesuaian` json DEFAULT NULL COMMENT 'Adjustment factors as JSON',
+--   `arus_jenuh_disesuaikan` decimal(10,2) DEFAULT 0.00 COMMENT 'Adjusted saturated flow',
+--   `arus_lalu_lintas` decimal(10,2) DEFAULT 0.00 COMMENT 'Traffic flow (SMP/jam)',
+--   `rasio_arus` decimal(8,3) DEFAULT 0.000 COMMENT 'Flow ratio',
+--   `rasio_fase` decimal(8,3) DEFAULT 0.000 COMMENT 'Phase ratio',
+--   `waktu_hijau_per_fase` int(11) DEFAULT 0 COMMENT 'Green time per phase (seconds)',
+--   `kapasitas` decimal(10,2) DEFAULT 0.00,
+--   `derajat_kejenuhan` decimal(8,3) DEFAULT 0.000,
+--   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+--   PRIMARY KEY (`id`),
+--   UNIQUE KEY `unique_survey_pendekat` (`survey_id`, `kode_pendekat`),
+--   KEY `idx_survey_id` (`survey_id`),
+--   CONSTRAINT `fk_sa_iv_capacity_analysis_survey` FOREIGN KEY (`survey_id`) REFERENCES `sa_surveys` (`id`) ON DELETE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- SA-IV Phase Analysis
 CREATE TABLE IF NOT EXISTS `sa_iv_phase_analysis` (
@@ -216,6 +286,51 @@ CREATE TABLE IF NOT EXISTS `sa_iv_phase_analysis` (
   KEY `idx_survey_id` (`survey_id`),
   CONSTRAINT `fk_sa_iv_phase_analysis_survey` FOREIGN KEY (`survey_id`) REFERENCES `sa_surveys` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `sa_iv_capacity_analysis` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `survey_id` INT(11) NOT NULL,
+  `kode_pendekat` ENUM('U','S','T','B') NOT NULL,
+  `hijau_fase` INT(11) DEFAULT 0 COMMENT 'Nomor fase hijau',
+  `tipe_pendekat` ENUM('P','O','P/O') DEFAULT NULL COMMENT 'P=Protected, O=Opposed, P/O=Mixed',
+
+  -- JSON sesuai payload
+  `foot` JSON DEFAULT NULL COMMENT 'whh, sbp, S, ras',
+  `rasio_kendaraan_belok` JSON DEFAULT NULL COMMENT 'rbkijt, rbki, rbka',
+  `arus_belok_kanan` JSON DEFAULT NULL COMMENT 'dariArahDitinjau, dariArahBerlawanan',
+  `lebar_efektif` DECIMAL(8,2) DEFAULT 0.00,
+  `arus_jenuh_dasar` DECIMAL(10,2) DEFAULT 0.00,
+  `faktor_penyesuaian` JSON DEFAULT NULL COMMENT 'fhs, fux, fg, fp, fbki, fbka',
+  `arus_jenuh_yang_disesuaikan` JSON DEFAULT NULL COMMENT 'j',
+
+  -- Nilai angka biasa
+  `arus_lalu_lintas` DECIMAL(10,2) DEFAULT 0.00,
+  `rasio_arus` DECIMAL(8,3) DEFAULT 0.000,
+  `rasio_fase` DECIMAL(8,3) DEFAULT 0.000,
+  `waktu_hijau_per_fase` INT(11) DEFAULT 0,
+  `kapasitas` DECIMAL(10,2) DEFAULT 0.00,
+  `derajat_kejenuhan` DECIMAL(8,3) DEFAULT 0.000,
+
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_survey_pendekat` (`survey_id`, `kode_pendekat`),
+  KEY `idx_survey_id` (`survey_id`),
+  CONSTRAINT `fk_sa_iv_capacity_analysis_survey`
+    FOREIGN KEY (`survey_id`)
+    REFERENCES `sa_survey_headers` (`id`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE sa_iv_capacity_foot (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  survey_id INT NOT NULL,
+  whh FLOAT,
+  sbp FLOAT,
+  S FLOAT,
+  ras FLOAT
+);
+
 
 -- SA-IV Calculation Configuration
 CREATE TABLE IF NOT EXISTS `sa_iv_calculation_config` (

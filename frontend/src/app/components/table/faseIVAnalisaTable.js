@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import DataSample from "@/data/DataFaseIVAnalisa.json"
 import SketsaFaseIV from '@/app/components/sketsa/sketsaFaseIV'
 import { ToastContainer, toast } from 'react-toastify';
-
-
-export default function TrafficPhaseTable ({ selectedId }) {
+import { apiSAIForm, apiSAIIForm, apiSAIIIForm, apiSAIVForm } from '@/lib/apiService';
+import { useAuth } from '@/app/context/authContext';
+export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
+  const { setLoading } = useAuth();
   const [tableData, setTableData] = useState(
     [
       {
@@ -83,196 +84,356 @@ export default function TrafficPhaseTable ({ selectedId }) {
       }
     ]);
 
+  function convertPhaseDataToOriginal (phaseData) {
+    const cleanNumber = (num) => {
+      // Kalau null, undefined, string kosong → kembalikan 0
+      if (num === null || num === undefined || num === '') return 0;
 
-  useEffect(() => {
-    if (!selectedId || selectedId === 0 || selectedId === '0') {
-      setTableData([]);
-      return;
-    }
+      const parsed = parseFloat(num);
+      if (isNaN(parsed)) return 0; // bukan angka valid
 
-    const raw = localStorage.getItem('data');
-    if (!raw) return;
+      // Kalau integer, langsung kembalikan
+      if (Number.isInteger(parsed)) return parsed;
 
-    try {
-      const parsed = JSON.parse(raw);
-      const sa1 = parsed?.data?.sa1?.[selectedId];
-      const sa2 = parsed?.data?.sa2?.[selectedId];
-      const sa3 = parsed?.data?.sa3?.[selectedId];
-      const sa4 = parsed?.data?.sa4?.[selectedId];
-      const data_fase = sa3?.tabel_konflik?.dataFase
-      const saiv = sa4?.SAIV
-      if (!sa4) {
-        toast.error("Data SA 4 tidak ditemukan!", { position: 'top-right' });
-      }
+      // Kalau ada desimal, bulatkan ke 2 digit
+      return parseFloat(parsed.toFixed(2));
+    };
 
-      if (!sa1 || !sa2 || !sa3) {
-        toast.error("Data SA 1 s/d SA 3 tidak lengkap!", { position: 'top-right' });
-        setTableData([]);
-        return;
-      }
-
-      const arahMap = {
-        utara: "U",
-        selatan: "S",
-        timur: "T",
-        barat: "B"
-      };
-
-      console.log(sa4)
-
-      // Kumpulkan data dari semua arah untuk semua fase terlebih dahulu
-      const allArahData = {};
-
-      // Loop semua arah untuk mengumpulkan data
-      Object.entries(sa1.fase.data).forEach(([arahKey, detail]) => {
-        const arahKode = arahMap[arahKey] || arahKey?.charAt(0)?.toUpperCase() || '-';
-        allArahData[arahKode] = [];
-
-        let currentMF = 0; // Mulai dari 0 untuk setiap arah
-
-        ['1', '2', '3', '4'].forEach(fKey => {
-          const faseData = data_fase?.find(
-            item => item.kode === arahKode && item.fase === parseInt(fKey)
-          );
-          console.log(faseData)
-          const wk = Number(faseData?.wk || 0);
-          const wms = Number(faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan || 0 );
-
-          const saivData = saiv?.tabel?.find(
-            item => item.kodePendekat === arahKode && item.hijauFase === parseInt(fKey)
-          );
-
-          const whi = saivData?.waktuHijauPerFase ? Number(saivData.waktuHijauPerFase) : 0;
-          const wkFinal = saivData ? 3 : wk;
-
-          // Total waktu fase ini
-          console.log({wk: wk,wms: wms, whi: whi, wkFinal: wkFinal})
-          const total = whi + wkFinal + wms;
-
-          allArahData[arahKode].push({
-            fase: fKey,
-            mf: currentMF,
-            whi,
-            wk: wkFinal,
-            wms,
-            total: total
-          });
-
-          currentMF += total; // Update mf untuk fase berikutnya
-        });
-      });
+    // const whhGlobal = cleanNumber(phaseData?.[0]?.jarak?.[0]?.wHijau) || 0;
+    const whhGlobal = Math.max(
+      0,
+      ...(phaseData || [])
+        .flatMap(phase => (phase?.jarak || []).map(j => cleanNumber(j?.wHijau) || 0))
+    );
 
 
-      // Hitung akumulasi global untuk setiap fase (dari SEMUA arah)
-      const globalAccumulation = [0, 0, 0, 0]; // untuk fase 1, 2, 3, 4
-
-      for (let faseIndex = 1; faseIndex < 4; faseIndex++) { // fase 2, 3, 4
-        let totalForThisFase = 0;
-
-        // Akumulasi dari semua fase sebelumnya
-        for (let prevFaseIndex = 0; prevFaseIndex < faseIndex; prevFaseIndex++) {
-          // Jumlah dari SEMUA arah di fase sebelumnya
-          Object.values(allArahData).forEach(arahData => {
-            totalForThisFase += arahData[prevFaseIndex].total;
-          });
-        }
-
-        globalAccumulation[faseIndex] = totalForThisFase;
-      }
-
-      console.log("Global accumulation:", globalAccumulation);
-
-      // Sekarang proses untuk arah saat ini (dalam loop utama)
-      const newTableData = Object.entries(sa1.fase.data).map(([arah, detail]) => {
-        const kodePendekat = arahMap[arah] || arah?.charAt(0)?.toUpperCase() || '-';
-
-        console.log(arah, detail)
-        const tipePendekatRaw = detail?.tipe_pendekat || {};
-        const arahRaw = detail?.arah || {};
-        const faseRaw = detail?.fase || {};
-
-        // Tentukan arah
-        const arahLabel = (() => {
-          const terlawan = arahRaw?.terlawan;
-          const terlindung = arahRaw?.terlindung;
-          if (terlawan && terlindung) return "Terlindung/Terlawan";
-          if (terlawan) return "Terlawan";
-          if (terlindung) return "Terlindung";
-          return "-";
-        })();
-
-        // whh dari sa4
-        const whhFromSAIV = saiv?.foot?.whh || 0;
-        const SFromSAIV = saiv?.foot?.S || 0;
-        // Tentukan tipe pendekat
-        const tipePendekatLabel = (() => {
-          const p = tipePendekatRaw?.terlindung;
-          const o = tipePendekatRaw?.terlawan;
-          if (p && o) return "P/O";
-          if (p) return "P";
-          if (o) return "O";
-          return "-";
-        })();
-
-        const phases = {
-          f1: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
-          f2: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
-          f3: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
-          f4: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } }
-        };
-
-        ['1', '2', '3', '4'].forEach((fKey, index) => {
-          const faseData = data_fase?.find(
-            item => (item.kode === kodePendekat) && (item.fase === parseInt(fKey))
-          );
-
-          const wk = Number(faseData?.wk || 0);
-          const wms = Number(faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan || 0);
-          console.log(faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan)
-          const saivData = saiv?.tabel?.find(
-            item => item.kodePendekat === kodePendekat && item.hijauFase === parseInt(fKey)
-          );
-
-          const whi = saivData?.waktuHijauPerFase ? Number(saivData.waktuHijauPerFase) : 0;
-          const wkFinal = saivData ? 3 : wk;
-
-          // Cek apakah arah ini AKTIF di fase ini (ada data whi, wk, atau wms)
-          const isActive = (whi > 0 || wkFinal > 0 || wms > 0);
-
-          // Berikan mf hanya jika arah ini aktif, jika tidak aktif mf = 0
-          const mf = isActive ? globalAccumulation[index] : 0;
-
-          phases[`f${fKey}`] = {
-            mf,
-            whi,
-            wAll: { wk: wkFinal, wms: wms }
+    return {
+      whh: whhGlobal,
+      dataFase: phaseData.map((phase) => {
+        // dari array `jarak` ke object keyed by type
+        const jarakObj = {};
+        phase.jarak.forEach((item) => {
+          jarakObj[item.type] = {
+            pendekat: item.pendekat,
+            kecepatan: {
+              vkbr: cleanNumber(item.kecepatan.berangkat),
+              vkdt: cleanNumber(item.kecepatan.datang),
+              vpk: cleanNumber(item.kecepatan.pejalanKaki)
+            },
+            waktuTempuh: cleanNumber(item.waktuTempuh),
+            wms: cleanNumber(item.wws),
+            wmsDisesuaikan: cleanNumber(item.wusDisarankan),
+            wk: cleanNumber(item.wk),
+            wah: cleanNumber(item.wAll),
           };
         });
 
         return {
-          kodePendekat,
-          tipePendekat: tipePendekatLabel,
-          arah: arahLabel,
-          arahDetail: {
-            bka: detail?.arah?.bka || false,
-            bki: detail?.arah?.bki || false,
-            bkijt: detail?.arah?.bkijt || false,
-            lurus: detail?.arah?.lurus || false
-          },
-          pemisahanLurusRka: detail?.pemisahan_lurus_bka ?? "",
-          phases,
-          whi: 0,
-          s: SFromSAIV,
-          whh: whhFromSAIV
+          fase: phase.fase,
+          kode: phase.kode,
+          whh: whhGlobal, // semua pakai whhGlobal
+          jarak: jarakObj
         };
-      });
+      })
+    };
+  }
 
-      setTableData(newTableData);
-      console.log(newTableData)
-    } catch (e) {
-      console.error('Gagal parse data:', e);
+  // ===== FETCH TO API =====
+
+  const fetchDataSAI = async (id) => {
+    try {
+      setLoading(true);
+      const response = await apiSAIForm.getByIdSAI(id);
+      console.log(response.data.data)
+      if (response && response.data) {
+        return response.data.data || [];
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      const existing = JSON.parse(localStorage.getItem('data'));
+      setLoading(false);
+      return existing?.data?.sa1?.[selectedId];
     }
-  }, [selectedId]);
+  };
+
+  const fetchDataSAII = async (id) => {
+    try {
+      setLoading(true);
+      const response = await apiSAIIForm.getByIdSAII(id);
+      console.log(response.data.data)
+      if (response && response.data) {
+        return response.data.data || [];
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      const existing = JSON.parse(localStorage.getItem('data'));
+      setLoading(false);
+      return existing?.data?.sa1?.[selectedId];
+    }
+  };
+
+  const fetchDataSAIII = async (id) => {
+    try {
+      setLoading(true);
+      const response = await apiSAIIIForm.getByIdSAIII(id);
+
+      if (response && response.data) {
+        const { phaseData, whh } = response.data.data;
+        console.log(convertPhaseDataToOriginal(phaseData, whh))
+        return convertPhaseDataToOriginal(phaseData, whh);
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      const existing = JSON.parse(localStorage.getItem('data'));
+      setLoading(false);
+      return existing?.data?.sa3?.[selectedId];
+    }
+  };
+
+  const fetchDataSAIV = async (id) => {
+    try {
+      setLoading(true);
+      const response = await apiSAIVForm.getByIdSAIV(id);
+
+      if (response && response.data) {
+        console.log(response.data.data)
+        return response.data.data;
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      const existing = JSON.parse(localStorage.getItem('data'));
+      setLoading(false);
+      return existing?.data?.sa3?.[selectedId];
+    }
+  };
+
+
+  useEffect(() => {
+    const loadData = async () => {
+
+      if (!selectedId || selectedId === 0 || selectedId === '0') {
+        setTableData([]);
+        return;
+      }
+
+      // const raw = localStorage.getItem('data');
+      // if (!raw) return;
+
+      try {
+        // const parsed = JSON.parse(raw);
+        // const sa1 = parsed?.data?.sa1?.[selectedId];
+        // const sa2 = parsed?.data?.sa2?.[selectedId];
+        // const sa3 = parsed?.data?.sa3?.[selectedId];
+        // const sa4 = parsed?.data?.sa4?.[selectedId];
+        const sa1 = await fetchDataSAI(selectedId);
+        const sa2 = await fetchDataSAII(selectedId);
+        const sa3 = await fetchDataSAIII(selectedId);
+        const sa4 = await fetchDataSAIV(selectedId);
+        const data_fase = sa3?.dataFase;
+        const saiv = sa4?.capacityAnalysis;
+        console.log(sa1)
+        console.log(sa2)
+        console.log(sa3)
+        console.log(data_fase)
+        console.log(saiv)
+        if (!sa4) {
+          toast.error("Data SA 4 tidak ditemukan!", { position: 'top-right' });
+        }
+
+        if (!sa1 || !sa2 || !sa3) {
+          toast.error("Data SA 1 s/d SA 3 tidak lengkap!", { position: 'top-right' });
+          setTableData([]);
+          console.log("SAI,II,III")
+          return;
+        }
+
+        const arahMap = {
+          utara: "U",
+          selatan: "S",
+          timur: "T",
+          barat: "B"
+        };
+
+        console.log(sa4)
+
+        // Kumpulkan data dari semua arah untuk semua fase terlebih dahulu
+        const allArahData = {};
+
+        // Loop semua arah untuk mengumpulkan data
+        Object.entries(sa1?.fase).forEach(([arahKey, detail]) => {
+          const arahKode = arahMap[arahKey] || arahKey?.charAt(0)?.toUpperCase() || '-';
+          allArahData[arahKode] = [];
+          console.log('Processing arah:', arahKode);
+          console.log('Available data_fase:', data_fase);
+
+          let currentMF = 0; // Mulai dari 0 untuk setiap arah
+
+          ['1', '2', '3', '4'].forEach(fKey => {
+            const faseData = data_fase?.find(
+              item => item.kode === arahKode && item.fase === parseInt(fKey)
+            );
+
+            console.log(`Fase ${fKey} untuk arah ${arahKode}:`, faseData);
+
+            // PERBAIKAN: Jangan skip, tapi buat entry dengan nilai 0
+            const wk = Number(faseData?.jarak?.lintasanBerangkat?.wk || 0);
+            const wms = Number(
+              faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan ||
+              faseData?.jarak?.wmsDisesuaikan ||
+              0
+            );
+
+            // Cari data SAIV
+            const saivData = saiv?.table?.find(
+              item => item.kode_pendekat === arahKode && item.hijau_fase === parseInt(fKey)
+            );
+            const dataTabelsaIV = dataTableSAIV?.tabel?.find(item => item.kodePendekat === arahKode && item.hijauFase === parseInt(fKey))
+
+            const whi = saivData?.waktuHijauPerFase ? Number(saivData.waktuHijauPerFase) : dataTabelsaIV ? Number(dataTabelsaIV.waktuHijauPerFase) : 0;
+            const wkFinal = saivData ? 3 : wk;
+            console.log(`Fase ${fKey} calculations:`, {
+              wk: wk,
+              wms: wms,
+              whi: whi,
+              wkFinal: wkFinal,
+              saivData: !!saivData
+            });
+
+            // Total waktu fase ini
+            const total = whi + wkFinal + wms;
+            console.log(`Total fase ${fKey}:`, total);
+
+            allArahData[arahKode].push({
+              fase: fKey,
+              mf: currentMF,
+              whi: whi,
+              wk: wkFinal,
+              wms,
+              total: total
+            });
+
+            currentMF += total; // Update mf untuk fase berikutnya
+          });
+
+          console.log(`Final data for arah ${arahKode}:`, allArahData[arahKode]);
+        });
+
+
+        // Hitung akumulasi global untuk setiap fase (dari SEMUA arah)
+        const globalAccumulation = [0, 0, 0, 0]; // untuk fase 1, 2, 3, 4
+
+        for (let faseIndex = 1; faseIndex < 4; faseIndex++) { // fase 2, 3, 4
+          let totalForThisFase = 0;
+
+          // Akumulasi dari semua fase sebelumnya
+          for (let prevFaseIndex = 0; prevFaseIndex < faseIndex; prevFaseIndex++) {
+            // Jumlah dari SEMUA arah di fase sebelumnya
+            Object.values(allArahData).forEach(arahData => {
+              totalForThisFase += arahData[prevFaseIndex].total;
+            });
+          }
+
+          globalAccumulation[faseIndex] = totalForThisFase;
+        }
+
+        console.log("Global accumulation:", globalAccumulation);
+
+        // Sekarang proses untuk arah saat ini (dalam loop utama)
+        const newTableData = Object.entries(sa1.fase).map(([arah, detail]) => {
+          const kodePendekat = arahMap[arah] || arah?.charAt(0)?.toUpperCase() || '-';
+
+          console.log(arah, detail)
+          const tipePendekatRaw = detail?.tipe_pendekat || {};
+          const arahRaw = detail?.arah || {};
+          const faseRaw = detail?.fase || {};
+
+          // Tentukan arah
+          const arahLabel = (() => {
+            const terlawan = arahRaw?.terlawan;
+            const terlindung = arahRaw?.terlindung;
+            if (terlawan && terlindung) return "Terlindung/Terlawan";
+            if (terlawan) return "Terlawan";
+            if (terlindung) return "Terlindung";
+            return "-";
+          })();
+
+          // whh dari sa4
+          const whhFromSAIV = saiv?.foot?.whh || 0;
+          const SFromSAIV = saiv?.foot?.S || 0;
+          // Tentukan tipe pendekat
+          const tipePendekatLabel = (() => {
+            const p = tipePendekatRaw?.terlindung;
+            const o = tipePendekatRaw?.terlawan;
+            if (p && o) return "P/O";
+            if (p) return "P";
+            if (o) return "O";
+            return "-";
+          })();
+
+          const phases = {
+            f1: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
+            f2: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
+            f3: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } },
+            f4: { mf: 0, whi: 0, wAll: { wk: 0, wms: 0 } }
+          };
+
+          ['1', '2', '3', '4'].forEach((fKey, index) => {
+            const faseData = data_fase?.find(
+              item => (item.kode === kodePendekat) && (item.fase === parseInt(fKey))
+            );
+
+            const wk = Number(faseData?.jarak?.lintasanBerangkat?.wk || 0);
+            // console.log(faseData?.jarak?.lintasanBerangkat?.wk)
+            const wms = Number(faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan || 0);
+            console.log(faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan)
+            const saivData = saiv?.table?.find(
+              item => item.kode_pendekat === kodePendekat && item.hijau_fase === parseInt(fKey)
+            );
+
+            const dataTabelsaIV = dataTableSAIV?.tabel?.find(item => item.kodePendekat === kodePendekat && item.hijauFase === parseInt(fKey))
+
+            const whi = saivData?.waktuHijauPerFase ? Number(saivData.waktuHijauPerFase) : dataTabelsaIV ? Number(dataTabelsaIV.waktuHijauPerFase) : 0;
+            const wkFinal = saivData ? 3 : wk;
+
+            // Cek apakah arah ini AKTIF di fase ini (ada data whi, wk, atau wms)
+            const isActive = (whi > 0 || wkFinal > 0 || wms > 0);
+
+            // Berikan mf hanya jika arah ini aktif, jika tidak aktif mf = 0
+            const mf = isActive ? globalAccumulation[index] : 0;
+
+            phases[`f${fKey}`] = {
+              mf,
+              whi,
+              wAll: { wk: wkFinal, wms: wms }
+            };
+          });
+
+          return {
+            kodePendekat,
+            tipePendekat: tipePendekatLabel,
+            arah: arahLabel,
+            arahDetail: {
+              bka: detail?.arah?.bka || false,
+              bki: detail?.arah?.bki || false,
+              bkijt: detail?.arah?.bkijt || false,
+              lurus: detail?.arah?.lurus || false
+            },
+            pemisahanLurusRka: detail?.pemisahan_lurus_bka ?? "",
+            phases,
+            whi: 0,
+            s: SFromSAIV,
+            whh: whhFromSAIV
+          };
+        });
+
+        setTableData(newTableData);
+        console.log(newTableData)
+      } catch (e) {
+        console.error('Gagal parse data:', e);
+      }
+    }
+    loadData();
+  }, [selectedId, dataTableSAIV]);
 
 
   const handleInputChange = (rowIndex, field, subField, phaseKey, value) => {

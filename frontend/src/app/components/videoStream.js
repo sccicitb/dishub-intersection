@@ -183,14 +183,14 @@ export default function SimpleVideoTest({ videoUrl }) {
         />
       </div>
 
-      <div className="bg-gray-100 p-3 rounded">
+      {/* <div className="bg-gray-100 p-3 rounded">
         <h4 className="font-semibold mb-2">Debug Logs:</h4>
         <div className="max-h-40 overflow-y-auto text-sm font-mono">
           {logs.map((log, index) => (
             <div key={index} className="mb-1">{log}</div>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* <div className="mt-3 text-sm text-gray-600">
         <p><strong>URL:</strong> {videoUrl}</p>

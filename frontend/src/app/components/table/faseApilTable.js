@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { SketsaAPILL } from '../sketsaApil';
 import { MdDeleteOutline } from "react-icons/md";
 
-const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan }) => {
+const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan, dataFase }) => {
   const [data, setData] = useState({
     lokasi: "",
     data: {
@@ -113,8 +113,22 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan }) => {
     }
   });
 
+
   useEffect(() => {
-    if (!dataLapangan) return;
+    console.log(dataFase)
+    if (!dataFase) {
+      // Kalau dataLapangan kosong, isi default 4 arah
+      setData({
+        lokasi: "",
+        data: {
+          utara: getDefaultApproach(),
+          selatan: getDefaultApproach(),
+          timur: getDefaultApproach(),
+          barat: getDefaultApproach()
+        }
+      });
+      return;
+    }
 
     const pendekatMap = {
       u: 'utara',
@@ -123,18 +137,11 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan }) => {
       b: 'barat'
     };
 
-    // Jika ada fase, gunakan datanya
-    if (dataLapangan.fase && dataLapangan.fase.data) {
-      setData({
-        lokasi: dataLapangan.fase.lokasi || "",
-        data: dataLapangan.fase.data
-      });
-    }
-
-    // Jika tidak ada, generate ulang dari pendekat
-    else if (Array.isArray(dataLapangan.pendekat)) {
+    if (dataFase) {
+      // Gunakan data langsung kalau sudah ada struktur lengkap
+      setData({ data: dataFase });
+    } else if (Array.isArray(dataLapangan)) {
       const generatedData = {};
-
       dataLapangan.pendekat.forEach(item => {
         const kode = item.kodePendekat?.toLowerCase();
         const arah = pendekatMap[kode];
@@ -148,7 +155,7 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan }) => {
         data: generatedData
       });
     }
-  }, [dataLapangan]);
+  }, [dataFase]);
 
 
 
@@ -190,20 +197,28 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan }) => {
   // Handler untuk mengubah data
   const handleDataChange = (direction, field, subField, value) => {
     setData(prevData => {
-      const newData = { ...prevData };
-      if (subField) {
-        newData.data[direction][field][subField] = value;
-      } else {
-        newData.data[direction][field] = value;
-      }
+      const newData = {
+        ...prevData,
+        data: {
+          ...prevData.data,
+          [direction]: {
+            ...prevData.data[direction],
+            [field]: subField
+              ? { ...prevData.data[direction][field], [subField]: value }
+              : value
+          }
+        }
+      };
       return newData;
     });
+
   };
 
 
 
   const submitFormApill = () => {
-    setDataFaseApil(data)
+    setDataFaseApil(data.data)
+    console.log(data)
   }
 
   const Checkbox = ({ checked, onChange }) => (
@@ -220,6 +235,11 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan }) => {
   }
 
   const directions = Object.keys(data.data);
+
+
+  if (!data || !data.data || Object.keys(data.data).length === 0) {
+    return <div className="p-4 text-red-500 font-semibold">⚠️ Data tidak tersedia</div>;
+  }
 
   return (
     <div className="p-6 bg-white">
@@ -338,14 +358,14 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan }) => {
                   <td className="border border-black p-2 text-center text-[12px]">
                     <div className="flex items-center space-x-2 text-[12px] mb-1">
                       <Checkbox
-                        checked={directionData.tipe_pendekat.terlindung}
+                        checked={directionData.tipe_pendekat?.terlindung}
                         onChange={(e) => handleDataChange(direction, 'tipe_pendekat', 'terlindung', e.target.checked)}
                       />
                       <span>Terlindung (P)</span>
                     </div>
                     <div className="flex items-center space-x-2 text-[12px]">
                       <Checkbox
-                        checked={directionData.tipe_pendekat.terlawan}
+                        checked={directionData.tipe_pendekat?.terlawan}
                         onChange={(e) => handleDataChange(direction, 'tipe_pendekat', 'terlawan', e.target.checked)}
                       />
                       <span>Terlawan (O)</span>
@@ -357,25 +377,25 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan }) => {
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2 text-[12px]">
                         <Checkbox
-                          checked={directionData.arah.bki}
+                          checked={directionData.arah?.bki}
                           onChange={(e) => handleDataChange(direction, 'arah', 'bki', e.target.checked)}
                         />
                         <span>BKi / BKIJT</span>
                         <Checkbox
-                          checked={directionData.arah.bkijt}
+                          checked={directionData.arah?.bkijt}
                           onChange={(e) => handleDataChange(direction, 'arah', 'bkijt', e.target.checked)}
                         />
                       </div>
                       <div className="flex items-center space-x-2 text-[12px]">
                         <Checkbox
-                          checked={directionData.arah.lurus}
+                          checked={directionData.arah?.lurus}
                           onChange={(e) => handleDataChange(direction, 'arah', 'lurus', e.target.checked)}
                         />
                         <span>Lurus</span>
                       </div>
                       <div className="flex items-center space-x-2 text-[12px]">
                         <Checkbox
-                          checked={directionData.arah.bka}
+                          checked={directionData.arah?.bka}
                           onChange={(e) => handleDataChange(direction, 'arah', 'bka', e.target.checked)}
                         />
                         <span>BKa</span>
@@ -386,7 +406,7 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan }) => {
                   {/* Pemisahan Lurus - BKa */}
                   <td className="border border-black p-2 text-center">
                     <Checkbox
-                      checked={directionData.pemisahan_lurus_bka}
+                      checked={directionData?.pemisahan_lurus_bka}
                       onChange={(e) => handleDataChange(direction, 'pemisahan_lurus_bka', null, e.target.checked)}
                     />
                   </td>
@@ -396,13 +416,13 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan }) => {
                     <td key={phase} className="border border-black p-2 text-center">
                       <div>
                         <Checkbox
-                          checked={directionData.arah.bkijt}
+                          checked={directionData.arah?.bkijt}
                           onChange={() => { }}
                         />
                       </div>
                       <div className="">
                         <Checkbox
-                          checked={directionData.fase[phase]}
+                          checked={directionData?.fase?.[phase] || false}
                           onChange={(e) => handleDataChange(direction, 'fase', phase, e.target.checked)}
                         />
                       </div>
@@ -434,25 +454,25 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan }) => {
               <td colSpan={4} className="border border-black p-2 text-center">Sketsa Simpang APILL</td>
               <td className="border border-black p-2 text-center">
                 <SketsaAPILL
-                  directions={data.data}
+                  directions={data?.data}
                   currentPhase={"fase_1"}
                 />
               </td>
               <td className="border border-black p-2 text-center">
                 <SketsaAPILL
-                  directions={data.data}
+                  directions={data?.data}
                   currentPhase={"fase_2"}
                 />
               </td>
               <td className="border border-black p-2 text-center">
                 <SketsaAPILL
-                  directions={data.data}
+                  directions={data?.data}
                   currentPhase={"fase_3"}
                 />
               </td>
               <td className="border border-black p-2 text-center">
                 <SketsaAPILL
-                  directions={data.data}
+                  directions={data?.data}
                   currentPhase={"fase_4"}
                 />
               </td>
