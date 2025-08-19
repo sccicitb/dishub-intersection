@@ -36,6 +36,7 @@ exports.createHeader = async (req, res) => {
 
     // Create a header with new structure
     const header = new SaSurveyHeader({
+      simpang_id: req.body.simpangId || req.body.simpang_id || 0,
       tanggal: req.body.tanggal,
       perihal: req.body.perihal,
       kabupaten_kota: req.body.kabupatenKota || req.body.kabupaten_kota,
@@ -43,7 +44,8 @@ exports.createHeader = async (req, res) => {
       ruas_jalan_mayor: req.body.ruasJalanMayor || req.body.ruas_jalan_mayor,
       ruas_jalan_minor: req.body.ruasJalanMinor || req.body.ruas_jalan_minor,
       ukuran_kota: req.body.ukuranKota || req.body.ukuran_kota,
-      periode: req.body.periode
+      periode: req.body.periode,
+      status: req.body.status || 'draft'
     });
 
     // Save header in the database
@@ -52,6 +54,7 @@ exports.createHeader = async (req, res) => {
     // Format response to match API documentation
     const response = {
       id: data.id,
+      simpangId: data.simpang_id,
       tanggal: data.tanggal,
       kabupatenKota: data.kabupaten_kota,
       lokasi: data.lokasi,
@@ -60,6 +63,7 @@ exports.createHeader = async (req, res) => {
       ukuranKota: data.ukuran_kota,
       perihal: data.perihal,
       periode: data.periode,
+      status: data.status,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
@@ -91,6 +95,7 @@ exports.getAllHeaders = async (req, res) => {
     // Format response to match API documentation
     const formattedData = data.map(header => ({
       id: header.id,
+      simpangId: header.simpang_id,
       tanggal: header.tanggal,
       kabupatenKota: header.kabupaten_kota,
       lokasi: header.lokasi,
@@ -99,6 +104,7 @@ exports.getAllHeaders = async (req, res) => {
       ukuranKota: header.ukuran_kota,
       perihal: header.perihal,
       periode: header.periode,
+      status: header.status,
       createdAt: header.created_at,
       updatedAt: header.updated_at
     }));
@@ -122,6 +128,7 @@ exports.getHeaderById = async (req, res) => {
     // Format response to match API documentation
     const response = {
       id: data.id,
+      simpangId: data.simpang_id,
       tanggal: data.tanggal,
       kabupatenKota: data.kabupaten_kota,
       lokasi: data.lokasi,
@@ -130,6 +137,7 @@ exports.getHeaderById = async (req, res) => {
       ukuranKota: data.ukuran_kota,
       perihal: data.perihal,
       periode: data.periode,
+      status: data.status,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
@@ -162,6 +170,7 @@ exports.updateHeader = async (req, res) => {
     }
 
     const updateData = {
+      simpang_id: req.body.simpangId || req.body.simpang_id || 0,
       tanggal: req.body.tanggal,
       perihal: req.body.perihal,
       kabupaten_kota: req.body.kabupatenKota || req.body.kabupaten_kota,
@@ -169,7 +178,8 @@ exports.updateHeader = async (req, res) => {
       ruas_jalan_mayor: req.body.ruasJalanMayor || req.body.ruas_jalan_mayor,
       ruas_jalan_minor: req.body.ruasJalanMinor || req.body.ruas_jalan_minor,
       ukuran_kota: req.body.ukuranKota || req.body.ukuran_kota,
-      periode: req.body.periode
+      periode: req.body.periode,
+      status: req.body.status || 'draft'
     };
 
     const data = await SaSurveyHeader.updateById(req.params.id, updateData);
@@ -177,6 +187,7 @@ exports.updateHeader = async (req, res) => {
     // Format response to match API documentation
     const response = {
       id: data.id,
+      simpangId: data.simpang_id,
       tanggal: data.tanggal,
       kabupatenKota: data.kabupaten_kota,
       lokasi: data.lokasi,
@@ -184,7 +195,8 @@ exports.updateHeader = async (req, res) => {
       ruasJalanMinor: safeJsonParse(data.ruas_jalan_minor),
       ukuranKota: data.ukuran_kota,
       perihal: data.perihal,
-      periode: data.periode
+      periode: data.periode,
+      status: data.status
     };
 
     res.send({
@@ -200,6 +212,50 @@ exports.updateHeader = async (req, res) => {
     } else {
       res.status(500).send({
         message: "Error updating survey header with id " + req.params.id
+      });
+    }
+  }
+};
+
+// Update survey status
+exports.updateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).send({
+        message: "Status is required!"
+      });
+    }
+
+    // Validate status values
+    const validStatuses = ['draft', 'in_progress', 'completed', 'submitted'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).send({
+        message: "Invalid status. Must be one of: draft, in_progress, completed, submitted"
+      });
+    }
+
+    const updateData = { status };
+    const data = await SaSurveyHeader.updateById(id, updateData);
+    
+    res.send({
+      success: true,
+      message: "Survey status updated successfully",
+      data: {
+        id: data.id,
+        status: data.status
+      }
+    });
+  } catch (err) {
+    if (err.kind === "not_found") {
+      res.status(404).send({
+        message: `Survey header with id ${req.params.id} not found.`
+      });
+    } else {
+      res.status(500).send({
+        message: "Error updating survey status with id " + req.params.id
       });
     }
   }

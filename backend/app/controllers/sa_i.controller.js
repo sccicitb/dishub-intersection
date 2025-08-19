@@ -45,6 +45,7 @@ exports.createCompleteSurvey = async (req, res) => {
 
     // 1. Create main survey header record
     const headerData = {
+      simpang_id: surveyHeader.simpangId || surveyHeader.simpang_id || 0,
       tanggal: surveyHeader.tanggal,
       perihal: surveyHeader.perihal,
       kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota || 'Default City',
@@ -158,6 +159,7 @@ exports.getCompleteSurvey = async (req, res) => {
     // Transform header data to match expected format
     const surveyHeader = {
       id: header.id,
+      simpangId: header.simpang_id,
       tanggal: header.tanggal,
       kabupatenKota: header.kabupaten_kota,
       lokasi: header.lokasi,
@@ -254,6 +256,7 @@ exports.updateCompleteSurvey = async (req, res) => {
     // 1. Update main header record
     if (surveyHeader) {
       const headerData = {
+        simpang_id: surveyHeader.simpangId || surveyHeader.simpang_id || 0,
         tanggal: surveyHeader.tanggal,
         perihal: surveyHeader.perihal,
         kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota,

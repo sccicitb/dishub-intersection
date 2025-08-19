@@ -125,8 +125,8 @@ export const apiCoreSurvey = {
   getAllSurvey: () => getRequest(`/sa-surveys/header`),
   getByIdSurvey: (id) => getRequest(`/sa-surveys/header/${id}`),
   createSurvey: (data) => createRequest(`/sa-surveys/header`, data),
-  updateByIdSurvey: (id, data) => updateRequest(`/sa-surveys/header?id=${id}`, data),
-  deleteByIdSurvey: (id) => deleteRequest(`/sa-surveys/header?id=${id}`),
+  updateByIdSurvey: (id, data) => updateRequest(`/sa-surveys/header/${id}`, data),
+  deleteByIdSurvey: (id) => deleteRequest(`/sa-surveys/header/${id}`),
 }
 
 export const apiSAIForm = {
@@ -140,7 +140,7 @@ export const apiSAIIForm = {
   createSAII: (data) => createRequest(`/sa-surveys/sa-ii`, data),
   updateByIdSAII: (id, data) => updateRequest(`/sa-surveys/sa-ii/${id}`, data),
   getAllEMP: () => getRequest(`/sa-surveys/sa-ii/emp-configurations`),
-  getByIdArus: (id) => getRequest(`/sa-surveys/sa-ii/arus-simpang/${id}`),
+  getByIdArus: (id) => getRequest(`/sa-surveys/sa-ii/${id}/arus-kendaraan`),
 }
 
 export const apiSAIIIForm = {

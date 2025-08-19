@@ -77,6 +77,23 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
     }
   };
 
+  const fetchDataSAIIArus = async (id) => {
+    try {
+      setLoading(true);
+      const response = await apiSAIIForm.getByIdArus(id);
+      console.log(response.data.data)
+      if (response && response.data) {
+        // console.log(response.data.data)
+        return response.data.data || [];
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      const existing = JSON.parse(localStorage.getItem('data'));
+      setLoading(false);
+      return existing?.data?.sa1?.[selectedId];
+    }
+  };
+
 
   const getKinerjaDataByDirection = async (direction, surveyData) => {
     try {
@@ -114,6 +131,8 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
     const result = [];
 
     const data = await fetchDataSAII(selectedId);
+    // const data = await fetchDataSAIIArus(selectedId);
+    // const data = await fetchDataSAIIArus(idSimpang);
 
     const surveyData = Array.isArray(data?.surveyData) ? data.surveyData : [];
 
@@ -567,19 +586,18 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
   const loadDataNew = async () => {
     try {
       // ambil data arus terbaru
-      // const dataArus = await apiSAIIForm.getByIdArus(idSimpang);
-      // const surveyData = Array.isArray(dataArus?.data?.data) ? dataArus.data.data : [];
+      const dataArus = await fetchDataSAIIArus(selectedId);
 
       // ambil data arus terbaru
-      const surveyData = Object.keys(mock_new).map(kode => ({
+      const surveyData = Object.keys(dataArus).map(kode => ({
         direction: kode.toUpperCase(),
         rows: ["BKi / BKIJT", "Lurus", "BKa"].map((type, idx) => ({
           type,
-          mp: { kendjam: mock_new[kode].mp[idx], terlindung: 0, terlawan: 0 },
-          ks: { kendjam: mock_new[kode].ks[idx], terlindung: 0, terlawan: 0 },
-          sm: { kendjam: mock_new[kode].sm[idx], terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
-          ktb: { count: mock_new[kode].ktb[idx] },
-          rktb: mock_new[kode].rktb[idx]
+          mp: { kendjam: dataArus[kode].mp[idx], terlindung: 0, terlawan: 0 },
+          ks: { kendjam: dataArus[kode].ks[idx], terlindung: 0, terlawan: 0 },
+          sm: { kendjam: dataArus[kode].sm[idx], terlindung: 0, terlawan: 0, smpTerlindung: 0, smpTerlawan: 0 },
+          ktb: { count: dataArus[kode].ktb[idx] },
+          rktb: dataArus[kode].rktb[idx]
         }))
       }));
 
@@ -597,6 +615,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
           if (!direction) return null;
 
           // ini async, jadi harus await
+          console.log("test", kode, surveyData)
           const kinerja = await getKinerjaDataByDirection(kode, surveyData);
 
           return {
