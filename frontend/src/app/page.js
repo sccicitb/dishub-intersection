@@ -683,10 +683,12 @@ export default function Home () {
       </div> */}
 
       <div className="w-[90%] py-5 block bg-base-200 rounded-xl">
-        <div className="w-full px-5">
+        <div className="w-64 px-5">
           <OptionSelectMaps
             onSelect={(selectedLocation) => handleSelectOption(selectedLocation, selectedDate)}
             onDateSelect={(selectedDate) => handleSelectOption(selectedLocation, selectedDate)}
+            optionMap
+            optionDate
           />
         </div>
         {/* {selectedLocation && (

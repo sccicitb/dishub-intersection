@@ -120,3 +120,44 @@ export const survey = {
   },
   getProporsi: (simpang_id, type, date) => getRequest(`/survey-proporsi?ID_Simpang=${simpang_id}${type ? '&type=' + type + '' : ''}&date=${date}`)
 }
+
+export const apiCoreSurvey = {
+  getAllSurvey: () => getRequest(`/sa-surveys/header`),
+  getByIdSurvey: (id) => getRequest(`/sa-surveys/header/${id}`),
+  createSurvey: (data) => createRequest(`/sa-surveys/header`, data),
+  updateByIdSurvey: (id, data) => updateRequest(`/sa-surveys/header/${id}`, data),
+  deleteByIdSurvey: (id) => deleteRequest(`/sa-surveys/header/${id}`),
+}
+
+export const apiSAIForm = {
+  getByIdSAI: (id) => getRequest(`/sa-surveys/sa-i/${id}`),
+  createSAI: (data) => createRequest(`/sa-surveys/sa-i`, data),
+  updateByIdSAI: (id, data) => updateRequest(`/sa-surveys/sa-i/${id}`, data),
+}
+
+export const apiSAIIForm = {
+  getByIdSAII: (id) => getRequest(`/sa-surveys/sa-ii/${id}`),
+  createSAII: (data) => createRequest(`/sa-surveys/sa-ii`, data),
+  updateByIdSAII: (id, data) => updateRequest(`/sa-surveys/sa-ii/${id}`, data),
+  getAllEMP: () => getRequest(`/sa-surveys/sa-ii/emp-configurations`),
+  getByIdArus: (id) => getRequest(`/sa-surveys/sa-ii/${id}/arus-kendaraan`),
+}
+
+export const apiSAIIIForm = {
+  getByIdSAIII: (id) => getRequest(`/sa-surveys/sa-iii/${id}`),
+  createSAIII: (data) => createRequest(`/sa-surveys/sa-iii`, data),
+  updateByIdSAIII: (id, data) => updateRequest(`/sa-surveys/sa-iii/${id}`, data),
+}
+
+export const apiSAIVForm = {
+  getByIdSAIV: (id) => getRequest(`/sa-surveys/sa-iv/${id}`),
+  createSAIV: (data) => createRequest(`/sa-surveys/sa-iv`, data),
+  getByIdCalculation: (id, data) => createRequest(`/sa-surveys/sa-iv/config/${id}`, data),
+  updateByIdSurvey: (id, data) => updateRequest(`/sa-surveys/sa-iv/${id}`, data),
+}
+
+export const apiSAVForm = {
+  getByIdSAV: (id) => getRequest(`/sa-surveys/sa-v/${id}`),
+  createSAV: (data) => createRequest(`/sa-surveys/sa-v`, data),
+  updateByIdSurvey: (id, data) => updateRequest(`/sa-surveys/sa-v/${id}`, data),
+}

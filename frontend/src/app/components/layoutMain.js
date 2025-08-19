@@ -121,7 +121,7 @@ const Layout = ({ children }) => {
         {/* Sidebar */}
         <div className="drawer-side z-[40]">
           <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay"></label>
-          <div className="menu bg-[#232f61]/90 not-2xl:rounded-tr-4xl text-base-content font-semibold min-h-full p-0 w-52 gap-1">
+          <div className="menu bg-[#232f61]/90 not-2xl:rounded-tr-4xl text-base-content font-semibold min-h-full p-0 w-56 gap-1">
             <div className="flex justify-center">
               <div className="rounded-tr-3xl bg-neutral-800/90 w-full h-16 p-4">
                 <Image

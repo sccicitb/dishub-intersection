@@ -2,89 +2,100 @@
 
 import React from "react";
 
-// Fungsi untuk mengelompokkan dan mengambil status per jam
-const getStatusPerHour = (dataArray) => {
+// Fungsi bantu untuk menghasilkan slot waktu setiap 5 menit
+const generateTimeSlots = () => {
+  const slots = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 5) {
+      const h = hour.toString().padStart(2, "0");
+      const m = minute.toString().padStart(2, "0");
+      slots.push(`${h}:${m}`);
+    }
+  }
+  return slots;
+};
+
+// Fungsi untuk mengambil status per 5 menit
+const getStatusPer5Minutes = (dataArray) => {
   if (!Array.isArray(dataArray)) return {};
 
-  // Kelompokkan data berdasarkan jam (0-23) di WIB
-  const statusPerHour = {};
+  const statusMap = {};
 
   dataArray.forEach((item) => {
     const date = new Date(item.recorded_at);
-    // Ambil jam lokal WIB
     const hour = date.toLocaleString("id-ID", {
       timeZone: "Asia/Jakarta",
       hour: "2-digit",
       hourCycle: "h23",
     });
+    const minute = date.toLocaleString("id-ID", {
+      timeZone: "Asia/Jakarta",
+      minute: "2-digit",
+    });
 
-    // Ambil status 0 atau 1, asumsikan ada property `status` yang bernilai 0/1
+    const roundedMinute = (Math.floor(parseInt(minute) / 5) * 5)
+      .toString()
+      .padStart(2, "0");
+    const timeSlot = `${hour}:${roundedMinute}`;
+
     const status = item.status === 1 ? 1 : 0;
 
-    // Kalau sudah ada status jam ini, kita bisa tentukan prioritas (misal: 1 kalau ada 1 di jam itu)
-    if (!(hour in statusPerHour) || status === 1) {
-      statusPerHour[hour] = status;
+    // Simpan status jika belum ada atau status 1 (error) lebih prioritas
+    if (!(timeSlot in statusMap) || status === 1) {
+      statusMap[timeSlot] = status;
     }
   });
 
-  return statusPerHour;
+  return statusMap;
 };
 
 const filterLogsByDate = (logs, targetDate) => {
   if (!Array.isArray(logs) || !targetDate) return [];
 
-  // Format target date ke YYYY-MM-DD
-  const targetDateStr = new Date(targetDate).toISOString().split('T')[0];
+  const targetDateStr = new Date(targetDate).toISOString().split("T")[0];
 
-  return logs.filter(log => {
+  return logs.filter((log) => {
     if (!log.recorded_at) return false;
-
-    // Ambil tanggal dari recorded_at
-    const logDateStr = new Date(log.recorded_at).toISOString().split('T')[0];
+    const logDateStr = new Date(log.recorded_at).toISOString().split("T")[0];
     return logDateStr === targetDateStr;
   });
 };
 
 const CameraStatusTimeline = ({ cameraStatusData = [], selectedDate = null }) => {
-  // Filter data berdasarkan tanggal yang dipilih jika belum difilter
   const filteredData = selectedDate
     ? filterLogsByDate(cameraStatusData, selectedDate)
     : cameraStatusData;
 
-  const statusPerHour = getStatusPerHour(filteredData);
-  // Buat array jam dari 0 sampai 23
-  const hours = Array.from({ length: 24 }, (_, i) =>
-    i.toString().padStart(2, "0")
-  );
+  const statusPer5Min = getStatusPer5Minutes(filteredData);
+  const slots = generateTimeSlots(); // 288 slot
 
   return (
     <div className="p-3">
-      <h2 className="text-[14px] font-semibold mb-2">Timeline Status Kamera per Jam (WIB)</h2>
-      {/* <div className="flex space-x-1"> */}
+      <h2 className="text-[14px] font-semibold mb-2">
+        Timeline Status Kamera per 5 Menit (WIB)
+      </h2>
       <div className="flex w-full">
-        {hours.map((hour) => {
-          const status = statusPerHour[hour];
-          let bgColor = "bg-gray-300"; // default abu-abu untuk tidak ada data
-
-          if (status === 1) bgColor = "bg-green-500";
-          else if (status === 0) bgColor = "bg-red-500";
+        {slots.map((slot) => {
+          const status = statusPer5Min[slot];
+          let bgColor = "bg-red-500"; // default mati (tidak ada data)
+          if (status === 0) bgColor = "bg-green-500"; // kamera hidup
+          else if (status === 1) bgColor = "bg-yellow-400"; // kamera error / status 1
 
           return (
             <div
-              key={hour}
-              title={`${hour}:00 - Status: ${status !== undefined ? status : "Tidak ada data"}`}
-              className={`${bgColor} w-5 h-5 flex-1 cursor-default`}
-            // className={`${bgColor} w-6 h-6 rounded-sm cursor-default`}
+              key={slot}
+              title={`${slot} - Status: ${status !== undefined ? status === 0 ? 'Menyala' : 'Mati' : "tidak ada data"}`}
+              className={`${bgColor} w-2 h-5`}
             />
           );
         })}
       </div>
-      <div className="flex justify-between text-[11px] mt-0.5 text-gray-600 font-mono">
+      <div className="flex justify-between text-[11px] mt-1 text-gray-600 font-mono">
         <span>00:00</span>
         <span>06:00</span>
         <span>12:00</span>
         <span>18:00</span>
-        <span>23:00</span>
+        <span>23:55</span>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { cameras } from '@/lib/apiService';
 import { ToastContainer, toast } from 'react-toastify';
+import { apiSAIForm } from '@/lib/apiService'
 import 'react-toastify/dist/ReactToastify.css';
 
 const FaseApilTable = lazy(() => import("@/app/components/table/faseApilTable"));
@@ -29,12 +30,16 @@ const FormSAIPage = () => {
       tanggal: '',
       kabupatenKota: '',
       lokasi: '',
+      simpang_id: 0,
+      survey_type: "",
       ruasJalanMayor: [''],
       ruasJalanMinor: [''],
       ukuranKota: '',
       perihal: '',
-      periode: ''
+      periode: '',
+      status: ''
     });
+
     setLapangan({
       pendekat: [
         {
@@ -54,10 +59,12 @@ const FormSAIPage = () => {
         }
       ]
     });
+
     setFaseApil({
       lokasi: "",
       data: {}
     });
+
   };
 
   const fetchData = async () => {
@@ -93,58 +100,146 @@ const FormSAIPage = () => {
     //   ...lapangan,
     //   fase: { ...faseApil }
     // };
-
     payload = {
-      ...lapangan,
+      surveyHeader: {
+        ...headerData,
+        tanggal: headerData?.tanggal?.split('T')[0]
+      },
+      pendekat: lapangan?.pendekat?.map(p => ({
+        kodePendekat: p.kodePendekat || "",
+        tipeLingkunganJalan: p.tipeLingkunganJalan || "",
+        kelasHambatanSamping: p.kelasHambatanSamping || "",
+        median: p.median || "",
+        kelandaianPendekat: parseFloat(p.kelandaianPendekat) || 0,
+        bkjt: parseInt(p.bkjt) || 0,
+        jarakKeKendaraanParkir: parseFloat(p.jarakKeKendaraanParkir) || 0,
+        lebarAwalLajur: parseFloat(p.lebarPendekat?.awalLajur) || 0,
+        lebarGarisHenti: parseFloat(p.lebarPendekat?.garisHenti) || 0,
+        lebarLajurBki: parseFloat(p.lebarPendekat?.lajurBki) || 0,
+        lebarLajurKeluar: parseFloat(p.lebarPendekat?.lajurKeluar) || 0
+      })),
       fase: { ...faseApil }
     };
+
     // setPayload(payload)
 
     console.log('Payload gabungan:', payload, headerData);
     console.log('id:', selectedId);
   }, [lapangan, headerData, faseApil, selectedId]);
 
-
-  const submitData = () => {
-    console.log(payload);
-
-    const existing = JSON.parse(localStorage.getItem('data')) || {
-      data: { headerData: [], sa1: {}, sa2: {}, sa3: {}, sa4: {}, sa5: {} }
+  const fetchCreateSAI = async () => {
+    payload = {
+      surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] },
+      pendekat: lapangan.pendekat.map(p => ({
+        kodePendekat: p.kodePendekat || "",
+        tipeLingkunganJalan: p.tipeLingkunganJalan || "",
+        kelasHambatanSamping: p.kelasHambatanSamping || "",
+        median: p.median || "",
+        kelandaianPendekat: parseFloat(p.kelandaianPendekat) || 0,
+        bkjt: parseInt(p.bkjt) || 0,
+        jarakKeKendaraanParkir: parseFloat(p.jarakKeKendaraanParkir) || 0,
+        lebarAwalLajur: parseFloat(p.lebarPendekat?.awalLajur) || 0,
+        lebarGarisHenti: parseFloat(p.lebarPendekat?.garisHenti) || 0,
+        lebarLajurBki: parseFloat(p.lebarPendekat?.lajurBki) || 0,
+        lebarLajurKeluar: parseFloat(p.lebarPendekat?.lajurKeluar) || 0
+      })),
+      fase: { ...faseApil }
     };
 
-    const headerId = headerData?.id;
-
-    // Validasi id
-    if (headerId !== undefined && headerId !== null && headerId !== 0 && headerId !== '0') {
-      // Simpan payload ke sa1
-      existing.data.sa1[headerId] = payload;
-      localStorage.setItem('data', JSON.stringify(existing));
-      console.log('Data berhasil disimpan ke sa1 dengan id:', headerId);
-    } else {
-      console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
+    try {
+      const res = await apiSAIForm.createSAI(payload)
+      if (res.status !== 200) {
+        toast.error('Data Gagal Ditambahkan!', { position: 'top-center' })
+        return;
+      } 
+      toast.success(res.data.message, { position: 'top-center' })
+    } catch (error) {
+      console.error(`${error}`)
     }
-  };
+  }
 
+  const fetchUpdateSAI = async (id) => {
+    payload = {
+      surveyHeader: { ...headerData, tanggal: headerData?.tanggal?.split('T')[0] },
+      pendekat: lapangan?.pendekat?.map(p => ({
+        kodePendekat: p.kodePendekat || "",
+        tipeLingkunganJalan: p.tipeLingkunganJalan || "",
+        kelasHambatanSamping: p.kelasHambatanSamping || "",
+        median: p.median || "",
+        kelandaianPendekat: parseFloat(p.kelandaianPendekat) || 0,
+        bkjt: parseInt(p.bkjt) || 0,
+        jarakKeKendaraanParkir: parseFloat(p.jarakKeKendaraanParkir) || 0,
+        lebarAwalLajur: parseFloat(p.lebarPendekat?.awalLajur) || 0,
+        lebarGarisHenti: parseFloat(p.lebarPendekat?.garisHenti) || 0,
+        lebarLajurBki: parseFloat(p.lebarPendekat?.lajurBki) || 0,
+        lebarLajurKeluar: parseFloat(p.lebarPendekat?.lajurKeluar) || 0
+      })),
+      fase: { ...faseApil }
+    };
 
+    try {
+      const res = await apiSAIForm.updateByIdSAI(id, payload)
+      if (res.status !== 200) {
+        toast.error('Data Gagal Dirubah!', { position: 'top-center' })
+        return;
+      }
 
-  const handleSubmit = () => {
+      toast.success(res.data.message, { position: 'top-center' })
+    } catch (error) {
+      console.error(`${error}`)
+    }
+  }
+  const submitData = () => {
+    // const existing = JSON.parse(localStorage.getItem('data')) || {
+    //   data: { headerData: [], sa1: {}, sa2: {}, sa3: {}, sa4: {}, sa5: {} }
+    // };
+    // const headerId = headerData?.id;
+    // Validasi id
+    // if (headerId !== undefined && headerId !== null && headerId !== 0 && headerId !== '0') {
+    //   // Simpan payload ke sa1
+    //   existing.data.sa1[headerId] = payload;
+    //   localStorage.setItem('data', JSON.stringify(existing));
+    //   console.log('Data berhasil disimpan ke sa1 dengan id:', headerId);
+    // } else {
+    //   console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
+    // }
+    // selectedId != 0 ? fetchCreateSAI() : fetchUpdateSAI(selectedId)
     toast.info(
       ({ closeToast }) => (
         <div>
-          <p className="text-sm">Yakin ingin mengirim data?</p>
-          <div className="flex gap-2 mt-2">
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
             <button
               onClick={() => {
-                submitData(); // fungsi kirim API
-                toast.dismiss(); // tutup semua toast
+                closeToast();
+                if (selectedId === 0) {
+                  fetchCreateSAI();
+                } else {
+                  fetchUpdateSAI(selectedId);
+                }
+                toast.dismiss();
               }}
-              className="btn btn-sm text-white font-light btn-success"
+              style={{
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
             >
               Ya
             </button>
             <button
-              onClick={() => toast.dismiss()}
-              className="btn btn-sm text-white font-light btn-error"
+              onClick={closeToast}
+              style={{
+                backgroundColor: '#f44336',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
             >
               Batal
             </button>
@@ -152,8 +247,10 @@ const FormSAIPage = () => {
         </div>
       ),
       {
+        position: 'top-center',
         autoClose: false,
         closeOnClick: false,
+        closeButton: false,
         draggable: false,
       }
     );
@@ -196,11 +293,11 @@ const FormSAIPage = () => {
         <MapComponent title={""} onClick={handleCameraSelect} onClickSimpang={handleSimpangSelect} form />
       </Suspense>
       <Suspense fallback={<Loading />}>
-        <FaseLapanganTable setDataLapangan={setLapangan} selectedId={selectedId} />
-        <FaseApilTable setDataFaseApil={setFaseApil} dataLapangan={lapangan} />
+        <FaseLapanganTable setDataLapangan={setLapangan} selectedId={selectedId} setFaseApil={setFaseApil} />
+        <FaseApilTable setDataFaseApil={setFaseApil} dataLapangan={lapangan} dataFase={faseApil} />
       </Suspense>
       <div className="w-full items-center flex p-6">
-        <button onClick={handleSubmit} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
+        <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
       </div>
       {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
         <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>

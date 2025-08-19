@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 // import VideoStream from '../components/videoStream';
-// import CCTVStream from '../components/cctvStream';
+import CCTVStream from '../components/cctvStream';
 import CameraStatusTimeline from "@/app/components/cameraStatusTime";
 import { maps, cameras, logCamera } from '@/lib/apiService';
 import AdaptiveVideoPlayer from './adaptiveCameraStream';
@@ -198,22 +198,35 @@ const CameraStream = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-5">
         {/* Video Streams - untuk kamera dengan socket_event = "not_yet_assign" */}
         {/* {videoStreamCameras.map((cam) => {
-      console.log(cam.url) 
-      return(
-        <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
-          <VideoStream
-            videoUrl={cam.url}
-            title={`Video ${cam.name}`}
-            large
-            onClick={() => console.log(`Clicked on ${cam.name}`)}
-          />
-          <div className="p-3 bg-gray-100">
-            <p className="text-sm text-gray-600">Stream Type: HLS</p>
-            <p className="text-sm text-gray-600">Status: Video Stream</p>
-            <p className="text-sm text-gray-600">Socket Event: {cam.url} </p>
-          </div>
-        </div>
-      )})} */}
+          console.log(cam.url)
+          return (
+            <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
+              <VideoStream
+                videoUrl={cam.url}
+                title={`Video ${cam.name}`}
+                large
+                onClick={() => console.log(`Clicked on ${cam.name}`)}
+              />
+              <div className="p-3 bg-gray-100">
+                <p className="text-sm text-gray-600">Stream Type: HLS</p>
+                <p className="text-sm text-gray-600">Status: Video Stream</p>
+                <p className="text-sm text-gray-600">Socket Event: {cam.url} </p>
+              </div>
+            </div>
+          )
+        })} */}
+        {videoStreamCameras.map((cam) => {
+          return (
+            <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
+              <AdaptiveVideoPlayer
+                videoUrl={cam.url}
+                title={`Video ${cam.name}`}
+                large
+                onClick={() => console.log(`Clicked on ${cam.name}`)}
+              />
+            </div>
+          )
+        })}
 
       </div>
       <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100 my-2" />
@@ -225,15 +238,15 @@ const CameraStream = () => {
           return (
             <div key={cam.id} className="bg-base-200 rounded-lg shadow-md overflow-hidden">
               {/* CCTVStream diganti dengan sample image */}
-              {/* <CCTVStream
+              <CCTVStream
                 data={streamData[cam.id]}
                 title={`CCTV ${cam.name}`}
                 large
                 onClick={() => setActiveCamera(cam.camera?.id || cam.id)}
-              /> */}
+              />
 
               {/* Sample Image Display */}
-              <div
+              {/* <div
                 className="relative w-full aspect-video bg-black cursor-pointer"
                 onClick={() => setActiveCamera(cam.camera?.id || cam.id)}
               >
@@ -250,7 +263,7 @@ const CameraStream = () => {
                   CCTV Simpang {getSampleTitle(cam.name)}
                   <div className="w-3 h-3 rounded-full bg-green-600"></div>
                 </div>
-              </div>
+              </div> */}
 
               <CameraStatusTimeline
                 cameraStatusData={cameraLogs[cam.id]?.all || []}

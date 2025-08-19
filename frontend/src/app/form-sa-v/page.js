@@ -1,6 +1,7 @@
 "use client";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { cameras } from '@/lib/apiService';
+import { apiSAVForm } from './../../lib/apiService';
 
 const FaseApilTable = lazy(() => import("@/app/components/table/faseApilTable"));
 const FaseLapanganTable = lazy(() => import("@/app/components/table/faseLapanganTable"));
@@ -63,34 +64,128 @@ const FaseIVPage = () => {
     console.log('id:', selectedId);
   }, [dataSAV, headerData, selectedId]);
 
-  const handleSubmit = () => {
-    payload = {
-      SAV: { ...dataSAV },
-      // fase: { ...faseApil }
-    };
+  // const handleSubmit = () => {
+  //   payload = {
+  //     SAV: { ...dataSAV },
+  //     // fase: { ...faseApil }
+  //   };
 
-    console.log(payload);
+  //   console.log(payload);
 
-    const existing = JSON.parse(localStorage.getItem('data')) || {
-      data: { headerData: [], sa1: {}, sa2: {}, sa3: {}, sa4: {}, sa5: {} }
-    };
+  //   const existing = JSON.parse(localStorage.getItem('data')) || {
+  //     data: { headerData: [], sa1: {}, sa2: {}, sa3: {}, sa4: {}, sa5: {} }
+  //   };
 
-    const headerId = headerData?.id;
+  //   const headerId = headerData?.id;
 
-    if (!existing.data.sa5) {
-      existing.data.sa5 = {};
+  //   if (!existing.data.sa5) {
+  //     existing.data.sa5 = {};
+  //   }
+  //   // Validasi id
+  //   if (headerId !== undefined && headerId !== null && headerId !== 0 && headerId !== '0') {
+  //     // Simpan payload ke sa1
+  //     existing.data.sa5[headerId] = payload;
+  //     localStorage.setItem('data', JSON.stringify(existing));
+  //     console.log('Data berhasil disimpan ke sa5 dengan id:', headerId);
+  //   } else {
+  //     console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
+  //   }
+  // };
+
+  const fetchCreateSAV = async () => {
+    let payloadAPI
+    dataSAV ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, delayData: { ...dataSAV } } : {}
+
+
+    try {
+      const res = await apiSAVForm.createSAV(payloadAPI)
+      if (res.status !== 200) {
+        toast.error('Data Gagal Ditambahkan!', {
+          position: 'top-center'
+        })
+        return;
+      }
+      toast.success(res.data.message, { position: 'top-center' })
+      // payloadAPI = {}
+      // handleResetAll()
+    } catch (error) {
+      console.error(`${error}`)
     }
-    // Validasi id
-    if (headerId !== undefined && headerId !== null && headerId !== 0 && headerId !== '0') {
-      // Simpan payload ke sa1
-      existing.data.sa5[headerId] = payload;
-      localStorage.setItem('data', JSON.stringify(existing));
-      console.log('Data berhasil disimpan ke sa5 dengan id:', headerId);
-    } else {
-      console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
+  }
+
+  const fetchUpdateSAV = async (id) => {
+    let payloadAPI;
+    dataTableSAV ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, delayData: { ...dataSAV } } : {}
+
+
+    try {
+      const res = await apiSAVForm.updateByIdSAV(id, payloadAPI)
+      console.log(res)
+      if (res.status !== 200) {
+        toast.error('Data Gagal Dirubah!', { position: 'top-center' })
+        return;
+      }
+      toast.success(res.data.message, { position: 'top-center' })
+      // payloadAPI = {}
+      // handleResetAll()
+    } catch (error) {
+      console.error(`${error}`)
     }
+  }
+
+  const submitData = () => {
+    // selectedId != 0 ? createSAV() : fetchCreateSAV(selectedId)
+    toast.info(
+      ({ closeToast }) => (
+        <div>
+          <p>Apakah Anda yakin ingin menyimpan data ini?</p>
+          <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => {
+                closeToast();
+                if (selectedId === 0) {
+                  fetchCreateSAV();
+                } else {
+                  fetchUpdateSAV(selectedId);
+                }
+                toast.dismiss();
+              }}
+              style={{
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              Ya
+            </button>
+            <button
+              onClick={closeToast}
+              style={{
+                backgroundColor: '#f44336',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        position: 'top-center',
+        autoClose: false,
+        closeOnClick: false,
+        closeButton: false,
+        draggable: false,
+      }
+    );
   };
-
   useEffect(() => { console.log(headerData) }, [headerData])
 
   return (
@@ -109,7 +204,7 @@ const FaseIVPage = () => {
         <FaseVTable selectedId={selectedId} setDataSAV={setDataSAV} />
       </Suspense>
       <div className="w-full items-center flex p-6">
-        <button onClick={handleSubmit} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
+        <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
       </div>
       {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
         <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>
