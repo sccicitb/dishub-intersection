@@ -5,7 +5,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 const GridVertical = lazy(() => import("@/app/components/gridVertical"));
 const GridHorizontal = lazy(() => import("@/app/components/gridHorizontal"));
 
-const SimpangTrafficKinerja = () => {
+const SimpangTrafficKinerja = (trafficData) => {
   const [dataSimpang, setDataSimpang] = useState(null);
   const [categoryNames, setCategoryNames] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -19,6 +19,13 @@ const SimpangTrafficKinerja = () => {
       setSelectedCategory(Object.keys(kategori)[0]);
     });
   }, []);
+
+  useEffect(() => {
+    // if (trafficData && trafficData.trafficData) {
+    //   setTrafficData(trafficData.trafficData);
+    // }
+    console.log(trafficData);
+  },[trafficData]);
 
   useEffect(() => {
     console.log(dataSimpang)

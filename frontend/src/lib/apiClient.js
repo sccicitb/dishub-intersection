@@ -3,8 +3,8 @@ import Cookies from 'js-cookie';
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL
   ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
-  // : 'http://localhost:9090/api';
-  : 'http://63.250.52.19:9090/api';
+  : 'http://localhost:9090/api';
+  // : 'http://63.250.52.19:9090/api';
 
 const axiosInstance = axios.create({
   baseURL,

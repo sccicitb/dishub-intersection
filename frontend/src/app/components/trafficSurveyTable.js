@@ -287,6 +287,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
 
     const calculatedData = await calculateDataDirectly(trafficData.surveyData);
     setTrafficData({ surveyData: calculatedData });
+    setDataTraffic({ surveyData: calculatedData });
   };
 
 
@@ -651,7 +652,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
       // SOLUSI 1: Langsung hitung dengan data yang baru, bukan mengandalkan state
       const calculatedData = await calculateDataDirectly(cleanedResult);
       setTrafficData({ surveyData: calculatedData });
-
+      setDataTraffic({ surveyData: calculatedData });
     } catch (err) {
       console.error("Gagal load data arus terbaru:", err);
       setTrafficData({ surveyData: [] });
@@ -767,10 +768,10 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
               {mp.kendjam}
             </td>
             <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
-              {mp.terlindung}
+              {mp.terlindung.toFixed(0)}
             </td>
             <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
-              {mp.terlawan}
+              {mp.terlawan.toFixed(0)}
             </td>
 
             {/* KS */}
@@ -778,10 +779,10 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
               {ks.kendjam}
             </td>
             <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
-              {ks.terlindung}
+              {ks.terlindung.toFixed(0)}
             </td>
             <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
-              {ks.terlawan}
+              {ks.terlawan.toFixed(0)}
             </td>
 
             {/* SM */}
@@ -789,7 +790,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
               {sm.kendjam}
             </td>
             <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
-              {sm.terlindung}
+              {sm.terlindung.toFixed(0)}
             </td>
             <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
               {sm.terlawan.toFixed(0)}
@@ -800,7 +801,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
               {total.kendjam}
             </td>
             <td className="border-r border-gray-300 px-1 py-1 text-xs text-center text-green-600 font-semibold">
-              {total.smpTerlindung}
+              {total.smpTerlindung.toFixed(0)}
             </td>
             <td className="border-r border-gray-300 px-1 py-1 text-xs text-center text-green-600 font-semibold">
               {total.smpTerlawan.toFixed(0)}
