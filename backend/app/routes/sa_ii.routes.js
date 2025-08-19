@@ -22,6 +22,13 @@ router.get("/emp-configurations", saIIController.getEMPConfigurations);
 // Get complete SA-II survey with all related data
 router.get("/:surveyId", saIIController.getCompleteSurvey);
 
+// =====================================================
+// SA-II ARUS KENDARAAN ROUTES (Requirements.md lines 158-197)
+// =====================================================
+
+// Get aggregated vehicle data for SA-II Arus Kendaraan
+router.get("/:surveyId/arus-kendaraan", saIIController.getArusKendaraan);
+
 // Update a complete SA-II survey
 router.put("/:surveyId", saIIController.updateCompleteSurvey);
 

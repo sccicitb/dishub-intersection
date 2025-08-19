@@ -83,4 +83,39 @@ SaIIVehicleData.removeBySurveyId = (surveyId, result) => {
   });
 };
 
+// Get aggregated vehicle data from table arus for SA-II
+SaIIVehicleData.getArusAggregatedData = async (simpangId) => {
+  try {
+    const [rows] = await sql.query(`
+      SELECT 
+        dari_arah,
+        ke_arah,
+        SUM(MP) as total_mp,
+        SUM(SM) as total_sm,
+        SUM(KTB) as total_ktb,
+        SUM(AUP + TR + BS + TS + TB + BB + GANDENG) as total_ks
+      FROM arus 
+      WHERE ID_Simpang = ?
+      GROUP BY dari_arah, ke_arah
+    `, [simpangId]);
+    
+    return rows;
+  } catch (error) {
+    throw new Error(`Error aggregating arus data: ${error.message}`);
+  }
+};
+
+// Get survey header validation
+SaIIVehicleData.validateSurveyExists = async (surveyId) => {
+  try {
+    const [rows] = await sql.query(
+      "SELECT id, status, simpang_id FROM sa_survey_headers WHERE id = ?", 
+      [surveyId]
+    );
+    return rows.length > 0 ? rows[0] : null;
+  } catch (error) {
+    throw new Error(`Error validating survey: ${error.message}`);
+  }
+};
+
 module.exports = SaIIVehicleData; 

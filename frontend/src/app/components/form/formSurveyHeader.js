@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy } from 'react';
 import { GoPlus } from "react-icons/go";
 import { FaMinus } from "react-icons/fa6";
 import { Description } from '../ui/description';
 import { IoReloadOutline } from "react-icons/io5";
 import { useAuth } from '@/app/context/authContext';
+import { apiCoreSurvey } from '@/lib/apiService';
+
+const OptionSelectMaps = lazy(() => import("@/app/components/simpang/optionSelectMaps"))
 
 const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
   const { pathname } = useAuth()
@@ -15,16 +18,21 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
     tanggal: '',
     kabupatenKota: '',
     lokasi: '',
+    simpang_id: 0,
+    survey_type: "",
     ruasJalanMayor: [''],
     ruasJalanMinor: [''],
     ukuranKota: '',
     perihal: '',
-    periode: ''
+    periode: '',
+    status: ''
   });
   const [resetAll, setReset] = useState(false)
   const [optionSelect, setOptionSelect] = useState(0);
   const [dataLocalHead, setDataLocalHead] = useState([])
   const [statusHeader, setStatusHeader] = useState(false)
+  const [loading, setLoading] = useState(false);
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -55,15 +63,43 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
     }
   };
 
+  // Fetch data dari API saat component mount
   useEffect(() => {
-    const stored = localStorage.getItem('data');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      setDataLocalHead(parsed.data?.headerData || []);
-    }
+    fetchSurveyData();
   }, []);
 
-  const handleSubmit = () => {
+  const fetchSurveyData = async () => {
+    try {
+      setLoading(true);
+      // Assuming there's an endpoint to get all surveys or list of surveys
+      // You might need to adjust this based on your actual API structure
+      const response = await apiCoreSurvey.getAllSurvey(); // or another appropriate endpoint
+      if (response && response.data) {
+        setDataLocalHead(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      // Fallback to localStorage if API fails
+      // const stored = localStorage.getItem('data');
+      // if (stored) {
+      //   const parsed = JSON.parse(stored);
+      //   setDataLocalHead(parsed.data || []);
+      // }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Commented out original localStorage logic
+  // useEffect(() => {
+  //   const stored = localStorage.getItem('data');
+  //   if (stored) {
+  //     const parsed = JSON.parse(stored);
+  //     setDataLocalHead(parsed.data?.headerData || []);
+  //   }
+  // }, []);
+
+  const handleSubmit = async () => {
     // Validasi form
     const requiredFields = ['tanggal', 'kabupatenKota', 'lokasi'];
     const missingFields = requiredFields.filter(field => !formData[field]);
@@ -76,74 +112,146 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
     // Filter empty string dari array
     const cleanData = {
       ...formData,
+      survey_type: pathname === '/form-sa-i' ? "SA-I" : "",
       ruasJalanMayor: formData.ruasJalanMayor.filter(item => item.trim() !== ''),
-      ruasJalanMinor: formData.ruasJalanMinor.filter(item => item.trim() !== '')
+      ruasJalanMinor: formData.ruasJalanMinor.filter(item => item.trim() !== ''),
+      status: pathname !== '/form-sa-v' ? 'draft' : 'complete'
     };
 
-    // Ambil localStorage
-    const raw = localStorage.getItem('data');
-    let existing = raw ? JSON.parse(raw) : {
-      data: { headerData: [], sa1: {}, sa2: {}, sa3: {} }
-    };
+    try {
+      setLoading(true);
 
-    if (!Array.isArray(existing.data.headerData)) {
-      existing.data.headerData = [];
-    }
-
-    // Kalau sedang edit (sudah ada id)
-    if (cleanData.id > 0) {
-      const index = existing.data.headerData.findIndex(item => item.id === cleanData.id);
-      if (index !== -1) {
-        existing.data.headerData[index] = cleanData; // update
+      let response;
+      // Kalau sedang edit (sudah ada id)
+      if (cleanData.id > 0) {
+        response = await apiCoreSurvey.updateByIdSurvey(cleanData.id, cleanData);
+        console.log('Data berhasil diupdate:', response);
+        alert('Data berhasil diupdate!');
       } else {
-        existing.data.headerData.push({ ...cleanData, id: Date.now() }); // fallback kalau id tidak ditemukan
+        // Kalau tambah baru
+        response = await apiCoreSurvey.createSurvey(cleanData);
+        console.log('Data berhasil dibuat:', response);
+        alert('Data berhasil dibuat!');
       }
-    } else {
-      // Kalau tambah baru
-      const newId = Date.now();
-      existing.data.headerData.push({ ...cleanData, id: newId });
+
+      // Update local state dengan data terbaru
+      if (response && response.data) {
+        setDataHeader(response.data);
+        // Refresh data list
+        await fetchSurveyData();
+      } else {
+        setDataHeader(cleanData);
+      }
+
+    } catch (error) {
+      console.error('Error saving data:', error);
+      alert('Gagal menyimpan data. Silakan coba lagi.');
+
+      // // Fallback to localStorage if API fails
+      // const raw = localStorage.getItem('data');
+      // let existing = raw ? JSON.parse(raw) : {
+      //   data: { headerData: [], sa1: {}, sa2: {}, sa3: {} }
+      // };
+
+      // if (!Array.isArray(existing.data.headerData)) {
+      //   existing.data.headerData = [];
+      // }
+
+      // // Kalau sedang edit (sudah ada id)
+      // if (cleanData.id > 0) {
+      //   const index = existing.data.headerData.findIndex(item => item.id === cleanData.id);
+      //   if (index !== -1) {
+      //     existing.data.headerData[index] = cleanData; // update
+      //   } else {
+      //     existing.data.headerData.push({ ...cleanData, id: Date.now() }); // fallback kalau id tidak ditemukan
+      //   }
+      // } else {
+      //   // Kalau tambah baru
+      //   const newId = Date.now();
+      //   existing.data.headerData.push({ ...cleanData, id: newId });
+      // }
+
+      // // Simpan kembali ke localStorage
+      // localStorage.setItem('data', JSON.stringify(existing));
+      // setDataHeader(cleanData);
+    } finally {
+      setLoading(false);
     }
-
-    // Simpan kembali ke localStorage
-    localStorage.setItem('data', JSON.stringify(existing));
-
-    // Simulasi sukses
-    console.log('Data berhasil disimpan:', cleanData);
-    alert('Data berhasil disimpan!');
-
-    setDataHeader(cleanData)
   };
 
+  const refreshData = async () => {
+    await fetchSurveyData();
 
-  const refreshData = () => {
-    const stored = localStorage.getItem('data');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      setDataLocalHead(parsed.data?.headerData || []);
-    }
+    // Commented out localStorage fallback
+    // const stored = localStorage.getItem('data');
+    // if (stored) {
+    //   const parsed = JSON.parse(stored);
+    //   setDataLocalHead(parsed.data?.headerData || []);
+    // }
   }
 
-  const handleSelect = (e) => {
+  const handleSelect = async (e) => {
     setReset(false)
     const selectedId = e.target.value;
     setOptionSelect(selectedId);
 
-    const selectedData = dataLocalHead.find(item => item.id.toString() === selectedId);
-    if (selectedData) {
+    try {
+      setLoading(true);
+      // Fetch specific survey data by ID
+      const response = await apiCoreSurvey.getByIdSurvey(selectedId);
+      console.log(response)
+      console.log(selectedId)
+      if (response && response.data.data) {
+        console.log(response.data)
+        const selectedData = response.data.data;
+        setFormData({
+          id: selectedData?.id || 0,
+          tanggal: selectedData.tanggal?.split('T')[0] || '',
+          simpang_id: selectedData.simpang_id || 0,
+          kabupatenKota: selectedData.kabupatenKota || '',
+          lokasi: selectedData.lokasi || '',
+          survey_type: selectedData.survey_type || '',
+          ruasJalanMayor: selectedData.ruasJalanMayor || [''],
+          ruasJalanMinor: selectedData.ruasJalanMinor || [''],
+          ukuranKota: selectedData.ukuranKota || '',
+          perihal: selectedData.perihal || '',
+          periode: selectedData.periode || ''
+        });
+        setSelectedId(selectedId || 0);
+        setDataHeader(selectedData);
+      }
+    } catch (error) {
+      console.error('Error fetching survey by ID:', error);
+
+      // Fallback to local data
+      // const selectedData = dataLocalHead.find(item => item.id.toString() === selectedId);
+      // if (selectedData) {
       setFormData({
-        id: selectedData.id || 0,
-        tanggal: selectedData.tanggal || '',
-        kabupatenKota: selectedData.kabupatenKota || '',
-        lokasi: selectedData.lokasi || '',
-        ruasJalanMayor: selectedData.ruasJalanMayor || [''],
-        ruasJalanMinor: selectedData.ruasJalanMinor || [''],
-        ukuranKota: selectedData.ukuranKota || '',
-        perihal: selectedData.perihal || '',
-        periode: selectedData.periode || ''
+        id: 0,
+        tanggal: '',
+        kabupatenKota: '',
+        simpang_id: 0,
+        lokasi: '',
+        survey_type: '',
+        ruasJalanMayor: [''],
+        ruasJalanMinor: [''],
+        ukuranKota: '',
+        perihal: '',
+        periode: ''
       });
+      // setSelectedId(selectedData.id || 0);
+      setSelectedId(0);
+      // setDataHeader(selectedData);
+      // }
+    } finally {
+      setLoading(false);
     }
-    setSelectedId(selectedData.id || 0)
-    setDataHeader(selectedData)
+  };
+
+  const handleSelectOption = (location) => {
+    console.log("Lokasi dipilih dan tanggal:", location); // bisa access id, nama, lat, lon, dll
+    handleInputChange('simpang_id', location.id)
+    handleInputChange('lokasi', location?.Nama_Simpang || '')
   };
 
   const handleReset = () => {
@@ -154,6 +262,8 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
       tanggal: '',
       kabupatenKota: '',
       lokasi: '',
+      simpang_id: 0,
+      survey_type: "",
       ruasJalanMayor: [''],
       ruasJalanMinor: [''],
       ukuranKota: '',
@@ -170,6 +280,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
       setStatusForm(false)
     }
   }, [pathname])
+
   const renderArrayInput = (field, label, placeholder) => (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
@@ -222,25 +333,31 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
           {statusHeader && (
             <div>
               <select
-                className="select select-bordered focus:outline-none select-sm bg-transparent focus:ring-0 "
+                className="select select-bordered focus:outline-none select-sm bg-transparent focus:ring-0"
                 value={optionSelect}
                 onChange={handleSelect}
+                disabled={loading}
               >
-                <option value={0} disabled={!resetAll && (optionSelect !== 0 || optionSelect !== '')}>Pilih Data Header</option>
-                {dataLocalHead.map((item) => (
+                <option value={0} disabled={!resetAll && (optionSelect !== 0 || optionSelect !== '')}>
+                  {loading ? 'Loading...' : 'Pilih Data Header'}
+                </option>
+                {dataLocalHead?.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.perihal} - {item.lokasi}
+                    {item.perihal} - {item.lokasi} - {item.id}
                   </option>
                 ))}
               </select>
-              <button className='btn btn-sm bg-transparent hover:drop-shadow-2xl hover:bg-transparent border-none ring-0' onClick={() => refreshData()}
+              <button
+                className='btn btn-sm bg-transparent hover:drop-shadow-2xl hover:bg-transparent border-none ring-0'
+                onClick={() => refreshData()}
+                disabled={loading}
               >
-                <IoReloadOutline className='text-xl text-success' />
+                <IoReloadOutline className={`text-xl text-success ${loading ? 'animate-spin' : ''}`} />
               </button>
             </div>
           )}
         </div>
-      </Description >
+      </Description>
       <div className='bg-base-200 p-5 rounded-md border border-base-300 grid grid-cols-1 lg:grid-cols-2 lg:space-x-10 w-full space-y-10'>
         <div className="space-y-6 grid grid-cols-2 gap-2">
           {/* Tanggal */}
@@ -251,13 +368,12 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
             <input
               type="date"
               readOnly={statusForm}
-              value={formData.tanggal}
+              value={formData.tanggal.split('T')[0]}
               onChange={(e) => handleInputChange('tanggal', e.target.value)}
               className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
               required
             />
           </div>
-
 
           {/* Perihal */}
           <div>
@@ -308,7 +424,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Lokasi *
             </label>
-            <input
+            {/* <input
               type="text"
               readOnly={statusForm}
               value={formData.lokasi}
@@ -316,6 +432,12 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
               placeholder="Contoh: Simpang Condongcatur"
               className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
               required
+            /> */}
+            <OptionSelectMaps
+              onSelect={(selectedLocation) => handleSelectOption(selectedLocation)}
+              // onDateSelect={(selectedDate) => handleSelectOption(selectedLocation, selectedDate)}
+              optionMap
+            // optionDate
             />
           </div>
 
@@ -339,14 +461,13 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
               className="w-full px-3 input input-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-100/90 focus:border-transparent"
             />
           </div>
-
         </div>
         <div className="overflow-x-autos">
           <table className="w-full border border-gray-300 table table-sm">
             <tbody className='font-normal'>
               <tr>
                 <td className='border border-gray-300 w-1/2'>Tanggal</td>
-                <td className='border border-gray-300'>{formData.tanggal}</td>
+                <td className='border border-gray-300'>{formData.tanggal.split('T')[0]}</td>
               </tr>
               <tr>
                 <td className='border border-gray-300'>Kabupaten/Kota</td>
@@ -385,9 +506,9 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
           type="button"
           onClick={handleSubmit}
           className="w-full btn-sm btn btn-success"
-          disabled={statusForm}
+          disabled={statusForm || loading}
         >
-          <span>Simpan</span>
+          <span>{loading ? 'Menyimpan...' : 'Simpan'}</span>
         </button>
       </div>
       {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
@@ -396,10 +517,8 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
           {JSON.stringify(formData, null, 2)}
         </pre>
       </div> */}
-    </div >
+    </div>
   );
 };
 
 export default SurveyFormSAHeader;
-
-

@@ -7,7 +7,7 @@ module.exports = function(app) {
   const { requireViewerOrHigher, requireAdmin } = require('../middleware/role.middleware');
 
   // Simpang CRUD Operations - Admin only for write operations, Viewer+ for read
-  app.get('/api/simpang', authenticateToken, requireViewerOrHigher, simpangController.getAllSimpang);        // List semua simpang
+  app.get('/api/simpang', simpangController.getAllSimpang);        // List semua simpang
   app.get('/api/simpang/:id', authenticateToken, requireViewerOrHigher, simpangController.getSimpangById);   // Detail simpang
   app.get('/api/simpang/:id/detail', authenticateToken, requireViewerOrHigher, simpangController.getSimpangDetail); // Detail simpang with cameras
   app.post('/api/simpang', authenticateToken, requireAdmin, simpangController.createSimpang);       // Tambah simpang

@@ -14,6 +14,9 @@ router.get('/header/:id', saSurveyHeaderController.getHeaderById);
 // Update a survey header
 router.put('/header/:id', saSurveyHeaderController.updateHeader);
 
+// Update survey status
+router.patch('/header/:id/status', saSurveyHeaderController.updateStatus);
+
 // Delete a survey header
 router.delete('/header/:id', saSurveyHeaderController.deleteHeader);
 

@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { apiSAIForm, apiSAIIForm, apiSAIIIForm, apiSAIVForm, apiSAVForm } from '@/lib/apiService';
 
 export default function FormSAVTable ({ selectedId, setDataSAV }) {
   const [tableData, setTableData] = useState({
@@ -97,6 +98,73 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
       }
     ]
   });
+
+  
+  const fetchDataSAI = async (id) => {
+    try {
+      setLoading(true);
+      const response = await apiSAIForm.getByIdSAI(id);
+      console.log(response.data.data)
+      if (response && response.data) {
+        return response.data.data || [];
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      const existing = JSON.parse(localStorage.getItem('data'));
+      setLoading(false);
+      return existing?.data?.sa1?.[selectedId];
+    }
+  };
+
+  const fetchDataSAII = async (id) => {
+    try {
+      setLoading(true);
+      const response = await apiSAIIForm.getByIdSAII(id);
+      console.log(response.data.data)
+      if (response && response.data) {
+        return response.data.data || [];
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      const existing = JSON.parse(localStorage.getItem('data'));
+      setLoading(false);
+      return existing?.data?.sa1?.[selectedId];
+    }
+  };
+
+   const fetchDataSAIV = async (id) => {
+    try {
+      setLoading(true);
+      const response = await apiSAIVForm.getByIdSAIV(id);
+      console.log(response.data.data)
+      if (response && response.data) {
+        return response.data.data || [];
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      const existing = JSON.parse(localStorage.getItem('data'));
+      setLoading(false);
+      return existing?.data?.sa1?.[selectedId];
+    }
+  };
+
+  const fetchDataSAIII = async (id) => {
+    try {
+      setLoading(true);
+      const response = await apiSAIIIForm.getByIdSAIII(id);
+
+      if (response && response.data) {
+        const { phaseData, whh } = response.data.data;
+        console.log(convertPhaseDataToOriginal(phaseData, whh))
+        return convertPhaseDataToOriginal(phaseData, whh);
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      const existing = JSON.parse(localStorage.getItem('data'));
+      setLoading(false);
+      return existing?.data?.sa3?.[selectedId];
+    }
+  };
 
   const aggregateSA4DataByKode = (sa4TableData) => {
     if (!sa4TableData || !Array.isArray(sa4TableData)) {
