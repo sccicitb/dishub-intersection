@@ -280,11 +280,11 @@ const FormSAIIPage = () => {
       <EkuivalensiForm setEMP={setDataEmp} selectedId={selectedId} />
       <Suspense fallback={<div className="my-5 w-full text-center">Loading...</div>}>
         <TrafficKinerjaTable dataEMP={dataEmp} selectedId={selectedId} setDataTraffic={setTrafficData} idSimpang={idSelect} />
-        <SimpangTrafficKinerja />
-        <div className="w-full">
+        <SimpangTrafficKinerja trafficData={trafficData}/>
+        {/* <div className="w-full">
           <EkuivalensiChart data={dataTerlindung} />
           <EkuivalensiChart data={dataTerlawan} />
-        </div>
+        </div> */}
         <div className="w-full items-center flex p-6">
           <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
         </div>
