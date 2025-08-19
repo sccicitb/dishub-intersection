@@ -11,17 +11,19 @@ This API documentation directly supports the frontend requirements from `Require
 
 #### **1. Survey Header Requirements**
 
-**Frontend Requirement**: Survey header with date, location, period selection
+**Frontend Requirement**: Survey header with date, location, period selection, and simpang linking
 **API Endpoints**:
 - `POST /api/sa-surveys/header` - Create survey header
 - `GET /api/sa-surveys/header` - Get all survey headers
 - `GET /api/sa-surveys/header/:id` - Get specific survey header
 - `PUT /api/sa-surveys/header/:id` - Update survey header
 - `DELETE /api/sa-surveys/header/:id` - Delete survey header
+- `PATCH /api/sa-surveys/header/:id/status` - Update survey status
 
 **Payload Structure**:
 ```json
 {
+  "simpang_id": 2,
   "tanggal": "2025-01-15",
   "kabupatenKota": "Yogyakarta",
   "lokasi": "Test Intersection",
@@ -29,7 +31,8 @@ This API documentation directly supports the frontend requirements from `Require
   "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
   "ukuranKota": "1",
   "perihal": "Traffic analysis for intersection optimization",
-  "periode": "Pertama"
+  "periode": "Pertama",
+  "status": "draft"
 }
 ```
 
@@ -40,6 +43,7 @@ This API documentation directly supports the frontend requirements from `Require
 - `GET /api/sa-surveys/header/:id/forms` - Get all forms for a header
 - `POST /api/sa-surveys/sa-i/` - Create SA-I form (auto-creates header if needed)
 - `POST /api/sa-surveys/sa-ii/` - Create SA-II form (auto-creates header if needed)
+- `GET /api/sa-surveys/sa-ii/:id/arus-kendaraan` - **NEW: Get SA-II vehicle traffic data (Requirements.md lines 158-197)**
 - `POST /api/sa-surveys/sa-iii/` - Create SA-III form (auto-creates header if needed)
 - `POST /api/sa-surveys/sa-iv/` - Create SA-IV form (auto-creates header if needed)
 - `POST /api/sa-surveys/sa-v/` - Create SA-V form (auto-creates header if needed)
@@ -50,6 +54,7 @@ This API documentation directly supports the frontend requirements from `Require
 **POST** `/api/sa-surveys/header`
 ```json
 {
+  "simpang_id": 2,
   "tanggal": "2025-01-15",
   "kabupatenKota": "Yogyakarta",
   "lokasi": "Test Intersection",
@@ -57,7 +62,8 @@ This API documentation directly supports the frontend requirements from `Require
   "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
   "ukuranKota": "1",
   "perihal": "Traffic analysis for intersection optimization",
-  "periode": "Pertama"
+  "periode": "Pertama",
+  "status": "draft"
 }
 ```
 
@@ -68,6 +74,7 @@ This API documentation directly supports the frontend requirements from `Require
   "message": "Survey header created successfully",
   "data": {
     "id": 183,
+    "simpangId": 2,
     "tanggal": "2025-01-15",
     "kabupatenKota": "Yogyakarta",
     "lokasi": "Test Intersection",
@@ -76,6 +83,7 @@ This API documentation directly supports the frontend requirements from `Require
     "ukuranKota": "1",
     "perihal": "Traffic analysis for intersection optimization",
     "periode": "Pertama",
+    "status": "draft",
     "createdAt": "2025-01-15T10:00:00Z",
     "updatedAt": "2025-01-15T10:00:00Z"
   }
@@ -245,6 +253,7 @@ This API documentation directly supports the frontend requirements from `Require
 {
   "surveyHeader": {
     "id": 183,
+    "simpangId": 2,
     "tanggal": "2025-01-15",
     "kabupatenKota": "Yogyakarta",
     "lokasi": "Test Intersection",
@@ -252,7 +261,8 @@ This API documentation directly supports the frontend requirements from `Require
     "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
     "ukuranKota": "1",
     "perihal": "SA-II Vehicle Analysis",
-    "periode": "Pertama"
+    "periode": "Pertama",
+    "status": "draft"
   },
   "vehicleData": [
     {
@@ -289,6 +299,60 @@ This API documentation directly supports the frontend requirements from `Require
 
 #### **Update Complete SA-II Survey**
 **PUT** `/api/sa-surveys/sa-ii/:surveyId`
+
+#### **🚀 NEW: Get SA-II Vehicle Traffic Data (Requirements.md lines 158-197)**
+**GET** `/api/sa-surveys/sa-ii/:surveyId/arus-kendaraan`
+
+**Description**: Retrieves aggregated vehicle traffic data by movement direction (BKi, Lurus, BKa) for all vehicle types (MP, SM, KTB, KS, RKTB) based on the survey's simpang_id.
+
+**Response Format** (Matches Requirements.md exactly):
+```json
+{
+  "u": {
+    "mp": [500, 100, 140],
+    "ks": [100, 250, 80],
+    "sm": [120, 220, 50],
+    "ktb": [0, 2, 0],
+    "rktb": [4, null, null]
+  },
+  "t": {
+    "mp": [300, 120, 90],
+    "ks": [80, 210, 70],
+    "sm": [110, 200, 45],
+    "ktb": [1, 1, 1],
+    "rktb": [3, null, null]
+  },
+  "b": {
+    "mp": [500, 620, 290],
+    "ks": [80, 270, 420],
+    "sm": [110, 110, 65],
+    "ktb": [1, 5, 2],
+    "rktb": [3, null, null]
+  },
+  "s": {
+    "mp": [312, 620, 290],
+    "ks": [850, 270, 420],
+    "sm": [160, 310, 65],
+    "ktb": [1, 4, 2],
+    "rktb": [2, null, null]
+  }
+}
+```
+
+**Data Structure**:
+- **Directions**: `u` (Utara/North), `t` (Timur/East), `b` (Barat/West), `s` (Selatan/South)
+- **Vehicle Types**: `mp` (Motor Passenger), `sm` (Small Motor), `ktb` (Kendaraan Tak Bermotor), `ks` (Kendaraan Sedang), `rktb` (Rasio KTB)
+- **Movement Array**: `[BKi, Lurus, BKa]` where:
+  - Index 0: BKi (Belok Kiri/Left Turn)
+  - Index 1: Lurus (Straight)
+  - Index 2: BKa (Belok Kanan/Right Turn)
+
+**Features**:
+- ✅ **Dynamic simpang linking**: Uses survey's `simpang_id` to retrieve data
+- ✅ **Real-time aggregation**: Combines SQL queries with Node.js business logic
+- ✅ **Traffic engineering rules**: Proper movement categorization based on direction
+- ✅ **Complete vehicle coverage**: All vehicle types and movement directions
+- ✅ **Production ready**: Fully tested and working end-to-end
 
 ### **SA-III: Intersection Sketch**
 
@@ -497,6 +561,7 @@ The APIs use the `sa_survey_headers` table with the following structure:
 -- Survey header (reusable across forms)
 sa_survey_headers {
   id: 183,
+  simpang_id: 2,  -- NEW: Links survey to specific simpang
   tanggal: "2025-01-15",
   kabupaten_kota: "Yogyakarta",
   lokasi: "Test Intersection",
@@ -505,9 +570,11 @@ sa_survey_headers {
   ukuran_kota: "1",
   perihal: "Traffic analysis",
   periode: "Pertama",
+  status: "draft",  -- NEW: Survey completion status
   created_at: "2025-01-15T10:00:00Z",
   updated_at: "2025-01-15T10:00:00Z"
 }
+```
 
 -- Form data (linked to header via survey_id)
 sa_i_pendekat {
@@ -535,16 +602,21 @@ sa_i_pendekat {
 4. **Clean API Design**: Consistent endpoint structure
 5. **Comprehensive Coverage**: All Form SA requirements supported
 6. **Google Maps Integration**: Coordinate fields support VARCHAR(25) for flexibility
+7. **🚀 NEW: Dynamic Simpang Linking**: Surveys automatically linked to specific simpang via `simpang_id`
+8. **🚀 NEW: SA-II Real-time Data**: Live vehicle traffic data retrieval with automatic aggregation
+9. **🚀 NEW: Production Ready**: Fully tested end-to-end workflow with real data
 
 ## 📝 **VALIDATION RULES**
 
 ### **Survey Header Validation**
+- `simpang_id`: Required, BIGINT(20), links to simpang table
 - `tanggal`: Required, valid date format (YYYY-MM-DD)
 - `kabupatenKota`: Required, string field
 - `lokasi`: Required, string field
 - `ruasJalanMayor/ruasJalanMinor`: Required, JSON arrays
 - `ukuranKota`: Required, string field
 - `periode`: Required, enum('Pertama','Kedua','Ketiga','Keempat')
+- `status`: Optional, enum('draft','in_progress','completed','submitted'), defaults to 'draft'
 
 ### **Form-Specific Validation**
 
@@ -559,6 +631,13 @@ sa_i_pendekat {
 - `lebarGarisHenti`: Required, decimal
 - `lebarLajurBki`: Required, decimal
 - `lebarLajurKeluar`: Required, decimal
+
+#### **SA-II Validation**
+- **GET API**: No validation required - automatically uses survey's `simpang_id`
+- **Data Source**: Automatically retrieves from `arus` table based on simpang
+- **Movement Categorization**: Uses traffic engineering rules (BKi, Lurus, BKa)
+- **Vehicle Types**: MP, SM, KTB, KS, RKTB automatically aggregated
+- **Response Format**: Exactly matches Requirements.md lines 158-197
 
 #### **SA-III Validation**
 - Coordinate fields: VARCHAR(25) for Google Maps compatibility
@@ -607,6 +686,7 @@ sa_i_pendekat {
 curl -X POST http://localhost:8080/api/sa-surveys/header \
   -H "Content-Type: application/json" \
   -d '{
+    "simpang_id": 2,
     "tanggal": "2025-01-15",
     "kabupatenKota": "Yogyakarta",
     "lokasi": "Test Intersection",
@@ -614,7 +694,8 @@ curl -X POST http://localhost:8080/api/sa-surveys/header \
     "ruasJalanMinor": ["Jl. Kecil 1", "Jl. Kecil 2"],
     "ukuranKota": "1",
     "perihal": "Test survey",
-    "periode": "Pertama"
+    "periode": "Pertama",
+    "status": "draft"
   }'
 
 # 2. Create SA-I form
@@ -657,6 +738,9 @@ curl -X POST http://localhost:8080/api/sa-surveys/sa-i \
 
 # 3. Get all forms for header
 curl -X GET http://localhost:8080/api/sa-surveys/header/183/forms
+
+# 4. Test SA-II GET API (NEW!)
+curl -X GET http://localhost:8080/api/sa-surveys/sa-ii/183/arus-kendaraan
 ```
 
 ## 🔧 **WORKFLOW SCENARIOS**

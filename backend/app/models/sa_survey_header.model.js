@@ -1,6 +1,7 @@
 const sql = require("../config/db.js");
 
 const SaSurveyHeader = function(header) {
+  this.simpang_id = header.simpang_id || 0;
   this.tanggal = header.tanggal;
   this.perihal = header.perihal;
   this.kabupaten_kota = header.kabupaten_kota || 'Default City';
@@ -9,6 +10,7 @@ const SaSurveyHeader = function(header) {
   this.ruas_jalan_minor = header.ruas_jalan_minor || JSON.stringify(['Default Road']);
   this.ukuran_kota = header.ukuran_kota || '0';
   this.periode = header.periode || 'Pertama';
+  this.status = header.status || 'draft';
 };
 
 // Helper function to safely parse JSON
@@ -30,6 +32,7 @@ const safeJsonParse = (jsonString, defaultValue = ['Default Road']) => {
 SaSurveyHeader.create = async (newHeader) => {
   try {
     const headerData = {
+      simpang_id: newHeader.simpang_id || 0,
       tanggal: newHeader.tanggal,
       perihal: newHeader.perihal,
       kabupaten_kota: newHeader.kabupaten_kota || 'Default City',
@@ -41,7 +44,8 @@ SaSurveyHeader.create = async (newHeader) => {
         ? JSON.stringify(newHeader.ruas_jalan_minor) 
         : JSON.stringify(['Default Road']),
       ukuran_kota: newHeader.ukuran_kota || '0',
-      periode: newHeader.periode || 'Pertama'
+      periode: newHeader.periode || 'Pertama',
+      status: newHeader.status || 'draft'
     };
     
     const [result] = await sql.query("INSERT INTO sa_survey_headers SET ?", headerData);
@@ -115,6 +119,7 @@ SaSurveyHeader.getAll = async (params) => {
 SaSurveyHeader.updateById = async (id, header) => {
   try {
     const updateData = {
+      simpang_id: header.simpang_id || 0,
       tanggal: header.tanggal,
       perihal: header.perihal,
       kabupaten_kota: header.kabupaten_kota,
@@ -126,7 +131,8 @@ SaSurveyHeader.updateById = async (id, header) => {
         ? JSON.stringify(header.ruas_jalan_minor) 
         : header.ruas_jalan_minor,
       ukuran_kota: header.ukuran_kota,
-      periode: header.periode
+      periode: header.periode,
+      status: header.status || 'draft'
     };
     
     const [result] = await sql.query(
