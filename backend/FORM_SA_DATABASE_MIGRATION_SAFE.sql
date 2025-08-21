@@ -409,6 +409,15 @@ INSERT INTO `emp_configurations` (`vehicle_type`, `condition_type`, `emp_value`,
 ('SM', 'terlawan', 1.80, true)
 ON DUPLICATE KEY UPDATE `emp_value` = VALUES(`emp_value`);
 
+-- Replace unique_survey_pendekat index with unique_survey_pendekat_fase
+DROP INDEX unique_survey_pendekat;
+ALTER TABLE sa_iv_capacity_analysis 
+
+-- Add new unique index for survey_id, kode_pendekat, hijau_fase
+ALTER TABLE sa_iv_capacity_analysis 
+ADD UNIQUE KEY unique_survey_pendekat_fase (survey_id, kode_pendekat, hijau_fase);
+
+
 -- =====================================================
 -- MIGRATION COMPLETE
 -- =====================================================
