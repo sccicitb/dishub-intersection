@@ -33,7 +33,7 @@ exports.createCompleteSurvey = async (req, res) => {
     return;
   }
 
-  const { surveyHeader, ekuivalensi, surveyData, ktbData } = req.body;
+  const { surveyHeader, ekuivalensi, surveyData } = req.body;
 
   // Start database transaction
   const sql = require("../config/db.js");
@@ -186,19 +186,19 @@ exports.createCompleteSurvey = async (req, res) => {
     }
 
     // 3. Create KTB data records
-    if (ktbData && Array.isArray(ktbData)) {
-      for (const ktbItem of ktbData) {
-        const ktbRecord = {
-          survey_id: headerId,
-          direction: ktbItem.direction,
-          ktb_count: ktbItem.ktb_count || 0,
-          turn_ratio: ktbItem.turn_ratio || 0,
-          rktb_value: ktbItem.rktb_value || 0
-        };
+    // if (ktbData && Array.isArray(ktbData)) {
+    //   for (const ktbItem of ktbData) {
+    //     const ktbRecord = {
+    //       survey_id: headerId,
+    //       direction: ktbItem.direction,
+    //       ktb_count: ktbItem.ktb_count || 0,
+    //       turn_ratio: ktbItem.turn_ratio || 0,
+    //       rktb_value: ktbItem.rktb_value || 0
+    //     };
 
-        await connection.query("INSERT INTO sa_ii_ktb_data SET ?", ktbRecord);
-      }
-    }
+    //     await connection.query("INSERT INTO sa_ii_ktb_data SET ?", ktbRecord);
+    //   }
+    // }
 
     // Commit transaction
     await connection.commit();

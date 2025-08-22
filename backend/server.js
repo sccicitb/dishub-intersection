@@ -12,7 +12,8 @@ var corsOptions = {
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://63.250.52.19:9091",  
-    "http://63.250.52.19:6060"  // sementara untuk demo
+    "http://63.250.52.19:6060",  // sementara untuk demo
+    process.env.CORS_ORIGIN
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: [

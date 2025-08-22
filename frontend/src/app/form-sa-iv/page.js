@@ -2,6 +2,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { cameras } from '@/lib/apiService';
 import { apiSAIVForm } from "@/lib/apiService";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const FaseApilTable = lazy(() => import("@/app/components/table/faseApilTable"));
 const FaseLapanganTable = lazy(() => import("@/app/components/table/faseLapanganTable"));
@@ -17,12 +19,12 @@ const FaseIVPage = () => {
   const [dataCameras, setDataCameras] = useState([]);
   const [selectCameras, setSelectCameras] = useState();
   const [headerData, setHeader] = useState({});
-  const [dataTableSAIV, setDataTableSAIV] = useState([]);
+  const [dataTableSAIV, setDataTableSAIV] = useState({});
   const [selectedId, setSelectedId] = useState(0);
 
   const handleResetAll = () => {
     setSelectedId(0);
-    setDataTableSAIV([])
+    setDataTableSAIV({})
     setHeader({
       id: 0,
       tanggal: '',
@@ -68,17 +70,14 @@ const FaseIVPage = () => {
   }
 
 
-  let payload;
+  const [payload, setPayload] = useState({});
 
   useEffect(() => {
-
-    payload = {
+    setPayload({
       capacityAnalysis: { ...dataTableSAIV },
-      // fase: { ...faseApil }
-    };
-
-    console.log('Payload gabungan:', payload, headerData);
-    console.log('id:', selectedId);
+      headerData: { ...headerData },
+      id: selectedId
+    });
   }, [dataTableSAIV, headerData, selectedId]);
 
   // const handleSubmit = () => {
@@ -167,7 +166,7 @@ const FaseIVPage = () => {
       console.error(`${error}`)
     }
   }
-  
+
   const submitData = () => {
     // selectedId != 0 ? createSAIV() : fetchCreateSAIV(selectedId)
     toast.info(
@@ -224,6 +223,7 @@ const FaseIVPage = () => {
 
   return (
     <div>
+      <ToastContainer />
       <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
@@ -244,6 +244,12 @@ const FaseIVPage = () => {
         </div>
         <FaseIVAnalisaTable selectedId={selectedId} dataTableSAIV={dataTableSAIV} />
       </Suspense>
+      {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
+        <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>
+        <pre className="text-xs whitespace-pre-wrap break-all max-h-96 overflow-auto bg-white p-2 rounded border border-gray-300">
+          {JSON.stringify(payload, null, 2)}
+        </pre>
+      </div> */}
     </div>
   )
 }

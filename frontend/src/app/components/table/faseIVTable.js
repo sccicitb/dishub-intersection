@@ -42,6 +42,92 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
     ]
   });
 
+  const mergeWithSAIVResponse = (saivResponse, currentTableData) => {
+    if (!saivResponse?.capacityAnalysis?.table) {
+      console.warn('No capacity analysis table found in response');
+      return currentTableData;
+    }
+
+    const capacityTable = saivResponse.capacityAnalysis.table;
+    const footData = saivResponse.capacityAnalysis.foot?.[0] || {};
+
+    // Buat map untuk pencarian cepat berdasarkan kode_pendekat dan hijau_fase
+    const apiDataMap = new Map();
+    capacityTable.forEach(item => {
+      const key = `${item.kode_pendekat}_${item.hijau_fase}`;
+      apiDataMap.set(key, item);
+    });
+
+    // Update tabel dengan menggabungkan data
+    const updatedTabel = currentTableData.tabel.map(row => {
+      const key = `${row.kodePendekat}_${row.hijauFase}`;
+      const apiData = apiDataMap.get(key);
+
+      if (apiData) {
+        // Jika data ditemukan di API, gunakan faktor penyesuaian dari API
+        return {
+          ...row,
+          rasioKendaraanBelok: {
+            rbkijt: apiData.rasio_kendaraan_belok?.rbkijt || row.rasioKendaraanBelok.rbkijt || 0,
+            rbki: apiData.rasio_kendaraan_belok?.rbki || row.rasioKendaraanBelok.rbki || 0,
+            rbka: apiData.rasio_kendaraan_belok?.rbka || row.rasioKendaraanBelok.rbka || 0,
+          },
+          arusBelokKanan: {
+            dariArahDitinjau: apiData.arus_belok_kanan?.dariArahDitinjau || row.arusBelokKanan.dariArahDitinjau || 0,
+            dariArahBerlawanan: apiData.arus_belok_kanan?.dariArahBerlawanan || row.arusBelokKanan.dariArahBerlawanan || 0,
+          },
+          lebarEfektif: parseFloat(apiData.lebar_efektif) || row.lebarEfektif || 0,
+          arusJenuhDasar: parseFloat(apiData.arus_jenuh_dasar) || row.arusJenuhDasar || 0,
+          faktorPenyesuaian: {
+            fg: apiData.faktor_penyesuaian?.fg || 0,
+            fp: apiData.faktor_penyesuaian?.fp || 0,
+            fhs: apiData.faktor_penyesuaian?.fhs || 0,
+            fux: apiData.faktor_penyesuaian?.fux || 0,
+            fbka: apiData.faktor_penyesuaian?.fbka || 0,
+            fbki: apiData.faktor_penyesuaian?.fbki || 0,
+          },
+          arusJenuhYangDisesuaikan: {
+            j: apiData.arus_jenuh_yang_disesuaikan?.j || row.arusJenuhYangDisesuaikan.j || 0,
+          },
+          arusLaluLintas: parseFloat(apiData.arus_lalu_lintas) || row.arusLaluLintas || 0,
+          rasioArus: parseFloat(apiData.rasio_arus) || row.rasioArus || 0,
+          rasioFase: parseFloat(apiData.rasio_fase) || row.rasioFase || 0,
+          waktuHijauPerFase: parseInt(apiData.waktu_hijau_per_fase) || row.waktuHijauPerFase || 0,
+          kapasitas: parseFloat(apiData.kapasitas) || row.kapasitas || 0,
+          derajatKejenuhan: parseFloat(apiData.derajat_kejenuhan) || row.derajatKejenuhan || 0,
+        };
+      } else {
+        // Jika tidak ada data di API untuk kombinasi kode_pendekat dan hijau_fase ini,
+        // gunakan nilai default 0 untuk faktor penyesuaian
+        return {
+          ...row,
+          faktorPenyesuaian: {
+            fhs: 0,
+            fux: 0,
+            fg: 0,
+            fp: 0,
+            fbki: 0,
+            fbka: 0,
+          }
+        };
+      }
+    });
+
+    // Update foot data juga
+    const updatedFoot = {
+      whh: footData.whh || currentTableData.foot.whh || 0,
+      sbp: footData.sbp || currentTableData.foot.sbp || 0,
+      S: footData.S || currentTableData.foot.S || 0,
+      ras: footData.ras || currentTableData.foot.ras || 0,
+    };
+
+    return {
+      ...currentTableData,
+      foot: updatedFoot,
+      tabel: updatedTabel
+    };
+  };
+
   const recalculateTableData = (tabel, foot) => {
     const updatedTable = tabel.map((row) => {
       // Hitung ulang arus jenuh disesuaikan jika perlu
@@ -265,7 +351,7 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
       return { isValid: false, error: 'Gagal parse data', details: e };
     }
   };
-  
+
   // Function untuk mendapatkan faktor penyesuaian
   const getFaktorPenyesuaian = (sa4TableData, kodePendekat, hijauFase) => {
     const defaultFaktor = {
@@ -457,6 +543,7 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
     return {
       whh: whhGlobal,
       dataFase: phaseData.map((phase) => {
+        console.log('Processing phase:', phase, 'with whh:', whhGlobal);
         // dari array `jarak` ke object keyed by type
         const jarakObj = {};
         phase.jarak.forEach((item) => {
@@ -568,98 +655,69 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
 
     const loadData = async () => {
       if (!selectedId || selectedId === 0 || selectedId === '0') {
-        setTableData([]);
+        setTableData({
+          foot: { whh: 0, sbp: 0, S: 0, ras: 0 },
+          tabel: []
+        });
         return;
       }
 
       try {
-        // 2. Ambil data dari masing-masing SA
+        // Fetch data dari berbagai SA
         const sa1Result = await fetchDataSAI(selectedId);
         const sa2Result = await fetchDataSAII(selectedId);
         const sa3Result = await fetchDataSAIII(selectedId);
-        const sa4Result = await fetchDataSAIV(selectedId);
+        const sa4Result = await fetchDataSAIV(selectedId); // Response seperti yang Anda berikan
 
-        // const sa1Result = getSA1Data(storedResult.data, selectedId);
-        // const sa2Result = getSA2Data(storedResult.data, selectedId);
-        // const sa3Result = getSA3Data(storedResult.data, selectedId);
-        // const sa4Result = getSA4Data(storedResult.data, selectedId);
-
-        // 3. Validasi data wajib (SA1, SA2, SA3)
-        if (!sa1Result) {
-          console.log("sa1")
-          setTableData({});
+        // Validasi data wajib
+        if (!sa1Result || !sa2Result || !sa3Result) {
+          setTableData({
+            foot: { whh: 0, sbp: 0, S: 0, ras: 0 },
+            tabel: []
+          });
           return;
         }
 
-        if (!sa2Result) {
-          console.log("sa2")
-          setTableData({});
-          return;
-        }
-
-        if (!sa3Result) {
-          console.log("sa3")
-          setTableData({});
-          return;
-        }
-
-        console.log('SA4 table data:', sa4Result.capacityAnalysis);
-
-        // 4. Proses data untuk membuat tabel
+        // Proses data untuk membuat tabel (kode existing Anda)
         const newTable = [];
 
         sa1Result.pendekat.forEach((pendekat) => {
           const kode = pendekat.kodePendekat?.toUpperCase();
           const arahBerlawananKode = getArahBerlawanan(kode);
-
-          // Dapatkan fase aktif untuk pendekat ini
           const faseAktif = getFaseAktif(sa1Result.fase, kode);
+          const surveyResult = processSurveyData(sa2Result.surveyData, kode, arahBerlawananKode);
 
-          // Proses data survey
-          const surveyResult = processSurveyData(
-            sa2Result.surveyData,
-            kode,
-            arahBerlawananKode
-          );
-
-          // Buat row untuk setiap fase aktif
           faseAktif.forEach((fase) => {
-            const tableRow = createTableRow(
-              pendekat,
-              fase,
-              surveyResult,
-              sa4Result.capacityAnalysis.table
-            );
+            const tableRow = createTableRow(pendekat, fase, surveyResult, sa4Result?.capacityAnalysis?.table || []);
             newTable.push(tableRow);
           });
         });
 
-        console.log('Direction yang tersedia:', sa2Result?.surveyData?.map(d => d.direction));
-        console.log('new data', newTable);
-
-        // 5. Hitung total rasio dan nilai akhir
+        // Hitung total rasio dan nilai akhir
         const totalRasio = hitungTotalRasioArusPerPendekat(newTable);
-        const finalResult = calculateTableWithRasioFase(
-          newTable,
-          totalRasio,
-          sa3Result.tabelKonflik
-        );
+        const finalResult = calculateTableWithRasioFase(newTable, totalRasio, sa3Result);
+        console.log(finalResult)
 
-        // 6. Update state
-        setTableData((prev) => ({
-          ...prev,
-          tabel: finalResult.tableWithRasioFase,
-          foot: {
-            ...prev.foot,
-            ...finalResult.footerData
-          }
-        }));
+        // Buat tableData sementara
+        const tempTableData = {
+          foot: { ...finalResult.footerData },
+          tabel: finalResult.tableWithRasioFase
+        };
+
+        // Merge dengan data dari SA4 response
+        console.log('Merging SA-IV response with table data');
+        console.log('SA-IV response:', sa4Result);
+        const mergedTableData = mergeWithSAIVResponse(sa4Result, tempTableData);
+
+        // Update state dengan data yang sudah di-merge
+        setTableData(mergedTableData);
 
       } catch (e) {
         console.error('Gagal memproses data:', e);
         toast.error('Terjadi kesalahan saat memproses data', { position: 'top-right' });
       }
-    }
+    };
+
 
     loadData();
   }, [selectedId]);
