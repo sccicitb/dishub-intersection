@@ -41,6 +41,7 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
       }
     ]
   });
+
   const mergeWithSAIVResponse = (saivResponse, currentTableData) => {
     if (!saivResponse?.capacityAnalysis?.table) {
       console.warn('No capacity analysis table found in response');
@@ -542,6 +543,7 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
     return {
       whh: whhGlobal,
       dataFase: phaseData.map((phase) => {
+        console.log('Processing phase:', phase, 'with whh:', whhGlobal);
         // dari array `jarak` ke object keyed by type
         const jarakObj = {};
         phase.jarak.forEach((item) => {

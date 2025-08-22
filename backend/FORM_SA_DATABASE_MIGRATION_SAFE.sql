@@ -417,6 +417,8 @@ ALTER TABLE sa_iv_capacity_analysis
 ALTER TABLE sa_iv_capacity_analysis 
 ADD UNIQUE KEY unique_survey_pendekat_fase (survey_id, kode_pendekat, hijau_fase);
 
+ALTER TABLE sa_ii_vehicle_data
+MODIFY rktb_value DECIMAL(12,3);
 
 -- =====================================================
 -- MIGRATION COMPLETE
