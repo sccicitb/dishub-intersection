@@ -163,7 +163,7 @@ exports.getCompleteSurvey = async (req, res) => {
 
     // Get capacity analysis data
     const [footRows] = await sql.query("SELECT * FROM sa_iv_capacity_foot WHERE survey_id = ?", [headerId]);
-    
+
     const [capacityRows] = await sql.query("SELECT * FROM sa_iv_capacity_analysis WHERE survey_id = ?", [headerId]);
     // Get phase analysis data
     const [phaseRows] = await sql.query("SELECT * FROM sa_iv_phase_analysis WHERE survey_id = ?", [headerId]);
@@ -200,12 +200,12 @@ exports.getCompleteSurvey = async (req, res) => {
         kode_pendekat: item.kode_pendekat,
         hijau_fase: item.hijau_fase,
         tipe_pendekat: item.tipe_pendekat,
-        rasio_kendaraan_belok: item.rasio_kendaraan_belok,
-        arus_belok_kanan: item.arus_belok_kanan,
+        rasio_kendaraan_belok: safeJsonParse(item.rasio_kendaraan_belok),
+        arus_belok_kanan: safeJsonParse(item.arus_belok_kanan),
         lebar_efektif: item.lebar_efektif,
         arus_jenuh_dasar: item.arus_jenuh_dasar,
-        faktor_penyesuaian: item.faktor_penyesuaian,
-        arus_jenuh_yang_disesuaikan: item.arus_jenuh_yang_disesuaikan,
+        faktor_penyesuaian: safeJsonParse(item.faktor_penyesuaian),
+        arus_jenuh_yang_disesuaikan: safeJsonParse(item.arus_jenuh_yang_disesuaikan),
         arus_lalu_lintas: item.arus_lalu_lintas,
         rasio_arus: item.rasio_arus,
         rasio_fase: item.rasio_fase,
@@ -242,98 +242,147 @@ exports.getCompleteSurvey = async (req, res) => {
     });
   }
 };
-
-// Update complete SA-IV survey
+// Update complete SA-IV survey - OPTIMIZED VERSION
 exports.updateCompleteSurvey = async (req, res) => {
   const headerId = req.params.surveyId;
+  console.log("Payload:", JSON.stringify(req.body, null, 2));
   const { surveyHeader, capacityAnalysis, phaseAnalysis } = req.body;
 
-  if (!surveyHeader || !capacityAnalysis || !phaseAnalysis) {
+  if (!surveyHeader || !capacityAnalysis) {
     return res.status(400).json({
       success: false,
-      error: "Missing required data: surveyHeader, capacityAnalysis, or phaseAnalysis"
+      error: "Missing required data: surveyHeader, or capacityAnalysis"
     });
   }
 
-  // Start transaction
   const sql = require("../config/db.js");
-
   let connection;
+
   try {
     connection = await sql.getConnection();
 
+    // Start transaction properly
     await connection.beginTransaction();
 
-    // Update survey header
-    if (surveyHeader) {
-      const headerData = {
-        tanggal: surveyHeader.tanggal,
-        perihal: surveyHeader.perihal,
-        kabupaten_kota: surveyHeader.kabupatenKota || surveyHeader.kabupaten_kota,
-        lokasi: surveyHeader.lokasi,
-        ruas_jalan_mayor: Array.isArray(surveyHeader.ruasJalanMayor)
-          ? JSON.stringify(surveyHeader.ruasJalanMayor)
-          : surveyHeader.ruasJalanMayor,
-        ruas_jalan_minor: Array.isArray(surveyHeader.ruasJalanMinor)
-          ? JSON.stringify(surveyHeader.ruasJalanMinor)
-          : surveyHeader.ruasJalanMinor,
-        ukuran_kota: surveyHeader.ukuranKota || surveyHeader.ukuran_kota,
-        periode: surveyHeader.periode
-      };
+    // 1. Delete existing data in single query with multiple tables
+    await connection.query(`
+      DELETE cf, ca, pa FROM 
+      sa_iv_capacity_foot cf 
+      LEFT JOIN sa_iv_capacity_analysis ca ON cf.survey_id = ca.survey_id
+      LEFT JOIN sa_iv_phase_analysis pa ON cf.survey_id = pa.survey_id
+      WHERE cf.survey_id = ?
+    `, [headerId]);
 
-      await connection.query("UPDATE sa_survey_headers SET ? WHERE id = ?", [headerData, headerId]);
+    // Alternative if the above doesn't work - but keep them together
+    /*
+    await Promise.all([
+      connection.query("DELETE FROM sa_iv_capacity_foot WHERE survey_id = ?", [headerId]),
+      connection.query("DELETE FROM sa_iv_capacity_analysis WHERE survey_id = ?", [headerId]),
+      connection.query("DELETE FROM sa_iv_phase_analysis WHERE survey_id = ?", [headerId])
+    ]);
+    */
+
+    // 2. Insert capacity foot
+    await connection.query(
+      "INSERT INTO sa_iv_capacity_foot (survey_id, whh, sbp, S, ras) VALUES (?, ?, ?, ?, ?)",
+      [
+        headerId,
+        capacityAnalysis.foot.whh,
+        capacityAnalysis.foot.sbp,
+        capacityAnalysis.foot.S,
+        capacityAnalysis.foot.ras
+      ]
+    );
+
+    // 3. Batch insert capacity analysis - MUCH FASTER
+    if (capacityAnalysis.tabel && capacityAnalysis.tabel.length > 0) {
+      const capacityValues = [];
+      const capacityParams = [];
+
+      for (const analysis of capacityAnalysis.tabel) {
+        capacityValues.push(`(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+        capacityParams.push(
+          headerId,
+          analysis.kodePendekat,
+          analysis.hijauFase,
+          analysis.tipependekat,
+          JSON.stringify(analysis.rasioKendaraanBelok),
+          JSON.stringify(analysis.arusBelokKanan),
+          analysis.lebarEfektif,
+          analysis.arusJenuhDasar,
+          JSON.stringify(analysis.faktorPenyesuaian),
+          JSON.stringify(analysis.arusJenuhYangDisesuaikan),
+          analysis.arusLaluLintas,
+          analysis.rasioArus,
+          analysis.rasioFase,
+          analysis.waktuHijauPerFase,
+          analysis.kapasitas,
+          analysis.derajatKejenuhan
+        );
+      }
+
+      const capacityQuery = `
+        INSERT INTO sa_iv_capacity_analysis 
+        (survey_id, kode_pendekat, hijau_fase, tipe_pendekat, rasio_kendaraan_belok, arus_belok_kanan, 
+        lebar_efektif, arus_jenuh_dasar, faktor_penyesuaian, arus_jenuh_yang_disesuaikan, 
+        arus_lalu_lintas, rasio_arus, rasio_fase, waktu_hijau_per_fase, kapasitas, derajat_kejenuhan)
+        VALUES ${capacityValues.join(', ')}
+      `;
+
+      await connection.query(capacityQuery, capacityParams);
     }
 
-    // Delete existing data
-    await connection.query("DELETE FROM sa_iv_capacity_analysis WHERE survey_id = ?", [headerId]);
-    await connection.query("DELETE FROM sa_iv_phase_analysis WHERE survey_id = ?", [headerId]);
+    // 4. Batch insert phase analysis
+    if (phaseAnalysis && phaseAnalysis.length > 0) {
+      const phaseValues = [];
+      const phaseParams = [];
 
-    // Insert new capacity analysis data
-    for (const analysis of capacityAnalysis) {
-      const capacityData = {
-        survey_id: headerId,
-        kode_pendekat: analysis.kode_pendekat,
-        rasio_kendaraan_belok: JSON.stringify(analysis.rasio_kendaraan_belok),
-        arus_belok_kanan: JSON.stringify(analysis.arus_belok_kanan),
-        arus_jenuh_dasar: analysis.arus_jenuh_dasar,
-        faktor_penyesuaian: JSON.stringify(analysis.faktor_penyesuaian),
-        kapasitas: analysis.kapasitas,
-        derajat_kejenuhan: analysis.derajat_kejenuhan
-      };
+      for (const analysis of phaseAnalysis) {
+        phaseValues.push(`(?, ?, ?, ?)`);
+        phaseParams.push(
+          headerId,
+          analysis.kode_pendekat,
+          JSON.stringify(analysis.phases),
+          analysis.cycle_time
+        );
+      }
 
-      await connection.query("INSERT INTO sa_iv_capacity_analysis SET ?", capacityData);
-    }
+      const phaseQuery = `
+        INSERT INTO sa_iv_phase_analysis 
+        (survey_id, kode_pendekat, phases, cycle_time)
+        VALUES ${phaseValues.join(', ')}
+      `;
 
-    // Insert new phase analysis data
-    for (const analysis of phaseAnalysis) {
-      const phaseData = {
-        survey_id: headerId,
-        kode_pendekat: analysis.kode_pendekat,
-        phases: JSON.stringify(analysis.phases),
-        cycle_time: analysis.cycle_time
-      };
-
-      await connection.query("INSERT INTO sa_iv_phase_analysis SET ?", phaseData);
+      await connection.query(phaseQuery, phaseParams);
     }
 
     // Commit transaction
     await connection.commit();
 
-    connection.release();
     res.json({
       success: true,
       message: "SA-IV Survey updated successfully"
     });
 
   } catch (error) {
+    console.error("Error updating SA-IV survey:", error);
+
     if (connection) {
-      await connection.rollback();
-      connection.release();
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error("Rollback error:", rollbackError);
+      }
     }
+
     res.status(500).json({
       success: false,
       error: error.message || "Some error occurred while updating the SA-IV survey."
     });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 };
 

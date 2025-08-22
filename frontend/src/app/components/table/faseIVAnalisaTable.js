@@ -381,9 +381,14 @@ export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
             const faseData = data_fase?.find(
               item => (item.kode === kodePendekat) && (item.fase === parseInt(fKey))
             );
+            const flatFase = data_fase.flat(); // hilangkan nested array
+
+            console.log(flatFase.find(
+              item => item.kode === kodePendekat && String(item.fase) === String(fKey)
+            ));
 
             const wk = Number(faseData?.jarak?.lintasanBerangkat?.wk || 0);
-            // console.log(faseData?.jarak?.lintasanBerangkat?.wk)
+            console.log(faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan)
             const wms = Number(faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan || 0);
             console.log(faseData?.jarak?.lintasanBerangkat?.wmsDisesuaikan)
             const saivData = saiv?.table?.find(

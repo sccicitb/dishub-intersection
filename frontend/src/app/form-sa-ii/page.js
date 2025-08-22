@@ -16,7 +16,7 @@ const FormSAIIPage = () => {
   const [dataChart, setDataChart] = useState([]);
   const [dataTerlindung, setDataTerlindung] = useState([]);
   const [dataTerlawan, setDataTerlawan] = useState([]);
-  const [trafficData, setTrafficData] = useState([]);
+  const [trafficData, setTrafficData] = useState({});
   const [headerData, setHeader] = useState({});
   const [idSelect, setIdSelect] = useState(0);
   const [dataEmp, setDataEmp] = useState({
@@ -24,7 +24,7 @@ const FormSAIIPage = () => {
     terlawan: { mp: '', ks: '', sm: '' }
   });
   const [selectedId, setSelectedId] = useState(0);
-  // const [payloadData, setPayloadData] = useState({})
+  const [payloadData, setPayloadData] = useState({})
 
   const combineData = (buildings, camerasData) => {
     const result = buildings.filter(b => b.latitude != null && b.longitude != null).map(building => {
@@ -80,11 +80,9 @@ const FormSAIIPage = () => {
       periode: '',
       status: ''
     });
-    setTrafficData({ surveyData: [] });
+    setTrafficData({});
   }
 
-
-  let payload;
 
   const fetchAllMap = async () => {
     try {
@@ -114,15 +112,18 @@ const FormSAIIPage = () => {
       console.error(`${error}`)
     }
   }
+
   useEffect(() => {
+    let payload;
     payload = {
       ekuivalensi: { ...dataEmp },
       ...trafficData
       // fase: { ...faseApil }
     };
-    // setPayloadData(payload)
+    setPayloadData(payload)
+    console.log("Payload:", JSON.stringify(payload, null, 2));
 
-    console.log('Payload gabungan:', payload, headerData);
+    // console.log('Payload gabungan:', payload, headerData);
     console.log('id:', selectedId);
   }, [dataEmp, headerData, trafficData, selectedId]);
 
@@ -134,13 +135,14 @@ const FormSAIIPage = () => {
   }, [headerData, selectedId])
 
   const fetchCreateSAII = async () => {
-    payload = {
+    const payloadCreate = {
       ekuivalensi: { ...dataEmp },
       ...trafficData
     };
+    console.log("Payload:", JSON.stringify(payloadCreate, null, 2));
 
     try {
-      const res = await apiSAIIForm.createSAII(payload)
+      const res = await apiSAIIForm.createSAII(payloadCreate)
       if (res.status !== 200) {
         toast.error('Data Gagal Ditambahkan!', { position: 'top-center' })
         return;
@@ -151,13 +153,15 @@ const FormSAIIPage = () => {
   }
 
   const fetchUpdateSAII = async (id) => {
-    payload = {
+    const payloadUpdate = {
       ekuivalensi: { ...dataEmp },
       ...trafficData
     };
 
+    console.log("Payload:", JSON.stringify(payloadUpdate, null, 2));
+
     try {
-      const res = await apiSAIIForm.updateByIdSAII(id, payload)
+      const res = await apiSAIIForm.updateByIdSAII(id, payloadUpdate)
       if (res.status !== 200) {
         toast.error('Data Gagal Ditambahkan!', { position: 'top-center' })
         return;
@@ -201,6 +205,7 @@ const FormSAIIPage = () => {
                 } else {
                   fetchUpdateSAII(selectedId);
                 }
+                toast.dismiss();
               }}
               style={{
                 backgroundColor: '#4CAF50',
@@ -280,7 +285,7 @@ const FormSAIIPage = () => {
       <EkuivalensiForm setEMP={setDataEmp} selectedId={selectedId} />
       <Suspense fallback={<div className="my-5 w-full text-center">Loading...</div>}>
         <TrafficKinerjaTable dataEMP={dataEmp} selectedId={selectedId} setDataTraffic={setTrafficData} idSimpang={idSelect} />
-        <SimpangTrafficKinerja trafficData={trafficData}/>
+        <SimpangTrafficKinerja trafficData={trafficData} />
         {/* <div className="w-full">
           <EkuivalensiChart data={dataTerlindung} />
           <EkuivalensiChart data={dataTerlawan} />

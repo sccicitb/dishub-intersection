@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 
 const TrafficPhaseDiagram = ({ tableData }) => {
+  console.log('Received tableData:', tableData);
   // Calculate total cycle time from the data
   const calculateTotalCycle = () => {
     let maxTime = 0;
