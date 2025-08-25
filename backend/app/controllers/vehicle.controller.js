@@ -125,4 +125,74 @@ exports.getRataPer15Menit = (req, res) => {
   }, filter);
 };
 
+// =====================================================
+// TRAFFIC MATRIX OPERATIONS (NEW)
+// =====================================================
+
+// Get complete traffic matrix (asal-tujuan + arah pergerakan)
+exports.getTrafficMatrix = async (req, res) => {
+  try {
+    const { simpang_id, start_date, end_date } = req.query;
+    
+    // Validate required parameters
+    if (!simpang_id) {
+      return res.status(400).json({
+        success: false,
+        message: "simpang_id is required"
+      });
+    }
+    
+    if (!start_date || !end_date) {
+      return res.status(400).json({
+        success: false,
+        message: "start_date and end_date are required (format: YYYY-MM-DD)"
+      });
+    }
+    
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(start_date) || !dateRegex.test(end_date)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format. Use YYYY-MM-DD"
+      });
+    }
+    
+    // Validate date range
+    const startDate = new Date(start_date);
+    const endDate = new Date(end_date);
+    if (startDate > endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "start_date cannot be after end_date"
+      });
+    }
+    
+    // Get complete traffic matrix using Vehicle model
+    const result = await Vehicle.getCompleteTrafficMatrix(simpang_id, start_date, end_date);
+    
+    // Return success response with both matrices
+    res.json({
+      success: true,
+      message: "Traffic matrix retrieved successfully",
+      data: {
+        simpang_id: parseInt(simpang_id),
+        date_range: {
+          start_date: start_date,
+          end_date: end_date
+        },
+        asalTujuan: result.asalTujuan,
+        arahPergerakan: result.arahPergerakan
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error getting traffic matrix:", error);
+    res.status(500).json({
+      success: false,
+      message: `Error retrieving traffic matrix: ${error.message}`
+    });
+  }
+};
+
 

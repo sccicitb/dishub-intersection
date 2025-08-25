@@ -360,4 +360,182 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
   }
 };
 
+// ✅ NEW: Get origin-destination matrix for traffic analysis
+// Adopts date range pattern from existing functions for consistency
+Vehicle.getAsalTujuanMatrix = async (simpangId, startDate, endDate) => {
+  try {
+    // ✅ ADOPTED: Same date formatting pattern as existing functions
+    const formattedStartDate = `${startDate} 00:00:00`;
+    const formattedEndDate = `${endDate} 23:59:59`;
+    
+    // ✅ ADOPTED: Same query structure pattern with COUNT(*) for performance
+    const sql = `
+      SELECT 
+        dari_arah,
+        ke_arah,
+        COUNT(*) as total_vehicles
+      FROM arus 
+      WHERE ID_Simpang = ? 
+        AND waktu BETWEEN ? AND ?
+      GROUP BY dari_arah, ke_arah
+      ORDER BY dari_arah, ke_arah
+    `;
+    
+    // ✅ ADOPTED: Same parameter order and execution pattern
+    const [rows] = await db.query(sql, [simpangId, formattedStartDate, formattedEndDate]);
+    return rows;
+  } catch (error) {
+    throw new Error(`Error getting asal-tujuan matrix: ${error.message}`);
+  }
+};
+
+// ✅ NEW: Process raw origin-destination data into movement direction matrix (BKi, Lurus, BKa)
+// Uses traffic engineering rules to categorize movements
+Vehicle.processMovementDirection = (asalTujuanData) => {
+  try {
+    // Define all possible directions (Indonesian for matrix output)
+    const directions = ['barat', 'selatan', 'timur', 'utara'];
+    const movementTypes = ['Belok Kiri', 'Lurus', 'Belok Kanan'];
+    
+    // Direction mapping from English to Indonesian
+    const directionMap = {
+      'west': 'barat',
+      'south': 'selatan', 
+      'east': 'timur',
+      'north': 'utara'
+    };
+    
+    // Initialize result matrix with zeros
+    const result = {};
+    movementTypes.forEach(type => {
+      result[type] = {};
+      directions.forEach(dir => {
+        result[type][dir] = 0;
+      });
+      result[type]['Total'] = 0;
+    });
+    
+    // Process each origin-destination pair using traffic engineering rules
+    asalTujuanData.forEach(row => {
+      const { dari_arah, ke_arah, total_vehicles } = row;
+      
+      // Apply movement categorization rules based on traffic engineering
+      let movementType = null;
+      
+      if (dari_arah === 'east') {
+        if (ke_arah === 'south') movementType = 'Belok Kiri';      // East → South = BKi
+        else if (ke_arah === 'north') movementType = 'Belok Kanan'; // East → North = BKa
+        else if (ke_arah === 'west') movementType = 'Lurus';        // East → West = Lurus
+      }
+      else if (dari_arah === 'west') {
+        if (ke_arah === 'north') movementType = 'Belok Kiri';       // West → North = BKi
+        else if (ke_arah === 'south') movementType = 'Belok Kanan'; // West → South = BKa
+        else if (ke_arah === 'east') movementType = 'Lurus';        // West → East = Lurus
+      }
+      else if (dari_arah === 'north') {
+        if (ke_arah === 'west') movementType = 'Belok Kiri';        // North → West = BKi
+        else if (ke_arah === 'east') movementType = 'Belok Kanan';  // North → East = BKa
+        else if (ke_arah === 'south') movementType = 'Lurus';       // North → South = Lurus
+      }
+      else if (dari_arah === 'south') {
+        if (ke_arah === 'east') movementType = 'Belok Kiri';        // South → East = BKi
+        else if (ke_arah === 'west') movementType = 'Belok Kanan';  // South → West = BKa
+        else if (ke_arah === 'north') movementType = 'Lurus';       // South → North = Lurus
+      }
+      
+      // If movement type is determined, add to matrix
+      if (movementType) {
+        // Map English direction to Indonesian for matrix
+        const dariArahId = directionMap[dari_arah];
+        if (dariArahId) {
+          result[movementType][dariArahId] += total_vehicles;
+          result[movementType]['Total'] += total_vehicles;
+        }
+      }
+    });
+    
+    return result;
+  } catch (error) {
+    throw new Error(`Error processing movement direction: ${error.message}`);
+  }
+};
+
+// ✅ NEW: Build asal-tujuan matrix with totals (exactly like the dashboard image)
+Vehicle.buildAsalTujuanMatrix = (asalTujuanData) => {
+  try {
+    const directions = ['barat', 'selatan', 'timur', 'utara'];
+    
+    // Direction mapping from English to Indonesian
+    const directionMap = {
+      'west': 'barat',
+      'south': 'selatan', 
+      'east': 'timur',
+      'north': 'utara'
+    };
+    
+    // Initialize matrix with zeros
+    const matrix = {};
+    directions.forEach(dir => {
+      matrix[dir] = {};
+      directions.forEach(dest => {
+        matrix[dir][dest] = 0;
+      });
+      matrix[dir]['Total'] = 0;
+    });
+    
+    // Fill in actual data from database
+    asalTujuanData.forEach(row => {
+      const { dari_arah, ke_arah, total_vehicles } = row;
+      
+      // Map English directions to Indonesian
+      const dariArahId = directionMap[dari_arah] || dari_arah;
+      const keArahId = directionMap[ke_arah] || ke_arah;
+      
+      // Only process if both directions are valid
+      if (directions.includes(dariArahId) && directions.includes(keArahId)) {
+        matrix[dariArahId][keArahId] = total_vehicles;
+        matrix[dariArahId]['Total'] += total_vehicles;
+      }
+    });
+    
+    // Calculate column totals (vehicles arriving at each destination)
+    matrix['Total'] = {};
+    directions.forEach(dest => {
+      matrix['Total'][dest] = 0;
+      directions.forEach(origin => {
+        matrix['Total'][dest] += matrix[origin][dest];
+      });
+    });
+    
+    // Calculate grand total
+    matrix['Total']['Total'] = directions.reduce((sum, dir) => sum + matrix['Total'][dir], 0);
+    
+    return matrix;
+  } catch (error) {
+    throw new Error(`Error building asal-tujuan matrix: ${error.message}`);
+  }
+};
+
+// ✅ NEW: Get complete traffic matrix (both asal-tujuan and arah pergerakan)
+Vehicle.getCompleteTrafficMatrix = async (simpangId, startDate, endDate) => {
+  try {
+    // Get raw origin-destination data from database
+    const asalTujuanData = await Vehicle.getAsalTujuanMatrix(simpangId, startDate, endDate);
+    
+    // Process into movement direction matrix (BKi, Lurus, BKa)
+    const arahPergerakanData = Vehicle.processMovementDirection(asalTujuanData);
+    
+    // Build complete asal-tujuan matrix with totals
+    const asalTujuanMatrix = Vehicle.buildAsalTujuanMatrix(asalTujuanData);
+    
+    // Return both matrices in the exact format needed for dashboard
+    return {
+      asalTujuan: asalTujuanMatrix,
+      arahPergerakan: arahPergerakanData
+    };
+  } catch (error) {
+    throw new Error(`Error getting complete traffic matrix: ${error.message}`);
+  }
+};
+
 module.exports = Vehicle;

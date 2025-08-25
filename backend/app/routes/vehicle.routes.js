@@ -22,5 +22,12 @@ module.exports = app => {
   // router.get("/getRataPer15Menit", authenticateToken, requireViewerOrHigher, Vehicles.getRataPer15Menit);
   router.get("/getRataPer15Menit", Vehicles.getRataPer15Menit);
 
+  // =====================================================
+  // TRAFFIC MATRIX ROUTES (NEW)
+  // =====================================================
+
+  // Get complete traffic matrix (asal-tujuan + arah pergerakan)
+  router.get("/traffic-matrix", Vehicles.getTrafficMatrix);
+
   app.use('/api/vehicles', router);
 };
