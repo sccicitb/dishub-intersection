@@ -1,0 +1,71 @@
+{
+  "success": true,
+  "message": "Traffic matrix retrieved successfully",
+  "data": {
+    "simpang_id": 2,
+    "date_range": {
+      "start_date": "2025-03-28",
+      "end_date": "2025-03-28"
+    },
+    "asalTujuan": {
+      "barat": {
+        "barat": 0,
+        "selatan": 0,
+        "timur": 0,
+        "utara": 0,
+        "Total": 0
+      },
+      "selatan": {
+        "barat": 1306,
+        "selatan": 0,
+        "timur": 1289,
+        "utara": 1222,
+        "Total": 3817
+      },
+      "timur": {
+        "barat": 1202,
+        "selatan": 1280,
+        "timur": 0,
+        "utara": 1252,
+        "Total": 3734
+      },
+      "utara": {
+        "barat": 0,
+        "selatan": 0,
+        "timur": 0,
+        "utara": 0,
+        "Total": 0
+      },
+      "Total": {
+        "barat": 2508,
+        "selatan": 1280,
+        "timur": 1289,
+        "utara": 2474,
+        "Total": 7551
+      }
+    },
+    "arahPergerakan": {
+      "Belok Kiri": {
+        "barat": 0,
+        "selatan": 1289,
+        "timur": 1280,
+        "utara": 0,
+        "Total": 2569
+      },
+      "Lurus": {
+        "barat": 0,
+        "selatan": 1222,
+        "timur": 1202,
+        "utara": 0,
+        "Total": 2424
+      },
+      "Belok Kanan": {
+        "barat": 0,
+        "selatan": 1306,
+        "timur": 1252,
+        "utara": 0,
+        "Total": 2558
+      }
+    }
+  }
+}

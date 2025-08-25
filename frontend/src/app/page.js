@@ -2,31 +2,26 @@
 
 import { useEffect, useState, Suspense, lazy } from "react";
 import { vehicles } from "@/lib/apiAccess";
+import { survey } from "@/lib/apiService";
 import SocketConnection from "./components/testingSocket";
+import TableMatrix from "@/app/components/table/tableMatrix";
 
 const LintasChart = lazy(() => import("@/app/components/lintasChart"));
 const TotalChart = lazy(() => import("@/app/components/totalChart"));
 const GrafikRoad = lazy(() => import("@/app/components/roadChart"));
 const ChordDiagram = lazy(() => import("@/app/components/diagram/chord"))
 const OptionSelectMaps = lazy(() => import("@/app/components/simpang/optionSelectMaps"))
-// import CameraStatusTimeline from "@/app/components/cameraStatusTime";
 const CameraStream = lazy(() => import("@/app/components/cameraStream"));
 const MapComponent = lazy(() => import("@/app/components/map"));
+// import CameraStatusTimeline from "@/app/components/cameraStatusTime";
 
-// Lazy load dari react-icons/fa
 const FaCar = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaCar })));
 const FaTruck = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaTruck })));
 const FaBus = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaBus })));
 const FaMotorcycle = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaMotorcycle })));
-const FaBicycle = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaBicycle })));
 const FaShuttleVan = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaShuttleVan })));
-const FaTractor = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaTractor })));
 const FaTruckMoving = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaTruckMoving })));
 const FaCaravan = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaCaravan })));
-
-// Lazy load dari react-icons/fa6
-const FaArrowRightToBracket = lazy(() => import("react-icons/fa6").then(mod => ({ default: mod.FaArrowRightToBracket })));
-const FaArrowRightFromBracket = lazy(() => import("react-icons/fa6").then(mod => ({ default: mod.FaArrowRightFromBracket })));
 
 
 export default function Home () {
@@ -48,35 +43,6 @@ export default function Home () {
   const [activeFilter, setActiveFilter] = useState('day');
   const [activeFilterSection2, setActiveFilterSection2] = useState('day');
   const [periodDisplayText, setPeriodDisplayText] = useState('');
-
-  // Vehicle data objects
-  const incomingVehicles = {
-    labels: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
-    values: [342, 127, 89, 523, 64],
-    percentages: ['30%', '11%', '8%', '46%', '5%'],
-    vehicleTypes: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
-    iconComponents: [FaCar, FaTruck, FaBus, FaMotorcycle, FaBicycle],
-    centerIconComponent: <FaArrowRightToBracket size={28} className="text-green-500" />,
-    centerTitle: "Masuk",
-    tooltipLabels: ['Mobil masuk', 'Truk masuk', 'Bus masuk', 'Motor masuk', 'Sepeda masuk'],
-    color: '#4ade80',
-    thickness: 25,
-    format: 'unit'
-  };
-
-  const outgoingVehicles = {
-    labels: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
-    values: [315, 118, 76, 498, 59],
-    percentages: ['30%', '11%', '7%', '47%', '5%'],
-    vehicleTypes: ['Mobil', 'Truk', 'Bus', 'Motor', 'Sepeda'],
-    iconComponents: [FaCar, FaTruck, FaBus, FaMotorcycle, FaBicycle],
-    centerIconComponent: <FaArrowRightFromBracket size={28} className="text-red-500" />,
-    centerTitle: "Keluar",
-    tooltipLabels: ['Mobil keluar', 'Truk keluar', 'Bus keluar', 'Motor keluar', 'Sepeda keluar'],
-    color: '#BF3D3D',
-    thickness: 25,
-    format: 'unit'
-  };
 
   const [incomingVehiclesBar2, setIncomingVehiclesBar2] = useState({
     labels: [],
@@ -102,40 +68,17 @@ export default function Home () {
     format: 'unit'
   });
 
-  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(0);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const handleSelectOption = (location, date) => {
-    console.log("Lokasi dipilih dan tanggal:", location, date); // bisa access id, nama, lat, lon, dll
-    setSelectedLocation(location);
+    console.log("Lokasi dipilih dan tanggal:", location, date);
+    setSelectedLocation(location?.id ?? 0);
     setSelectedDate(date)
   };
 
-  // const incomingVehiclesBar2 = {
-  //   labels: ['Utara', 'Selatan', 'Timur', 'Barat'],
-  //   values: [342, 127, 89, 523, 64],
-  //   percentages: ['30%', '11%', '8%', '46%', '5%'],
-  //   directionRoad: ['Utara', 'Selatan', 'Timur', 'Barat'],
-  //   centerTitle: "Masuk",
-  //   tooltipLabels: ['Utara masuk', 'Selatan masuk', 'Timur masuk', 'Barat masuk'],
-  //   color: '#4ade80',
-  //   thickness: 25,
-  //   format: 'unit'
-  // };
-
-  // const outgoingVehiclesBar2 = {
-  //   labels: ['Utara', 'Selatan', 'Timur', 'Barat'],
-  //   values: [315, 118, 76, 498, 59],
-  //   percentages: ['30%', '11%', '7%', '47%', '5%'],
-  //   directionRoad: ['Utara', 'Selatan', 'Timur', 'Barat'],
-  //   centerTitle: "Keluar",
-  //   tooltipLabels: ['Mobil keluar', 'Selatan keluar', 'Timur keluar', 'Barat keluar', 'Sepeda keluar'],
-  //   color: '#BF3D3D',
-  //   thickness: 25,
-  //   format: 'unit'
-  // };
-
-  // Function to generate period display text
   const getPeriodDisplayText = (filter) => {
     const now = new Date();
     const options = { timeZone: 'Asia/Jakarta' };
@@ -451,101 +394,64 @@ export default function Home () {
     setPeriodDisplayText(getPeriodDisplayText(activeFilter));
   }, [])
 
-
+  const [dataMatrix, setDataMatrix] = useState([]);
   const [dataChord, setDataChord] = useState([]);
+  const categories = ["barat", "selatan", "timur", "utara"];
+
+  const fetchAPIMatrix = async (simpang_id, startDate, endDate) => {
+    try {
+      const response = await survey.getTrafficMatrix(simpang_id, startDate, endDate);
+      if (response.status === 200 && response.data) {
+        return response.data.data; // Assuming the API returns the matrix data in this structure
+      } else {
+        console.error("Failed to fetch traffic matrix:", response);
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching traffic matrix:", error);
+      return null;
+    }
+  };
 
   useEffect(() => {
-    import("@/data/DataChord.json").then((data) => setDataChord(data.default || []))
+    import("@/data/contohmatrix.json").then((data) => {
+      const asalTujuan = data.default.data.asalTujuan;
+
+      const data_matrix = categories.map(from => {
+        console.log(from, asalTujuan[from]); // debug
+        return categories.map(to => asalTujuan[from][to]);
+      });
+      setDataChord(data.default.data);
+      console.log("Data Chord:", data.default);
+      setDataMatrix(data_matrix);
+    });
   }, []);
 
-  // const matrix = [
-  //   // U   T   B   S
-  //   [0, 10, 30, 15], // U (dari U ke T, B, S)
-  //   [25, 0, 5, 20], // T
-  //   [10, 15, 0, 10], // B
-  //   [20, 10, 15, 0], // S
-  // ];
+  useEffect(() => {
+    if (selectedLocation !== 0 && (startDate || endDate)) {
+      fetchAPIMatrix(selectedLocation, startDate, endDate).then((data) => {
+        if (data) {
+          const asalTujuan = data.asalTujuan;
+          const data_matrix = categories.map(from => {
+            return categories.map(to => asalTujuan[from][to]);
+          });
+          setDataChord(data);
+          setDataMatrix(data_matrix);
+        } else {
+          import("@/data/contohmatrix.json").then((data) => {
+            const asalTujuan = data.default.data.asalTujuan;
 
-  // const categories = ["U", "T", "B", "S"];
-
-  // // Data dari gambar pertama - Matriks Asal-Tujuan (Kendaraan)
-  // const vehicleMatrix = [
-  //   //  ke_arah: barat, selatan, timur, utara
-  //   [0, 137, 4, 0],     // barat
-  //   [864, 0, 16, 0],    // selatan  
-  //   [950, 145, 0, 14],  // timur
-  //   [890, 121, 0, 0],   // utara
-  // ];
-
-  // const vehicleCategories = ["barat", "selatan", "timur", "utara"];
-  // const vehicleTotalsRow = [2704, 403, 20, 14]; // Total kolom
-  // const vehicleTotalsCol = [141, 880, 1109, 1011]; // Total baris
-  // const vehicleGrandTotal = 3141;
-
-  // // Data dari gambar kedua - Matriks Arah Pergerakan (Kendaraan)
-  // const movementMatrix = [
-  //   //        barat, selatan, timur, utara
-  //   [0, 137, 14, 0],      // Belok Kiri (890 total)
-  //   [950, 121, 16, 0],    // Lurus (1087 total)
-  //   [864, 145, 4, 0],     // Belok Kanan (1013 total - dari gambar terlihat 864+145+4)
-  // ];
-
-  // const movementCategories = ["barat", "selatan", "timur", "utara"];
-  // const movementLabels = ["Belok Kiri", "Lurus", "Belok Kanan"];
-  // const movementTotalsRow = [2704, 403, 34, 0]; // Total kolom (sama dengan tabel pertama)
-  // const movementTotalsCol = [1041, 1087, 1013]; // Total baris
-  // const movementGrandTotal = 3141;
-
-  const TableComponent = ({ title, matrix, rowLabels, colLabels, totalsRow, totalsCol, grandTotal }) => (
-    <div className="mb-5 bg-base-100 rounded-xl shadow-xs shadow-base-300 p-5">
-      <h3 className="text-lg font-semibold mb-4 text-center">{title}</h3>
-      <div className="w-full">
-        <table className="text-sm table-sm w-full border border-base-300 mx-auto">
-          <thead>
-            <tr>
-              <th className="border border-base-300 p-1.5 bg-base-200 font-semibold">
-                {title.includes("Asal") ? "ke_arah" : "arah_pergerakan"}
-              </th>
-              {colLabels?.map((cat, i) => (
-                <th key={i} className="border border-base-300 p-1.5 bg-base-200 font-semibold">
-                  {cat}
-                </th>
-              ))}
-              <th className="border border-base-300 p-1.5 bg-base-200 font-semibold">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {matrix?.map((row, fromIdx) => (
-              <tr key={fromIdx}>
-                <td className="border border-base-300 p-1.5 font-semibold bg-base-50">
-                  {rowLabels[fromIdx]}
-                </td>
-                {row.map((val, toIdx) => (
-                  <td key={toIdx} className="border border-base-300 p-1.5 text-center">
-                    {val === 0 ? "" : val.toLocaleString()}
-                  </td>
-                ))}
-                <td className="border border-base-300 p-1.5 text-center font-semibold">
-                  {totalsCol[fromIdx].toLocaleString()}
-                </td>
-              </tr>
-            ))}
-            <tr className="bg-base-200">
-              <td className="border border-base-300 p-1.5 font-semibold">Total</td>
-              {totalsRow?.map((total, i) => (
-                <td key={i} className="border border-base-300 p-1.5 text-center font-semibold">
-                  {total === 0 ? "" : total.toLocaleString()}
-                </td>
-              ))}
-              <td className="border border-base-300 p-1.5 text-center font-semibold">
-                {grandTotal.toLocaleString()}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+            const data_matrix = categories.map(from => {
+              return categories.map(to => asalTujuan[from][to]);
+            });
+            setDataChord(data.default);
+            console.log("Data Chord:", data.default);
+            setDataMatrix(data_matrix);
+          });
+        }
+      })
+    }
+  }, [selectedLocation, startDate, endDate]);
 
   if (!isClient) return null;
 
@@ -651,74 +557,26 @@ export default function Home () {
           </div>
         )}
       </Suspense>
-      {/* <div className="flex gap-6">
-        <div className="w-fit">
-          <ChordDiagram matrix={matrix} categories={categories} />
-        </div>
-
-        <div className="overflow-auto">
-          <table className="text-sm border border-gray-300">
-            <thead>
-              <tr>
-                <th className="border px-2 py-1 bg-base-200">Dari / Ke</th>
-                {categories.map((cat, i) => (
-                  <th key={i} className="border px-2 py-1 bg-base-200">{cat}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {matrix.map((row, fromIdx) => (
-                <tr key={fromIdx}>
-                  <td className="border px-2 py-1 font-medium bg-base-200">{categories[fromIdx]}</td>
-                  {row.map((val, toIdx) => (
-                    <td key={toIdx} className="border px-2 py-1 text-center">
-                      {fromIdx === toIdx ? "-" : val}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div> */}
-
       <div className="w-[90%] py-5 block bg-base-200 rounded-xl">
         <div className="w-64 px-5">
           <OptionSelectMaps
             onSelect={(selectedLocation) => handleSelectOption(selectedLocation, selectedDate)}
             onDateSelect={(selectedDate) => handleSelectOption(selectedLocation, selectedDate)}
             optionMap
-            optionDate
+            optionDateRange
+            startDateRange={setStartDate}
+            endDateRange={setEndDate}
           />
         </div>
-        {/* {selectedLocation && (
-          <div className="mt-4 text-sm text-green-600">
-            <strong>Lokasi dipilih:</strong> {selectedLocation.Nama_Simpang}
-          </div>
-        )} */}
-        <div className="w-full sm:flex overflow-x-auto place-items-center">
+        <div className="w-full lg:flex overflow-x-auto place-items-center">
           <div className="w-fit block m-auto">
-            <ChordDiagram matrix={dataChord?.chordDiagram?.matrix || {}} categories={dataChord?.chordDiagram?.categories || {}} />
+            <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
           </div>
           <div className="max-w-4xl mx-auto">
-            <TableComponent
-              title="Matriks Asal - Tujuan (kendaraan)"
-              matrix={dataChord?.vehicleMatrix?.matrix}
-              rowLabels={dataChord?.vehicleMatrix?.rowLabels}
-              colLabels={dataChord?.vehicleMatrix?.colLabels}
-              totalsRow={dataChord?.vehicleMatrix?.totalsRow}
-              totalsCol={dataChord?.vehicleMatrix?.totalsCol}
-              grandTotal={dataChord?.vehicleMatrix?.grandTotal}
-            />
-
-            <TableComponent
-              title="Matriks Arah Pergerakan (kendaraan)"
-              matrix={dataChord?.movementMatrix?.matrix}
-              rowLabels={dataChord?.movementMatrix?.rowLabels}
-              colLabels={dataChord?.movementMatrix?.colLabels}
-              totalsRow={dataChord?.movementMatrix?.totalsRow}
-              totalsCol={dataChord?.movementMatrix?.totalsCol}
-              grandTotal={dataChord?.movementMatrix?.grandTotal}
+            <TableMatrix
+              categories={categories}
+              asalTujuan={dataChord?.asalTujuan || {}}
+              arahPergerakan={dataChord?.asalTujuan || {}}
             />
           </div>
         </div>
