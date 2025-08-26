@@ -437,7 +437,8 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
               onSelect={(selectedLocation) => handleSelectOption(selectedLocation)}
               // onDateSelect={(selectedDate) => handleSelectOption(selectedLocation, selectedDate)}
               optionMap
-            // optionDate
+              optionDateRange={false}
+              optionDate={false}
             />
           </div>
 
