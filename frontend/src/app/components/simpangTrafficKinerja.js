@@ -267,7 +267,7 @@ const SimpangTrafficKinerja = (trafficData) => {
 
       </Suspense>
 
-      <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
+      {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
         <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>
         <pre className="text-xs whitespace-pre-wrap break-all max-h-96 overflow-auto bg-white p-2 rounded border border-gray-300">
           {JSON.stringify(trafficData ?? [], null, 2)}
@@ -279,7 +279,7 @@ const SimpangTrafficKinerja = (trafficData) => {
         <pre className="text-xs whitespace-pre-wrap break-all max-h-96 overflow-auto bg-white p-2 rounded border border-gray-300">
           {JSON.stringify(dataSimpang ?? {}, null, 2)}
         </pre>
-      </div>
+      </div> */}
     </div>
   );
 };

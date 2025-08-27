@@ -29,6 +29,9 @@ router.get("/:surveyId", saIIController.getCompleteSurvey);
 // Get aggregated vehicle data for SA-II Arus Kendaraan
 router.get("/:surveyId/arus-kendaraan", saIIController.getArusKendaraan);
 
+// Get directed vehicle data for SA-II Arus Kendaraan
+router.get("/checkDirection/:simpangId/", saIIController.checkAvailableDirections);
+
 // Update a complete SA-II survey
 router.put("/:surveyId", saIIController.updateCompleteSurvey);
 

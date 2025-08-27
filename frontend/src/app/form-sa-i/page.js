@@ -299,6 +299,7 @@ const FormSAIPage = () => {
           setDataLapangan={setLapangan}
           selectedId={selectedId}
           setFaseApil={setFaseApil}
+          dataHeader={headerData}
         />
         <FaseApilTable
           setDataFaseApil={setFaseApil}

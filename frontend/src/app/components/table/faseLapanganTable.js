@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { GoPlus } from "react-icons/go";
 import { FaMinus } from "react-icons/fa6";
-import { apiSAIForm } from '@/lib/apiService';
+import { apiSAIForm, apiSAIIForm } from '@/lib/apiService';
 import { toast } from 'react-toastify';
 
 
-export default function FaseLapanganTable ({ setDataLapangan, selectedId, setFaseApil }) {
+export default function FaseLapanganTable ({ setDataLapangan, selectedId, setFaseApil, dataHeader }) {
   const [formData, setFormData] = useState({
     pendekat: [
       {
@@ -28,13 +28,13 @@ export default function FaseLapanganTable ({ setDataLapangan, selectedId, setFas
     ]
   });
 
-  const kodePendekataOptions = [
+  const [kodePenOption, setKodePenOption] = useState([
     { value: "", label: "Pilih Kode Pendekat" },
-    { value: "U", label: "U (Utara)" },
-    { value: "S", label: "S (Selatan)" },
-    { value: "B", label: "B (Barat)" },
-    { value: "T", label: "T (Timur)" }
-  ];
+    // { value: "U", label: "U (Utara)" },
+    // { value: "S", label: "S (Selatan)" },
+    // { value: "B", label: "B (Barat)" },
+    // { value: "T", label: "T (Timur)" }
+  ]);
 
   const tipeLingkunganOptions = [
     { value: "", label: "Pilih Tipe Lingkungan" },
@@ -169,24 +169,6 @@ export default function FaseLapanganTable ({ setDataLapangan, selectedId, setFas
 
         setFormData(DataFormatted);
 
-        // const DataFormatted = {
-        //   pendekat: apiData.pendekat?.map(p => ({
-        //     kodePendekat: p.kodePendekat || "",
-        //     tipeLingkunganJalan: p.tipeLingkunganJalan || "",
-        //     kelasHambatanSamping: p.kelasHambatanSamping || "",
-        //     median: p.median || "",
-        //     kelandaianPendekat: p.kelandaianPendekat || "",
-        //     bkjt: p.bkjt || "",
-        //     jarakKeKendaraanParkir: p.jarakKeKendaraanParkir || "",
-        //     lebarPendekat: {
-        //       awalLajur: p.lebarAwalLajur || "",
-        //       garisHenti: p.lebarGarisHenti || "",
-        //       lajurBki: p.lebarLajurBki || "",
-        //       lajurKeluar: p.lebarLajurKeluar || ""
-        //     }
-        //   }))
-        // }
-
         setFaseApil(apiData.fase)
         setDataLapangan(DataFormatted);
         console.log(apiData);
@@ -229,82 +211,108 @@ export default function FaseLapanganTable ({ setDataLapangan, selectedId, setFas
   };
 
   const handleSubmit = () => {
-  // Validasi wajib
-  const hasEmptyRequired = formData.pendekat.some(item =>
-    !item.kodePendekat || !item.tipeLingkunganJalan || !item.kelasHambatanSamping
-  );
+    // Validasi wajib
+    const hasEmptyRequired = formData.pendekat.some(item =>
+      !item.kodePendekat || !item.tipeLingkunganJalan || !item.kelasHambatanSamping
+    );
 
-  if (hasEmptyRequired) {
-    alert('Harap lengkapi field wajib: Kode Pendekat, Tipe Lingkungan Jalan, dan Kelas Hambatan Samping');
-    return;
-  }
-
-  const cleanData = {
-    ...formData,
-    pendekat: formData.pendekat
-      .map(item => ({
-        ...item,
-        lebarPendekat: Object.fromEntries(
-          Object.entries(item.lebarPendekat || {})
-            .filter(([key, value]) => value.trim() !== '')
-        )
-      }))
-      .filter(item => item.kodePendekat)
-  };
-
-  // Mapping untuk kode → nama pendekat
-  const pendekatMap = {
-    U: 'utara',
-    S: 'selatan',
-    T: 'timur',
-    B: 'barat'
-  };
-
-  // Template fase default
-  const defaultFaseObj = {
-    tipe_pendekat: {
-      terlindung: true,
-      terlawan: false
-    },
-    arah: {
-      bki: true,
-      bkijt: false,
-      lurus: true,
-      bka: false
-    },
-    pemisahan_lurus_bka: false,
-    fase: {
-      fase_1: true,
-      fase_2: false,
-      fase_3: false,
-      fase_4: false
+    if (hasEmptyRequired) {
+      alert('Harap lengkapi field wajib: Kode Pendekat, Tipe Lingkungan Jalan, dan Kelas Hambatan Samping');
+      return;
     }
+
+    const cleanData = {
+      ...formData,
+      pendekat: formData.pendekat
+        .map(item => ({
+          ...item,
+          lebarPendekat: Object.fromEntries(
+            Object.entries(item.lebarPendekat || {})
+              .filter(([key, value]) => value.trim() !== '')
+          )
+        }))
+        .filter(item => item.kodePendekat)
+    };
+
+    // Mapping untuk kode → nama pendekat
+    const pendekatMap = {
+      U: 'utara',
+      S: 'selatan',
+      T: 'timur',
+      B: 'barat'
+    };
+
+    // Template fase default
+    const defaultFaseObj = {
+      tipe_pendekat: {
+        terlindung: true,
+        terlawan: false
+      },
+      arah: {
+        bki: true,
+        bkijt: false,
+        lurus: true,
+        bka: false
+      },
+      pemisahan_lurus_bka: false,
+      fase: {
+        fase_1: true,
+        fase_2: false,
+        fase_3: false,
+        fase_4: false
+      }
+    };
+
+    // Generate ulang fase sesuai kodePendekat
+    const newFase = {};
+    cleanData.pendekat.forEach(p => {
+      const key = pendekatMap[p.kodePendekat.toUpperCase()];
+      if (key) {
+        newFase[key] = { ...defaultFaseObj };
+      }
+    });
+
+    // Simpan fase baru
+    cleanData.fase = newFase;
+
+    // Optional: agar React detect perubahan meskipun sama
+    cleanData.updatedAt = Date.now();
+    // console.log(cleanData)
+    // console.log(newFase)
+    setDataLapangan(cleanData);
+    setFaseApil(newFase);
+
+    console.log('Data Pendekat yang akan dikirim:', cleanData);
+    alert('Data berhasil disimpan & fase default digenerate ulang!');
   };
 
-  // Generate ulang fase sesuai kodePendekat
-  const newFase = {};
-  cleanData.pendekat.forEach(p => {
-    const key = pendekatMap[p.kodePendekat.toUpperCase()];
-    if (key) {
-      newFase[key] = { ...defaultFaseObj };
+  useEffect(() => {
+    console.log(dataHeader)
+    const getDirectionData = async () => {
+      if (!dataHeader.simpangId || dataHeader.simpangId === 0 || dataHeader.simpangId === '0') return;
+
+      const pendekatMap = {
+        U: 'Utara',
+        S: 'Selatan',
+        T: 'Timur',
+        B: 'Barat'
+      };
+
+      try {
+        const response = await apiSAIIForm.checkDirection(dataHeader.simpangId);
+        if (response.status === 200) {
+          console.log('Data arah yang tersedia:', response.data.directions);
+          setKodePenOption(response?.data?.directions?.map(dir => ({ value: dir.toUpperCase(), label: pendekatMap[dir.toUpperCase()] })));
+        } else {
+          console.warn('Gagal mengambil data arah:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching direction data:', error);
+      }
     }
-  });
+    getDirectionData();
+  }, [dataHeader.simpangId]);
 
-  // Simpan fase baru
-  cleanData.fase = newFase;
-
-  // Optional: agar React detect perubahan meskipun sama
-  cleanData.updatedAt = Date.now();
-  // console.log(cleanData)
-  // console.log(newFase)
-  setDataLapangan(cleanData);
-  setFaseApil(newFase);
-
-  console.log('Data Pendekat yang akan dikirim:', cleanData);
-  alert('Data berhasil disimpan & fase default digenerate ulang!');
-};
-
-  
   return (
     <div className="w-full mx-auto p-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-6">Form Data Lapangan</h2>
@@ -350,7 +358,7 @@ export default function FaseLapanganTable ({ setDataLapangan, selectedId, setFas
                   className="w-full select select-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-0 focus:ring-0 focus:border-transparent"
                   required
                 >
-                  {kodePendekataOptions.map(option => (
+                  {kodePenOption.map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
