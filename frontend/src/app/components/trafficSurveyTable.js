@@ -4,9 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { apiSAIForm, apiSAIIForm } from '@/lib/apiService';
 import { useAuth } from '../context/authContext';
 import { TbReload } from "react-icons/tb";
+import { toast } from 'react-toastify';
 import { BiMath } from "react-icons/bi";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) => {
   const { setLoading } = useAuth()
@@ -58,6 +57,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
       if (response && response.data) {
         return response.data.data || [];
       }
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
@@ -74,6 +74,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
       if (response && response.data) {
         return response.data.data || [];
       }
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
@@ -176,7 +177,10 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
     try {
       const response = await apiSAIForm.getByIdSAI(id);
       console.log(response)
-      return response?.data?.data?.pendekat || [];
+      if (response.data.success === true) {
+        toast.success('Data SA I berhasil diambil', { autoClose: 2000, position: "top-center" });
+        return response?.data?.data?.pendekat || [];
+      }
     } catch (error) {
       console.error('Gagal fetch data dari API:', error);
       return [];
@@ -235,7 +239,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
           subtotal[kendaraan].kendjam += kendjam;
           subtotal[kendaraan].terlindung += terlindung;
           subtotal[kendaraan].terlawan += terlawan;
-          
+
           if (kendaraan === 'sm') {
             subtotal[kendaraan].smpTerlindung += terlindung;
             subtotal[kendaraan].smpTerlawan += terlawan;
@@ -316,7 +320,6 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
   };
 
   const fetchData = async () => {
-    console.log("testsa", selectedId);
 
     if (selectedId === 0 || selectedId === '0' || !selectedId) {
       setTrafficData({ surveyData: [] });
@@ -326,13 +329,11 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
 
     try {
       if (!selectedId || selectedId === 0 || selectedId === '0') return;
-      
+
       // Ambil data dari API
       const pendekatArr = await getPendekatFromAPI(selectedId);
-      console.log(pendekatArr)
       const generated = await generateSurveyDataFromPendekat(pendekatArr);
-      console.log(generated)
-      
+
       // Jika ada dataEMP, langsung hitung data
       if (dataEMP?.terlindung && dataEMP?.terlawan && generated.length > 0) {
         const calculatedData = await calculateDataDirectly(generated);
@@ -343,7 +344,6 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
         setTrafficData({ surveyData: generated });
         setDataTraffic({ surveyData: generated });
       }
-      
       console.log("Data sent to parent:", generated);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -352,20 +352,21 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
     }
   };
 
-  const recalculateData = async () => {
-    if (!trafficData?.surveyData?.length || !dataEMP?.terlindung || !dataEMP?.terlawan) return;
-
-    const calculatedData = await calculateDataDirectly(trafficData.surveyData);
-    setTrafficData({ surveyData: calculatedData });
-    setDataTraffic({ surveyData: calculatedData });
-  };
-
   useEffect(() => {
-    fetchData();
+    if (selectedId !== 0) {
+      (async () => {
+        try {
+          await fetchData();
+        } catch (err) {
+          console.error("Error in useEffect async:", err);
+        }
+      })();
+    }
   }, [selectedId]);
 
+
   useEffect(() => {
-    if (trafficData?.surveyData?.length > 0 && dataEMP?.terlindung && dataEMP?.terlawan) {
+    if (selectedId !== 0 && trafficData?.surveyData?.length > 0 && dataEMP?.terlindung && dataEMP?.terlawan) {
       const recalculate = async () => {
         const calculatedData = await calculateDataDirectly(trafficData.surveyData);
         setTrafficData({ surveyData: calculatedData });
@@ -373,12 +374,10 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
       };
       recalculate();
     }
-  }, [dataEMP]);
+  }, [selectedId, dataEMP]);
 
   const loadDataNew = async () => {
     try {
-      setLoading(true);
-      
       // ambil data arus terbaru
       const dataArus = await fetchDataSAIIArus(selectedId);
 
@@ -398,7 +397,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
           // ambil data dari dataArus
           const arusData = dataArus[kode] || {
             mp: [0, 0, 0],
-            ks: [0, 0, 0], 
+            ks: [0, 0, 0],
             sm: [0, 0, 0],
             ktb: [0, 0, 0],
             rktb: [0, 0, 0]
@@ -436,40 +435,36 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
         setTrafficData({ surveyData: cleanedResult });
         setDataTraffic({ surveyData: cleanedResult });
       }
-      
-      toast.success('Data berhasil dimuat ulang!');
+
+      // toast.success('Data berhasil dimuat ulang!', { autoClose: 2000, position: "top-center" });
     } catch (err) {
       console.error("Gagal load data arus terbaru:", err);
       setTrafficData({ surveyData: [] });
       setDataTraffic({ surveyData: [] });
-      toast.error('Gagal memuat data baru.');
-    } finally {
-      setLoading(false);
+      toast.error('Gagal memuat data baru.', { autoClose: 2000, position: "top-center" });
     }
   };
 
   const handleRecalculate = async () => {
     if (!trafficData?.surveyData?.length) {
-      toast.warning('Tidak ada data untuk dihitung ulang. Silakan ambil data terlebih dahulu.');
+      toast.warning('Tidak ada data untuk dihitung ulang. Silakan ambil data terlebih dahulu.', { autoClose: 2000, position: "top-center" });
       return;
     }
 
     if (!dataEMP?.terlindung || !dataEMP?.terlawan) {
-      toast.warning('Data EMP belum lengkap. Pastikan data EMP terlindung dan terlawan sudah terisi.');
+      toast.warning('Data EMP belum lengkap. Pastikan data EMP terlindung dan terlawan sudah terisi.', { autoClose: 2000, position: "top-center" });
       return;
     }
 
     try {
-      setLoading(true);
+      // setLoading(true);
       const calculatedData = await calculateDataDirectly(trafficData.surveyData);
+      // toast.success('Perhitungan berhasil diperbarui!', { autoClose: 2000, position: "top-center" });
       setTrafficData({ surveyData: calculatedData });
       setDataTraffic({ surveyData: calculatedData });
-      toast.success('Perhitungan berhasil diperbarui!');
     } catch (error) {
       console.error('Error recalculating data:', error);
-      toast.error('Gagal menghitung ulang data.');
-    } finally {
-      setLoading(false);
+      toast.error('Gagal menghitung ulang data.', { autoClose: 2000, position: "top-center" });
     }
   };
 
@@ -521,18 +516,153 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
       }
     );
   }
+
   const renderTableRows = () => {
     const rows = [];
 
-    console.log("test", trafficData)
+    console.log("test", trafficData);
 
-    if (!trafficData || !trafficData.surveyData) {
+    // Jika trafficData kosong atau surveyData kosong, tampilkan row contoh kosong
+    if (!trafficData || !trafficData.surveyData || trafficData.surveyData.length === 0) {
+      rows.length = 0;
+
+      // Buat contoh row kosong untuk 4 direction (U, S, T, B)
+      const emptyDirections = [
+        { direction: "U", rows: [] },
+        { direction: "S", rows: [] },
+        { direction: "T", rows: [] },
+        { direction: "B", rows: [] }
+      ];
+
+      emptyDirections.forEach((directionData, dirIndex) => {
+        // Buat 3 row kosong untuk setiap direction (BKi/BKIJT, Lurus, BKa)
+        const emptyRowTypes = ["BKi / BKIJT", "Lurus", "BKa"];
+
+        emptyRowTypes.forEach((rowType, rowIndex) => {
+          rows.push(
+            <tr key={`${dirIndex}-${rowIndex}-empty`} className="border-gray-300">
+              {rowIndex === 0 && (
+                <td
+                  rowSpan={emptyRowTypes.length + 1} // +1 untuk subtotal
+                  className="border-r border-gray-400 px-2 py-3 text-center font-semibold bg-base-100 align-middle"
+                >
+                  {directionData.direction}
+                </td>
+              )}
+              <td className="border-r border-gray-300 px-2 py-1 text-xs bg-base-50">
+                {rowType}
+              </td>
+
+              {/* MP - kosong */}
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center text-blue-600 font-semibold">
+                0
+              </td>
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
+                0
+              </td>
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
+                0
+              </td>
+
+              {/* KS - kosong */}
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center text-blue-600 font-semibold">
+                0
+              </td>
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
+                0
+              </td>
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
+                0
+              </td>
+
+              {/* SM - kosong */}
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center text-blue-600 font-semibold">
+                0
+              </td>
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
+                0
+              </td>
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
+                0
+              </td>
+
+              {/* Total - kosong */}
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center text-blue-600 font-semibold">
+                0
+              </td>
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center text-green-600 font-semibold">
+                0
+              </td>
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center text-green-600 font-semibold">
+                0
+              </td>
+
+              {/* KTB - kosong */}
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center">
+                0
+              </td>
+              <td className="border-r border-gray-300 px-1 py-1 text-xs text-center text-blue-600 font-semibold">
+                0
+              </td>
+
+              {/* RKTB - kosong */}
+              <td className="px-1 py-1 text-xs text-center bg-base-200">
+                0
+              </td>
+            </tr>
+          );
+        });
+
+        // Tambahkan row subtotal kosong
+        rows.push(
+          <tr key={`subtotal-${dirIndex}-empty`} className="bg-base-100 font-semibold border-gray-400">
+            <td className="border-r border-gray-300 px-2 py-1 text-xs">Total</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold"></td>
+            <td className="border-r border-gray-300 px-1 py-1 text-xs text-center font-semibold">0</td>
+            <td className="px-1 py-1 text-xs text-center font-semibold bg-base-200">0</td>
+          </tr>
+        );
+      });
+
       return rows;
     }
 
-    console.log("test", trafficData)
+    // Kode existing untuk menampilkan data yang ada
     trafficData.surveyData?.forEach((directionData, dirIndex) => {
-      const rowsData = directionData?.rows || []; // fallback empty array
+      const rowsData = directionData?.rows || [];
+
+      if (rowsData.length === 0 || !Array.isArray(rowsData)) {
+        // render baris kosong 1x untuk direction ini
+        rows.push(
+          <tr key={`${dirIndex}-empty`}>
+            <td
+              rowSpan={1}
+              className="border-r border-gray-400 px-2 py-3 text-center font-semibold bg-base-100 align-middle"
+            >
+              {directionData?.direction || ""}
+            </td>
+            {Array.from({ length: 15 }).map((_, i) => (
+              <td key={i} className="border px-2 py-2 text-center">
+                0
+              </td>
+            ))}
+          </tr>
+        );
+        return;
+      }
+
       rowsData.forEach((row, rowIndex) => {
         const mp = row?.mp || { kendjam: 0, terlindung: 0, terlawan: 0 };
         const ks = row?.ks || { kendjam: 0, terlindung: 0, terlawan: 0 };
@@ -643,7 +773,6 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
         </tr>
       );
     });
-
 
     return rows;
   };

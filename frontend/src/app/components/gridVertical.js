@@ -37,7 +37,7 @@ const GridVertical = ({ position, data, category = false, col }) => {
   }, [data]);
 
   return (
-    <div className={`flex w-40 ${col ? 'min-h-24' : 'h-fit'} bg-stone-300 justify-evenly text-xs relative`}>
+    <div className={`flex ${!position && 'flex-row-reverse'} w-40 ${col ? 'min-h-24' : 'h-fit'} bg-stone-300 justify-evenly text-xs relative`}>
       {/* Row 1 - Arrow Up */}
       <div className={`flex ${!position ? "flex-col-reverse" : "flex-col"} w-full h-full justify-end items-center`}>
         <div className={`grid ${col ? 'grid-rows-' + col + ' ' : 'grid-rows-4'} h-full`}>
@@ -47,7 +47,7 @@ const GridVertical = ({ position, data, category = false, col }) => {
             </div>
           ))}
         </div>
-        <HiMiniArrowTurnUpLeft className={`text-2xl p-0.5 ${position ? 'tranform rotate-180 scale-x-[-1] ' : ''}`} />
+        <HiMiniArrowTurnUpLeft className={`text-2xl p-0.5 ${position ? 'tranform rotate-180 scale-x-[-1] ' : 'transform scale-x-[-1]'}`} />
       </div>
 
       {/* Row 2 - Arrow Back */}
@@ -71,7 +71,7 @@ const GridVertical = ({ position, data, category = false, col }) => {
             </div>
           ))}
         </div>
-        <HiOutlineArrowTurnUpRight className={`text-2xl p-0.5 ${position ? ' transform scale-x-[-1] rotate-180' : ''}`} />
+        <HiOutlineArrowTurnUpRight className={`text-2xl p-0.5 ${position ? ' transform scale-x-[-1] rotate-180' : 'transform scale-x-[-1]'}`} />
       </div>
 
       {category && (

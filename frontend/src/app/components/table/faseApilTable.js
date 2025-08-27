@@ -237,9 +237,9 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan, dataFase }) => {
   const directions = Object.keys(data.data);
 
 
-  if (!data || !data.data || Object.keys(data.data).length === 0) {
-    return <div className="p-4 text-red-500 font-semibold">⚠️ Data tidak tersedia</div>;
-  }
+  // if (!data || !data.data || Object.keys(data.data).length === 0) {
+  //   return <div className="p-4 text-red-500 font-semibold">⚠️ Data tidak tersedia</div>;
+  // }
 
   return (
     <div className="p-6 bg-white">
@@ -325,9 +325,6 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan, dataFase }) => {
               </th>
               <th className="border border-black p-2 bg-gray-100 text-[12px] font-medium">
                 Fase 4
-              </th>
-              <th className="border border-black p-2 bg-gray-100 text-[12px] font-medium">
-                Aksi
               </th>
             </tr>
           </thead>

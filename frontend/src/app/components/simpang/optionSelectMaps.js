@@ -100,8 +100,8 @@ const OptionSelectMaps = ({
   optionMap = false,
   optionDate = false,
   optionDateRange = false,
-  startDateRange = '',
-  endDateRange = '',
+  startDateRange = () => {},
+  endDateRange = () => {},
 }) => {
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
@@ -195,8 +195,8 @@ const OptionSelectMaps = ({
   useEffect(() => {
     setFilteredBuildings(buildings);
     onDateSelect?.(buildings);
-    endDateRange(endDate);
-    startDateRange(startDate);
+    endDateRange?.(endDate);
+    startDateRange?.(startDate);
   }, [buildings, selectedDate, startDate, endDate]);
 
   // Clear handler
@@ -215,6 +215,7 @@ const OptionSelectMaps = ({
       {(optionDate || optionDateRange) && (
         <Dropdown
           isOpen={isDateDropdownOpen}
+          onClose={() => setIsDateDropdownOpen(false)} 
           onToggle={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
           label={getDateLabel()}
         >
@@ -240,6 +241,7 @@ const OptionSelectMaps = ({
         <Dropdown
           isOpen={isLocationDropdownOpen}
           onToggle={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
+          onClose={() => setIsDateDropdownOpen(false)} 
           label={`Lokasi (${filteredBuildings.length}) ${locationName ? `: ${locationName}` : ''}`}
           className="min-w-full"
         >

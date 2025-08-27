@@ -77,15 +77,9 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
       if (response && response.data) {
         setDataLocalHead(response.data.data || []);
       }
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching survey data:', error);
-      // Fallback to localStorage if API fails
-      // const stored = localStorage.getItem('data');
-      // if (stored) {
-      //   const parsed = JSON.parse(stored);
-      //   setDataLocalHead(parsed.data || []);
-      // }
-    } finally {
       setLoading(false);
     }
   };
@@ -142,52 +136,17 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
       } else {
         setDataHeader(cleanData);
       }
+      setLoading(false);
 
     } catch (error) {
       console.error('Error saving data:', error);
       alert('Gagal menyimpan data. Silakan coba lagi.');
-
-      // // Fallback to localStorage if API fails
-      // const raw = localStorage.getItem('data');
-      // let existing = raw ? JSON.parse(raw) : {
-      //   data: { headerData: [], sa1: {}, sa2: {}, sa3: {} }
-      // };
-
-      // if (!Array.isArray(existing.data.headerData)) {
-      //   existing.data.headerData = [];
-      // }
-
-      // // Kalau sedang edit (sudah ada id)
-      // if (cleanData.id > 0) {
-      //   const index = existing.data.headerData.findIndex(item => item.id === cleanData.id);
-      //   if (index !== -1) {
-      //     existing.data.headerData[index] = cleanData; // update
-      //   } else {
-      //     existing.data.headerData.push({ ...cleanData, id: Date.now() }); // fallback kalau id tidak ditemukan
-      //   }
-      // } else {
-      //   // Kalau tambah baru
-      //   const newId = Date.now();
-      //   existing.data.headerData.push({ ...cleanData, id: newId });
-      // }
-
-      // // Simpan kembali ke localStorage
-      // localStorage.setItem('data', JSON.stringify(existing));
-      // setDataHeader(cleanData);
-    } finally {
       setLoading(false);
     }
   };
 
   const refreshData = async () => {
     await fetchSurveyData();
-
-    // Commented out localStorage fallback
-    // const stored = localStorage.getItem('data');
-    // if (stored) {
-    //   const parsed = JSON.parse(stored);
-    //   setDataLocalHead(parsed.data?.headerData || []);
-    // }
   }
 
   const handleSelect = async (e) => {
@@ -220,12 +179,10 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
         setSelectedId(selectedId || 0);
         setDataHeader(selectedData);
       }
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching survey by ID:', error);
 
-      // Fallback to local data
-      // const selectedData = dataLocalHead.find(item => item.id.toString() === selectedId);
-      // if (selectedData) {
       setFormData({
         id: 0,
         tanggal: '',
@@ -239,11 +196,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
         perihal: '',
         periode: ''
       });
-      // setSelectedId(selectedData.id || 0);
       setSelectedId(0);
-      // setDataHeader(selectedData);
-      // }
-    } finally {
       setLoading(false);
     }
   };
@@ -437,7 +390,8 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
               onSelect={(selectedLocation) => handleSelectOption(selectedLocation)}
               // onDateSelect={(selectedDate) => handleSelectOption(selectedLocation, selectedDate)}
               optionMap
-            // optionDate
+              optionDateRange={false}
+              optionDate={false}
             />
           </div>
 

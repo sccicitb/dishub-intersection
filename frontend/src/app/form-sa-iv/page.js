@@ -2,8 +2,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { cameras } from '@/lib/apiService';
 import { apiSAIVForm } from "@/lib/apiService";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import DisabledWrapper from "../components/form/disabledWrapper";
+import { toast } from 'react-toastify';
+import { Loading } from "../components/form/Loading";
 
 const FaseApilTable = lazy(() => import("@/app/components/table/faseApilTable"));
 const FaseLapanganTable = lazy(() => import("@/app/components/table/faseLapanganTable"));
@@ -12,8 +13,6 @@ const SurveyInfoTable = lazy(() => import('@/app/components/surveyorTable'));
 const SurveyFormSAHeader = lazy(() => import('@/app/components/form/formSurveyHeader'))
 const FaseIVTable = lazy(() => import('@/app/components/table/faseIVTable'))
 const FaseIVAnalisaTable = lazy(() => import('@/app/components/table/faseIVAnalisaTable'))
-
-export const Loading = () => { return (<div className="w-full h-full m-auto text-center p-2">Loading ...</div>) }
 
 const FaseIVPage = () => {
   const [dataCameras, setDataCameras] = useState([]);
@@ -80,29 +79,6 @@ const FaseIVPage = () => {
     });
   }, [dataTableSAIV, headerData, selectedId]);
 
-  // const handleSubmit = () => {
-  //   console.log(payload);
-
-  //   const existing = JSON.parse(localStorage.getItem('data')) || {
-  //     data: { headerData: [], sa1: {}, sa2: {}, sa3: {}, sa4: {}, sa5: {} }
-  //   };
-
-  //   const headerId = headerData?.id;
-
-  //   if (!existing.data.sa4) {
-  //     existing.data.sa4 = {};
-  //   }
-  //   // Validasi id
-  //   if (headerId !== undefined && headerId !== null && headerId !== 0 && headerId !== '0') {
-  //     // Simpan payload ke sa1
-  //     existing.data.sa4[headerId] = payload;
-  //     localStorage.setItem('data', JSON.stringify(existing));
-  //     console.log('Data berhasil disimpan ke sa1 dengan id:', headerId);
-  //   } else {
-  //     console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
-  //   }
-  // };
-
   const fetchData = async () => {
     try {
       const camerasRes = await cameras.getAll();
@@ -118,17 +94,9 @@ const FaseIVPage = () => {
     fetchData();
   }, []);
 
-  const handleSimpangSelect = () => {
-
-  }
-
-  const handleCameraSelect = () => {
-
-  }
-
   const fetchCreateSAIV = async () => {
     let payloadAPI
-    dataTableSAIV ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, capacityAnalysis: { ...dataTableSAIV } } : { }
+    dataTableSAIV ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, capacityAnalysis: { ...dataTableSAIV } } : {}
 
 
     try {
@@ -149,7 +117,7 @@ const FaseIVPage = () => {
 
   const fetchUpdateSAIV = async (id) => {
     let payloadAPI;
-    dataTableSAIV ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, capacityAnalysis: { ...dataTableSAIV } } : { }
+    dataTableSAIV ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, capacityAnalysis: { ...dataTableSAIV } } : {}
 
 
     try {
@@ -223,7 +191,6 @@ const FaseIVPage = () => {
 
   return (
     <div>
-      <ToastContainer />
       <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
@@ -237,13 +204,15 @@ const FaseIVPage = () => {
       {/* <Suspense fallback={<Loading />}>
         <MapComponent title={""} onClick={handleCameraSelect} onClickSimpang={handleSimpangSelect} form />
       </Suspense> */}
-      <Suspense fallback={<Loading />}>
-        <FaseIVTable setFormTableIV={setDataTableSAIV} selectedId={selectedId} />
-        <div className="w-full items-center flex p-6">
-          <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
-        </div>
-        <FaseIVAnalisaTable selectedId={selectedId} dataTableSAIV={dataTableSAIV} />
-      </Suspense>
+      <DisabledWrapper selectedId={selectedId}>
+        <Suspense fallback={<Loading />}>
+          <FaseIVTable setFormTableIV={setDataTableSAIV} selectedId={selectedId} />
+          <div className="w-full items-center flex p-6">
+            <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
+          </div>
+          <FaseIVAnalisaTable selectedId={selectedId} dataTableSAIV={dataTableSAIV} />
+        </Suspense>
+      </DisabledWrapper>
       {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
         <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>
         <pre className="text-xs whitespace-pre-wrap break-all max-h-96 overflow-auto bg-white p-2 rounded border border-gray-300">
