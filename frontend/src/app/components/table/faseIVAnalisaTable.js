@@ -3,11 +3,10 @@
 import { useState, useEffect } from 'react';
 import DataSample from "@/data/DataFaseIVAnalisa.json"
 import SketsaFaseIV from '@/app/components/sketsa/sketsaFaseIV'
-import { ToastContainer, toast } from 'react-toastify';
 import { apiSAIForm, apiSAIIForm, apiSAIIIForm, apiSAIVForm } from '@/lib/apiService';
-import { useAuth } from '@/app/context/authContext';
+import { toast } from 'react-toastify';
+
 export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
-  const { setLoading } = useAuth();
   const [tableData, setTableData] = useState(
     [
       {
@@ -142,71 +141,100 @@ export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
 
   const fetchDataSAI = async (id) => {
     try {
-      setLoading(true);
       const response = await apiSAIForm.getByIdSAI(id);
       console.log(response.data.data)
       if (response && response.data) {
         return response.data.data || [];
+      } else {
+        toast.error("Data SA I tidak ditemukan!", { autoClose: 500, position: 'top-center' });
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
-      setLoading(false);
       return existing?.data?.sa1?.[selectedId];
     }
   };
 
   const fetchDataSAII = async (id) => {
     try {
-      setLoading(true);
       const response = await apiSAIIForm.getByIdSAII(id);
       console.log(response.data.data)
       if (response && response.data) {
         return response.data.data || [];
+      } else {
+        toast.error("Data SA II tidak ditemukan!", {
+          autoClose: 500, position: 'top-center'
+        });
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
-      setLoading(false);
       return existing?.data?.sa1?.[selectedId];
     }
   };
 
   const fetchDataSAIII = async (id) => {
     try {
-      setLoading(true);
       const response = await apiSAIIIForm.getByIdSAIII(id);
 
       if (response && response.data) {
         const { phaseData, whh } = response.data.data;
         console.log(convertPhaseDataToOriginal(phaseData, whh))
         return convertPhaseDataToOriginal(phaseData, whh);
+      } else {
+        toast.error(`Data SA-III Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
-      setLoading(false);
       return existing?.data?.sa3?.[selectedId];
     }
   };
 
   const fetchDataSAIV = async (id) => {
     try {
-      setLoading(true);
       const response = await apiSAIVForm.getByIdSAIV(id);
 
       if (response && response.data) {
         console.log(response.data.data)
         return response.data.data;
+      } else {
+        toast.error(`Data SA-IV Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
-      setLoading(false);
       return existing?.data?.sa3?.[selectedId];
     }
   };
 
+
+  const fetchAllData = async (id) => {
+
+    try {
+      const [sa1Result, sa2Result, sa3Result, sa4Result] = await Promise.all([
+        fetchDataSAI(id),
+        fetchDataSAII(id),
+        fetchDataSAIII(id),
+        fetchDataSAIV(id),
+      ]);
+
+      toast.success("Semua data SA berhasil dimuat", {
+        autoClose: 1000,
+        position: "top-center",
+      });
+
+      return { sa1Result, sa2Result, sa3Result, sa4Result };
+    } catch (error) {
+      console.error("Error loading SA data:", error);
+      toast.error("Gagal memuat data SA", {
+        autoClose: 1500,
+        position: "top-center",
+      });
+      return null;
+    } finally {
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -216,19 +244,12 @@ export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
         return;
       }
 
-      // const raw = localStorage.getItem('data');
-      // if (!raw) return;
-
       try {
-        // const parsed = JSON.parse(raw);
-        // const sa1 = parsed?.data?.sa1?.[selectedId];
-        // const sa2 = parsed?.data?.sa2?.[selectedId];
-        // const sa3 = parsed?.data?.sa3?.[selectedId];
-        // const sa4 = parsed?.data?.sa4?.[selectedId];
-        const sa1 = await fetchDataSAI(selectedId);
-        const sa2 = await fetchDataSAII(selectedId);
-        const sa3 = await fetchDataSAIII(selectedId);
-        const sa4 = await fetchDataSAIV(selectedId);
+        const { sa1Result, sa2Result, sa3Result, sa4Result } = await fetchAllData(selectedId);
+        const sa1 = sa1Result;
+        const sa2 = sa2Result
+        const sa3 = sa3Result
+        const sa4 = sa4Result
         const data_fase = sa3?.dataFase;
         const saiv = sa4?.capacityAnalysis;
         console.log(sa1)
@@ -237,11 +258,11 @@ export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
         console.log(data_fase)
         console.log(saiv)
         if (!sa4) {
-          toast.error("Data SA 4 tidak ditemukan!", { position: 'top-right' });
+          toast.error("Data SA 4 tidak ditemukan!", { autoClose: 500, position: 'top-right' });
         }
 
         if (!sa1 || !sa2 || !sa3) {
-          toast.error("Data SA 1 s/d SA 3 tidak lengkap!", { position: 'top-right' });
+          toast.error("Data SA 1 s/d SA 3 tidak lengkap!", { autoClose: 500, position: 'top-right' });
           setTableData([]);
           console.log("SAI,II,III")
           return;

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { apiSAIForm, apiSAIIForm, apiSAIIIForm, apiSAIVForm, apiSAVForm } from '@/lib/apiService';
+import { toast } from 'react-toastify';
 
 export default function FormSAVTable ({ selectedId, setDataSAV }) {
   const [tableData, setTableData] = useState({
@@ -99,20 +100,79 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
     ]
   });
 
-  
+
+  function convertPhaseDataToOriginal (phaseData) {
+    const cleanNumber = (num) => {
+      // Kalau null, undefined, string kosong → kembalikan 0
+      if (num === null || num === undefined || num === '') return 0;
+
+      const parsed = parseFloat(num);
+      if (isNaN(parsed)) return 0; // bukan angka valid
+
+      // Kalau integer, langsung kembalikan
+      if (Number.isInteger(parsed)) return parsed;
+
+      // Kalau ada desimal, bulatkan ke 2 digit
+      return parseFloat(parsed.toFixed(2));
+    };
+
+    // const whhGlobal = cleanNumber(phaseData?.[0]?.jarak?.[0]?.wHijau) || 0;
+    const whhGlobal = Math.max(
+      0,
+      ...(phaseData || [])
+        .flatMap(phase => (phase?.jarak || []).map(j => cleanNumber(j?.wHijau) || 0))
+    );
+
+
+    return {
+      whh: whhGlobal,
+      dataFase: phaseData.map((phase) => {
+        console.log('Processing phase:', phase, 'with whh:', whhGlobal);
+        // dari array `jarak` ke object keyed by type
+        const jarakObj = {};
+        phase.jarak.forEach((item) => {
+          jarakObj[item.type] = {
+            pendekat: item.pendekat,
+            kecepatan: {
+              vkbr: cleanNumber(item.kecepatan.berangkat),
+              vkdt: cleanNumber(item.kecepatan.datang),
+              vpk: cleanNumber(item.kecepatan.pejalanKaki)
+            },
+            waktuTempuh: cleanNumber(item.waktuTempuh),
+            wms: cleanNumber(item.wws),
+            wmsDisesuaikan: cleanNumber(item.wusDisarankan),
+            wk: cleanNumber(item.wk),
+            wah: cleanNumber(item.wAll),
+          };
+        });
+
+        return {
+          fase: phase.fase,
+          kode: phase.kode,
+          whh: whhGlobal, // semua pakai whhGlobal
+          jarak: jarakObj
+        };
+      })
+    };
+  }
+
   const fetchDataSAI = async (id) => {
     try {
       setLoading(true);
       const response = await apiSAIForm.getByIdSAI(id);
       console.log(response.data.data)
       if (response && response.data) {
+        // toast.success(`Data SA-I loaded successfully`, { autoClose: 500, position: 'top-center' });
         return response.data.data || [];
+      } else {
+        toast.error(`Data SA-I Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
+        setLoading(false);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
-      const existing = JSON.parse(localStorage.getItem('data'));
       setLoading(false);
-      return existing?.data?.sa1?.[selectedId];
+      return null;
     }
   };
 
@@ -122,7 +182,12 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
       const response = await apiSAIIForm.getByIdSAII(id);
       console.log(response.data.data)
       if (response && response.data) {
+        // toast.success(`Data SA-II loaded successfully`, { autoClose: 500, position: 'top-center' });
         return response.data.data || [];
+      } else {
+        toast.error(`Data SA-II Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
+        setLoading(false);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
@@ -132,13 +197,39 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
     }
   };
 
-   const fetchDataSAIV = async (id) => {
+  const fetchDataSAIV = async (id) => {
     try {
       setLoading(true);
       const response = await apiSAIVForm.getByIdSAIV(id);
       console.log(response.data.data)
       if (response && response.data) {
+        // toast.success(`Data SA-IV loaded successfully`, { autoClose: 500, position: 'top-center' });
         return response.data.data || [];
+      } else {
+        toast.error(`Data SA-IV Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
+        setLoading(false);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error fetching survey data:', error);
+      const existing = JSON.parse(localStorage.getItem('data'));
+      setLoading(false);
+      return existing?.data?.sa1?.[selectedId];
+    }
+  };
+
+  const fetchDataSAV = async (id) => {
+    try {
+      setLoading(true);
+      const response = await apiSAVForm.getByIdSAV(id);
+      console.log(response.data)
+      if (response && response.data.SAV) {
+        // toast.success(`Data SA-V loaded successfully`, { autoClose: 500, position: 'top-center' });
+        return response.data.SAV || {};
+      } else {
+        toast.error(`Data SA-V Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
+        setLoading(false);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
@@ -154,9 +245,14 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
       const response = await apiSAIIIForm.getByIdSAIII(id);
 
       if (response && response.data) {
+        // toast.success(`Data SA-III loaded successfully`, { autoClose: 500, position: 'top-center' });
         const { phaseData, whh } = response.data.data;
         console.log(convertPhaseDataToOriginal(phaseData, whh))
         return convertPhaseDataToOriginal(phaseData, whh);
+      } else {
+        toast.error(`Data SA-III Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
+        setLoading(false);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
@@ -167,7 +263,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
   };
 
   const aggregateSA4DataByKode = (sa4TableData) => {
-    if (!sa4TableData || !Array.isArray(sa4TableData)) {
+    if (!sa4TableData) {
       console.log('SA4 table data tidak valid atau kosong');
       return {};
     }
@@ -175,7 +271,8 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
     const aggregated = {};
 
     sa4TableData.forEach(row => {
-      const kode = row.kodePendekat?.toUpperCase(); // pakai 'kodePendekat' dari struktur kamu
+      console.log('Memproses baris SA4:', row);
+      const kode = row.kode_pendekat?.toUpperCase(); // pakai 'kodePendekat' dari struktur kamu
       if (!kode) return;
 
       if (!aggregated[kode]) {
@@ -195,203 +292,85 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
       }
       console.log(row)
       // Agregasi nilai
-      aggregated[kode].totalArusLaluLintas += parseFloat(row.arusLaluLintas) || 0;
+      aggregated[kode].totalArusLaluLintas += parseFloat(row.arus_lalu_lintas) || 0;
       aggregated[kode].totalVolume += parseFloat(row.volume) || 0;
       aggregated[kode].totalCapacity += parseFloat(row.kapasitas) || 0;
-      aggregated[kode].derajatKejenuhan += parseFloat(row.derajatKejenuhan) || 0;
-      aggregated[kode].waktuHijauPerFase += parseFloat(row.waktuHijauPerFase) || 0;
-      aggregated[kode].lebarEfektif = parseFloat(row.lebarEfektif) || 0;
-      aggregated[kode].rkba = parseFloat(row.rkba) || 0;
-      aggregated[kode].rkbi = parseFloat(row.rkbi) || 0;
-      aggregated[kode].rkbijt = parseFloat(row.rkbijt) || 0;
+      aggregated[kode].derajatKejenuhan += parseFloat(row.derajat_kejenuhan) || 0;
+      aggregated[kode].waktuHijauPerFase += parseFloat(row.waktu_hijau_per_fase) || 0;
+      aggregated[kode].lebarEfektif = parseFloat(row.lebar_efektif) || 0;
+      aggregated[kode].rkba = parseFloat(row.rasio_kendaraan_belok.rbka) || 0;
+      aggregated[kode].rkbi = parseFloat(row.rasio_kendaraan_belok.rbki) || 0;
+      aggregated[kode].rkbijt = parseFloat(row.rasio_kendaraan_belok.rbkijt) || 0;
     });
 
     return aggregated;
   };
 
-  const getStoredData = (selectedId) => {
-    if (!selectedId || selectedId === 0 || selectedId === '0') {
-      return { isValid: false, error: 'ID tidak valid' };
-    }
-
-    const raw = localStorage.getItem('data');
-    if (!raw) {
-      return { isValid: false, error: 'Data tidak ditemukan di localStorage' };
-    }
-
-    try {
-      const parsed = JSON.parse(raw);
-      return { isValid: true, data: parsed };
-    } catch (e) {
-      return { isValid: false, error: 'Gagal parse data', details: e };
-    }
-  };
-
-  // Function untuk mengambil data SA1 (pendekat)
-  const getSA1Data = (data, selectedId) => {
-    const sa1 = data?.data?.sa1?.[selectedId];
-
-    if (!sa1) {
-      return {
-        isValid: false,
-        error: "Data Form SA 1 tidak ditemukan!"
-      };
-    }
-
-    return {
-      isValid: true,
-      pendekats: sa1.pendekat || [],
-      faseData: sa1.fase?.data || {}
-    };
-  };
-
-  // Function untuk mengambil data SA2 (survey data)
-  const getSA2Data = (data, selectedId) => {
-    const sa2 = data?.data?.sa2?.[selectedId];
-
-    if (!sa2) {
-      return {
-        isValid: false,
-        error: "Data Form SA 2 tidak ditemukan!"
-      };
-    }
-
-    return {
-      isValid: true,
-      surveyData: sa2.surveyData || []
-    };
-  };
-
-  // Function untuk mengambil data SA3 (konflik data)
-  const getSA3Data = (data, selectedId) => {
-    const sa3 = data?.data?.sa3?.[selectedId];
-
-    if (!sa3) {
-      return {
-        isValid: false,
-        error: "Data Form SA 3 tidak ditemukan!"
-      };
-    }
-
-    return {
-      isValid: true,
-      tabelKonflik: sa3.tabel_konflik || {}
-    };
-  };
   function formattingAngka (angka) {
     return new Intl.NumberFormat('id-ID').format(angka);
   }
 
-  // floor
-  // round
-  // ceil 
-
-  // Function untuk membuat data row berdasarkan kode pendekat
   const createRowFromPendekat = (kodePendekat, faseAktif, sa4Data, S) => {
+    // --- hitung pakai float ---
     const nq1 = sa4Data.derajatKejenuhan <= 0.5 ? 0
-      : Math.floor(0.25 * S * ((sa4Data.derajatKejenuhan - 1) +
+      : 0.25 * S * (
+        (sa4Data.derajatKejenuhan - 1) +
         Math.sqrt(
           Math.pow(sa4Data.derajatKejenuhan - 1, 2) +
           (8 * (sa4Data.derajatKejenuhan - 0.5)) / S
-        ))
+        )
       );
-    const rh = (sa4Data.waktuHijauPerFase / S).toFixed(3)
-    const nq2 = Math.round(S * ((1 - rh) / (1 - rh * sa4Data.derajatKejenuhan) * (sa4Data.totalArusLaluLintas / 3600)))
-    const nq = nq1 + nq2
-    const nqmax = ((parseFloat(nq1) + parseFloat(nq2) + parseFloat(nq)) * 0.775).toFixed(0)
-    const rqh = (0.9 * nq / (sa4Data.totalArusLaluLintas * S) * 3600).toFixed(3)
-    const pa = (Math.round((parseFloat(nqmax) * 20) / sa4Data.lebarEfektif)).toFixed(0)
-    const nqh = (sa4Data.totalArusLaluLintas * rqh).toFixed(0)
-    const tl = (S * ((0.5 * Math.pow(1 - parseFloat(rh), 2) / (1 - parseFloat(rh) * sa4Data.derajatKejenuhan))) + ((parseFloat(nq1) * 3600) / sa4Data.totalCapacity)).toFixed(0)
-    const tg = ((1 - parseFloat(rqh)) * (sa4Data.rkbi + sa4Data.rkba + sa4Data.rbkijt) * 6 + (parseFloat(rqh) * 4)).toFixed(0)
-    const t = parseFloat(tl) + parseFloat(tg)
-    const tundaanTotal = (parseFloat(sa4Data.totalArusLaluLintas) * t)
 
-    const Faktor_baru = 0.775 + (tableData.pol - 1) * 0.0165
-    console.log(Faktor_baru, tableData.pol)
+    const rh = sa4Data.waktuHijauPerFase / S;
 
+    const nq2 = S * ((1 - rh) / (1 - rh * sa4Data.derajatKejenuhan)) * (sa4Data.totalArusLaluLintas / 3600);
+
+    const nq = nq1 + nq2;
+
+    const nqmax = (nq1 + nq2 + nq) * 0.775;
+
+    const rqh = 0.9 * nq / (sa4Data.totalArusLaluLintas * S) * 3600;
+
+    const pa = (nqmax * 20) / sa4Data.lebarEfektif;
+
+    const nqh = sa4Data.totalArusLaluLintas * rqh;
+
+    const tl = S * ((0.5 * Math.pow(1 - rh, 2)) / (1 - rh * sa4Data.derajatKejenuhan))
+      + ((nq1 * 3600) / sa4Data.totalCapacity);
+
+    const tg = (1 - rqh) * (sa4Data.rkbi + sa4Data.rkba + sa4Data.rbkijt) * 6
+      + (rqh * 4);
+
+    const t = tl + tg;
+
+    const tundaanTotal = sa4Data.totalArusLaluLintas * t;
+
+    // --- return semua sebagai INT (dibulatkan) ---
     return {
       kode: kodePendekat.toUpperCase(),
-      q: sa4Data.totalArusLaluLintas,
-      c: sa4Data.totalCapacity,
-      dj: sa4Data.derajatKejenuhan,
-      rh: (sa4Data.waktuHijauPerFase / S).toFixed(3),
-      nq1: nq1,
-      nq2: nq2,
-      nq: nq,
-      nqMax: nqmax,
-      pa: pa,
-      rqh: rqh,
-      nqh: nqh,
-      tl: tl,
-      tg: tg,
-      t: t,
-      tundaanTotal: tundaanTotal,
+      q: Math.round(sa4Data.totalArusLaluLintas),
+      c: Math.round(sa4Data.totalCapacity),
+      dj: Math.round(sa4Data.derajatKejenuhan),
+
+      rh: Number((rh).toFixed(3)),   // simpan 3 desimal tapi tetap number
+      rqh: Number((rqh).toFixed(3)), // simpan 3 desimal tapi tetap number
+
+      nq1: Math.round(nq1),
+      nq2: Math.round(nq2),
+      nq: Math.round(nq),
+      nqMax: Math.round(nqmax),
+      pa: Math.round(pa),
+      nqh: Math.round(nqh),
+      tl: Math.round(tl),
+      tg: Math.round(tg),
+      t: Math.round(t),
+      tundaanTotal: Math.round(tundaanTotal),
     };
+
   };
-
-
-  // Function untuk mengambil data SA5 yang sudah ada (jika ada)
-  const getSA5Data = (data, selectedId) => {
-    const sa5 = data?.data?.sa5?.[selectedId];
-
-    return {
-      isValid: true, // SA5 bersifat opsional
-      existingData: sa5?.SAV || null
-    };
-  };
-
-  const getSA4Data = (data, selectedId) => {
-    const sa4 = data?.data?.sa4?.[selectedId];
-
-    return {
-      isValid: true, // SA5 bersifat opsional
-      existingData: sa4 || null
-    };
-  };
-
-  // Function untuk menyimpan data ke localStorage
-  const saveToLocalStorage = (data, selectedId, sa5Data) => {
-    try {
-      const updatedData = {
-        ...data,
-        data: {
-          ...data.data,
-          sa5: {
-            ...data.data.sa5,
-            [selectedId]: sa5Data
-          }
-        }
-      };
-
-      localStorage.setItem('data', JSON.stringify(updatedData));
-      console.log('Data SA5 berhasil disimpan:', sa5Data);
-      return true;
-    } catch (e) {
-      console.error('Gagal menyimpan data SA5:', e);
-      return false;
-    }
-  }
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Function untuk menyimpan data saat ini ke localStorage
-  const handleSaveData = () => {
-    const storedResult = getStoredData(selectedId);
-    if (!storedResult.isValid) {
-      setError('Gagal menyimpan: ' + storedResult.error);
-      return;
-    }
-
-    const saved = saveToLocalStorage(storedResult.data, selectedId, tableData);
-    if (saved) {
-      alert('Data berhasil disimpan!');
-      setError('');
-    } else {
-      setError('Gagal menyimpan data ke localStorage');
-    }
-  };
 
   const handleInputChange = (rowIndex, field, value) => {
 
@@ -408,22 +387,6 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
     });
   };
 
-  // const handleInputChange2 = () => {
-  //   const Faktor_baru = 0.775 + (tableData.pol - 1) * 0.0165;
-  //   console.log('Faktor baru:', Faktor_baru);
-  //   console.log('Faktor baru:', tableData);
-
-  //   // Misalnya kamu ingin update semua baris rh (rasio hijau) berdasarkan Faktor_baru:
-  //   const updatedData = tableData.data.map((row) => ({
-  //     ...row,
-  //     rh: parseFloat((row.rh * Faktor_baru).toFixed(3))  // contoh update
-  //   }));
-
-  //   setTableData(prev => ({
-  //     ...prev,
-  //     data: updatedData
-  //   }));
-  // };
   const updateAllRelatedCalculations = (currentData, newPolValue, S) => {
     const Faktor_baru = 0.775 + (newPolValue - 1) * 0.0165;
 
@@ -455,16 +418,14 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
     return { los: 'F', kondisi: 'Macet Total' };
   };
 
-
-
+  const [dataFaseIV, setDataFaseIV] = useState(null);
 
   const handleInputChange2 = (field, value) => {
     if (field === 'pol') {
       console.log('Updating pol value:', value);
 
-      const storedResult = getStoredData(selectedId);
-      const sa4Result = getSA4Data(storedResult.data, selectedId);
-      const S = sa4Result.existingData?.SAIV?.foot?.S || 1;
+      const sa4Result = dataFaseIV;
+      const S = sa4Result?.foot?.[0].S || 1;
 
       const updatedData = updateAllRelatedCalculations(tableData.data, value, S);
 
@@ -475,95 +436,51 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
       }));
     }
 
-    // if (field === 'row_1') {
-    //   const row2 = tableData.row_2 ?? 0;
-    //   const row1 = value ?? 0;
-
-    //   setTableData((prev) => ({
-    //     ...prev,
-    //     row_1: row1,
-    //     row_3: row1 + row2,
-    //     row_4: parseInt(tableData.qbkijt) * (row1 + row2),
-    //   }));
-    // }
-
-    // if (field === 'row_2') {
-    //   const row1 = tableData.row_1 ?? 0;
-    //   const row2 = value ?? 0;
-
-    //   setTableData((prev) => ({
-    //     ...prev,
-    //     row_2: row2,
-    //     row_3: row1 + row2,
-    //     row_4: parseInt(tableData.qbkijt) * (row1 + row2),
-    //   }));
-    // }
-
     if (field === 'row_1') {
-      const row_1 = value ?? 0;
-      const row_2 = tableData.row_2 ?? 0;
-      const row_3 = row_1 + row_2;
-      const row_4 = parseInt(tableData?.bkijt ?? 1) * parseInt(row_3);
-      const totalTundaan = (tableData.data || []).reduce((sum, row) => {
-        return sum + (row.tundaanTotal ?? 0);
-      }, 0);
-      const total_tundaan = totalTundaan + row_4;
-      const tundaanRata = (total_tundaan / tableData.qtotal).toFixed(3)
-      setTableData((prev) => ({
-        ...prev,
-        row_1,
-        row_3,
-        row_4,
-        total_tundaan,
-        trata: tundaanRata
-      }));
+      setTableData(prev => {
+        const row_1 = Number(value) || 0;
+        const row_2 = prev.row_2 || 0;
+        const row_3 = row_1 + row_2;
+        const row_4 = (parseInt(prev.bkijt ?? 1)) * row_3;
+
+        const totalTundaan = (prev.data || []).reduce((sum, row) => sum + (row.tundaanTotal ?? 0), 0);
+        const total_tundaan = totalTundaan + row_4;
+        const tundaanRata = (total_tundaan / (prev.qtotal || 1)).toFixed(3);
+
+        return {
+          ...prev,
+          row_1,
+          row_3,
+          row_4,
+          total_tundaan,
+          trata: tundaanRata
+        };
+      });
     }
 
     if (field === 'row_2') {
-      const row_1 = tableData.row_1 ?? 0;
-      const row_2 = value ?? 0;
-      const row_3 = row_1 + row_2;
-      const row_4 = parseInt(tableData?.bkijt ?? 1) * parseInt(row_3);
+      setTableData(prev => {
+        const row_1 = prev.row_1 || 0;
+        const row_2 = Number(value) || 0;
+        const row_3 = row_1 + row_2;
+        const row_4 = (parseInt(prev.bkijt ?? 1)) * row_3;
 
-      const totalTundaan = (tableData.data || []).reduce((sum, row) => {
-        return sum + (row.tundaanTotal ?? 0);
-      }, 0);
-      console.log(totalTundaan)
-      const total_tundaan = totalTundaan + row_4;
-      const tundaanRata = (total_tundaan / tableData.qtotal).toFixed(3)
-      setTableData((prev) => ({
-        ...prev,
-        row_2,
-        row_3,
-        row_4,
-        total_tundaan,
-        trata: tundaanRata
-      }));
+        const totalTundaan = (prev.data || []).reduce((sum, row) => sum + (row.tundaanTotal ?? 0), 0);
+        const total_tundaan = totalTundaan + row_4;
+        const tundaanRata = (total_tundaan / (prev.qtotal || 1)).toFixed(3);
+
+        return {
+          ...prev,
+          row_2,
+          row_3,
+          row_4,
+          total_tundaan,
+          trata: tundaanRata
+        };
+      });
     }
+
   };
-
-
-  // const handleInputChange2 = (field, value) => {
-  //   if (field === 'pol') {
-  //     const Faktor_baru = 0.775 + (value - 1) * 0.0165;
-  //     console.log('Faktor_baru:', Faktor_baru);
-  //     console.log('Faktor_baru:', value);
-
-  //     const updatedData = tableData.data.map((row) => {
-  //       return {
-  //         ...row,
-  //         nqMax: parseFloat(((row.nq + row.nq1 + row.nq2) * Faktor_baru).toFixed(3))
-  //       };
-  //     });
-
-  //     setTableData((prev) => ({
-  //       ...prev,
-  //       pol: value,
-  //       data: updatedData
-  //     }));
-  //   }
-  // };
-
 
   // Function untuk mendapatkan fase aktif
   const getFaseAktif = (faseData, kode) => {
@@ -587,224 +504,230 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
     }, { q: 0, nq: 0, nqh: 0, tundaanTotal: 0 });
   };
 
-  useEffect(() => {
-    if (!selectedId || selectedId === 0 || selectedId === '0') {
-      setTableData(prev => ({ ...prev, data: [] }));
-      setError('');
-      return;
-    }
-
+  const fetchAllData = async (id) => {
     setLoading(true);
-    setError('');
 
     try {
-      // 1. Ambil dan validasi data dari localStorage
-      const storedResult = getStoredData(selectedId);
-      if (!storedResult.isValid) {
-        setError(storedResult.error);
-        setLoading(false);
-        return;
-      }
+      const [sa1Result, sa2Result, sa3Result, sa5Result, sa4Result] = await Promise.all([
+        fetchDataSAI(id),
+        fetchDataSAII(id),
+        fetchDataSAIII(id),
+        fetchDataSAV(id),
+        fetchDataSAIV(id),
+      ]);
 
-      // 2. Ambil data dari SA1, SA2, SA3
-      const sa1Result = getSA1Data(storedResult.data, selectedId) || {};
-      const sa2Result = getSA2Data(storedResult.data, selectedId) || {};
-      const sa3Result = getSA3Data(storedResult.data, selectedId) || {};
-      const sa5Result = getSA5Data(storedResult.data, selectedId) || {};
-      const sa4Result = getSA4Data(storedResult.data, selectedId) || {};
+      toast.success("Semua data SA berhasil dimuat", {
+        autoClose: 1000,
+        position: "top-center",
+      });
 
-      console.log('SA1 Data:', sa1Result);
-      console.log('SA2 Data:', sa2Result);
-      console.log('SA3 Data:', sa3Result);
-      console.log('SA4 Data:', sa4Result);
-      console.log('Existing SA5 Data:', sa5Result.existingData);
-
-      if (!sa4Result.existingData) {
-        setTableData({
-          data: [],
-          row_1: 0,
-          row_2: 1,
-          row_3: 1,
-          row_4: 0,
-          bkijt: 0,
-          qtotal: 0,
-          total_tundaan: 0,
-          trata: 0,
-          tkt: 0,
-          rkt: 0,
-          rkhrata: 0,
-          totalrata: 0,
-          polution: 0,
-          loss: 0,
-          los: ''
-        });
-        setLoading(false);
-        return;
-      }
-
-      if (sa5Result.existingData) {
-        setTableData(sa5Result.existingData);
-        setLoading(false);
-        return;
-      }
-
-      let totalKTBCount = 0;
-      let qtotalarus = 0;
-
-      // 3. Validasi data wajib (SA1 minimal harus ada untuk mendapatkan kode pendekat)
-      if (!sa1Result.isValid) {
-        setError(sa1Result.error);
-        setLoading(false);
-        return;
-      }
-      // 4. Jika ada data SA5 yang sudah tersimpan, gunakan itu
-      if (sa5Result.existingData) {
-        console.log('Menggunakan data SA5 yang sudah ada');
-        setTableData(sa5Result.existingData);
-      } else {
-        if (!sa4Result.existingData) return;
-        // Ambil nilai KTB dari SA2 jika bkijt di SA1 bernilai true
-
-
-        // 5. Buat data baru berdasarkan kode pendekat dari SA1 dan SA4
-        console.log('Membuat data SA5 baru dari SA1 dan SA4', sa4Result);
-
-        // Agregasi data SA4 berdasarkan kode pendekat
-        const S = sa4Result.existingData.SAIV ? sa4Result?.existingData?.SAIV?.foot?.S : 0;
-        const sa4Aggregated = aggregateSA4DataByKode(sa4Result.existingData.SAIV.tabel);
-        console.log('SA4 Data yang diagregasi:', sa4Aggregated);
-
-        const newData = sa1Result.pendekats.map(pendekat => {
-          const kodePendekat = pendekat.kodePendekat?.toUpperCase();
-          const faseAktif = getFaseAktif(sa1Result.faseData, kodePendekat);
-          const sa4Data = sa4Aggregated[kodePendekat] || null;
-
-          let totalKTBRatio = 0;
-
-          qtotalarus += sa4Data.totalArusLaluLintas
-
-          const directionMap = {
-            B: 'barat',
-            S: 'selatan',
-            T: 'timur',
-            U: 'utara'
-          };
-
-
-          const arahPendekat = sa1Result?.faseData?.[directionMap[kodePendekat]]?.arah || {};
-
-          console.log(sa1Result?.faseData?.[directionMap[kodePendekat]]?.arah, kodePendekat)
-          if (arahPendekat?.bkijt === true) {
-            console.log(`>>>> bkijt TRUE untuk pendekat ${kodePendekat}`);
-
-            const mappedDirection = directionMap[kodePendekat];
-            console.log(mappedDirection);
-
-            const sa2Entry = sa2Result?.surveyData?.find(entry =>
-              entry.direction?.toUpperCase() === kodePendekat?.toUpperCase()
-            );
-
-            console.log(">>>> SA2", sa2Result);
-            console.log(">>>> SA2 Entry ditemukan:", sa2Entry);
-
-            // const bkijtRow = sa2Entry?.rows?.find(row => row?.type?.toLowerCase() === "bki / bkijt");
-            const bkijtRow = sa2Entry?.rows?.find(row =>
-              row?.type?.toLowerCase().includes("bkijt")
-            );
-
-            if (bkijtRow?.total) {
-              const terlawan = bkijtRow.total.terlawan || 0;
-              const terlindung = bkijtRow.total.terlindung || 0;
-              const nilaiKTB = Math.max(terlawan, terlindung);
-
-              console.log(">>>> Nilai KTB (maks):", nilaiKTB, "dari terlawan:", terlawan, "dan terlindung:", terlindung);
-
-              totalKTBCount += nilaiKTB;
-            }
-          }
-
-          console.log(`Pendekat ${kodePendekat}: `);
-          console.log('  - Fase aktif:', faseAktif);
-          console.log('  - Data SA4:', sa4Data);
-          console.log('  - Data S:', S);
-          console.log('  - Data KTB:', totalKTBCount);
-
-          return createRowFromPendekat(kodePendekat, faseAktif, sa4Data, S);
-        }).filter(row => row.kode); // Filter yang memiliki kode
-
-        const totalTundaan = newData.reduce((sum, row) => {
-          return sum + (row.tundaanTotal ?? 0); // asumsi setiap row punya totalTundaan
-        }, 0);
-
-        const totalKendaraanTerhenti = newData.reduce((sum, row) => {
-          return sum + (Number(row.nqh) ?? 0);
-        }, 0);
-
-        const totalArah = newData.length;
-        const derajatKejenuhan = Math.max(...newData.map(data => data.dj));
-
-        const bkijt = parseInt(totalKTBCount);
-        const qtotal = bkijt + parseInt(qtotalarus);
-        const row_1 = 0;
-        const row_2 = 1;
-        const row_3 = row_1 + row_2;
-        const row_4 = bkijt * row_3;
-        const total_tundaan = totalTundaan + row_4;
-        const trata = (total_tundaan / qtotal).toFixed(3);
-        const tkt = parseInt(totalKendaraanTerhenti)
-        const rkt = (tkt / qtotal)
-        const rkhrata = (Number(totalKendaraanTerhenti) / totalArah).toFixed(0)
-        const totalrata = (qtotal / totalArah / 3600).toFixed(2);
-        const polution = qtotal * 0.02
-        // const loss = total_tundaan * qtotal * 30
-        const loss = total_tundaan * 250
-        const los = kriteriaLos(derajatKejenuhan).los
-
-        setTableData(prev => ({
-          ...prev,
-          row_1,
-          row_2,
-          row_3,
-          row_4,
-          bkijt,
-          qtotal,
-          total_tundaan,
-          data: newData,
-          trata,
-          tkt,
-          rkt,
-          rkhrata,
-          totalrata,
-          polution,
-          loss,
-          los
-        }));
-
-
-        console.log('Data SA5 yang dibuat:', newData);
-      }
-
-    } catch (e) {
-      console.error('Error saat memproses data:', e);
-      setError('Terjadi kesalahan saat memproses data: ' + e.message);
+      return { sa1Result, sa2Result, sa3Result, sa5Result, sa4Result };
+    } catch (error) {
+      console.error("Error loading SA data:", error);
+      toast.error("Gagal memuat data SA", {
+        autoClose: 1500,
+        position: "top-center",
+      });
+      return null;
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    const loadData = async () => {
+      try {
+        if (!selectedId || selectedId === 0 || selectedId === '0') {
+          setTableData(prev => ({ ...prev, data: [] }));
+          setError('');
+          return;
+        }
+
+        const { sa1Result, sa2Result, sa3Result, sa5Result, sa4Result } = await fetchAllData(selectedId);
+        // const sa1Result = await fetchDataSAI(selectedId);
+        // const sa2Result = await fetchDataSAII(selectedId);
+        // const sa3Result = await fetchDataSAIII(selectedId);
+        // const sa5Result = await fetchDataSAV(selectedId);
+        // const sa4Result = await fetchDataSAIV(selectedId);
+        // const sa5Result = null;
+
+        console.log('SA1 Data:', sa1Result);
+        console.log('SA2 Data:', sa2Result);
+        console.log('SA3 Data:', sa3Result);
+        console.log('SA4 Data:', sa4Result);
+        console.log('SA5 Data:', sa5Result);
+        // console.log('Existing SA5 Data:', sa5Result);
+
+        if (!sa4Result) {
+          console.log('Data SA4 tidak ditemukan, mengosongkan tabel SA5');
+          setTableData({
+            data: [],
+            row_1: 0,
+            row_2: 1,
+            row_3: 1,
+            row_4: 0,
+            bkijt: 0,
+            qtotal: 0,
+            total_tundaan: 0,
+            trata: 0,
+            tkt: 0,
+            rkt: 0,
+            rkhrata: 0,
+            totalrata: 0,
+            polution: 0,
+            loss: 0,
+            los: ''
+          });
+          setLoading(false);
+          return;
+        }
+
+        let totalKTBCount = 0;
+        let qtotalarus = 0;
+
+        if (!sa1Result) {
+          setError(sa1Result.error);
+          setLoading(false);
+          return;
+        }
+
+        if (sa5Result) {
+          console.log('Menggunakan data SA5 yang sudah ada');
+          setTableData({ ...tableData, pol: sa5Result.pol, row_1: sa5Result.row_1, row_2: sa5Result.row_2, ...sa5Result });
+          // return;
+        } else {
+          if (!sa4Result) return;
+
+          const S = sa4Result.capacityAnalysis ? sa4Result.capacityAnalysis.foot?.[0].S : 0;
+          console.log('Nilai S yang digunakan:', sa4Result.capacityAnalysis.table);
+          const sa4Aggregated = aggregateSA4DataByKode(sa4Result.capacityAnalysis.table);
+          console.log('SA4 Data yang diagregasi:', sa4Aggregated);
+
+          const newData = sa1Result.pendekat.map(pendekat => {
+            const kodePendekat = pendekat.kodePendekat?.toUpperCase();
+            const faseAktif = getFaseAktif(sa1Result.fase, kodePendekat);
+            const sa4Data = sa4Aggregated[kodePendekat] || null;
+
+            let totalKTBRatio = 0;
+
+            qtotalarus += sa4Data.totalArusLaluLintas
+
+            const directionMap = {
+              B: 'barat',
+              S: 'selatan',
+              T: 'timur',
+              U: 'utara'
+            };
+
+            const arahPendekat = sa1Result?.fase?.[directionMap[kodePendekat]]?.arah || {};
+
+            console.log(sa1Result?.fase?.[directionMap[kodePendekat]]?.arah, kodePendekat)
+            if (arahPendekat?.bkijt === true) {
+              console.log(`>>>> bkijt TRUE untuk pendekat ${kodePendekat}`);
+
+              const mappedDirection = directionMap[kodePendekat];
+              console.log(mappedDirection);
+
+              const sa2Entry = sa2Result?.surveyData?.find(entry =>
+                entry.direction?.toUpperCase() === kodePendekat?.toUpperCase()
+              );
+
+              console.log(">>>> SA2", sa2Result);
+              console.log(">>>> SA2 Entry ditemukan:", sa2Entry);
+
+              // const bkijtRow = sa2Entry?.rows?.find(row => row?.type?.toLowerCase() === "bki / bkijt");
+              const bkijtRow = sa2Entry?.rows?.find(row =>
+                row?.type?.toLowerCase().includes("bkijt")
+              );
+
+              if (bkijtRow?.total) {
+                const terlawan = bkijtRow.total.terlawan || 0;
+                const terlindung = bkijtRow.total.terlindung || 0;
+                const nilaiKTB = Math.max(terlawan, terlindung);
+
+                console.log(">>>> Nilai KTB (maks):", nilaiKTB, "dari terlawan:", terlawan, "dan terlindung:", terlindung);
+
+                totalKTBCount += nilaiKTB;
+              }
+            }
+
+            console.log(`Pendekat ${kodePendekat}: `);
+            console.log('  - Fase aktif:', faseAktif);
+            console.log('  - Data SA4:', sa4Data);
+            console.log('  - Data S:', S);
+            console.log('  - Data KTB:', totalKTBCount);
+
+            return createRowFromPendekat(kodePendekat, faseAktif, sa4Data, S);
+          }).filter(row => row.kode); // Filter yang memiliki kode
+          console.log('Data SA5 sebelum diset:', newData);
+          const totalTundaan = newData.reduce((sum, row) => {
+            return sum + (row.tundaanTotal ?? 0); // asumsi setiap row punya totalTundaan
+          }, 0);
+
+          const totalKendaraanTerhenti = newData.reduce((sum, row) => {
+            return sum + (Number(row.nqh) ?? 0);
+          }, 0);
+
+          const totalArah = newData.length;
+          const derajatKejenuhan = Math.max(...newData.map(data => data.dj));
+
+          const bkijt = parseInt(totalKTBCount);
+          const qtotal = bkijt + parseInt(qtotalarus);
+          const row_1 = 0;
+          const row_2 = 1;
+          const row_3 = row_1 + row_2;
+          const row_4 = bkijt * row_3;
+          const total_tundaan = totalTundaan + row_4;
+          const trata = (total_tundaan / qtotal).toFixed(3);
+          const tkt = parseInt(totalKendaraanTerhenti)
+          const rkt = (tkt / qtotal)
+          const rkhrata = (Number(totalKendaraanTerhenti) / totalArah).toFixed(0)
+          const totalrata = (qtotal / totalArah / 3600).toFixed(2);
+          const polution = qtotal * 0.02
+          // const loss = total_tundaan * qtotal * 30
+          const loss = total_tundaan * 250
+          const los = kriteriaLos(derajatKejenuhan).los
+
+          setTableData(prev => ({
+            ...prev,
+            row_1,
+            row_2,
+            row_3,
+            row_4,
+            bkijt,
+            qtotal,
+            total_tundaan,
+            data: newData,
+            trata,
+            tkt,
+            rkt,
+            rkhrata,
+            totalrata,
+            polution,
+            loss,
+            los
+          }));
+
+
+          console.log('Data SA5 yang dibuat:', newData);
+        }
+
+      } catch (e) {
+        console.error('Error saat memproses data:', e);
+        setError('Terjadi kesalahan saat memproses data: ' + e.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
   }, [selectedId]);
 
   return (
     <div>
 
       <div className="p-4 bg-base-100">
-        {/* <div className="mb-6">
-        <h2 className="text-2xl  text-base-content mb-2">
-        FORM SA-V
-        </h2>
-        <p className="text-sm text-base-content/70">
-        Formulir Analisis Kapasitas dan Tundaan Lalu Lintas
-        </p>
-        </div> */}
-
         <div className="overflow-x-auto">
           <table className="table table-xs w-full border border-gray-300">
             <thead>
@@ -916,7 +839,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                   <td className="border border-gray-300 p-0">
                     <div className="flex h-full min-h-[2rem]">
                       <input
-                        type="number"
+                        type="text"
                         step="0.01"
                         readOnly={true}
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0" value={formattingAngka(row.q)}
@@ -927,7 +850,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                   <td className="border border-gray-300 p-0">
                     <div className="flex h-full min-h-[2rem]">
                       <input
-                        type="number"
+                        type="text"
                         step="0.001"
                         readOnly={true}
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
@@ -940,7 +863,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="0.0001"
                         value={row.dj}
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
@@ -952,7 +875,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="0.001"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
                         value={row.rh}
@@ -964,7 +887,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="0.001"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
                         value={formattingAngka(row.nq1)}
@@ -976,7 +899,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="0.001"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
                         value={formattingAngka(row.nq2)}
@@ -988,7 +911,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
                         value={formattingAngka(row.nq)}
@@ -1000,7 +923,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
                         value={row.nqMax}
@@ -1012,7 +935,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="0.01"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
                         value={formattingAngka(row.pa)}
@@ -1024,7 +947,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="0.01"
                         value={row.rqh}
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
@@ -1036,7 +959,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
                         value={formattingAngka(row.nqh)}
@@ -1048,7 +971,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
                         value={formattingAngka(row.tl)}
@@ -1060,7 +983,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
                         value={formattingAngka(row.tg)}
@@ -1072,7 +995,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
                         value={formattingAngka(row.t)}
@@ -1084,7 +1007,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <div className="flex h-full min-h-[2rem]">
                       <input
                         readOnly={true}
-                        type="number"
+                        type="text"
                         step="1"
                         className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-10 border-0"
                         value={formattingAngka(row.tundaanTotal)}
@@ -1188,47 +1111,39 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
 
                 <td className="border bg-green-100 border-gray-300 p-0">
                   <div className="flex items-center w-full h-full min-h-[2rem]">
-
                     <input
-                      type="number"
-                      step="1"
+                      type="text"
+                      value={tableData?.row_1 ?? ''}
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-5 border-0"
-                      value={tableData.row_1 ?? ''}
+
                       onChange={(e) => {
-                        const rawValue = e.target.value;
-                        const newRow1 = rawValue === '' ? '' : parseInt(rawValue);
-
-                        setTableData((prev) => ({
-                          ...prev,
-                          row_1: newRow1 === '' ? 0 : newRow1,
-                        }));
-
-                        handleInputChange2('row_1', newRow1);
+                        // biarkan kosong "" atau angka
+                        const val = e.target.value;
+                        if (/^\d*$/.test(val)) { // hanya angka
+                          handleInputChange2('row_1', val === "" ? "" : Number(val));
+                        }
                       }}
                     />
+
                   </div>
                 </td>
 
                 <td className="border bg-green-100 border-gray-300 p-0">
                   <div className="flex items-center w-full h-full min-h-[2rem]">
-
                     <input
-                      type="number"
-                      step="1"
+                      type="text"
+                      value={tableData?.row_2 ?? ''}
                       className="appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none flex-1 p-0 focus:border-transparent focus:outline-0 focus:ring-0 text-center w-5 border-0"
-                      value={formattingAngka(tableData?.row_2) ?? ''}
+
                       onChange={(e) => {
-                        const rawValue = e.target.value;
-                        const newRow2 = rawValue === '' ? '' : parseInt(rawValue);
-
-                        setTableData((prev) => ({
-                          ...prev,
-                          row_1: newRow2 === '' ? 0 : newRow2,
-                        }));
-
-                        handleInputChange2('row_2', newRow2);
+                        // biarkan kosong "" atau angka
+                        const val = e.target.value;
+                        if (/^\d*$/.test(val)) { // hanya angka
+                          handleInputChange2('row_2', val === "" ? "" : Number(val));
+                        }
                       }}
                     />
+
                   </div>
                 </td>
                 <td className="border border-gray-300 p-0">
@@ -1421,7 +1336,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
                     <tr className='text-sm'><td className="px-1">R<sub>KH</sub> rata-rata</td><td className="px-1">= {formattingAngka(tableData.rkhrata)}</td></tr>
                     <tr className='text-sm'><td className="px-1">q<sub>total</sub></td><td className="px-1">= {tableData.qtotal} SMP/jam</td></tr>
                     <tr className='text-sm'><td className="px-1">q<sub>bkijt</sub></td><td className="px-1">= {tableData.bkijt} SMP/jam</td></tr>
-                    <tr className='text-sm'><td className="px-1">Tingkat polusi</td><td className="px-1">= {tableData.polution} μg/m<sup>3</sup></td></tr>
+                    <tr className='text-sm'><td className="px-1">Tingkat polusi</td><td className="px-1">= {Math.round(tableData.polution)} μg/m<sup>3</sup></td></tr>
                     <tr className='text-sm'><td className="px-1">Biaya kemacetan</td><td className="px-1">= Rp.{tableData.loss > 0 || tableData.loss === '' ? formattingAngka(tableData.loss) : 0}.00</td></tr>
                   </tbody>
                 </table>

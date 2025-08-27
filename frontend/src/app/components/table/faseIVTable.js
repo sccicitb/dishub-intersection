@@ -1,12 +1,11 @@
+"use client";
+
 import Image from 'next/image';
 import { lazy, Suspense, useEffect, useState } from "react";
-import { ToastContainer, toast } from 'react-toastify';
 import { apiSAIForm, apiSAIIForm, apiSAIIIForm, apiSAIVForm } from '@/lib/apiService';
-import { useAuth } from "@/app/context/authContext";
-
+import { toast } from 'react-toastify';
 
 export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
-  const { setLoading } = useAuth();
   const [tableData, setTableData] = useState({
     foot: {
       whh: 0,
@@ -577,82 +576,108 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
 
   const fetchDataSAI = async (id) => {
     try {
-      setLoading(true);
       const response = await apiSAIForm.getByIdSAI(id);
       console.log(response.data.data)
       if (response && response.data) {
         return response.data.data || [];
+      } else {
+        toast.error('Gagal memuat data SA I', {
+          autoClose: 500,
+          position: 'top-center'
+        });
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
-      setLoading(false);
       return existing?.data?.sa1?.[selectedId];
     }
   };
 
   const fetchDataSAII = async (id) => {
     try {
-      setLoading(true);
       const response = await apiSAIIForm.getByIdSAII(id);
       console.log(response.data.data)
       if (response && response.data) {
         return response.data.data || [];
+      } else {
+        toast.error('Gagal memuat data SA II', {
+          autoClose: 500,
+          position: 'top-center'
+        });
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
-      setLoading(false);
       return existing?.data?.sa1?.[selectedId];
     }
   };
 
   const fetchDataSAIII = async (id) => {
     try {
-      setLoading(true);
       const response = await apiSAIIIForm.getByIdSAIII(id);
 
       if (response && response.data) {
         const { phaseData, whh } = response.data.data;
         console.log(convertPhaseDataToOriginal(phaseData, whh))
         return convertPhaseDataToOriginal(phaseData, whh);
+      } else {
+        toast.error('Gagal memuat data SA III', {
+          autoClose: 500,
+          position: 'top-center'
+        });
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
-      setLoading(false);
       return existing?.data?.sa3?.[selectedId];
     }
   };
 
   const fetchDataSAIV = async (id) => {
     try {
-      setLoading(true);
       const response = await apiSAIVForm.getByIdSAIV(id);
 
       if (response && response.data) {
         console.log(response.data.data)
         return response.data.data;
+      } else {
+        toast.error('Gagal memuat data SA IV', {
+          autoClose: 500,
+          position: 'top-center'
+        });
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
-      setLoading(false);
       return existing?.data?.sa3?.[selectedId];
     }
   };
 
-  useEffect(() => {
-    // 1. Ambil dan validasi data dari localStorage
-    // const storedResult = getStoredData(selectedId);
-    // if (!storedResult.isValid) {
-    //   setTableData([]);
-    //   if (storedResult.error !== 'ID tidak valid') {
-    //     console.error(storedResult.error, storedResult.details);
-    //   }
-    //   return;
-    // }
+  const setToLocal = () => {
+    setFormTableIV(tableData)
+  }
 
+  const fetchAllData = async () => {
+    try {
+      const [sa1Result, sa2Result, sa3Result, sa4Result] = await Promise.all([
+        fetchDataSAI(selectedId),
+        fetchDataSAII(selectedId),
+        fetchDataSAIII(selectedId),
+        fetchDataSAIV(selectedId)
+      ])
+
+      toast.success('Data berhasil dimuat', {
+        autoClose: 1000,
+        position: 'top-center'
+      });
+
+      return { sa1Result, sa2Result, sa3Result, sa4Result };
+    } catch (e) {
+      console.error(e)
+    }
+  };
+
+  useEffect(() => {
     const loadData = async () => {
       if (!selectedId || selectedId === 0 || selectedId === '0') {
         setTableData({
@@ -664,10 +689,12 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
 
       try {
         // Fetch data dari berbagai SA
-        const sa1Result = await fetchDataSAI(selectedId);
-        const sa2Result = await fetchDataSAII(selectedId);
-        const sa3Result = await fetchDataSAIII(selectedId);
-        const sa4Result = await fetchDataSAIV(selectedId); // Response seperti yang Anda berikan
+        const { sa1Result, sa2Result, sa3Result, sa4Result } = await fetchAllData();
+
+        // const sa1Result = await fetchDataSAI(selectedId);
+        // const sa2Result = await fetchDataSAII(selectedId);
+        // const sa3Result = await fetchDataSAIII(selectedId);
+        // const sa4Result = await fetchDataSAIV(selectedId);  Response seperti yang Anda berikan
 
         // Validasi data wajib
         if (!sa1Result || !sa2Result || !sa3Result) {
@@ -711,20 +738,15 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
 
         // Update state dengan data yang sudah di-merge
         setTableData(mergedTableData);
-
+        setFormTableIV(mergedTableData);
       } catch (e) {
         console.error('Gagal memproses data:', e);
         toast.error('Terjadi kesalahan saat memproses data', { position: 'top-right' });
       }
     };
 
-
     loadData();
   }, [selectedId]);
-
-  const setToLocal = () => {
-    setFormTableIV(tableData)
-  }
 
   return (
     <div className="p-6 bg-base-100">

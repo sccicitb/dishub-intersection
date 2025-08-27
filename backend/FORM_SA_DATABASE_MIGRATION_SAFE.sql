@@ -420,6 +420,54 @@ ADD UNIQUE KEY unique_survey_pendekat_fase (survey_id, kode_pendekat, hijau_fase
 ALTER TABLE sa_ii_vehicle_data
 MODIFY rktb_value DECIMAL(12,3);
 
+DROP TABLE IF EXISTS sa_v_delay_analysis;
+DROP TABLE IF EXISTS sa_v_performance_summary;
+
+CREATE TABLE sa_v_delay_analysis (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  survey_id INT NOT NULL,
+  kode_pendekat VARCHAR(5),
+  arus_lalu_lintas INT,
+  kapasitas INT,
+  derajat_kejenuhan DECIMAL(10,3),
+  rasio_hijau DECIMAL(10,3),
+  rasio_kendaraan_terhenti DECIMAL(10,3),
+  nq1 INT,
+  nq2 INT,
+  nq INT,
+  nq_max INT,
+  panjang_antrian VARCHAR(50),
+  jumlah_kendaraan_terhenti INT,
+  tundaan_lalu_lintas INT,
+  tundaan_geometri INT,
+  tundaan_rata_rata INT,
+  tundaan_total BIGINT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sa_v_performance_summary (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  survey_id INT NOT NULL,
+  tundaan_simpang_rata DECIMAL(15,3),
+  rasio_kendaraan_terhenti_rata DECIMAL(15,3),
+  total_kendaraan_terhenti DECIMAL(15,3),
+  total_q INT,
+  row_1 INT,
+  row_2 INT,
+  row_3 INT,
+  row_4 INT,
+  qbkijt INT,
+  total_tundaan BIGINT,
+  tkt BIGINT,
+  pol INT,
+  rkt DECIMAL(15,6),
+  bkijt INT,
+  level_of_service VARCHAR(5),
+  polution DECIMAL(20,3),
+  loss BIGINT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- =====================================================
 -- MIGRATION COMPLETE
 -- =====================================================

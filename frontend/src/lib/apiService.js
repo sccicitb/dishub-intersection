@@ -162,5 +162,5 @@ export const apiSAIVForm = {
 export const apiSAVForm = {
   getByIdSAV: (id) => getRequest(`/sa-surveys/sa-v/${id}`),
   createSAV: (data) => createRequest(`/sa-surveys/sa-v`, data),
-  updateByIdSurvey: (id, data) => updateRequest(`/sa-surveys/sa-v/${id}`, data),
+  updateByIdSAV: (id, data) => updateRequest(`/sa-surveys/sa-v/${id}`, data),
 }

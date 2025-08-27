@@ -2,6 +2,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { cameras } from '@/lib/apiService';
 import { apiSAVForm } from './../../lib/apiService';
+import {  toast } from 'react-toastify';
+import DisabledWrapper from "../components/form/disabledWrapper";
 
 const FaseApilTable = lazy(() => import("@/app/components/table/faseApilTable"));
 const FaseLapanganTable = lazy(() => import("@/app/components/table/faseLapanganTable"));
@@ -15,7 +17,7 @@ const FaseIVAnalisaTable = lazy(() => import('@/app/components/table/faseIVAnali
 export const Loading = () => { return (<div className="w-full h-full m-auto text-center p-2">Loading ...</div>) }
 
 
-const FaseIVPage = () => {
+const FaseVPage = () => {
   const [dataCameras, setDataCameras] = useState([]);
   const [selectCameras, setSelectCameras] = useState();
   const [headerData, setHeader] = useState({});
@@ -39,17 +41,6 @@ const FaseIVPage = () => {
     });
   }
 
-  // const fetchData = async () => {
-  //   try {
-  //     const camerasRes = await cameras.getAll();
-  //     const data = camerasRes.data.cameras || [];
-  //     setDataCameras(data);
-  //   } catch (err) {
-  //     console.error("Failed to fetch data:", err);
-  //     setDataCameras([]);
-  //   }
-  // };
-
   let payload;
 
   useEffect(() => {
@@ -64,37 +55,9 @@ const FaseIVPage = () => {
     console.log('id:', selectedId);
   }, [dataSAV, headerData, selectedId]);
 
-  // const handleSubmit = () => {
-  //   payload = {
-  //     SAV: { ...dataSAV },
-  //     // fase: { ...faseApil }
-  //   };
-
-  //   console.log(payload);
-
-  //   const existing = JSON.parse(localStorage.getItem('data')) || {
-  //     data: { headerData: [], sa1: {}, sa2: {}, sa3: {}, sa4: {}, sa5: {} }
-  //   };
-
-  //   const headerId = headerData?.id;
-
-  //   if (!existing.data.sa5) {
-  //     existing.data.sa5 = {};
-  //   }
-  //   // Validasi id
-  //   if (headerId !== undefined && headerId !== null && headerId !== 0 && headerId !== '0') {
-  //     // Simpan payload ke sa1
-  //     existing.data.sa5[headerId] = payload;
-  //     localStorage.setItem('data', JSON.stringify(existing));
-  //     console.log('Data berhasil disimpan ke sa5 dengan id:', headerId);
-  //   } else {
-  //     console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
-  //   }
-  // };
-
   const fetchCreateSAV = async () => {
     let payloadAPI
-    dataSAV ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, delayData: { ...dataSAV } } : {}
+    dataSAV ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, SAV: { ...dataSAV } } : {}
 
 
     try {
@@ -115,7 +78,7 @@ const FaseIVPage = () => {
 
   const fetchUpdateSAV = async (id) => {
     let payloadAPI;
-    dataTableSAV ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, delayData: { ...dataSAV } } : {}
+    dataSAV ? payloadAPI = { surveyHeader: { ...headerData, tanggal: headerData.tanggal.split('T')[0] }, SAV: { ...dataSAV } } : {}
 
 
     try {
@@ -200,12 +163,14 @@ const FaseIVPage = () => {
       <div className="w-full p-4 text-xl">
         <h2>Form SA-V</h2>
       </div>
-      <Suspense fallback={<Loading />}>
-        <FaseVTable selectedId={selectedId} setDataSAV={setDataSAV} />
-      </Suspense>
-      <div className="w-full items-center flex p-6">
-        <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
-      </div>
+      <DisabledWrapper selectedId={selectedId}>
+        <Suspense fallback={<Loading />}>
+          <FaseVTable selectedId={selectedId} setDataSAV={setDataSAV} />
+        </Suspense>
+        <div className="w-full items-center flex p-6">
+          <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
+        </div>
+      </DisabledWrapper>
       {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
         <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>
         <pre className="text-xs whitespace-pre-wrap break-all max-h-[800px] overflow-auto bg-white p-2 rounded border border-gray-300">
@@ -215,4 +180,4 @@ const FaseIVPage = () => {
     </div>
   )
 }
-export default FaseIVPage;
+export default FaseVPage;

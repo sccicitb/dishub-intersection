@@ -1,9 +1,10 @@
 "use client";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { cameras } from '@/lib/apiService';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { apiSAIIIForm } from '@/lib/apiService'
+import DisabledWrapper from "../components/form/disabledWrapper";
+import { Loading } from "@/app/components/form/Loading";
 
 const FaseApilTable = lazy(() => import("@/app/components/table/faseApilTable"));
 const FaseLapanganTable = lazy(() => import("@/app/components/table/faseLapanganTable"));
@@ -11,8 +12,6 @@ const MapComponent = lazy(() => import("@/app/components/map"));
 const SurveyInfoTable = lazy(() => import('@/app/components/surveyorTable'));
 const SurveyFormSAHeader = lazy(() => import('@/app/components/form/formSurveyHeader'))
 const FaseKonflik = lazy(() => import('@/app/components/table/faseKonflik'))
-
-export const Loading = () => { return (<div className="w-full h-full m-auto text-center p-2">Loading ...</div>) }
 
 const FormSAIIIPage = () => {
   const [dataCameras, setDataCameras] = useState([]);
@@ -206,7 +205,6 @@ const FormSAIIIPage = () => {
 
   return (
     <div>
-      <ToastContainer />
       <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
@@ -221,12 +219,14 @@ const FormSAIIIPage = () => {
       <Suspense fallback={<Loading />}>
         <MapComponent title={""} onClick={handleCameraSelect} onClickSimpang={handleSimpangSelect} form />
       </Suspense>
-      <Suspense fallback={<Loading />}>
-        <FaseKonflik setDataKonflik={setDataKonflik} selectedId={selectedId} />
-      </Suspense>
-      <div className="w-full items-center flex p-6">
-        <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
-      </div>
+      <DisabledWrapper selectedId={selectedId}>
+        <Suspense fallback={<Loading />}>
+          <FaseKonflik setDataKonflik={setDataKonflik} selectedId={selectedId} />
+        </Suspense>
+        <div className="w-full items-center flex p-6">
+          <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
+        </div>
+      </DisabledWrapper>
     </div>
   )
 }
