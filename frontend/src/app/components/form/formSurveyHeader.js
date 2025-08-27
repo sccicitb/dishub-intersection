@@ -3,6 +3,7 @@
 import React, { useEffect, useState, lazy } from 'react';
 import { GoPlus } from "react-icons/go";
 import { FaMinus } from "react-icons/fa6";
+import { FaTrash } from "react-icons/fa";
 import { Description } from '../ui/description';
 import { IoReloadOutline } from "react-icons/io5";
 import { useAuth } from '@/app/context/authContext';
@@ -149,6 +150,28 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
     await fetchSurveyData();
   }
 
+  const handleDelete = async () => {
+    if (formData.id > 0) {
+      const confirmDelete = window.confirm('Apakah Anda yakin ingin menghapus data ini?');
+      if (!confirmDelete) return;
+      try {
+        setLoading(true);
+        await apiCoreSurvey.deleteByIdSurvey(formData.id);
+        alert('Data berhasil dihapus!');
+        // Reset form setelah hapus
+        handleReset();
+        await fetchSurveyData();
+        setLoading(false);
+      } catch (error) {
+        console.error('Error deleting data:', error);
+        alert('Gagal menghapus data. Silakan coba lagi.');
+        setLoading(false);
+      }
+    } else {
+      alert('Tidak ada data untuk dihapus.');
+    }
+  };
+
   const handleSelect = async (e) => {
     setReset(false)
     const selectedId = e.target.value;
@@ -208,6 +231,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
   };
 
   const handleReset = () => {
+    setSelectedId(0);
     onResetAll();
     setReset(true)
     setFormData({
@@ -277,40 +301,49 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
   return (
     <div className="w-full mx-auto px-6 gap-3 flex flex-col">
       <Description>
-        <div className='flex flex-col gap-2'>
-          {!statusHeader ? (
-            <div className='w-fit text-blue-600 font-semibold text-xs cursor-pointer' onClick={() => setStatusHeader(!statusHeader)}>Lanjut dengan mengisi form yang sudah ada?</div>
-          ) : (
-            <div className='w-fit text-red-600 font-semibold text-xs cursor-pointer' onClick={() => { setOptionSelect(0), handleReset(), setStatusHeader(!statusHeader), setOptionSelect("") }}>Reset Form (Buat Baru)</div>
-          )}
-          {statusHeader && (
-            <div>
-              <select
-                className="select select-bordered focus:outline-none select-sm bg-transparent focus:ring-0"
-                value={optionSelect}
-                onChange={handleSelect}
-                disabled={loading}
-              >
-                <option value={0} disabled={!resetAll && (optionSelect !== 0 || optionSelect !== '')}>
-                  {loading ? 'Loading...' : 'Pilih Data Header'}
-                </option>
-                {dataLocalHead?.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.perihal} - {item.lokasi} - {item.id}
+        <div className={`flex justify-between ${!statusHeader ? 'items-center' : 'items-end '} w-full`}>
+          <div className='flex flex-col gap-2 w-full'>
+            {!statusHeader ? (
+              <div className='w-fit text-blue-600 font-semibold text-xs cursor-pointer' onClick={() => setStatusHeader(!statusHeader)}>Lanjut dengan mengisi form yang sudah ada?</div>
+            ) : (
+              <div className='w-fit text-red-600 font-semibold text-xs cursor-pointer' onClick={() => { setOptionSelect(0), handleReset(), setStatusHeader(!statusHeader), setOptionSelect("") }}>Reset Form (Buat Baru)</div>
+            )}
+            {statusHeader && (
+              <div>
+                <select
+                  className="select select-bordered focus:outline-none select-sm bg-transparent focus:ring-0"
+                  value={optionSelect}
+                  onChange={handleSelect}
+                  disabled={loading}
+                >
+                  <option value={0} disabled={!resetAll && (optionSelect !== 0 || optionSelect !== '')}>
+                    {loading ? 'Loading...' : 'Pilih Data Header'}
                   </option>
-                ))}
-              </select>
-              <button
-                className='btn btn-sm bg-transparent hover:drop-shadow-2xl hover:bg-transparent border-none ring-0'
-                onClick={() => refreshData()}
-                disabled={loading}
-              >
-                <IoReloadOutline className={`text-xl text-success ${loading ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-          )}
+                  {dataLocalHead?.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.perihal} - {item.lokasi} - {item.id}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className='btn btn-sm bg-transparent hover:drop-shadow-2xl hover:bg-transparent border-none ring-0'
+                  onClick={() => refreshData()}
+                  disabled={loading}
+                >
+                  <IoReloadOutline className={`text-xl text-success ${loading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+            )}
+          </div>
+          <button
+            className='btn btn-sm bg-transparent hover:drop-shadow-2xl hover:bg-transparent border-none ring-0'
+            onClick={() => handleDelete()}
+            disabled={loading}
+          >
+            <FaTrash className={`text-xl text-error ${loading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
-      </Description>
+      </Description >
       <div className='bg-base-200 p-5 rounded-md border border-base-300 grid grid-cols-1 lg:grid-cols-2 lg:space-x-10 w-full space-y-10'>
         <div className="space-y-6 grid grid-cols-2 gap-2">
           {/* Tanggal */}
@@ -471,7 +504,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
           {JSON.stringify(formData, null, 2)}
         </pre>
       </div> */}
-    </div>
+    </div >
   );
 };
 

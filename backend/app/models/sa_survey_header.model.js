@@ -1,6 +1,6 @@
 const sql = require("../config/db.js");
 
-const SaSurveyHeader = function(header) {
+const SaSurveyHeader = function (header) {
   this.simpang_id = header.simpang_id || 0;
   this.tanggal = header.tanggal;
   this.perihal = header.perihal;
@@ -37,17 +37,17 @@ SaSurveyHeader.create = async (newHeader) => {
       perihal: newHeader.perihal,
       kabupaten_kota: newHeader.kabupaten_kota || 'Default City',
       lokasi: newHeader.lokasi || 'Default Location',
-      ruas_jalan_mayor: Array.isArray(newHeader.ruas_jalan_mayor) 
-        ? JSON.stringify(newHeader.ruas_jalan_mayor) 
+      ruas_jalan_mayor: Array.isArray(newHeader.ruas_jalan_mayor)
+        ? JSON.stringify(newHeader.ruas_jalan_mayor)
         : JSON.stringify(['Default Road']),
-      ruas_jalan_minor: Array.isArray(newHeader.ruas_jalan_minor) 
-        ? JSON.stringify(newHeader.ruas_jalan_minor) 
+      ruas_jalan_minor: Array.isArray(newHeader.ruas_jalan_minor)
+        ? JSON.stringify(newHeader.ruas_jalan_minor)
         : JSON.stringify(['Default Road']),
       ukuran_kota: newHeader.ukuran_kota || '0',
       periode: newHeader.periode || 'Pertama',
       status: newHeader.status || 'draft'
     };
-    
+
     const [result] = await sql.query("INSERT INTO sa_survey_headers SET ?", headerData);
     return { id: result.insertId, ...headerData };
   } catch (err) {
@@ -104,7 +104,7 @@ SaSurveyHeader.getAll = async (params) => {
     query += " ORDER BY created_at DESC";
 
     const [rows] = await sql.query(query, values);
-    
+
     // Parse JSON fields for all headers
     return rows.map(header => ({
       ...header,
@@ -124,22 +124,22 @@ SaSurveyHeader.updateById = async (id, header) => {
       perihal: header.perihal,
       kabupaten_kota: header.kabupaten_kota,
       lokasi: header.lokasi,
-      ruas_jalan_mayor: Array.isArray(header.ruas_jalan_mayor) 
-        ? JSON.stringify(header.ruas_jalan_mayor) 
+      ruas_jalan_mayor: Array.isArray(header.ruas_jalan_mayor)
+        ? JSON.stringify(header.ruas_jalan_mayor)
         : header.ruas_jalan_mayor,
-      ruas_jalan_minor: Array.isArray(header.ruas_jalan_minor) 
-        ? JSON.stringify(header.ruas_jalan_minor) 
+      ruas_jalan_minor: Array.isArray(header.ruas_jalan_minor)
+        ? JSON.stringify(header.ruas_jalan_minor)
         : header.ruas_jalan_minor,
       ukuran_kota: header.ukuran_kota,
       periode: header.periode,
       status: header.status || 'draft'
     };
-    
+
     const [result] = await sql.query(
       "UPDATE sa_survey_headers SET ? WHERE id = ?",
       [updateData, id]
     );
-    
+
     if (result.affectedRows == 0) {
       throw { kind: "not_found" };
     }
@@ -148,18 +148,51 @@ SaSurveyHeader.updateById = async (id, header) => {
     throw err;
   }
 };
-
 SaSurveyHeader.remove = async (id) => {
+  const connection = await sql.getConnection();
   try {
-    const [result] = await sql.query("DELETE FROM sa_survey_headers WHERE id = ?", [id]);
+    await connection.beginTransaction();
+
+    // Hapus lewat survey_id
+    await connection.query("DELETE FROM sa_i_fase_apil WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_i_pendekat WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_ii_equivalences WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_ii_ktb_data WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_ii_vehicle_data WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_iii_measurements WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_iii_phase_data WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_iv_capacity_analysis WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_iv_capacity_foot WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_iv_phase_analysis WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_iv_vehicle_data WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_v_delay_analysis WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_v_performance_summary WHERE survey_id = ?", [id]);
+    await connection.query("DELETE FROM sa_v_vehicle_data WHERE survey_id = ?", [id]);
+
+    // khusus config → pakai simpang_id
+    await connection.query("DELETE FROM sa_iv_calculation_config WHERE simpang_id = (SELECT simpang_id FROM sa_survey_headers WHERE id = ?)", [id]);
+
+    // hapus survey record (child)
+    await connection.query("DELETE FROM sa_surveys WHERE simpang_id = (SELECT simpang_id FROM sa_survey_headers WHERE id = ?)", [id]);
+
+    // terakhir hapus header
+    const [result] = await connection.query("DELETE FROM sa_survey_headers WHERE id = ?", [id]);
     if (result.affectedRows == 0) {
       throw { kind: "not_found" };
     }
+    
+    await connection.commit();
     return result;
   } catch (err) {
+    await connection.rollback();
+    console.error("Delete error:", err); // tambahin log biar keliatan
     throw err;
+  } finally {
+    connection.release();
   }
 };
+
+
 
 // Get all forms for a specific header
 SaSurveyHeader.getFormsByHeaderId = async (headerId) => {

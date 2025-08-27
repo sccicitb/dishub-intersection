@@ -144,6 +144,7 @@ export const apiSAIIForm = {
   updateByIdSAII: (id, data) => updateRequest(`/sa-surveys/sa-ii/${id}`, data),
   getAllEMP: () => getRequest(`/sa-surveys/sa-ii/emp-configurations`),
   getByIdArus: (id) => getRequest(`/sa-surveys/sa-ii/${id}/arus-kendaraan`),
+  checkDirection: (simpangId) => getRequest(`/sa-surveys/sa-ii/checkDirection/${simpangId}`),
 }
 
 export const apiSAIIIForm = {
