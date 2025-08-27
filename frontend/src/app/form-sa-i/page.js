@@ -4,6 +4,8 @@ import { cameras } from '@/lib/apiService';
 import { ToastContainer, toast } from 'react-toastify';
 import { apiSAIForm } from '@/lib/apiService'
 import 'react-toastify/dist/ReactToastify.css';
+import DisabledWrapper from "../components/form/disabledWrapper";
+import { Loading } from "@/app/components/form/Loading";
 
 const FaseApilTable = lazy(() => import("@/app/components/table/faseApilTable"));
 const FaseLapanganTable = lazy(() => import("@/app/components/table/faseLapanganTable"));
@@ -11,7 +13,7 @@ const MapComponent = lazy(() => import("@/app/components/map"));
 const SurveyInfoTable = lazy(() => import('@/app/components/surveyorTable'));
 const SurveyFormSAHeader = lazy(() => import('@/app/components/form/formSurveyHeader'))
 
-export const Loading = () => { return (<div className="w-full h-full m-auto text-center p-2">Loading ...</div>) }
+// export const Loading = () => { return (<div className="w-full h-full m-auto text-center p-2">Loading ...</div>) }
 
 
 const FormSAIPage = () => {
@@ -151,7 +153,7 @@ const FormSAIPage = () => {
       if (res.status !== 200) {
         toast.error('Data Gagal Ditambahkan!', { position: 'top-center' })
         return;
-      } 
+      }
       toast.success(res.data.message, { position: 'top-center' })
     } catch (error) {
       console.error(`${error}`)
@@ -292,13 +294,22 @@ const FormSAIPage = () => {
       <Suspense fallback={<Loading />}>
         <MapComponent title={""} onClick={handleCameraSelect} onClickSimpang={handleSimpangSelect} form />
       </Suspense>
-      <Suspense fallback={<Loading />}>
-        <FaseLapanganTable setDataLapangan={setLapangan} selectedId={selectedId} setFaseApil={setFaseApil} />
-        <FaseApilTable setDataFaseApil={setFaseApil} dataLapangan={lapangan} dataFase={faseApil} />
-      </Suspense>
-      <div className="w-full items-center flex p-6">
-        <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
-      </div>
+      <DisabledWrapper selectedId={selectedId}>
+        <FaseLapanganTable
+          setDataLapangan={setLapangan}
+          selectedId={selectedId}
+          setFaseApil={setFaseApil}
+        />
+        <FaseApilTable
+          setDataFaseApil={setFaseApil}
+          dataLapangan={lapangan}
+          dataFase={faseApil}
+        />
+        <div className="w-full items-center flex p-6">
+          <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
+        </div>
+      </DisabledWrapper>
+
       {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
         <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>
         <pre className="text-xs whitespace-pre-wrap break-all max-h-96 overflow-auto bg-white p-2 rounded border border-gray-300">

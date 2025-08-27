@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { apiSAIForm, apiSAIIForm, apiSAIIIForm, apiSAIVForm, apiSAVForm } from '@/lib/apiService';
+import { toast } from 'react-toastify';
 
 export default function FormSAVTable ({ selectedId, setDataSAV }) {
   const [tableData, setTableData] = useState({
@@ -155,21 +156,23 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
     };
   }
 
-
-
   const fetchDataSAI = async (id) => {
     try {
       setLoading(true);
       const response = await apiSAIForm.getByIdSAI(id);
       console.log(response.data.data)
       if (response && response.data) {
+        // toast.success(`Data SA-I loaded successfully`, { autoClose: 500, position: 'top-center' });
         return response.data.data || [];
+      } else {
+        toast.error(`Data SA-I Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
+        setLoading(false);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
-      const existing = JSON.parse(localStorage.getItem('data'));
       setLoading(false);
-      return existing?.data?.sa1?.[selectedId];
+      return null;
     }
   };
 
@@ -179,7 +182,12 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
       const response = await apiSAIIForm.getByIdSAII(id);
       console.log(response.data.data)
       if (response && response.data) {
+        // toast.success(`Data SA-II loaded successfully`, { autoClose: 500, position: 'top-center' });
         return response.data.data || [];
+      } else {
+        toast.error(`Data SA-II Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
+        setLoading(false);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
@@ -195,7 +203,12 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
       const response = await apiSAIVForm.getByIdSAIV(id);
       console.log(response.data.data)
       if (response && response.data) {
+        // toast.success(`Data SA-IV loaded successfully`, { autoClose: 500, position: 'top-center' });
         return response.data.data || [];
+      } else {
+        toast.error(`Data SA-IV Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
+        setLoading(false);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
@@ -211,7 +224,12 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
       const response = await apiSAVForm.getByIdSAV(id);
       console.log(response.data)
       if (response && response.data.SAV) {
-        return response.data.SAV|| {};
+        // toast.success(`Data SA-V loaded successfully`, { autoClose: 500, position: 'top-center' });
+        return response.data.SAV || {};
+      } else {
+        toast.error(`Data SA-V Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
+        setLoading(false);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
@@ -227,9 +245,14 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
       const response = await apiSAIIIForm.getByIdSAIII(id);
 
       if (response && response.data) {
+        // toast.success(`Data SA-III loaded successfully`, { autoClose: 500, position: 'top-center' });
         const { phaseData, whh } = response.data.data;
         console.log(convertPhaseDataToOriginal(phaseData, whh))
         return convertPhaseDataToOriginal(phaseData, whh);
+      } else {
+        toast.error(`Data SA-III Tidak ditemukan`, { autoClose: 500, position: 'top-center' });
+        setLoading(false);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching survey data:', error);
@@ -346,7 +369,6 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
 
   };
 
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -398,16 +420,6 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
 
   const [dataFaseIV, setDataFaseIV] = useState(null);
 
-  const getDataFaseIV = async (id) => {
-    try {
-      const data = await fetchDataSAIV(id);
-      setDataFaseIV(data);
-    } catch (error) {
-      console.error('Error fetching SAIV data:', error);
-      setDataFaseIV(null);
-    }
-  };
-
   const handleInputChange2 = (field, value) => {
     if (field === 'pol') {
       console.log('Updating pol value:', value);
@@ -445,7 +457,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
         };
       });
     }
-    
+
     if (field === 'row_2') {
       setTableData(prev => {
         const row_1 = prev.row_1 || 0;
@@ -492,6 +504,36 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
     }, { q: 0, nq: 0, nqh: 0, tundaanTotal: 0 });
   };
 
+  const fetchAllData = async (id) => {
+    setLoading(true);
+
+    try {
+      const [sa1Result, sa2Result, sa3Result, sa5Result, sa4Result] = await Promise.all([
+        fetchDataSAI(id),
+        fetchDataSAII(id),
+        fetchDataSAIII(id),
+        fetchDataSAV(id),
+        fetchDataSAIV(id),
+      ]);
+
+      toast.success("Semua data SA berhasil dimuat", {
+        autoClose: 1000,
+        position: "top-center",
+      });
+
+      return { sa1Result, sa2Result, sa3Result, sa5Result, sa4Result };
+    } catch (error) {
+      console.error("Error loading SA data:", error);
+      toast.error("Gagal memuat data SA", {
+        autoClose: 1500,
+        position: "top-center",
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     setError('');
@@ -503,13 +545,13 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
           return;
         }
 
-        getDataFaseIV(selectedId);
-        const sa1Result = await fetchDataSAI(selectedId);
-        const sa2Result = await fetchDataSAII(selectedId);
-        const sa3Result = await fetchDataSAIII(selectedId);
-        const sa5Result = await fetchDataSAV(selectedId);
+        const { sa1Result, sa2Result, sa3Result, sa5Result, sa4Result } = await fetchAllData(selectedId);
+        // const sa1Result = await fetchDataSAI(selectedId);
+        // const sa2Result = await fetchDataSAII(selectedId);
+        // const sa3Result = await fetchDataSAIII(selectedId);
+        // const sa5Result = await fetchDataSAV(selectedId);
+        // const sa4Result = await fetchDataSAIV(selectedId);
         // const sa5Result = null;
-        const sa4Result = await fetchDataSAIV(selectedId);
 
         console.log('SA1 Data:', sa1Result);
         console.log('SA2 Data:', sa2Result);
@@ -553,7 +595,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
 
         if (sa5Result) {
           console.log('Menggunakan data SA5 yang sudah ada');
-          setTableData({...tableData, pol: sa5Result.pol, row_1: sa5Result.row_1, row_2: sa5Result.row_2, ...sa5Result});
+          setTableData({ ...tableData, pol: sa5Result.pol, row_1: sa5Result.row_1, row_2: sa5Result.row_2, ...sa5Result });
           // return;
         } else {
           if (!sa4Result) return;

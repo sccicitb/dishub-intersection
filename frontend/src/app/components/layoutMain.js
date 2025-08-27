@@ -1,4 +1,5 @@
 "use client";
+
 import Image from "next/image";
 import * as Icons from "react-icons/ai";
 import * as FaIcons from "react-icons/fa";
@@ -79,7 +80,17 @@ const Layout = ({ children }) => {
   if (!token && pathname !== "/dashboard/mobility" || pathname === "/auth" || pathname === "/not-found") {
     return (
       <div>
-        <ToastContainer />
+        <ToastContainer
+          position="top-center"
+          autoClose={2000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
         {children}
       </div>
     );

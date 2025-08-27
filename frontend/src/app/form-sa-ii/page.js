@@ -1,10 +1,11 @@
 "use client"
+
 import { lazy, Suspense, useEffect, useState } from "react"
 import DataEkuivalensi from '@/data/DataEkuivalensi.json';
 import EkuivalensiForm from "../components/form/ekuivalensiForm";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { apiSAIIForm, maps, cameras } from "@/lib/apiService";
+import DisabledWrapper from "@/app/components/form/disabledWrapper";
 
 const SimpangTrafficKinerja = lazy(() => import("@/app/components/simpangTrafficKinerja"));
 const TrafficKinerjaTable = lazy(() => import("@/app/components/trafficSurveyTable"));
@@ -42,11 +43,11 @@ const FormSAIIPage = () => {
   };
 
   useEffect(() => {
-    // import('@/data/DataEkuivalensi.json').then((data) => {
-    //   setDataChart(data.default)
-    //   setDataTerlindung(data.default.filter((item) => item.type === "terlindungi" ? data.default.data : []))
-    //   setDataTerlawan(data.default.filter((item) => item.type === "terlawanan" ? data.default.data : []))
-    // })
+    import('@/data/DataEkuivalensi.json').then((data) => {
+      setDataChart(data.default)
+      setDataTerlindung(data.default.filter((item) => item.type === "terlindungi" ? data.default.data : []))
+      setDataTerlawan(data.default.filter((item) => item.type === "terlawanan" ? data.default.data : []))
+    })
     setDataChart(DataEkuivalensi);
     setDataTerlindung(DataEkuivalensi.filter(item => item.type.toLowerCase() === "terlindungi"));
     setDataTerlawan(DataEkuivalensi.filter(item => item.type.toLowerCase() === "terlawanan"));
@@ -80,7 +81,9 @@ const FormSAIIPage = () => {
       periode: '',
       status: ''
     });
-    setTrafficData({});
+    setTrafficData({
+      surveyData: []
+    });
   }
 
 
@@ -107,7 +110,7 @@ const FormSAIIPage = () => {
           (item.Nama_Simpang || "").toLowerCase().includes((headerData.lokasi || "").toLowerCase())
         )
 
-      setIdSelect(validation && validation.length > 0 ? validation[0].id : 1);
+      setIdSelect(validation && validation.length > 0 ? validation[0].id : 0);
     } catch (error) {
       console.error(`${error}`)
     }
@@ -172,26 +175,6 @@ const FormSAIIPage = () => {
   }
 
   const submitData = () => {
-
-    // console.log(payload);
-
-    // const existing = JSON.parse(localStorage.getItem('data')) || {
-    //   data: { headerData: [], sa1: {}, sa2: {}, sa3: {}, sa4: {}, sa5: {} }
-    // };
-
-    // const headerId = headerData?.id;
-
-    // // Validasi id
-    // if (headerId !== undefined && headerId !== null && headerId !== 0 && headerId !== '0') {
-    //   // Simpan payload ke sa1
-    //   existing.data.sa2[headerId] = payload;
-    //   localStorage.setItem('data', JSON.stringify(existing));
-    //   console.log('Data berhasil disimpan ke sa1 dengan id:', headerId);
-    // } else {
-    //   console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
-    // }
-
-    // selectedId != 0 ? createSAII() : updateSAII(selectedId)
     toast.info(
       ({ closeToast }) => (
         <div>
@@ -244,46 +227,14 @@ const FormSAIIPage = () => {
     );
   };
 
-  const handleSubmit = () => {
-    toast.info(
-      ({ closeToast }) => (
-        <div>
-          <p className="text-sm">Yakin ingin mengirim data?</p>
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={() => {
-                submitData(); // fungsi kirim API
-                toast.dismiss(); // tutup semua toast
-              }}
-              className="btn btn-sm text-white font-light btn-success"
-            >
-              Ya
-            </button>
-            <button
-              onClick={() => toast.dismiss()}
-              className="btn btn-sm text-white font-light btn-error"
-            >
-              Batal
-            </button>
-          </div>
-        </div>
-      ),
-      {
-        autoClose: false,
-        closeOnClick: false,
-        draggable: false,
-      }
-    );
-  };
   return (
     <div>
-      <ToastContainer />
       <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
       <SurveyFormSAHeader setDataHeader={setHeader} setSelectedId={setSelectedId} onResetAll={handleResetAll} />
-      <EkuivalensiForm setEMP={setDataEmp} selectedId={selectedId} />
-      <Suspense fallback={<div className="my-5 w-full text-center">Loading...</div>}>
+      <DisabledWrapper selectedId={selectedId}>
+        <EkuivalensiForm setEMP={setDataEmp} selectedId={selectedId} />
         <TrafficKinerjaTable dataEMP={dataEmp} selectedId={selectedId} setDataTraffic={setTrafficData} idSimpang={idSelect} />
         <SimpangTrafficKinerja trafficData={trafficData} />
         {/* <div className="w-full">
@@ -293,14 +244,14 @@ const FormSAIIPage = () => {
         <div className="w-full items-center flex p-6">
           <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
         </div>
-        {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
+      </DisabledWrapper>
+      {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
           <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>
           <pre className="text-xs whitespace-pre-wrap break-all max-h-[800px] overflow-auto bg-white p-2 rounded border border-gray-300">
             {JSON.stringify(payloadData, null, 2)}
           </pre>
         </div> */}
-      </Suspense>
-    </div>
+    </div >
   )
 }
 export default FormSAIIPage;

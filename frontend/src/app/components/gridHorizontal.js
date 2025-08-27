@@ -35,21 +35,22 @@ const GridHorizontal = ({ position, data, category = false, col }) => {
       row2: prepareRowData(data?.row2 || []),
       row3: prepareRowData(data?.row3 || [])
     });
+    console.log(displayData);
   }, [data]);
 
   return (
-    <div className={`h-34   ${col ? 'min-w-24' : 'w-40'} justify-evenly flex flex-col bg-stone-300 text-xs relative`}>
+    <div className={`h-34 ${position && 'flex-col-reverse'}  ${col ? 'min-w-24' : 'w-40'} justify-evenly flex flex-col bg-stone-300 text-xs relative`}>
       {/* Row 1 - Up Arrow */}
       <div className={`flex items-center ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className={`grid ${col ? 'grid-cols-' + col + ' ' : 'grid-cols-4'} flex-grow`}>
-          {(position ? [...displayData.row2].reverse() : displayData.row2).map((item) => (
+          {(position ? [...displayData.row1].reverse() : displayData.row1).map((item) => (
             <div key={item.id} className="p-2 text-center text-xs overflow-hidden truncate">
               {item.content}
             </div>
           ))}
         </div>
         <div className="p-1">
-          <HiMiniArrowTurnRightUp className={`text-lg ${!position ? 'transform rotate-180 scale-y-[-1]' : ''}`} />
+          <HiMiniArrowTurnRightUp className={`text-lg ${!position ? 'transform rotate-180 scale-y-[-1]' : 'transform scale-y-[-1]'}`} />
         </div>
       </div>
 
@@ -70,14 +71,14 @@ const GridHorizontal = ({ position, data, category = false, col }) => {
       {/* Row 3 - Down Arrow */}
       <div className={`items-center flex ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className={`grid ${col ? 'grid-cols-' + col + ' ' : 'grid-cols-4'} flex-grow`}>
-          {(position ? [...displayData.row2].reverse() : displayData.row2).map((item) => (
+          {(position ? [...displayData.row3].reverse() : displayData.row3).map((item) => (
             <div key={item.id} className="p-2 text-center text-xs overflow-hidden truncate">
               {item.content}
             </div>
           ))}
         </div>
         <div className="p-1 items-center">
-          <HiMiniArrowTurnRightDown className={`text-lg ${!position ? 'transform rotate-180 scale-y-[-1]' : ''}`} />
+          <HiMiniArrowTurnRightDown className={`text-lg ${!position ? 'transform rotate-180 scale-y-[-1]' :  'transform scale-y-[-1]'}`} />
         </div>
       </div>
 

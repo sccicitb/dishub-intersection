@@ -2,8 +2,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { cameras } from '@/lib/apiService';
 import { apiSAVForm } from './../../lib/apiService';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {  toast } from 'react-toastify';
+import DisabledWrapper from "../components/form/disabledWrapper";
 
 const FaseApilTable = lazy(() => import("@/app/components/table/faseApilTable"));
 const FaseLapanganTable = lazy(() => import("@/app/components/table/faseLapanganTable"));
@@ -153,7 +153,6 @@ const FaseVPage = () => {
 
   return (
     <div>
-      <ToastContainer />
       <div className="w-full p-8 text-xl">
         <h2>Analisis Kinerja Simpang APIL</h2>
       </div>
@@ -164,18 +163,20 @@ const FaseVPage = () => {
       <div className="w-full p-4 text-xl">
         <h2>Form SA-V</h2>
       </div>
-      <Suspense fallback={<Loading />}>
-        <FaseVTable selectedId={selectedId} setDataSAV={setDataSAV} />
-      </Suspense>
-      <div className="w-full items-center flex p-6">
-        <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
-      </div>
-      <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
+      <DisabledWrapper selectedId={selectedId}>
+        <Suspense fallback={<Loading />}>
+          <FaseVTable selectedId={selectedId} setDataSAV={setDataSAV} />
+        </Suspense>
+        <div className="w-full items-center flex p-6">
+          <button onClick={submitData} className="btn btn-sm w-full mx-auto btn-success">Submit</button>
+        </div>
+      </DisabledWrapper>
+      {/* <div className="w-full bg-gray-100 p-4 mt-4 rounded-md">
         <h3 className="text-lg font-semibold mb-2">Log Data (Debug)</h3>
         <pre className="text-xs whitespace-pre-wrap break-all max-h-[800px] overflow-auto bg-white p-2 rounded border border-gray-300">
           {JSON.stringify(payloadData, null, 2)}
         </pre>
-      </div>
+      </div> */}
     </div>
   )
 }

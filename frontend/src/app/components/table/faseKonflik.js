@@ -1,11 +1,11 @@
+"use client";
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { apiSAIForm, apiSAIIIForm } from '@/lib/apiService';
-import { useAuth } from "@/app/context/authContext";
+import { toast } from 'react-toastify';
 
 export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
-  const { setLoading } = useAuth();
   const [tableData, setTableData] = useState({
     whh: 0,
     dataFase: [
@@ -248,31 +248,6 @@ export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
     { key: 'lintasanPejalan', label: 'Lintasan Pejalan Kaki, L', sub: 'pk' }
   ];
 
-  // const loadSA3 = (id) => {
-  //   const existing = JSON.parse(localStorage.getItem('data'));
-  //   return existing?.data?.sa3?.[id] || null;
-  // };
-
-
-  // useEffect(() => {
-  //   console.log("test", selectedId)
-  //   if (selectedId === 0) {
-  //     setTableData({});
-  //     return;
-  //   }
-
-  //   if (!selectedId || selectedId === 0 || selectedId === '0') return;
-  //   const loadData = loadSA3(selectedId)
-  //   if (!loadData || !Array.isArray(loadData.tabel_konflik.dataFase)) {
-  //     console.warn("dataFase tidak valid:", loadData);
-  //     setTableData({});
-  //     return;
-  //   }
-
-  //   setTableData(loadData.tabel_konflik);
-  //   console.log("Loaded dataFase:", loadData.tabel_konflik);
-  // }, [selectedId]);
-
   function convertPhaseDataToOriginal (phaseData) {
     const cleanNumber = (num) => {
       // Kalau null, undefined, string kosong → kembalikan 0
@@ -329,7 +304,6 @@ export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
 
   const fetchDataSAI = async (id) => {
     try {
-      setLoading(true);
       const response = await apiSAIForm.getByIdSAI(id);
       console.log(response.data.data)
       if (response && response.data) {
@@ -338,14 +312,12 @@ export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
-      setLoading(false);
       return existing?.data?.sa1?.[selectedId];
     }
   };
 
   const fetchDataSAIII = async (id) => {
     try {
-      setLoading(true);
       const response = await apiSAIIIForm.getByIdSAIII(id);
 
       if (response && response.data) {
@@ -356,8 +328,29 @@ export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
     } catch (error) {
       console.error('Error fetching survey data:', error);
       const existing = JSON.parse(localStorage.getItem('data'));
-      setLoading(false);
       return existing?.data?.sa3?.[selectedId];
+    }
+  };
+
+  const fetchAllData = async (id) => {
+    try {
+      const [sa1Result, sa3Result] = await Promise.all([
+        fetchDataSAI(id),
+        fetchDataSAIII(id)
+      ]);
+
+      toast.success("Semua data SA berhasil dimuat", {
+        autoClose: 1000,
+        position: "top-center",
+      });
+      return { sa1Result, sa3Result };
+    } catch (error) {
+      console.error("Error loading SA data:", error);
+      toast.error("Gagal memuat data SA", {
+        autoClose: 1500,
+        position: "top-center",
+      });
+      return null;
     }
   };
 
@@ -368,9 +361,9 @@ export default function VehicleDataTable ({ setDataKonflik, selectedId }) {
         setTableData({});
         return;
       }
-
-      const sa1 = await fetchDataSAI(selectedId);
-      const sa3 = await fetchDataSAIII(selectedId);
+      const { sa1Result, sa3Result } = await fetchAllData(selectedId);
+      const sa1 = sa1Result;
+      const sa3 = sa3Result;
       const faseData = sa1?.fase || {};
 
       const pendekatMap = {
