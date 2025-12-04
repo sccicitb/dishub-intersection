@@ -48,18 +48,20 @@ const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, i
     params.push(simpangId);
   }
   if (approach && approach.toLowerCase() !== 'semua') {
-    query += ` AND dari_arah = ?`;
+    query += ` AND LOWER(dari_arah) = LOWER(?)`;
     params.push(approach);
   }
   if (direction && direction.toLowerCase() !== 'semua') {
-    query += ` AND ke_arah = ?`;
+    query += ` AND LOWER(ke_arah) = LOWER(?)`;
     params.push(direction);
   }
 
   // === Filter waktu ===
   if (date) {
+    // Convert date format from YYYY/MM/DD to YYYY-MM-DD if needed
+    const formattedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
     query += ` AND waktu BETWEEN ? AND ?`;
-    params.push(`${date} 00:00:00`, `${date} 23:59:59`);
+    params.push(`${formattedDate} 00:00:00`, `${formattedDate} 23:59:59`);
   } else {
     const now = new Date();
     const year = now.getFullYear();
@@ -95,8 +97,10 @@ const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, i
 
 // ✅ OPTIMIZED: Use index-friendly date range instead of DATE() function
 const getArusBySimpangDate = async (simpang_id, date) => {
-  const startDate = `${date} 00:00:00`;
-  const endDate = `${date} 23:59:59`;
+  // Convert date format from YYYY/MM/DD to YYYY-MM-DD if needed
+  const formattedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
+  const startDate = `${formattedDate} 00:00:00`;
+  const endDate = `${formattedDate} 23:59:59`;
   const [rows] = await db.query(`SELECT * FROM arus WHERE ID_Simpang = ? AND waktu BETWEEN ? AND ?`, [simpang_id, startDate, endDate]);
   return rows;
 };
@@ -116,15 +120,17 @@ const getArusSummaryByInterval = async (ID_Simpang, dbSubCodes, start, end) => {
 
 // ✅ OPTIMIZED: Use index-friendly date range instead of DATE() function
 const getSumForCell = async (ID_Simpang, dari_arah, ke_arah, jenis, date) => {
+  // Convert date format from YYYY/MM/DD to YYYY-MM-DD if needed
+  const formattedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
   // date: 'YYYY-MM-DD'
-  const startDate = `${date} 00:00:00`;
-  const endDate = `${date} 23:59:59`;
+  const startDate = `${formattedDate} 00:00:00`;
+  const endDate = `${formattedDate} 23:59:59`;
   const sql = `
     SELECT SUM(\`${jenis}\`) AS total
     FROM arus
     WHERE ID_Simpang = ?
-      AND dari_arah = ?
-      AND ke_arah = ?
+      AND LOWER(dari_arah) = LOWER(?)
+      AND LOWER(ke_arah) = LOWER(?)
       AND waktu BETWEEN ? AND ?
   `;
   const [rows] = await db.query(sql, [ID_Simpang, dari_arah, ke_arah, startDate, endDate]);
@@ -133,9 +139,11 @@ const getSumForCell = async (ID_Simpang, dari_arah, ke_arah, jenis, date) => {
 
 // ✅ OPTIMIZED: Use index-friendly date range instead of DATE() function
 const getArusSummaryGrid = async (ID_Simpang, jenisKendaraanDB, queryDate) => {
+  // Convert date format from YYYY/MM/DD to YYYY-MM-DD if needed
+  const formattedDate = queryDate.includes('/') ? queryDate.replace(/\//g, '-') : queryDate;
   const selectFields = jenisKendaraanDB.map(code => `SUM(\`${code}\`) AS \`${code}\``).join(', ');
-  const startDate = `${queryDate} 00:00:00`;
-  const endDate = `${queryDate} 23:59:59`;
+  const startDate = `${formattedDate} 00:00:00`;
+  const endDate = `${formattedDate} 23:59:59`;
   const sql = `
     SELECT dari_arah, ke_arah, ${selectFields}
     FROM arus
@@ -172,11 +180,11 @@ async function getDailySummaryByDateRange(filters, includedSubCodes, startDate, 
     params.push(filters.simpangId);
   }
   if (filters.approach && filters.approach.toLowerCase() !== 'semua') {
-    sql += ` AND dari_arah = ?`;
+    sql += ` AND LOWER(dari_arah) = LOWER(?)`;
     params.push(filters.approach);
   }
   if (filters.direction && filters.direction.toLowerCase() !== 'semua') {
-    sql += ` AND ke_arah = ?`;
+    sql += ` AND LOWER(ke_arah) = LOWER(?)`;
     params.push(filters.direction);
   }
   
@@ -288,11 +296,11 @@ async function getYearlySummary(startDateObj, filters, includedSubCodes, numYear
       params.push(filters.simpangId);
     }
     if (filters.approach && filters.approach.toLowerCase() !== 'semua') {
-      sql += ` AND dari_arah = ?`;
+      sql += ` AND LOWER(dari_arah) = LOWER(?)`;
       params.push(filters.approach);
     }
     if (filters.direction && filters.direction.toLowerCase() !== 'semua') {
-      sql += ` AND ke_arah = ?`;
+      sql += ` AND LOWER(ke_arah) = LOWER(?)`;
       params.push(filters.direction);
     }
 
@@ -446,7 +454,7 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
 
   // Add approach filter if not 'semua'
   if (dbApproach !== 'semua') {
-    sql += ` AND dari_arah = ?`;
+    sql += ` AND LOWER(dari_arah) = LOWER(?)`;
     params.push(dbApproach);
   }
 
@@ -512,6 +520,100 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
   }
 };
 
+// Get traffic matrix (asal-tujuan) dengan filtering approach
+const getTrafficMatrix = async (simpangId, date, approach = 'semua') => {
+  try {
+    // Format tanggal dari YYYY/MM/DD ke YYYY-MM-DD jika perlu
+    const formattedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
+    
+    // Build WHERE clause
+    let whereClause = 'WHERE ID_Simpang = ? AND DATE(waktu) = ?';
+    const params = [simpangId, formattedDate];
+
+    // Filter berdasarkan approach (dari_arah)
+    if (approach && approach.toLowerCase() !== 'semua') {
+      whereClause += ' AND LOWER(dari_arah) = LOWER(?)';
+      params.push(approach);
+    }
+
+    // Query untuk mendapatkan asal-tujuan matrix
+    const sql = `
+      SELECT 
+        dari_arah,
+        ke_arah,
+        COUNT(*) as total_vehicles
+      FROM arus 
+      ${whereClause}
+      GROUP BY dari_arah, ke_arah
+      ORDER BY dari_arah, ke_arah
+    `;
+
+    const [rows] = await db.query(sql, params);
+    
+    // Build matrix object
+    const directions = ['barat', 'selatan', 'timur', 'utara'];
+    const matrix = {};
+    
+    // Initialize matrix dengan 0
+    directions.forEach(from => {
+      matrix[from] = {};
+      directions.forEach(to => {
+        matrix[from][to] = 0;
+      });
+      matrix[from]['Total'] = 0;
+    });
+
+    // Populate matrix dari database
+    rows.forEach(row => {
+      const dari = row.dari_arah ? row.dari_arah.toLowerCase() : 'unknown';
+      const ke = row.ke_arah ? row.ke_arah.toLowerCase() : 'unknown';
+      
+      if (directions.includes(dari) && directions.includes(ke)) {
+        matrix[dari][ke] = row.total_vehicles;
+      }
+    });
+
+    // Calculate row totals
+    directions.forEach(from => {
+      let total = 0;
+      directions.forEach(to => {
+        total += matrix[from][to];
+      });
+      matrix[from]['Total'] = total;
+    });
+
+    // Build movement direction matrix (BKi, Lurus, BKa)
+    const movementMatrix = buildMovementDirectionMatrix(matrix, directions);
+
+    return {
+      asalTujuan: matrix,
+      arahPergerakan: movementMatrix
+    };
+  } catch (error) {
+    console.error('Error in getTrafficMatrix:', error);
+    throw new Error(`Database query failed: ${error.message}`);
+  }
+};
+
+// Helper untuk build movement direction matrix
+const buildMovementDirectionMatrix = (asalTujuanMatrix, directions) => {
+  // Movement direction matrix menampilkan data yang sama dengan asal-tujuan
+  // Hanya struktur yang berbeda: rows = arah_pergerakan, columns = directions
+  const movementTypes = ['Belok Kiri', 'Lurus', 'Belok Kanan'];
+
+  // Build result matrix (structure-nya sama dengan asalTujuan)
+  const result = {};
+  directions.forEach(dir => {
+    result[dir] = {};
+    directions.forEach(dir2 => {
+      result[dir][dir2] = asalTujuanMatrix[dir][dir2];
+    });
+    result[dir]['Total'] = asalTujuanMatrix[dir]['Total'];
+  });
+
+  return result;
+};
+
 module.exports = {
   getVehicleDataGrouped,
   getArusBySimpangDate,
@@ -523,5 +625,7 @@ module.exports = {
   getMonthlySummary,
   getYearlySummary,
   // KM Tabel API:
-  getKMTabelData
+  getKMTabelData,
+  // Matrix API:
+  getTrafficMatrix
 };

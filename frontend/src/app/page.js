@@ -3,8 +3,10 @@
 import { useEffect, useState, Suspense, lazy } from "react";
 import { vehicles } from "@/lib/apiAccess";
 import { survey } from "@/lib/apiService";
+import { maps } from "@/lib/apiService";
 import SocketConnection from "./components/testingSocket";
 import TableMatrix from "@/app/components/table/tableMatrix";
+import { useTrafficMatrix } from "@/hooks/useTrafficMatrix";
 
 const LintasChart = lazy(() => import("@/app/components/lintasChart"));
 const TotalChart = lazy(() => import("@/app/components/totalChart"));
@@ -69,15 +71,9 @@ export default function Home () {
   });
 
   const [selectedLocation, setSelectedLocation] = useState(0);
-  const [selectedDate, setSelectedDate] = useState(null);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-
-  const handleSelectOption = (location, date) => {
-    console.log("Lokasi dipilih dan tanggal:", location, date);
-    setSelectedLocation(location?.id ?? 0);
-    setSelectedDate(date)
-  };
+  const [simpangList, setSimpangList] = useState([]);
 
   const getPeriodDisplayText = (filter) => {
     const now = new Date();
@@ -392,66 +388,50 @@ export default function Home () {
     setIsClient(true);
     // Initialize period display text
     setPeriodDisplayText(getPeriodDisplayText(activeFilter));
+    
+    // Fetch simpang list for dropdown
+    const fetchSimpangList = async () => {
+      try {
+        const response = await maps.getAllSimpang();
+        console.log("test:"+response);
+        console.log(response.data);
+        if (response.status === 200 && Array.isArray(response.data.simpang)) {
+          setSimpangList(response.data.simpang);
+        }
+      } catch (error) {
+        console.error("Error fetching simpang list:", error);
+        setSimpangList([]);
+      }
+    };
+    
+    fetchSimpangList();
   }, [])
 
-  const [dataMatrix, setDataMatrix] = useState([]);
-  const [dataChord, setDataChord] = useState([]);
-  const categories = ["barat", "selatan", "timur", "utara"];
+  // Traffic Matrix Hook
+  const { 
+    dataChord, 
+    dataMatrix, 
+    categories, 
+    loading: matrixLoading, 
+    error: matrixError,
+    fetchTrafficMatrix,
+    loadDefaultMatrix 
+  } = useTrafficMatrix();
 
-  const fetchAPIMatrix = async (simpang_id, startDate, endDate) => {
-    try {
-      const response = await survey.getTrafficMatrix(simpang_id, startDate, endDate);
-      if (response.status === 200 && response.data) {
-        return response.data.data; // Assuming the API returns the matrix data in this structure
-      } else {
-        console.error("Failed to fetch traffic matrix:", response);
-        return null;
-      }
-    } catch (error) {
-      console.error("Error fetching traffic matrix:", error);
-      return null;
-    }
-  };
-
+  // Load default matrix on component mount
   useEffect(() => {
-    import("@/data/contohmatrix.json").then((data) => {
-      const asalTujuan = data.default.data.asalTujuan;
+    loadDefaultMatrix();
+  }, [loadDefaultMatrix]);
 
-      const data_matrix = categories.map(from => {
-        console.log(from, asalTujuan[from]); // debug
-        return categories.map(to => asalTujuan[from][to]);
+  // Fetch traffic matrix when location or dates change
+  useEffect(() => {
+    if (selectedLocation !== 0 && startDate && endDate) {
+      fetchTrafficMatrix(selectedLocation, startDate, endDate).catch(() => {
+        // If fetch fails, fallback to default matrix is handled in hook
+        console.log("Using default matrix due to fetch failure");
       });
-      setDataChord(data.default.data);
-      console.log("Data Chord:", data.default);
-      setDataMatrix(data_matrix);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (selectedLocation !== 0 && (startDate || endDate)) {
-      fetchAPIMatrix(selectedLocation, startDate, endDate).then((data) => {
-        if (data) {
-          const asalTujuan = data.asalTujuan;
-          const data_matrix = categories.map(from => {
-            return categories.map(to => asalTujuan[from][to]);
-          });
-          setDataChord(data);
-          setDataMatrix(data_matrix);
-        } else {
-          import("@/data/contohmatrix.json").then((data) => {
-            const asalTujuan = data.default.data.asalTujuan;
-
-            const data_matrix = categories.map(from => {
-              return categories.map(to => asalTujuan[from][to]);
-            });
-            setDataChord(data.default);
-            console.log("Data Chord:", data.default);
-            setDataMatrix(data_matrix);
-          });
-        }
-      })
     }
-  }, [selectedLocation, startDate, endDate]);
+  }, [selectedLocation, startDate, endDate, fetchTrafficMatrix]);
 
   if (!isClient) return null;
 
@@ -558,25 +538,26 @@ export default function Home () {
         )}
       </Suspense>
       <div className="w-[90%] py-5 block bg-base-200 rounded-xl">
-        <div className="w-64 px-5">
-          <OptionSelectMaps
-            onSelect={(selectedLocation) => handleSelectOption(selectedLocation, selectedDate)}
-            onDateSelect={(selectedDate) => handleSelectOption(selectedLocation, selectedDate)}
-            optionMap
-            optionDateRange
-            startDateRange={setStartDate}
-            endDateRange={setEndDate}
-          />
-        </div>
-        <div className="w-full lg:flex overflow-x-auto place-items-center">
+        <div className="w-full lg:flex overflow-x-auto place-items-center gap-4">
           <div className="w-fit block m-auto">
             <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
           </div>
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto w-full">
             <TableMatrix
               categories={categories}
               asalTujuan={dataChord?.asalTujuan || {}}
-              arahPergerakan={dataChord?.asalTujuan || {}}
+              arahPergerakan={dataChord?.arahPergerakan || {}}
+              loading={matrixLoading}
+              error={matrixError}
+              simpangList={simpangList}
+              selectedLocation={selectedLocation}
+              onLocationChange={(locationId) => setSelectedLocation(locationId)}
+              onDateChange={(type, date) => {
+                if (type === 'start') setStartDate(date);
+                if (type === 'end') setEndDate(date);
+              }}
+              startDate={startDate}
+              endDate={endDate}
             />
           </div>
         </div>

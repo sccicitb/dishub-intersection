@@ -22,6 +22,26 @@ const TURN_MAP = {
   west:  { left: 'south', straight: 'east', right: 'north' }
 };
 
+// Mapping Indonesian direction names to English (database format)
+const DIRECTION_MAP = {
+  'utara': 'north',
+  'north': 'north',
+  'selatan': 'south',
+  'south': 'south',
+  'timur': 'east',
+  'east': 'east',
+  'barat': 'west',
+  'west': 'west',
+  'semua': 'semua'
+};
+
+// Helper function to convert Indonesian direction to English or keep as-is
+const normalizeDirection = (direction) => {
+  if (!direction) return direction;
+  const normalized = direction.toLowerCase();
+  return DIRECTION_MAP[normalized] || normalized;
+};
+
 /**
  * GET /api/surveys/data-summary
  * Query string:
@@ -39,10 +59,12 @@ const getVehicleSummaryData = async (req, res) => {
     // --- 1. Baca filter dasar ---
     const filters = {
       simpangId: req.query.simpang_id,
-      approach: req.query.approach,
-      direction: req.query.direction,
+      approach: normalizeDirection(req.query.approach),  // Convert Indonesian to English
+      direction: normalizeDirection(req.query.direction),  // Convert Indonesian to English
       classificationType: req.query.classification || 'luar_kota'
     };
+
+    console.log('Filters normalized:', filters);
 
     // 1.1. Ambil subCode list (array) berdasarkan klasifikasi
     const classificationPath = path.join(__dirname, '../data/classification.json');
@@ -398,9 +420,79 @@ const getKMTabelData = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/surveys/traffic-matrix
+ * Get traffic matrix (asal-tujuan) with approach filtering
+ * Query parameters:
+ *   - simpang_id (required): Intersection ID
+ *   - date (required): Date in format YYYY-MM-DD or YYYY/MM/DD
+ *   - approach (optional): dari_arah filter ('barat'|'selatan'|'timur'|'utara'|'semua')
+ */
+const getTrafficMatrix = async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const { simpang_id, date, approach } = req.query;
+
+    // Validate required parameters
+    if (!simpang_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameter',
+        message: 'simpang_id is required'
+      });
+    }
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameter',
+        message: 'date is required (format: YYYY-MM-DD or YYYY/MM/DD)'
+      });
+    }
+
+    // Normalize date format
+    const normalizedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
+
+    // Normalize approach parameter
+    const normalizedApproach = approach ? normalizeDirection(approach) : 'semua';
+
+    console.log('Traffic Matrix Request:', { simpang_id, date: normalizedDate, approach: normalizedApproach });
+
+    // Call model to get matrix data
+    const result = await surveyModel.getTrafficMatrix(simpang_id, normalizedDate, normalizedApproach);
+
+    const executionTime = Date.now() - startTime;
+
+    return res.json({
+      success: true,
+      message: 'Traffic matrix retrieved successfully',
+      data: {
+        simpang_id: parseInt(simpang_id),
+        date: normalizedDate,
+        approach: normalizedApproach,
+        asalTujuan: result.asalTujuan,
+        arahPergerakan: result.arahPergerakan
+      },
+      execution_time_ms: executionTime
+    });
+
+  } catch (error) {
+    console.error('Error in getTrafficMatrix:', error);
+    const executionTime = Date.now() - startTime;
+
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error.message,
+      execution_time_ms: executionTime
+    });
+  }
+};
+
 module.exports = { 
   getVehicleSummaryData, 
   exportVehicleData, 
   getSurveyProporsi, 
-  getKMTabelData 
+  getKMTabelData,
+  getTrafficMatrix
 };
