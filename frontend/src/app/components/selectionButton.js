@@ -54,7 +54,7 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
 
   return (
     <div className="mx-auto space-y-1 w-full h-fit lg:w-[90%]">
-      <div className="space-y-1">
+      {/* <div className="space-y-1">
         <h3 className="text-[14px] font-medium">Pilih Surveyor</h3>
         <div className="join w-full gap-5 flex overflow-x-auto p-2">
           {surveyorOptions.map((option) => (
@@ -67,7 +67,7 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
             </button>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {interval && (
         <div className="space-y-1">
@@ -96,7 +96,7 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
 
       {pendekatan && (
         <div className="space-y-1">
-          <h3 className="text-[14px] font-medium">Pilih Pendekatan Simpang</h3>
+          <h3 className="text-[14px] font-medium">Pilih Pendekatan Simpang (Dari Arah)</h3>
           <div className="join w-full gap-5 flex overflow-x-auto p-2">
             {pendekatanOptions.map((option) => (
               <button

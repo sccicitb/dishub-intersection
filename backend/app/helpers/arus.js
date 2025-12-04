@@ -118,7 +118,7 @@ function getPeriodsAndSlots(arusRows, interval = '15min') {
         ts: sum(slotData, 'TS'),
         bb: sum(slotData, 'BB'),
         tb: sum(slotData, 'TB'),
-        gandengSemitrailer: sum(slotData, 'GANDEG'),
+        gandengSemitrailer: sum(slotData, 'GANDENG'),
         ktb: sum(slotData, 'KTB'),
         total: slotData.reduce((acc, row) =>
           acc + (Number(row.SM) || 0) + (Number(row.MP) || 0) + (Number(row.AUP) || 0) +
