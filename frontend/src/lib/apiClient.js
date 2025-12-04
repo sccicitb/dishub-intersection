@@ -6,7 +6,6 @@ const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL
   // : 'http://localhost:9090/api';
   : 'https://dishub-dashboard-v2.layanancerdas.id/api';
   // : 'http://63.250.52.19:9090/api';
-
 const axiosInstance = axios.create({
   baseURL,
   timeout: 70000,
