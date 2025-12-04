@@ -121,6 +121,13 @@ export const survey = {
 
     return getRequest(`/surveys/km-tabel?${params.join('&')}`);
   },
+  getMatrixWithApproachFilter: (simpang_id, date, approach) => {
+    let params = [`simpang_id=${simpang_id}`, `date=${date}`];
+    if (approach && approach !== 'semua') {
+      params.push(`approach=${approach}`);
+    }
+    return getRequest(`/surveys/traffic-matrix?${params.join('&')}`);
+  },
   getProporsi: (simpang_id, type, date) => getRequest(`/survey-proporsi?ID_Simpang=${simpang_id}${type ? '&type=' + type + '' : ''}&date=${date}`)
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, lazy, useRef, useCallback } from 'react';
+import { useState, useEffect, Suspense, lazy, useRef } from 'react';
 import { io } from "socket.io-client";
 import { cameras, survey, maps } from '@/lib/apiService';
 import { getCuacaJogja } from '@/lib/weatherAccess';
@@ -25,7 +25,7 @@ function SurveiSimpangPage () {
   const [activeSurveyor, setActiveSurveyor] = useState('Semua');
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
   const [activePendekatan, setActivePendekatan] = useState('Semua');
-  const [activeInterval, setActiveInterval] = useState("");
+  const [activeInterval, setActiveInterval] = useState('5min');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
   const [activeTitle, setActiveTitle] = useState("Survei ");
   const [vehicleData, setVehicleData] = useState([]);
@@ -102,9 +102,14 @@ function SurveiSimpangPage () {
           setActiveSimpang(cameraData[0].name || '');
         }
 
-        if (simpangData.length > 0 || simpangData[0]?.id) {
-          setActiveSimpangId(simpangData[0].id)
-          cuaca = await getCuacaJogja(simpangData[0].location.latitude, simpangData[0].location.longitude)
+        // Don't override user's selected simpang ID - only use for weather if available
+        if (simpangData.length > 0 && simpangData[0]?.location) {
+          // Just get weather for the current simpang, don't reset ID
+          try {
+            cuaca = await getCuacaJogja(simpangData[0].location.latitude, simpangData[0].location.longitude)
+          } catch (e) {
+            console.warn('Error fetching weather:', e);
+          }
         }
 
         setCuaca(cuaca || "");
@@ -144,31 +149,15 @@ function SurveiSimpangPage () {
 
   // Debounced fetchSurvey when dependencies change
   useEffect(() => {
-    if (!activeCamera) return;
-    const activeCameraData = getActiveCameraData();
-    camStandard
-    if (activeCameraData?.socket_event === "not_yet_assign") {
-      // Jika not_yet_assign, jangan fetch survey data
-      setVehicleData([]);
-      return;
-    }
+    // When filter changes (interval, pendekatan, date), re-fetch with current activeSimpangId
+    if (!activeSimpangId) return;
 
     const timer = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const res = await survey.getAll(activeCamera, formatDateToYMDForAPI(dateInput), activeInterval, activePendekatan.toLowerCase());
-        const datafetch = Array.isArray(res?.data?.vehicleData) ? res.data.vehicleData : [];
-        setVehicleData(datafetch);
-      } catch (err) {
-        console.error('Error fetching survey data:', err);
-        setVehicleData([]);
-      } finally {
-        setLoading(false);
-      }
+      await fetchVehicleData(activeSimpangId);
     }, 900);
 
     return () => clearTimeout(timer)
-  }, [dateInput, activeCamera, activeInterval, activePendekatan]);
+  }, [dateInput, activeInterval, activePendekatan, activeSimpangId]);
 
   useEffect(() => {
     if (!activeSimpangId) return;
@@ -276,10 +265,17 @@ function SurveiSimpangPage () {
     };
   }, [dataCamera]);
 
-  const fetchVehicleData = async (cameraId, date = dateInput, interval = activeInterval, pendekatan = activePendekatan.toLowerCase()) => {
+  // Fetch vehicle data for given simpang ID
+  const fetchVehicleData = async (simpangId) => {
     setLoading(true);
     try {
-      const res = await survey.getAll(cameraId, formatDateToYMDForAPI(date), interval, pendekatan);
+      // Use current filter states from component scope, not from parameter
+      const res = await survey.getAll(
+        simpangId,
+        formatDateToYMDForAPI(dateInput),
+        activeInterval,
+        activePendekatan.toLowerCase()
+      );
       const datafetch = Array.isArray(res?.data?.vehicleData) ? res.data.vehicleData : [];
       setVehicleData(datafetch);
     } catch (err) {
@@ -353,14 +349,27 @@ function SurveiSimpangPage () {
     }
     console.log(loc)
     setActiveTitle("Survei " + name);
-    fetchVehicleData(loc.id);
-    setActiveSimpangId(loc.id)
+    setActiveSimpangId(loc.id);
     setCuaca(cuaca);
+    
+    // Fetch immediately with the new simpang ID
+    await fetchVehicleData(loc.id);
+    // Fetch matrix data
+    await fetchMatrixData(loc.id, activePendekatan.toLowerCase());
   }
 
+  // Fetch matrix data when filters change (date, approach)
   useEffect(() => {
-    getActiveCameraData()
-  }, [activeCamera])
+    if (!activeSimpangId) return;
+
+    const timer = setTimeout(async () => {
+      // Normalize approach for API call
+      const approach = activePendekatan.toLowerCase() === 'semua' ? 'semua' : activePendekatan.toLowerCase();
+      await fetchMatrixData(activeSimpangId, approach);
+    }, 900); // 900ms debounce
+
+    return () => clearTimeout(timer);
+  }, [dateInput, activePendekatan, activeSimpangId]);
 
   // Render CCTV Stream Component berdasarkan socket_event
   const renderCCTVStream = () => {

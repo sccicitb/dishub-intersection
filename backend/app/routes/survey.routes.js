@@ -13,4 +13,7 @@ module.exports = (app) => {
   
   // KM Tabel API endpoint
   app.get('/api/surveys/km-tabel', authenticateToken, requireViewerOrHigher, surveyController.getKMTabelData);
+
+  // Traffic Matrix API endpoint
+  app.get('/api/surveys/traffic-matrix', authenticateToken, requireViewerOrHigher, surveyController.getTrafficMatrix);
 };

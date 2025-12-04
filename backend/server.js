@@ -13,6 +13,7 @@ var corsOptions = {
     "http://localhost:3001",
     "http://63.250.52.19:9091",  
     "http://63.250.52.19:6060",  // sementara untuk demo
+    "https://dishub-dashboard-v2.layanancerdas.id",
     process.env.CORS_ORIGIN
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
