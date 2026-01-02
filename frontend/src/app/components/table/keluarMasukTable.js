@@ -23,13 +23,16 @@ const KeluarMasukTable = ({ selectedDate, setSelectedDate, loading, data }) => {
 
   useEffect(() => {
     setVehicleData(data)
+    console.log("data received in KeluarMasukTable:", data, "is array:", Array.isArray(data))
   },[data])
 
   const generateTableRows = () => {
     let rows = [];
 
-    // Akses array vehicleData dari struktur JSON yang baru
-    const periods = vehicleData?.vehicleData || [];
+    // Data sudah berupa array langsung dari API (Array of periods)
+    const periods = Array.isArray(vehicleData) ? vehicleData : [];
+    
+    console.log("Generating rows from periods:", periods.length);
 
     periods.forEach((period, periodIndex) => {
       const timeSlots = period.timeSlots || [];
