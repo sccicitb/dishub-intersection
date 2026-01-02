@@ -59,10 +59,12 @@ const getVehicleSummaryData = async (req, res) => {
     // --- 1. Baca filter dasar ---
     const filters = {
       simpangId: req.query.simpang_id,
-      approach: normalizeDirection(req.query.approach),  // Convert Indonesian to English
+      approach: normalizeDirection(req.query.approach),  // Convert Indonesian to English (east, south, north, west)
       direction: normalizeDirection(req.query.direction),  // Convert Indonesian to English
       classificationType: req.query.classification || 'luar_kota'
     };
+
+    console.log('DEBUG - Query approach:', req.query.approach, '-> normalized:', filters.approach);
 
     console.log('Filters normalized:', filters);
 
@@ -489,10 +491,52 @@ const getTrafficMatrix = async (req, res) => {
   }
 };
 
+const getAvailableDirections = async (req, res) => {
+  try {
+    const { simpang_id } = req.query;
+
+    if (!simpang_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Parameter simpang_id is required'
+      });
+    }
+
+    const directions = await surveyModel.getAvailableDirections(simpang_id);
+
+    // Map English to Indonesian for user-friendly display
+    const directionMap = {
+      'north': 'utara',
+      'south': 'selatan',
+      'east': 'timur',
+      'west': 'barat'
+    };
+
+    const directionsIndonesian = directions.map(d => directionMap[d] || d);
+
+    return res.json({
+      success: true,
+      simpang_id: parseInt(simpang_id),
+      available_directions: directions,  // English
+      available_directions_id: directionsIndonesian,  // Indonesia
+      message: `${directions.length} directions available for this intersection`
+    });
+
+  } catch (error) {
+    console.error('Error in getAvailableDirections:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+};
+
 module.exports = { 
   getVehicleSummaryData, 
   exportVehicleData, 
   getSurveyProporsi, 
   getKMTabelData,
-  getTrafficMatrix
+  getTrafficMatrix,
+  getAvailableDirections
 };

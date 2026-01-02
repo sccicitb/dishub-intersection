@@ -71,7 +71,8 @@ function fromMinutes(min) {
 }
 
 // Main helper: interval = '5min' | '10min' | '15min' | '1h' | '60min'
-function getPeriodsAndSlots(arusRows, interval = '15min') {
+// vehicleCodes = optional array of vehicle code columns, defaults to standard columns
+function getPeriodsAndSlots(arusRows, interval = '15min', vehicleCodes = null) {
   let intervalMinutes;
   
   // Determine interval in minutes based on input
@@ -93,21 +94,50 @@ function getPeriodsAndSlots(arusRows, interval = '15min') {
       intervalMinutes = 15; // fallback to 15min
   }
 
+  // Default vehicle codes if not provided
+  const VEHICLE_CODES = vehicleCodes || ['SM', 'MP', 'AUP', 'TR', 'BS', 'TS', 'TB', 'BB', 'GANDENG', 'KTB'];
+  console.log(`[getPeriodsAndSlots] START: interval=${interval} (${intervalMinutes}min), rows=${arusRows.length}, vehicleCodes=${VEHICLE_CODES.join(',')}`);
+
   return PERIODS.map(period => {
     const slots = generateTimeSlots(period.start, period.end, intervalMinutes);
+    let periodTotalVehicles = 0;
+    let slotDebugLogged = false;
+    
     const timeSlots = slots.map(({ slotStart, slotEnd }) => {
       const slotData = arusRows.filter(row => {
         // pastikan row.waktu Date/Datetime object
         let jam;
         if (typeof row.waktu === 'string') {
           // kadang string ISO, kadang Date
-          jam = (new Date(row.waktu)).toTimeString().slice(0, 5);
-        } else {
+          const dateObj = new Date(row.waktu);
+          // IMPORTANT: Handle timezone! Use local time from ISO string
+          // Extract time part from ISO string: "2025-12-16T08:24:14.000Z" -> "08:24"
+          const isoStr = row.waktu;
+          const timeMatch = isoStr.match(/T(\d{2}):(\d{2}):/);
+          if (timeMatch) {
+            jam = `${timeMatch[1]}:${timeMatch[2]}`;
+          } else {
+            jam = dateObj.toTimeString().slice(0, 5);
+          }
+        } else if (row.waktu instanceof Date) {
           jam = row.waktu.toTimeString().slice(0, 5);
+        } else {
+          // Fallback for other formats
+          console.warn('Unexpected waktu format:', row.waktu, typeof row.waktu);
+          return false;
         }
-        return jam >= slotStart && jam < slotEnd;
+        const inSlot = jam >= slotStart && jam < slotEnd;
+        
+        // Debug log untuk slot pertama
+        if (!slotDebugLogged && slotStart === '06:00' && period.name === 'Pagi') {
+          console.log(`[DEBUG] Sample row waktu: ${row.waktu}, parsed jam: ${jam}, slot: ${slotStart}-${slotEnd}, inSlot: ${inSlot}`);
+          slotDebugLogged = true;
+        }
+        
+        return inSlot;
       });
 
+      // Dynamically build data object based on available columns
       const data = {
         sm: sum(slotData, 'SM'),
         mp: sum(slotData, 'MP'),
@@ -120,13 +150,22 @@ function getPeriodsAndSlots(arusRows, interval = '15min') {
         tb: sum(slotData, 'TB'),
         gandengSemitrailer: sum(slotData, 'GANDENG'),
         ktb: sum(slotData, 'KTB'),
-        total: slotData.reduce((acc, row) =>
-          acc + (Number(row.SM) || 0) + (Number(row.MP) || 0) + (Number(row.AUP) || 0) +
-          (Number(row.TR) || 0) + (Number(row.BS) || 0) + (Number(row.TS) || 0) +
-          (Number(row.BB) || 0) + (Number(row.TB) || 0) +
-          (Number(row.GANDEG) || 0) + (Number(row.KTB) || 0), 0)
+        // Calculate total from all available vehicle codes
+        total: slotData.reduce((acc, row) => {
+          let rowTotal = 0;
+          for (const code of VEHICLE_CODES) {
+            rowTotal += Number(row[code]) || 0;
+          }
+          return acc + rowTotal;
+        }, 0)
       };
       const status = slotData.length > 0 ? 1 : 0;
+      
+      // Log untuk slot dengan data
+      if (data.total > 0) {
+        console.log(`[getPeriodsAndSlots] ${period.name} ${slotStart}-${slotEnd}: ${slotData.length} rows, total=${data.total}, mp=${data.mp}, sm=${data.sm}`);
+      }
+      periodTotalVehicles += data.total;
 
       return {
         time: `${slotStart} - ${slotEnd}`,
@@ -134,6 +173,8 @@ function getPeriodsAndSlots(arusRows, interval = '15min') {
         data
       };
     });
+    console.log(`[getPeriodsAndSlots] ✓ ${period.name}: totalVehicles=${periodTotalVehicles}`);
+    
     return {
       name: period.name,
       timeSlots
