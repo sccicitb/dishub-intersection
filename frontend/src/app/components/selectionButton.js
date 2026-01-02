@@ -1,10 +1,37 @@
 "use client";
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { useAuth } from "@/app/context/authContext";
+import axiosInstance from '@/lib/apiClient';
 const SurveyLalulintasExport = lazy(() => import('./exportPdf'));
 
-export default function SelectionButtons ({ pendekatan, interval, exportPdf, arahPergerakan, vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, setActivePergerakan, activeInterval, setActiveInterval, activeDirection, setActiveDirection, direction }) {
+export default function SelectionButtons ({ pendekatan, interval, exportPdf, arahPergerakan, vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, setActivePergerakan, activeInterval, setActiveInterval, activeDirection, setActiveDirection, direction, simpang_id = 2 }) {
   const { pathname, isEditor } = useAuth();
+  const [availableDirections, setAvailableDirections] = useState([]);
+  const [loadingDirections, setLoadingDirections] = useState(false);
+
+  // Fetch available directions dari API berdasarkan simpang_id
+  useEffect(() => {
+    const fetchAvailableDirections = async () => {
+      try {
+        setLoadingDirections(true);
+        const response = await axiosInstance.get(`/surveys/available-directions`, {
+          params: { simpang_id: simpang_id }
+        });
+        
+        if (response.data.success && response.data.available_directions_id) {
+          setAvailableDirections(response.data.available_directions_id);
+        }
+      } catch (error) {
+        console.error('Error fetching available directions:', error);
+      } finally {
+        setLoadingDirections(false);
+      }
+    };
+
+    if (pendekatan && simpang_id) {
+      fetchAvailableDirections();
+    }
+  }, [simpang_id, pendekatan]);
 
   // Opsi untuk surveyor
   const surveyorOptions = ['VIANA', 'Manual', 'Semua'];
@@ -98,15 +125,28 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
         <div className="space-y-1">
           <h3 className="text-[14px] font-medium">Pilih Pendekatan Simpang (Dari Arah)</h3>
           <div className="join w-full gap-5 flex overflow-x-auto p-2">
-            {pendekatanOptions.map((option) => (
-              <button
-                key={option}
-                className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePendekatan.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
-                onClick={() => setActivePendekatan(option)}
-              >
-                {option}
-              </button>
-            ))}
+            {pendekatanOptions.map((option) => {
+              const isAvailable = availableDirections.length === 0 || availableDirections.some(dir => dir.toLowerCase() === option.toLowerCase());
+              const isDisabled = availableDirections.length > 0 && !isAvailable && option !== 'Semua';
+              
+              return (
+                <button
+                  key={option}
+                  disabled={isDisabled}
+                  className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2 ${
+                    isDisabled 
+                      ? 'opacity-50 cursor-not-allowed' 
+                      : activePendekatan.toLowerCase() === option.toLowerCase() 
+                        ? 'bg-[#232f61] text-white' 
+                        : 'outline-none'
+                  }`}
+                  onClick={() => !isDisabled && setActivePendekatan(option)}
+                  title={isDisabled ? `Tidak tersedia untuk simpang ini` : ''}
+                >
+                  {option}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
