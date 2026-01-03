@@ -42,6 +42,7 @@ function countArus(data, simpangMap) {
 }
 
 const PERIODS = [
+  { name: 'Dini Hari', start: '00:00', end: '05:59' },
   { name: 'Pagi', start: '06:00', end: '11:59' },
   { name: 'Siang', start: '12:00', end: '15:59' },
   { name: 'Sore', start: '16:00', end: '18:59' },
@@ -142,7 +143,6 @@ function getPeriodsAndSlots(arusRows, interval = '15min', vehicleCodes = null) {
         sm: sum(slotData, 'SM'),
         mp: sum(slotData, 'MP'),
         aup: sum(slotData, 'AUP'),
-        trMp: sum(slotData, 'MP'), // Atur jika ada field sendiri
         tr: sum(slotData, 'TR'),
         bs: sum(slotData, 'BS'),
         ts: sum(slotData, 'TS'),
