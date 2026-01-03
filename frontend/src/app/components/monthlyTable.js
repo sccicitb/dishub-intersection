@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 // import monthlyData from '@/data/DataTableDaysMonth.json';
+import { ExportMonthButton } from '@/app/components/exportExcel';
 
 const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loading }) => {
   const [vehicleData, setVehicleData] = useState({
@@ -31,7 +32,7 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
   }
   const calculateMonthlyTotal = (days) => {
     const totals = {
-      sm: 0, mp: 0, aup: 0, trMp: 0,
+      sm: 0, mp: 0, aup: 0, tr: 0,
       bs: 0, ts: 0, bb: 0, tb: 0,
       gandengSemitrailer: 0, ktb: 0, total: 0,
     };
@@ -60,8 +61,8 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
           <td className="border border-base-300 text-sm text-center">{monthItem.workDays}</td>
           <td className="border border-base-300 text-sm text-center">{monthlyTotal.sm}</td>
           <td className="border border-base-300 text-sm text-center">{monthlyTotal.mp}</td>
+          <td className="border border-base-300 text-sm text-center">{monthlyTotal.tr}</td>
           <td className="border border-base-300 text-sm text-center">{monthlyTotal.aup}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.trMp || monthlyTotal.tr}</td>
           <td className="border border-base-300 text-sm text-center">{monthlyTotal.bs}</td>
           <td className="border border-base-300 text-sm text-center">{monthlyTotal.ts}</td>
           <td className="border border-base-300 text-sm text-center">{monthlyTotal.bb}</td>
@@ -129,7 +130,7 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
   // Calculate yearly totals
   const calculateYearlyTotal = () => {
     const totals = {
-      sm: 0, mp: 0, aup: 0, trMp: 0, bs: 0, ts: 0, bb: 0, tb: 0, gandengSemitrailer: 0, ktb: 0, total: 0
+      sm: 0, mp: 0, aup: 0, bs: 0, ts: 0, bb: 0, tb: 0, gandengSemitrailer: 0, ktb: 0, total: 0
     };
 
     vehicleData.dailyData?.forEach(month => {
@@ -144,7 +145,7 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
   // Calculate LHRK totals
   const calculateLHRKTotal = () => {
     const totals = {
-      sm: 0, mp: 0, aup: 0, trMp: 0, bs: 0, ts: 0, bb: 0, tb: 0, gandengSemitrailer: 0, ktb: 0, total: 0
+      sm: 0, mp: 0, aup: 0, bs: 0, ts: 0, bb: 0, tb: 0, gandengSemitrailer: 0, ktb: 0, total: 0
     };
 
     let totalDays = 0;
@@ -169,21 +170,24 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
 
   return (
     <div>
-      <input
-        type="number"
-        id="year-input"
-        min="2000"
-        max="2100"
-        value={selectedYear || ''}
-        onChange={handleYearChange}
-        className="input input-md w-24"
-        placeholder="YYYY"
-      />
-      {loading ?
-        (<div className="flex justify-center p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-        ) : (
+      <div className="flex flex-wrap w-full gap-3 items-center mb-4">
+        <label htmlFor="year-input" className="pl-5 text-sm font-medium text-gray-700">
+          Pilih Tahun:
+        </label>
+        <input
+          type="number"
+          id="year-input"
+          min="2000"
+          max="2100"
+          value={selectedYear || ''}
+          onChange={handleYearChange}
+          className="input input-md w-24"
+          placeholder="YYYY"
+        />
+
+        <ExportMonthButton monthlyData={monthlyData} fileName="Data-Bulanan" selectedYear={selectedYear} />
+      </div>
+      {!loading && (
           <div className="mx-auto p-4 overflow-x-auto">
             <table className="table-auto border-collapse border border-base-300 w-full">
               <thead>
@@ -206,7 +210,8 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
                 </tr>
                 <tr className="bg-base-300">
                   <th rowSpan={2} className="border border-base-100 text-sm font-medium text-center">SM</th>
-                  <th colSpan={3} className="border border-base-100 text-sm font-medium text-center">MP</th>
+                  <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">MP</th>
+                  <th rowSpan={2} className="border border-base-100 text-sm font-medium">TR</th>
                   <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">KS</th>
                   <th rowSpan={2} className="border border-base-100 text-sm font-medium text-center">BB</th>
                   <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">TB</th>
@@ -215,7 +220,6 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
                 <tr className="bg-base-300">
                   <th className="border border-base-100 text-sm font-medium">MP</th>
                   <th className="border border-base-100 text-sm font-medium">AUP</th>
-                  <th className="border border-base-100 text-sm font-medium">TR</th>
                   <th className="border border-base-100 text-sm font-medium">BS</th>
                   <th className="border border-base-100 text-sm font-medium">TS</th>
                   <th className="border border-base-100 text-sm font-medium">TB</th>

@@ -127,6 +127,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
                 vehicleData={vehicleData}
                 classification={activeClassification}
                 pdf={false}
+                isEditor={true}
               />
             )}
           </>

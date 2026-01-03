@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 // import monthlyData from '@/data/DataTableDaysMonth.json';
+import { ExportDayButton } from '@/app/components/exportExcel';
 
 const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEndDate, selectedYear: parentSelectedYear, selectedMonth: parentSelectedMonth, setSelectedMonth: setParentSelectedMonth,
   setSelectedYear: setParentSelectedYear, type,
@@ -214,7 +215,7 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
           <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.sm || 0 : day?.sm || 0}</td>
           <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.mp || 0 : day?.mp || 0}</td>
           <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.aup || 0 : day?.aup || 0}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.trMp || 0 : day?.trMp || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.tr || 0 : day?.tr || 0}</td>
           <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.bs || 0 : day?.bs || 0}</td>
           <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.ts || 0 : day?.ts || 0}</td>
           <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.bb || 0 : day?.bb || 0}</td>
@@ -241,7 +242,7 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
   const calculateDailyTotal = () => {
     const daysData = getDaysData();
     const totals = {
-      sm: 0, mp: 0, aup: 0, trMp: 0, bs: 0, ts: 0, bb: 0, tb: 0, gandengSemitrailer: 0, ktb: 0, total: 0
+      sm: 0, mp: 0, aup: 0, tr: 0, bs: 0, ts: 0, bb: 0, tb: 0, gandengSemitrailer: 0, ktb: 0, total: 0
     };
 
     if (daysData && daysData.length > 0) {
@@ -286,7 +287,7 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
 
   return (
     <div className="mx-auto p-4">
-      <div className="items-center flex mb-4 flex-wrap">
+      <div className="items-center flex mb-4 flex-wrap gap-3">
 
         {type === "dailyRange" ? (
           <div className="flex flex-wrap items-center not-lg:my-2 gap-4">
@@ -344,6 +345,11 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
             />
           </div>
         )}
+        {type === "dailyRange" ? (
+          <ExportDayButton dailyData={monthlyData} fileName="Data-Harian-Rentang" type="dailyRange" />
+        ) : type === "dailyMonth" && (
+          <ExportDayButton dailyData={monthlyData} fileName="Data-Harian-Bulan" type="dailyMonth"/>
+        )}
       </div>
 
       <div className="overflow-x-auto">
@@ -368,7 +374,8 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
             </tr>
             <tr className="bg-base-300">
               <th rowSpan={2} className="border border-base-100 text-sm font-medium text-center">SM</th>
-              <th colSpan={3} className="border border-base-100 text-sm font-medium text-center">MP</th>
+              <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">MP</th>
+              <th rowSpan={2} className="border border-base-100 text-sm font-medium">TR</th>
               <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">KS</th>
               <th rowSpan={2} className="border border-base-100 text-sm font-medium text-center">BB</th>
               <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">TB</th>
@@ -377,7 +384,6 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
             <tr className="bg-base-300">
               <th className="border border-base-100 text-sm font-medium">MP</th>
               <th className="border border-base-100 text-sm font-medium">AUP</th>
-              <th className="border border-base-100 text-sm font-medium">TR</th>
               <th className="border border-base-100 text-sm font-medium">BS</th>
               <th className="border border-base-100 text-sm font-medium">TS</th>
               <th className="border border-base-100 text-sm font-medium">TB</th>
