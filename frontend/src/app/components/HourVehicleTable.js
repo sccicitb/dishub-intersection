@@ -148,12 +148,6 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.trMp || 0}
-            </td>
-            <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
-              style={pdf ? pdfCellStyle : {}}
-            >
               {slot.data.tr || 0}
             </td>
             <td
@@ -532,7 +526,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 Waktu
               </th>
               <th
-                colSpan={8}
+                colSpan={7}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
@@ -569,7 +563,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 SM
               </th>
               <th
-                colSpan={3}
+                colSpan={2}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
@@ -637,12 +631,6 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 AUP
-              </th>
-              <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                TR
               </th>
             </tr>
           </thead>

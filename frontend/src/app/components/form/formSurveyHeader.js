@@ -330,7 +330,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
                   onClick={() => refreshData()}
                   disabled={loading}
                 >
-                  <IoReloadOutline className={`text-xl text-success ${loading ? 'animate-spin' : ''}`} />
+                  <IoReloadOutline className={`text-xl text-success ${loading ? 'disabled' : ''}`} />
                 </button>
               </div>
             )}
@@ -340,7 +340,7 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
             onClick={() => handleDelete()}
             disabled={loading}
           >
-            <FaTrash className={`text-xl text-error ${loading ? 'animate-spin' : ''}`} />
+            <FaTrash className={`text-xl text-error ${loading ? 'disabled' : ''}`} />
           </button>
         </div>
       </Description >
