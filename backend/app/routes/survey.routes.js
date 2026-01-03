@@ -16,4 +16,7 @@ module.exports = (app) => {
 
   // Traffic Matrix API endpoint
   app.get('/api/surveys/traffic-matrix', authenticateToken, requireViewerOrHigher, surveyController.getTrafficMatrix);
+
+  // Available directions API endpoint
+  app.get('/api/surveys/available-directions', authenticateToken, requireViewerOrHigher, surveyController.getAvailableDirections);
 };

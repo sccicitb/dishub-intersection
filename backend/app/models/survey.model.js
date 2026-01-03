@@ -39,7 +39,8 @@ function mapRowToAlias(row, includedSubCodes) {
 }
 
 const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, includedSubCodes, interval = '15min') => {
-  let query = `SELECT waktu, ${includedSubCodes.join(', ')} FROM arus WHERE waktu IS NOT NULL`;
+  // Include ID_Simpang, dari_arah, ke_arah for proper filtering/grouping
+  let query = `SELECT waktu, ID_Simpang, dari_arah, ke_arah, ${includedSubCodes.join(', ')} FROM arus WHERE waktu IS NOT NULL`;
   const params = [];
 
   // Filter kamera, pendekatan, arah
@@ -86,8 +87,16 @@ const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, i
 
   const [rows] = await db.query(query, params);
 
-  // DELEGATE GROUPING/AGGREGATION TO HELPER, pass interval
-  const vehicleData = getPeriodsAndSlots(rows, interval).map(period => ({
+  // Debug logging
+  console.log(`[getVehicleDataGrouped] Query: ${query}`);
+  console.log(`[getVehicleDataGrouped] Params: ${JSON.stringify(params)}`);
+  console.log(`[getVehicleDataGrouped] Rows returned: ${rows.length}`);
+  if (rows.length > 0) {
+    console.log(`[getVehicleDataGrouped] First row sample:`, rows[0]);
+  }
+
+  // DELEGATE GROUPING/AGGREGATION TO HELPER, pass interval AND includedSubCodes
+  const vehicleData = getPeriodsAndSlots(rows, interval, includedSubCodes).map(period => ({
     period: period.name,
     timeSlots: period.timeSlots
   }));
@@ -448,7 +457,6 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
     FROM arus 
     WHERE ID_Simpang = ? 
       AND waktu BETWEEN ? AND ?
-      AND dari_arah IN ('east', 'west', 'north', 'south')
   `;
   const params = [simpang_id, startDate, endDate];
 
@@ -522,7 +530,7 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
 
 // Get traffic matrix (asal-tujuan) dengan filtering approach
 const getTrafficMatrix = async (simpangId, date, approach = 'semua') => {
-  try {
+try {
     // Format tanggal dari YYYY/MM/DD ke YYYY-MM-DD jika perlu
     const formattedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
     
@@ -614,6 +622,34 @@ const buildMovementDirectionMatrix = (asalTujuanMatrix, directions) => {
   return result;
 };
 
+/**
+ * Get available dari_arah (directions) for a specific simpang
+ * @param {number} simpangId - Simpang ID
+ * @returns {Promise<Array>} Array of available directions (north, south, east, west)
+ */
+const getAvailableDirections = async (simpangId) => {
+  try {
+    const query = `
+      SELECT DISTINCT LOWER(dari_arah) as direction
+      FROM arus
+      WHERE ID_Simpang = ?
+        AND dari_arah IS NOT NULL
+        AND dari_arah != ''
+      ORDER BY direction
+    `;
+
+    const [rows] = await db.query(query, [simpangId]);
+    const directions = rows.map(row => row.direction);
+
+    console.log(`[getAvailableDirections] Simpang ${simpangId} has directions:`, directions);
+
+    return directions;
+  } catch (error) {
+    console.error('Error in getAvailableDirections:', error);
+    throw new Error(`Database query failed: ${error.message}`);
+  }
+};
+
 module.exports = {
   getVehicleDataGrouped,
   getArusBySimpangDate,
@@ -627,5 +663,7 @@ module.exports = {
   // KM Tabel API:
   getKMTabelData,
   // Matrix API:
-  getTrafficMatrix
+  getTrafficMatrix,
+  // Available directions:
+  getAvailableDirections
 };

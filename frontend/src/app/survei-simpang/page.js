@@ -38,6 +38,7 @@ function SurveiSimpangPage () {
   const [camStandard, setCamStandard] = useState(0)
   const [dataSimpangById, setDataSimpangById] = useState({});
   const [Cuaca, setCuaca] = useState("")
+  const [fetchError, setFetchError] = useState(null);
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -268,6 +269,7 @@ function SurveiSimpangPage () {
   // Fetch vehicle data for given simpang ID
   const fetchVehicleData = async (simpangId) => {
     setLoading(true);
+    setFetchError(null);
     try {
       // Use current filter states from component scope, not from parameter
       const res = await survey.getAll(
@@ -281,23 +283,12 @@ function SurveiSimpangPage () {
     } catch (err) {
       console.error('Error fetching survey data:', err);
       setVehicleData([]);
+      setFetchError(err?.response?.data?.message || 'Gagal mengambil data kendaraan');
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper function untuk mendapatkan camera data berdasarkan activeCamera
-  // const getActiveCameraData = () => {
-  //   if (!Array.isArray(dataCamera) || dataCamera.length === 0) return null;
-
-  //   return dataCamera.find(building => {
-  //     // Cek berbagai kemungkinan struktur data
-  //     if (building?.camera?.camera_id === activeCamera) return true;
-  //     if (building?.camera?.id === activeCamera) return true;
-  //     if (building?.id === activeCamera) return true;
-  //     return false;
-  //   });
-  // };
 
   const handleClick = (building) => {
     if (!building) {
@@ -355,21 +346,19 @@ function SurveiSimpangPage () {
     // Fetch immediately with the new simpang ID
     await fetchVehicleData(loc.id);
     // Fetch matrix data
-    await fetchMatrixData(loc.id, activePendekatan.toLowerCase());
   }
 
-  // Fetch matrix data when filters change (date, approach)
+  // Fetch vehicle data when filters change (date, approach, interval, simpang)
   useEffect(() => {
     if (!activeSimpangId) return;
 
     const timer = setTimeout(async () => {
-      // Normalize approach for API call
-      const approach = activePendekatan.toLowerCase() === 'semua' ? 'semua' : activePendekatan.toLowerCase();
-      await fetchMatrixData(activeSimpangId, approach);
-    }, 900); // 900ms debounce
+      // Fetch vehicle data with current filters
+      await fetchVehicleData(activeSimpangId);
+    }, 900); // 900ms debounce to avoid excessive API calls
 
     return () => clearTimeout(timer);
-  }, [dateInput, activePendekatan, activeSimpangId]);
+  }, [dateInput, activePendekatan, activeInterval, activeSimpangId]);
 
   // Render CCTV Stream Component berdasarkan socket_event
   const renderCCTVStream = () => {
@@ -420,14 +409,14 @@ function SurveiSimpangPage () {
           <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
         )}
         <div className="w-[95%] m-auto">
-          <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
+          {/* <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
             <RecentVehicle customCSS={'h-[320px]'} data={streamData[activeCamera]} />
             <div className="py-1 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
               <div className="w-full">
                 {renderCCTVStream()}
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div className="lg:flex lg:place-items-center gap-5 py-10 space-y-5 max-lg:flex-col">
             <SurveyInfoTable fetchStatus={fetchStatus} id={activeSimpangId} cuaca={Cuaca} />
@@ -444,6 +433,7 @@ function SurveiSimpangPage () {
                 setActivePendekatan={setActivePendekatan}
                 activePergerakan={activePergerakan}
                 setActivePergerakan={setActivePergerakan}
+                simpang_id={activeSimpangId}
                 exportPdf
                 pendekatan
                 interval
@@ -461,10 +451,31 @@ function SurveiSimpangPage () {
             />
           </div>
 
-          {loading ? (<div>Loading...</div>) :
-            Array.isArray(vehicleData) && vehicleData.length > 0 && (
-              <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} isEditor={isEditor}/>
-            )}
+          {loading ? (
+            <div className="w-full flex justify-center items-center py-20">
+              <div className="text-center">
+                <div className="loading loading-spinner loading-lg text-primary"></div>
+                <p className="mt-4 text-gray-600">Memuat data kendaraan...</p>
+              </div>
+            </div>
+          ) : fetchError ? (
+            <div className="alert alert-error">
+              <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l-2-2m0 0l-2-2m2 2l2-2m-2 2l-2 2m2-2l2 2m-2-2l2-2"></path></svg>
+              <span>{fetchError}</span>
+            </div>
+          ) : Array.isArray(vehicleData) && vehicleData.length > 0 ? (
+            <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} isEditor={isEditor}/>
+          ) : (
+            <div className="w-full flex justify-center items-center py-20">
+              <div className="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-gray-600 text-lg font-medium">Tidak ada data</p>
+                <p className="text-gray-500 text-sm mt-2">Tidak ditemukan data kendaraan untuk filter yang dipilih</p>
+              </div>
+            </div>
+          )}
           <ClasificationTable typeClass={activeClassification} />
         </div>
       </Suspense>

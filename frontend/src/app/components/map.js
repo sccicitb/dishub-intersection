@@ -404,7 +404,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
               />
             </Source>
           )} */}
-          
+
             {distanceLine.map(({ id, feature }) => (
               <Source key={id} id={`line-${id}`} type="geojson" data={feature}>
                 <Layer
@@ -542,27 +542,29 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
             <div className="bg-white rounded-xl p-5 shadow-lg w-80 max-w-full">
               <h2 className="text-xs font-semibold mb-4">Pilih Kamera</h2>
               <div className="space-y-2">
-                {cameraModal.cameras.map((camera) => (
-                  <button
-                    key={camera.id}
-                    disabled={camera.socket_event === "not_yet_assign"}
-                    className={`w-full text-left rounded-xl btn btn-sm hover:bg-gray-100 ${camera.socket_event === "not_yet_assign"
-                      ? "border-orange-100 bg-orange-50"
-                      : "border-green-300 bg-green-50"
-                      }`}
-                    onClick={() => handleCameraSelect(camera)}
-                  >
-                    <div className="flex flex-col items-center">
-                      <span>{camera.name || `Camera ${camera.id}`}</span>
-                      <small className={`${camera.socket_event === "not_yet_assign"
-                        ? "text-orange-300"
-                        : "text-green-600"
-                        }`}>
-                        {camera.socket_event === "not_yet_assign" ? "Video Stream" : "Live Stream + Model Detection"}
-                      </small>
-                    </div>
-                  </button>
-                ))}
+                {cameraModal.cameras.map((camera) => {
+                  console.log(camera)
+                  return (
+                    <button
+                      key={camera.id}
+                      className={`w-full text-left rounded-xl btn btn-sm hover:bg-gray-100 ${camera.socket_event === "not_yet_assign"
+                        ? "border-orange-100 bg-orange-50"
+                        : "border-green-300 bg-green-50"
+                        }`}
+                      onClick={() => handleCameraSelect(camera)}
+                    >
+                      <div className="flex flex-col items-center">
+                        <span>{camera.name || `Camera ${camera.id}`}</span>
+                        <small className={`${camera.socket_event === "not_yet_assign"
+                          ? "text-orange-300"
+                          : "text-green-600"
+                          }`}>
+                          {camera.socket_event === "not_yet_assign" ? "Video Stream" : "Live Stream + Model Detection"}
+                        </small>
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
               <button
                 className="btn btn-sm mt-4 w-full btn-error rounded-xl"

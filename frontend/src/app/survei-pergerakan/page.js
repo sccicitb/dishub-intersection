@@ -45,6 +45,8 @@ function MovePage () {
   const [fetchStatus, setFetchStatus] = useState(false)
   const [dataKM, setDataKM] = useState([])
   const [simpangModel, setSimpangModel] = useState([])
+  const [loadingKM, setLoadingKM] = useState(false)
+  const [errorKM, setErrorKM] = useState(null)
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -141,7 +143,7 @@ function MovePage () {
           selatan: responses[2]?.data?.vehicleData || responses[2]?.data || [],
           utara: responses[3]?.data?.vehicleData || responses[3]?.data || []
         };
-
+        console.log(combinedData);
         setVehicleData(combinedData);
       } else {
         const res = await survey.getAll(
@@ -166,44 +168,61 @@ function MovePage () {
 
 
   const fetchSurveyKM = async () => {
+    console.log('fetchSurveyKM called', { activeSID, simpangModel, dateInput, activeInterval, activePendekatan });
+    
     if (loading || !activeSID) return;
 
 
-    if(!simpangModel.includes(activeSID)) return toast.info("Simpang yang dipilih tidak memiliki model deteksi, Silahkan pilih yang lain", {position : 'top-right'})
-
     const base = {
       camera_id: activeSID,
-      date: dateInput,
+      date: dateInput, // Format YYYY-MM-DD dari input
       interval: activeInterval || '',
       approach: activePendekatan?.toLowerCase() || '',
     };
 
     try {
-      const data = await survey.getAllKM(base.camera_id,
+      setLoadingKM(true);
+      setErrorKM(null);
+      console.log('Fetching KM with params:', base);
+      
+      const data = await survey.getAllKM(
+        base.camera_id,
         base.date,
         base.interval,
-        base.approach)
-      setDataKM(data.data.data)
+        base.approach
+      );
+      
+      console.log('KM API Response:', {
+        fullResponse: data,
+        dataProperty: data?.data,
+        vehicleData: data?.data?.data?.vehicleData
+      });
+
+      const kmData = data?.data?.data?.vehicleData || [];
+      console.log('Setting dataKM with', kmData.length, 'periods');
+      setDataKM(kmData);
     } catch (err) {
-      import("@/data/DataKMTabel.json").then((data) => setDataKM((data.default || [])))
-      console.error({ "error": err })
+      console.error('Error fetching KM:', {
+        error: err,
+        message: err?.message,
+        responseStatus: err?.response?.status,
+        responseData: err?.response?.data
+      });
+      setErrorKM(err?.response?.data?.message || err?.message || 'Gagal mengambil data Keluar-Masuk');
+      
+      import("@/data/DataKMTabel.json").then((data) => {
+        console.log('Fallback ke data lokal');
+        setDataKM((data.default || []))
+      });
+    } finally {
+      setLoadingKM(false);
     }
   }
 
   useEffect(() => {
-    // setLoading(true/);
     fetchSurvey();
+    fetchSurveyKM();
   }, [activeSID, activeCamera, activeInterval, activePendekatan, activeDirection, dateInput, reportType]);
-
-  useEffect(() => {
-    fetchSurveyKM();
-  }, [activeSID, activeInterval, activePendekatan, activeDirection, dateInput]);
-
-
-    useEffect(() => {
-    fetchSurveyKM();
-  }, [activeSimpangId, activeInterval, activePendekatan, activeDirection, dateInput]);
-
 
   const handleClick = (building) => {
     if (!building) {
@@ -273,10 +292,15 @@ function MovePage () {
           <DirectionTable vehicleData={vehicleData} classification={activeClassification} activePergerakan={activeDirection} activePendekatan={activePendekatan} />
           {kmTableStatus && (
             <Suspense fallback={<div>Loading Keluar-Masuk Table...</div>}>
+              {errorKM && (
+                <div className="alert alert-error mb-4">
+                  <span>{errorKM}</span>
+                </div>
+              )}
               <KeluarMasukTable
                 selectedDate={dateInput}
                 setSelectedDate={setDateInput}
-                loading={loading}
+                loading={loadingKM}
                 data={dataKM}
               />
             </Suspense>
