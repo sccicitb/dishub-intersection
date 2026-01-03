@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 // import yearlyData from '@/data/DataTableYear.json';
 
+import { ExportYearButton, ExportHourButton } from '@/app/components/exportExcel';
+
 const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
   const [vehicleData, setVehicleData] = useState({ yearlyData: [], lhrtData: [] });
   const [loading, setLoading] = useState(false);
@@ -83,8 +85,8 @@ const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
 
   return (
     <div className="mx-auto p-4 overflow-x-auto">
-      <div className="flex flex-col w-fit mb-2">
-        <label htmlFor="startDate" className="text-sm font-medium text-gray-700 mb-2">
+      <div className="flex flex-wrap w-full gap-3 items-center mb-4">
+        <label htmlFor="startDate" className="text-sm font-medium text-gray-700">
           Pilih Tanggal Mulai:
         </label>
         <input
@@ -95,6 +97,7 @@ const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
           className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
           max={getCurrentDate()}
         />
+        <ExportYearButton yearlyData={yearlyData} fileName="Data-Tahunan" />
       </div>
       <table className="table-auto border-collapse border border-base-300 w-full">
         <thead>
@@ -105,8 +108,11 @@ const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
             <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               SM
             </th>
-            <th colSpan={3} className="border border-base-100 px-2 py-1 text-sm font-medium">
+            <th colSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               MP
+            </th>
+            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
+              TR
             </th>
             <th colSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
               KS
@@ -127,7 +133,6 @@ const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
           <tr className="bg-base-300">
             <th className="border border-base-100 px-2 py-1 text-sm font-medium">MP</th>
             <th className="border border-base-100 px-2 py-1 text-sm font-medium">AUP</th>
-            <th className="border border-base-100 px-2 py-1 text-sm font-medium">TR</th>
             <th className="border border-base-100 px-2 py-1 text-sm font-medium">BS</th>
             <th className="border border-base-100 px-2 py-1 text-sm font-medium">TS</th>
             <th className="border border-base-100 px-2 py-1 text-sm font-medium">TB</th>
