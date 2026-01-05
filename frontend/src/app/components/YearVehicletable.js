@@ -85,7 +85,7 @@ const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
 
   return (
     <div className="mx-auto p-4 overflow-x-auto">
-      <div className="flex flex-wrap w-full gap-3 items-center mb-4">
+      {/* <div className="flex flex-wrap w-full gap-3 items-center mb-4">
         <label htmlFor="startDate" className="text-sm font-medium text-gray-700">
           Pilih Tanggal Mulai:
         </label>
@@ -98,7 +98,7 @@ const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
           max={getCurrentDate()}
         />
         <ExportYearButton yearlyData={yearlyData} fileName="Data-Tahunan" />
-      </div>
+      </div> */}
       <table className="table-auto border-collapse border border-base-300 w-full">
         <thead>
           <tr className="bg-base-300">

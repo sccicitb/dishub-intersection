@@ -133,7 +133,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
             <ExportMonthButton monthlyData={vehicleData} fileName="Data-Bulanan" selectedYear={selectedYear} />
           </div>
         )}
-        {(activeTab === 'dailyMonth' || activeTab === 'dailyRange') && (
+        {(activeTab === 'dailyRange') && (
           <div className="flex gap-2 items-center w-fit">
             <label className="mr-2 font-medium">Pilih Tanggal Mulai:</label>
             <input
