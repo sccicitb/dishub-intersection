@@ -5,6 +5,7 @@ import HourVehicleTable from '@/app/components/HourVehicleTable';
 import MonthlyVehicleTable from '@/app/components/monthlyTable';
 import DaysVehicleTable from '@/app/components/DaysVehicleTable';
 import YearVehicleTable from '@/app/components/YearVehicletable';
+import { ExportButton, ExportMonthButton, ExportDayButton, ExportYearButton } from '@/app/components/exportExcel';
 import { survey } from '@/lib/apiService';
 
 const classificationMap = {
@@ -26,6 +27,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
   const [selectedYear, setSelectedYear] = useState(year);
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
+  const [tabSubmitCounter, setTabSubmitCounter] = useState(0);
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -82,8 +84,10 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
   };
 
   useEffect(() => {
-    fetchSurvey();
-  }, [activeCamera, activeInterval, activePendekatan, activePergerakan, activeClassification, dateInput, activeTab, startDate, endDate, selectedMonth, selectedYear]);
+    if (tabSubmitCounter > 0) {
+      fetchSurvey();
+    }
+  }, [tabSubmitCounter]);
 
   return (
     <div className="mx-auto">
@@ -99,6 +103,80 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
               value={dateInput}
               onChange={(e) => setDateInput(e.target.value)}
             />
+            <button
+              onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
+              className="btn btn-md bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+            >
+              Submit
+            </button>
+            <ExportButton vehicleData={vehicleData} fileName='Data_Kendaraan_perjam' classification={activeClassification} />
+          </div>
+        )}
+        {activeTab === 'monthly' && (
+          <div className="flex gap-2 items-center w-fit">
+            <label className="mr-2 font-medium">Pilih Tahun:</label>
+            <select
+              className="border rounded px-2 py-1"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+            >
+              {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
+              className="btn btn-md bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+            >
+              Submit
+            </button>
+            <ExportMonthButton monthlyData={vehicleData} fileName="Data-Bulanan" selectedYear={selectedYear} />
+          </div>
+        )}
+        {(activeTab === 'dailyMonth' || activeTab === 'dailyRange') && (
+          <div className="flex gap-2 items-center w-fit">
+            <label className="mr-2 font-medium">Pilih Tanggal Mulai:</label>
+            <input
+              type="date"
+              className="border rounded px-2 py-1"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+            <label className="mr-2 font-medium">Tanggal Akhir:</label>
+            <input
+              type="date"
+              className="border rounded px-2 py-1"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+            <button
+              onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
+              className="btn btn-md bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+            >
+              Submit
+            </button>
+            <ExportDayButton dailyData={vehicleData} fileName={activeTab === 'dailyRange' ? "Data-Harian-Rentang" : "Data-Harian-Bulan"} type={activeTab} />
+          </div>
+        )}
+        {activeTab === 'yearly' && (
+          <div className="flex gap-2 items-center w-fit">
+            <label className="mr-2 font-medium">Pilih Tahun:</label>
+            <select
+              className="border rounded px-2 py-1"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+            >
+              {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
+              className="btn btn-md bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+            >
+              Submit
+            </button>
+            <ExportYearButton yearlyData={vehicleData} fileName="Data-Tahunan" />
           </div>
         )}
         {['hourly', 'monthly', 'dailyMonth', 'dailyRange', 'yearly'].map((tab) => (

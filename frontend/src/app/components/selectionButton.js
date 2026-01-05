@@ -13,6 +13,7 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
   useEffect(() => {
     const fetchAvailableDirections = async () => {
       try {
+        // console.log("test fetch available directions", { simpang_id });
         setLoadingDirections(true);
         const response = await axiosInstance.get(`/surveys/available-directions`, {
           params: { simpang_id: simpang_id }
@@ -28,10 +29,10 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
       }
     };
 
-    if (pendekatan && simpang_id) {
+    if (simpang_id) {
       fetchAvailableDirections();
     }
-  }, [simpang_id, pendekatan]);
+  }, [simpang_id]);
 
   // Opsi untuk surveyor
   const surveyorOptions = ['VIANA', 'Manual', 'Semua'];
@@ -133,7 +134,7 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
                 <button
                   key={option}
                   disabled={isDisabled}
-                  className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2 ${
+                  className={`btn join-item ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} rounded-md flex-1 text-nowrap btn-sm w-fit px-2 ${
                     isDisabled 
                       ? 'opacity-50 cursor-not-allowed' 
                       : activePendekatan.toLowerCase() === option.toLowerCase() 

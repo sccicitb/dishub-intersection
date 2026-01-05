@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 // import monthlyData from '@/data/DataTableDaysMonth.json';
 import { ExportMonthButton } from '@/app/components/exportExcel';
 
-const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loading }) => {
+const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loading, exportExcel = false }) => {
   const [vehicleData, setVehicleData] = useState({
     dailyData: [],
     lhrkData: []
@@ -184,54 +184,55 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
           className="input input-md w-24"
           placeholder="YYYY"
         />
-
-        <ExportMonthButton monthlyData={monthlyData} fileName="Data-Bulanan" selectedYear={selectedYear} />
+        {exportExcel && (
+          <ExportMonthButton monthlyData={monthlyData} fileName="Data-Bulanan" selectedYear={selectedYear} />
+        )}
       </div>
       {!loading && (
-          <div className="mx-auto p-4 overflow-x-auto">
-            <table className="table-auto border-collapse border border-base-300 w-full">
-              <thead>
-                <tr className="bg-base-300">
-                  <th rowSpan={3} className="border border-base-100 text-sm font-medium">
-                    Waktu
-                  </th>
-                  <th rowSpan={3} className="border border-base-100 text-sm font-medium">
-                    Jumlah hari kerja<br />dalam satu bulan<br />(hari)
-                  </th>
-                  <th colSpan={9} className="border border-base-100 text-sm font-medium text-center">
-                    Kendaraan Bermotor
-                  </th>
-                  <th rowSpan={1} className="border border-base-100 text-sm font-medium text-center">
-                    Kend. Tak<br />Bermotor
-                  </th>
-                  <th rowSpan={3} className="border border-base-100 text-sm font-medium text-center">
-                    Total<br />Kendaraan
-                  </th>
-                </tr>
-                <tr className="bg-base-300">
-                  <th rowSpan={2} className="border border-base-100 text-sm font-medium text-center">SM</th>
-                  <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">MP</th>
-                  <th rowSpan={2} className="border border-base-100 text-sm font-medium">TR</th>
-                  <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">KS</th>
-                  <th rowSpan={2} className="border border-base-100 text-sm font-medium text-center">BB</th>
-                  <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">TB</th>
-                  <th rowSpan={2} className="border border-base-100 text-sm font-medium">KTB</th>
-                </tr>
-                <tr className="bg-base-300">
-                  <th className="border border-base-100 text-sm font-medium">MP</th>
-                  <th className="border border-base-100 text-sm font-medium">AUP</th>
-                  <th className="border border-base-100 text-sm font-medium">BS</th>
-                  <th className="border border-base-100 text-sm font-medium">TS</th>
-                  <th className="border border-base-100 text-sm font-medium">TB</th>
-                  <th className="border border-base-100 text-sm font-medium">Gandeng /<br />Semitrailer</th>
-                </tr>
-              </thead>
-              <tbody>
-                {generateMonthlyRows()}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="mx-auto p-4 overflow-x-auto">
+          <table className="table-auto border-collapse border border-base-300 w-full">
+            <thead>
+              <tr className="bg-base-300">
+                <th rowSpan={3} className="border border-base-100 text-sm font-medium">
+                  Waktu
+                </th>
+                <th rowSpan={3} className="border border-base-100 text-sm font-medium">
+                  Jumlah hari kerja<br />dalam satu bulan<br />(hari)
+                </th>
+                <th colSpan={9} className="border border-base-100 text-sm font-medium text-center">
+                  Kendaraan Bermotor
+                </th>
+                <th rowSpan={1} className="border border-base-100 text-sm font-medium text-center">
+                  Kend. Tak<br />Bermotor
+                </th>
+                <th rowSpan={3} className="border border-base-100 text-sm font-medium text-center">
+                  Total<br />Kendaraan
+                </th>
+              </tr>
+              <tr className="bg-base-300">
+                <th rowSpan={2} className="border border-base-100 text-sm font-medium text-center">SM</th>
+                <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">MP</th>
+                <th rowSpan={2} className="border border-base-100 text-sm font-medium">TR</th>
+                <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">KS</th>
+                <th rowSpan={2} className="border border-base-100 text-sm font-medium text-center">BB</th>
+                <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">TB</th>
+                <th rowSpan={2} className="border border-base-100 text-sm font-medium">KTB</th>
+              </tr>
+              <tr className="bg-base-300">
+                <th className="border border-base-100 text-sm font-medium">MP</th>
+                <th className="border border-base-100 text-sm font-medium">AUP</th>
+                <th className="border border-base-100 text-sm font-medium">BS</th>
+                <th className="border border-base-100 text-sm font-medium">TS</th>
+                <th className="border border-base-100 text-sm font-medium">TB</th>
+                <th className="border border-base-100 text-sm font-medium">Gandeng /<br />Semitrailer</th>
+              </tr>
+            </thead>
+            <tbody>
+              {generateMonthlyRows()}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
