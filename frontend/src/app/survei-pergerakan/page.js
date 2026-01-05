@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense, lazy } from 'react';
 import { survey, maps, cameras } from '@/lib/apiService';
 import { getCuacaJogja } from '@/lib/weatherAccess';
 import { toast, ToastContainer } from 'react-toastify';
+import { exportPergerakanToExcel } from '@/utils/exportPergerakan';
 import 'react-toastify/dist/ReactToastify.css';
 // import VideoStream from '../components/videoStream';
 
@@ -47,6 +48,8 @@ function MovePage () {
   const [simpangModel, setSimpangModel] = useState([])
   const [loadingKM, setLoadingKM] = useState(false)
   const [errorKM, setErrorKM] = useState(null)
+  const [submitCounter, setSubmitCounter] = useState(0)
+  const [exportLoading, setExportLoading] = useState(false)
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -98,7 +101,7 @@ function MovePage () {
 
   const fetchSurvey = async () => {
     if (loading || !activeSID) return;
-
+    console.log('fetchSurvey called', { activeSID, simpangModel, dateInput, activeInterval, activePendekatan, activeDirection, reportType });
     // const classificationParam = classificationMap[activeClassification] || activeClassification?.toLowerCase().replace(/\s+/g, '_');
     const baseParams = {
       // camera_id: activeCamera,
@@ -219,10 +222,46 @@ function MovePage () {
     }
   }
 
+  const handleExportExcel = async () => {
+    if (!dateInput || !activeSimpang) {
+      alert('Pilih tanggal dan simpang terlebih dahulu');
+      return;
+    }
+
+    setExportLoading(true);
+    try {
+      const fileName = `survei-pergerakan-${dateInput}.xlsx`;
+      const simpangName = `${activeSimpang}`;
+
+      console.log('🔄 Starting Pergerakan export:', { dateInput, simpangName, vehicleDataKeys: vehicleData ? Object.keys(vehicleData) : [], kmDataLength: dataKM?.length });
+
+      const result = await exportPergerakanToExcel(
+        vehicleData,
+        dataKM,
+        dateInput,
+        simpangName,
+        fileName
+      );
+
+      if (!result.success) {
+        alert('Gagal export Excel:\n' + (result.message || 'Unknown error'));
+      } else {
+        alert('✅ Export berhasil! File sudah didownload.');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Terjadi kesalahan saat export Excel');
+    } finally {
+      setExportLoading(false);
+    }
+  }
+
   useEffect(() => {
-    fetchSurvey();
-    fetchSurveyKM();
-  }, [activeSID, activeCamera, activeInterval, activePendekatan, activeDirection, dateInput, reportType]);
+    if (submitCounter > 0) {
+      fetchSurvey();
+      fetchSurveyKM();
+    }
+  }, [submitCounter]);
 
   const handleClick = (building) => {
     if (!building) {
@@ -254,7 +293,8 @@ function MovePage () {
             <SurveyInfoTable fetchStatus={fetchStatus} id={activeSID} cuaca={Cuaca} />
 
             <div className="w-full justify-end flex flex-col">
-              <SelectionButtons vehicleData={vehicleData}
+              <SelectionButtons 
+                vehicleData={vehicleData}
                 activeSurveyor={activeSurveyor}
                 setActiveSurveyor={setActiveSurveyor}
                 activeClassification={activeClassification}
@@ -266,7 +306,7 @@ function MovePage () {
                 activeDirection={activeDirection}
                 setActiveDirection={setActiveDirection}
                 interval
-                direction
+                pendekatan
               />
             </div>
           </div>
@@ -279,6 +319,28 @@ function MovePage () {
               value={dateInput}
               onChange={(e) => setDateInput(e.target.value)}
             />
+            <button
+              onClick={() => setSubmitCounter(submitCounter + 1)}
+              className="btn btn-md bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+            >
+              Submit
+            </button>
+
+            <button
+              onClick={handleExportExcel}
+              disabled={exportLoading || !dateInput || !activeSimpang}
+              className="btn btn-md bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {exportLoading ? (
+                <>
+                  <span className="animate-spin">⟳</span>
+                  Exporting...
+                </>
+              ) : (
+                '📊 Export Excel'
+              )}
+            </button>
+
             <div className='content-center w-fit flex text-nowrap gap-2 rounded-lg text-sm p-2 bg-[#232f61] text-white font-semibold'>
               <div className='m-auto'>Keluar-Masuk Simpang</div>
               <input

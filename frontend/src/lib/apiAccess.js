@@ -7,11 +7,41 @@ export const authAPI = {
 }
 
 export const vehicles = {
-  getAll: (filter = 'day') => getRequest(`/vehicles/getChartMasukKeluar?filter=${filter}`),
-  getByArah: (filter = 'day') => getRequest(`/vehicles/getMasukKeluarByArah?filter=${filter}`),
-  getByJam: (filter = 'day') => getRequest(`/vehicles/getRataPerJam?filter=${filter}`),
-  getByMinute: (filter = 'day') => getRequest(`/vehicles/getRataPer15Menit?filter=${filter}`),
-  getByTipe: (filter = 'day') => getRequest(`/vehicles/getGroupTipeKendaraan?filter=${filter}`),
+  getAll: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
+    let url = `/vehicles/getChartMasukKeluar?filter=${filter}&simpang=${simpang_id}`;
+    if (filter === 'customrange' && startDate && endDate) {
+      url += `&start-date=${startDate}&end-date=${endDate}`;
+    }
+    return getRequest(url);
+  },
+  getByArah: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
+    let url = `/vehicles/getMasukKeluarByArah?filter=${filter}&simpang=${simpang_id}`;
+    if (filter === 'customrange' && startDate && endDate) {
+      url += `&start-date=${startDate}&end-date=${endDate}`;
+    }
+    return getRequest(url);
+  },
+  getByJam: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
+    let url = `/vehicles/getRataPerJam?filter=${filter}&simpang=${simpang_id}`;
+    if (filter === 'customrange' && startDate && endDate) {
+      url += `&start-date=${startDate}&end-date=${endDate}`;
+    }
+    return getRequest(url);
+  },
+  getByMinute: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
+    let url = `/vehicles/getRataPer15Menit?filter=${filter}&simpang=${simpang_id}`;
+    if (filter === 'customrange' && startDate && endDate) {
+      url += `&start-date=${startDate}&end-date=${endDate}`;
+    }
+    return getRequest(url);
+  },
+  getByTipe: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
+    let url = `/vehicles/getGroupTipeKendaraan?filter=${filter}&simpang=${simpang_id}`;
+    if (filter === 'customrange' && startDate && endDate) {
+      url += `&start-date=${startDate}&end-date=${endDate}`;
+    }
+    return getRequest(url);
+  },
 }
 
 export const maps = {

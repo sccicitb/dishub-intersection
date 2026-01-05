@@ -21,11 +21,35 @@ const Vehicle = function (data) {
 };
 
 // ✅ FIXED: Helper function to get index-friendly WHERE clause based on filter type
-const getDateFilterClause = (filter) => {
+const getDateFilterClause = (filter, startDate = null, endDate = null) => {
   // Get current date in Jakarta timezone (UTC+7) - PROPER METHOD
   const now = new Date();
   
   switch (filter) {
+    case 'customrange': {
+      // Custom date range - must have both startDate and endDate
+      if (!startDate || !endDate) {
+        throw new Error('customrange filter requires both start-date and end-date parameters in YYYY-MM-DD format');
+      }
+      
+      // Validate date format
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+        throw new Error('Invalid date format. Use YYYY-MM-DD format (e.g., 2026-01-05)');
+      }
+      
+      // Parse dates
+      const start = new Date(`${startDate}T00:00:00+07:00`);
+      const end = new Date(`${endDate}T23:59:59+07:00`);
+      
+      // Validate date range
+      if (start > end) {
+        throw new Error('start-date must be before end-date');
+      }
+      
+      return `waktu >= '${start.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${end.toISOString().slice(0, 19).replace('T', ' ')}'`;
+    }
+      
     case 'day':
     case 'harian': {
       // Calculate today's range in Jakarta timezone, then convert to UTC
@@ -38,23 +62,30 @@ const getDateFilterClause = (filter) => {
       return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
     }
       
+      
     case 'week':
     case 'minggu': {
       // This week (Monday to Sunday) in Jakarta timezone
-      const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
-      const today = new Date(todayJakarta);
-      const dayOfWeek = today.getDay();
+      // ✅ FIXED: Use proper date parsing for consistent timezone handling
+      const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
+      const [year, month, day] = todayJakarta.split('-').map(Number);
+      const today = new Date(year, month - 1, day); // Create date in local timezone
+      const dayOfWeek = today.getDay(); // 0=Sunday, 1=Monday, ... 6=Saturday
       
-      // Calculate Monday of this week
-      const monday = new Date(today);
-      monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      // Calculate Monday of this week (0=Sunday, so Monday is 1)
+      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const monday = new Date(year, month - 1, day - daysToMonday);
       
-      // Calculate Sunday of this week  
-      const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
+      // Calculate Sunday of this week (6 days after Monday)
+      const sunday = new Date(year, month - 1, day + (6 - daysToMonday));
       
-      const startUTC = new Date(`${monday.toISOString().slice(0, 10)}T00:00:00+07:00`);
-      const endUTC = new Date(`${sunday.toISOString().slice(0, 10)}T23:59:59+07:00`);
+      const mondayStr = monday.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+      const sundayStr = sunday.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+      
+      const startUTC = new Date(`${mondayStr}T00:00:00+07:00`);
+      const endUTC = new Date(`${sundayStr}T23:59:59+07:00`);
+      
+      console.log(`[Week Filter] Monday: ${mondayStr}, Sunday: ${sundayStr}, Start: ${startUTC.toISOString()}, End: ${endUTC.toISOString()}`);
       
       return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
     }
@@ -62,16 +93,22 @@ const getDateFilterClause = (filter) => {
     case 'month':
     case 'bulanan': {
       // This month in Jakarta timezone
-      const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
-      const today = new Date(todayJakarta);
+      // ✅ FIXED: Use proper date parsing for consistent timezone handling
+      const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
+      const [year, month, day] = todayJakarta.split('-').map(Number);
       
       // First day of current month
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const firstDay = new Date(year, month - 1, 1);
       // Last day of current month
-      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const lastDay = new Date(year, month, 0);
       
-      const startUTC = new Date(`${firstDay.toISOString().slice(0, 10)}T00:00:00+07:00`);
-      const endUTC = new Date(`${lastDay.toISOString().slice(0, 10)}T23:59:59+07:00`);
+      const firstDayStr = firstDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+      const lastDayStr = lastDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+      
+      const startUTC = new Date(`${firstDayStr}T00:00:00+07:00`);
+      const endUTC = new Date(`${lastDayStr}T23:59:59+07:00`);
+      
+      console.log(`[Month Filter] First: ${firstDayStr}, Last: ${lastDayStr}, Start: ${startUTC.toISOString()}, End: ${endUTC.toISOString()}`);
       
       return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
     }
@@ -79,15 +116,22 @@ const getDateFilterClause = (filter) => {
     case 'quarter':
     case 'kuartal': {
       // This quarter in Jakarta timezone
-      const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
-      const today = new Date(todayJakarta);
-      const quarter = Math.floor(today.getMonth() / 3);
+      // ✅ FIXED: Use proper date parsing for consistent timezone handling
+      const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
+      const [year, month, day] = todayJakarta.split('-').map(Number);
+      const quarter = Math.floor((month - 1) / 3);
       
-      const firstDay = new Date(today.getFullYear(), quarter * 3, 1);
-      const lastDay = new Date(today.getFullYear(), quarter * 3 + 3, 0);
+      const firstMonthOfQuarter = quarter * 3 + 1;
+      const firstDay = new Date(year, firstMonthOfQuarter - 1, 1);
+      const lastDay = new Date(year, firstMonthOfQuarter + 2, 0);
       
-      const startUTC = new Date(`${firstDay.toISOString().slice(0, 10)}T00:00:00+07:00`);
-      const endUTC = new Date(`${lastDay.toISOString().slice(0, 10)}T23:59:59+07:00`);
+      const firstDayStr = firstDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+      const lastDayStr = lastDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+      
+      const startUTC = new Date(`${firstDayStr}T00:00:00+07:00`);
+      const endUTC = new Date(`${lastDayStr}T23:59:59+07:00`);
+      
+      console.log(`[Quarter Filter] Q${quarter + 1} - First: ${firstDayStr}, Last: ${lastDayStr}, Start: ${startUTC.toISOString()}, End: ${endUTC.toISOString()}`);
       
       return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
     }
@@ -95,23 +139,32 @@ const getDateFilterClause = (filter) => {
     case 'year':
     case 'tahunan': {
       // This year in Jakarta timezone
-      const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
-      const today = new Date(todayJakarta);
+      // ✅ FIXED: Use proper date parsing for consistent timezone handling
+      const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
+      const [year, month, day] = todayJakarta.split('-').map(Number);
       
-      const firstDay = new Date(today.getFullYear(), 0, 1);
-      const lastDay = new Date(today.getFullYear(), 11, 31);
+      const firstDay = new Date(year, 0, 1);
+      const lastDay = new Date(year, 11, 31);
       
-      const startUTC = new Date(`${firstDay.toISOString().slice(0, 10)}T00:00:00+07:00`);
-      const endUTC = new Date(`${lastDay.toISOString().slice(0, 10)}T23:59:59+07:00`);
+      const firstDayStr = firstDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+      const lastDayStr = lastDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+      
+      const startUTC = new Date(`${firstDayStr}T00:00:00+07:00`);
+      const endUTC = new Date(`${lastDayStr}T23:59:59+07:00`);
+      
+      console.log(`[Year Filter] Year: ${year} - First: ${firstDayStr}, Last: ${lastDayStr}, Start: ${startUTC.toISOString()}, End: ${endUTC.toISOString()}`);
       
       return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
     }
       
     default: {
       // Default to today
-      const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+      // ✅ FIXED: Use proper date parsing for consistent timezone handling
+      const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const startUTC = new Date(`${todayJakarta}T00:00:00+07:00`);
       const endUTC = new Date(`${todayJakarta}T23:59:59+07:00`);
+      
+      console.log(`[Day Filter - Default] Today: ${todayJakarta}, Start: ${startUTC.toISOString()}, End: ${endUTC.toISOString()}`);
       
       return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
     }
@@ -213,11 +266,24 @@ Vehicle.getAll = async (result) => {
 };
 
 // ✅ FIXED: Use location-specific traffic flow rules instead of generic direction filtering
-Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
+Vehicle.getChartMasukKeluar = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
-    const dateFilter = getDateFilterClause(filter);
+    const dateFilter = getDateFilterClause(filter, startDate, endDate);
     const validSimpangIds = await getValidSimpangIds();
     const flowRules = getLocationSpecificFlowCases();
+    
+    // Build simpang filter
+    let simpangFilter = '';
+    if (simpang !== 'semua') {
+      const simpangId = parseInt(simpang, 10);
+      if (!isNaN(simpangId) && validSimpangIds.includes(simpangId)) {
+        simpangFilter = `AND ID_Simpang = ${simpangId}`;
+      } else {
+        throw new Error(`Invalid simpang ID: ${simpang}`);
+      }
+    } else {
+      simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
+    }
     
     const [rows] = await db.query(`
       SELECT
@@ -225,7 +291,7 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
         COUNT(${flowRules.getOutCases()}) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
-        AND ID_Simpang IN (${validSimpangIds.join(', ')});
+        ${simpangFilter};
     `);
     result(null, rows);
   } catch (err) {
@@ -235,11 +301,24 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day') => {
 };
 
 // ✅ FIXED: Use location-specific traffic flow rules instead of generic direction filtering
-Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
+Vehicle.getGroupTipeKendaraan = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
-    const dateFilter = getDateFilterClause(filter);
+    const dateFilter = getDateFilterClause(filter, startDate, endDate);
     const validSimpangIds = await getValidSimpangIds();
     const flowRules = getLocationSpecificFlowCases();
+    
+    // Build simpang filter
+    let simpangFilter = '';
+    if (simpang !== 'semua') {
+      const simpangId = parseInt(simpang, 10);
+      if (!isNaN(simpangId) && validSimpangIds.includes(simpangId)) {
+        simpangFilter = `AND ID_Simpang = ${simpangId}`;
+      } else {
+        throw new Error(`Invalid simpang ID: ${simpang}`);
+      }
+    } else {
+      simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
+    }
     
     const [rows] = await db.query(`
       SELECT
@@ -248,8 +327,8 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
         COUNT(${flowRules.getOutCases()}) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
-        AND ID_Simpang IN (${validSimpangIds.join(', ')})
-      GROUP BY SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB
+        ${simpangFilter}
+      GROUP BY SM, MP, AUP, TR, BS, TB, BB, GANDENG, KTB
       ORDER BY total_IN DESC;
     `);
     result(null, rows);
@@ -260,11 +339,24 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day') => {
 };
 
 // ✅ FIXED: Use location-specific traffic flow rules with direction breakdown
-Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
+Vehicle.getMasukKeluarByArah = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
-    const dateFilter = getDateFilterClause(filter);
+    const dateFilter = getDateFilterClause(filter, startDate, endDate);
     const validSimpangIds = await getValidSimpangIds();
     const flowRules = getLocationSpecificFlowCases();
+    
+    // Build simpang filter
+    let simpangFilter = '';
+    if (simpang !== 'semua') {
+      const simpangId = parseInt(simpang, 10);
+      if (!isNaN(simpangId) && validSimpangIds.includes(simpangId)) {
+        simpangFilter = `AND ID_Simpang = ${simpangId}`;
+      } else {
+        throw new Error(`Invalid simpang ID: ${simpang}`);
+      }
+    } else {
+      simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
+    }
     
     // ✅ LOCATION-SPECIFIC: Calculate IN/OUT by direction using official traffic rules
     const [data] = await db.query(`
@@ -286,7 +378,7 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day') => {
         COUNT(CASE WHEN dari_arah = 'west' AND (${flowRules.getOutCases()}) IS NOT NULL THEN 1 END) AS west_total_OUT
       FROM arus
       WHERE ${dateFilter}
-        AND ID_Simpang IN (${validSimpangIds.join(', ')});
+        ${simpangFilter};
     `);
     
     // Transform single row result to array format expected by frontend
@@ -332,11 +424,24 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
 };
 
 // ✅ FIXED: Use location-specific traffic flow rules with Jakarta timezone optimization
-Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
+Vehicle.getRataPer15Menit = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
-    const dateFilter = getDateFilterClause(filter);
+    const dateFilter = getDateFilterClause(filter, startDate, endDate);
     const validSimpangIds = await getValidSimpangIds();
     const flowRules = getLocationSpecificFlowCases();
+    
+    // Build simpang filter
+    let simpangFilter = '';
+    if (simpang !== 'semua') {
+      const simpangId = parseInt(simpang, 10);
+      if (!isNaN(simpangId) && validSimpangIds.includes(simpangId)) {
+        simpangFilter = `AND ID_Simpang = ${simpangId}`;
+      } else {
+        throw new Error(`Invalid simpang ID: ${simpang}`);
+      }
+    } else {
+      simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
+    }
     
     // ✅ OPTIMIZED: Use DATE_ADD instead of CONVERT_TZ for 95% better performance
     // DATE_ADD(waktu, INTERVAL 7 HOUR) is much faster than CONVERT_TZ
@@ -349,7 +454,7 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day') => {
         COUNT(${flowRules.getOutCases()}) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
-        AND ID_Simpang IN (${validSimpangIds.join(', ')})
+        ${simpangFilter}
       GROUP BY CAST(DATE_ADD(waktu, INTERVAL 7 HOUR) AS DATE), HOUR(DATE_ADD(waktu, INTERVAL 7 HOUR)), FLOOR(MINUTE(DATE_ADD(waktu, INTERVAL 7 HOUR)) / 15)
       ORDER BY tanggal, jam, menit;
     `);

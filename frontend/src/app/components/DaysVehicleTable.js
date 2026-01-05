@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { ExportDayButton } from '@/app/components/exportExcel';
 
 const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEndDate, selectedYear: parentSelectedYear, selectedMonth: parentSelectedMonth, setSelectedMonth: setParentSelectedMonth,
-  setSelectedYear: setParentSelectedYear, type,
+  setSelectedYear: setParentSelectedYear, type, exportExcel = false
 }) => {
 
   const [isDateRangeMode, setIsDateRangeMode] = useState(false);
@@ -345,9 +345,9 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
             />
           </div>
         )}
-        {type === "dailyRange" ? (
+        {exportExcel && type === "dailyRange" ? (
           <ExportDayButton dailyData={monthlyData} fileName="Data-Harian-Rentang" type="dailyRange" />
-        ) : type === "dailyMonth" && (
+        ) : exportExcel && type === "dailyMonth" && (
           <ExportDayButton dailyData={monthlyData} fileName="Data-Harian-Bulan" type="dailyMonth"/>
         )}
       </div>

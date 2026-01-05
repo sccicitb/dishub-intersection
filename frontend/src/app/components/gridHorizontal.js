@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HiMiniArrowTurnRightUp, HiMiniArrowTurnRightDown, HiArrowLongRight } from "react-icons/hi2";
+import Tooltip from './Tooltip';
 
 // GridHorizontal Component for East-West routes
 const GridHorizontal = ({ position, data, category = false, col }) => {
@@ -14,6 +15,13 @@ const GridHorizontal = ({ position, data, category = false, col }) => {
   const itemsPerPage = col ? col : 4;
   const typeVehicle = {
     type: ["sm", "mp", "ks", "ktb"]
+  };
+
+  // Helper function untuk check apakah content valid untuk tooltip
+  const isValidContent = (content) => {
+    if (content === '---' || content === '0' || content === 0) return false;
+    if (typeof content === 'string' && !content.trim()) return false;
+    return true;
   };
   useEffect(() => {
     const prepareRowData = (rowData) => {
@@ -44,9 +52,11 @@ const GridHorizontal = ({ position, data, category = false, col }) => {
       <div className={`flex items-center ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className={`grid ${col ? 'grid-cols-' + col + ' ' : 'grid-cols-4'} flex-grow`}>
           {(position ? [...displayData.row1].reverse() : displayData.row1).map((item) => (
-            <div key={item.id} className="p-2 text-center text-xs overflow-hidden truncate">
-              {item.content}
-            </div>
+            <Tooltip key={item.id} content={isValidContent(item.content) ? item.content : null} position="top">
+              <div className="p-2 text-center text-xs overflow-hidden truncate cursor-help">
+                {item.content}
+              </div>
+            </Tooltip>
           ))}
         </div>
         <div className="p-1">
@@ -58,9 +68,11 @@ const GridHorizontal = ({ position, data, category = false, col }) => {
       <div className={`items-center flex ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className={`grid ${col ? 'grid-cols-' + col + ' ' : 'grid-cols-4'} flex-grow`}>
           {(position ? [...displayData.row2].reverse() : displayData.row2).map((item) => (
-            <div key={item.id} className="p-2 text-center text-xs overflow-hidden truncate">
-              {item.content}
-            </div>
+            <Tooltip key={item.id} content={isValidContent(item.content) ? item.content : null} position="top">
+              <div className="p-2 text-center text-xs overflow-hidden truncate cursor-help">
+                {item.content}
+              </div>
+            </Tooltip>
           ))}
         </div>
         <div className={`p-1 items-center flex ${!position ? 'transform rotate-180' : ''}`}>
@@ -72,9 +84,11 @@ const GridHorizontal = ({ position, data, category = false, col }) => {
       <div className={`items-center flex ${!position ? 'flex-row-reverse' : 'flex-row'}`}>
         <div className={`grid ${col ? 'grid-cols-' + col + ' ' : 'grid-cols-4'} flex-grow`}>
           {(position ? [...displayData.row3].reverse() : displayData.row3).map((item) => (
-            <div key={item.id} className="p-2 text-center text-xs overflow-hidden truncate">
-              {item.content}
-            </div>
+            <Tooltip key={item.id} content={isValidContent(item.content) ? item.content : null} position="top">
+              <div className="p-2 text-center text-xs overflow-hidden truncate cursor-help">
+                {item.content}
+              </div>
+            </Tooltip>
           ))}
         </div>
         <div className="p-1 items-center">

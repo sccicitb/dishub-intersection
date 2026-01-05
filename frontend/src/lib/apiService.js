@@ -77,7 +77,20 @@ export const calendar = {
 };
 
 export const logCamera = {
-  getById: (id) => getRequest(`/cameras/${id}/status-log`)
+  getBySimpang: (simpang_id, date = null) => {
+    let url = `/cameras/status-log?simpang_id=${simpang_id}`;
+    if (date) {
+      url += `&date=${date}`;
+    }
+    return getRequest(url);
+  },
+  getByCameraId: (camera_id, date = null) => {
+    let url = `/cameras/status-log-idcamera?camera_id=${camera_id}`;
+    if (date) {
+      url += `&date=${date}`;
+    }
+    return getRequest(url);
+  }
 }
 
 export const survey = {

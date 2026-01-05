@@ -45,6 +45,9 @@ export const useTrafficMatrix = () => {
         setDataMatrix(transformedMatrix);
         
         return matrixData;
+      } else if (response.status === 200 && (!response.data?.data || Object.keys(response.data.data).length === 0)) {
+        // Jika data kosong, load default
+        throw new Error('No data available for selected period');
       } else {
         throw new Error('Invalid response format from API');
       }
@@ -52,6 +55,18 @@ export const useTrafficMatrix = () => {
       const errorMessage = err.message || 'Failed to fetch traffic matrix';
       setError(errorMessage);
       console.error('Error fetching traffic matrix:', err);
+      
+      // Fallback ke default matrix jika error
+      try {
+        const data = await import("@/data/contohmatrix.json");
+        const defaultData = data.default.data;
+        setDataChord(defaultData);
+        const transformedMatrix = transformMatrixData(defaultData);
+        setDataMatrix(transformedMatrix);
+      } catch (fallbackErr) {
+        console.error('Failed to load fallback matrix:', fallbackErr);
+      }
+      
       return null;
     } finally {
       setLoading(false);
