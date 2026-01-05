@@ -460,11 +460,8 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
   `;
   const params = [simpang_id, startDate, endDate];
 
-  // Add approach filter if not 'semua'
-  if (dbApproach !== 'semua') {
-    sql += ` AND LOWER(dari_arah) = LOWER(?)`;
-    params.push(dbApproach);
-  }
+  // DO NOT filter by approach in SQL - we need to see ALL traffic to properly separate masuk/keluar
+  // Filtering will be done at application level based on dari_arah and ke_arah
 
   sql += ` GROUP BY ${timeGrouping}, dari_arah, ke_arah`;
   sql += ` ORDER BY hour ${interval !== '1h' ? ', minute_group' : ''}, dari_arah, ke_arah`;
@@ -500,20 +497,55 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
           }
         });
 
-        // DYNAMIC SEPARATION: All 'dari_arah' traffic considered as masuk (arriving at intersection)
-        // This provides 100% coverage without hardcoded rules
-        const masukRows = slotRows; // All traffic is considered masuk since it's arriving at intersection
+        // Separate traffic into masuk and keluar based on simpang and direction
+        // For KM Tabel: 
+        // - masuk (IN): traffic coming FROM the main approach (dari_arah)
+        // - keluar (OUT): traffic going TO the main approach (ke_arah)
         
-        // For keluar, we could track ke_arah if needed, but typically KM Tabel focuses on masuk traffic
-        // If keluar is needed, it can be calculated based on ke_arah data
-        const keluarRows = []; // Keep empty for now, can be implemented if business logic requires it
+        // Create reverse mapping to handle both Indonesian and English direction names
+        const reverseMapping = {
+          'north': 'utara',
+          'south': 'selatan',
+          'east': 'timur',
+          'west': 'barat'
+        };
+        
+        // Get both English and Indonesian versions of the approach
+        const englishApproach = dbApproach;
+        const indonesianApproach = reverseMapping[dbApproach] || dbApproach;
+        
+        const masukRows = slotRows.filter(row => {
+          const dari = row.dari_arah?.toLowerCase();
+          
+          if (dbApproach === 'semua') {
+            // If no specific approach, count all traffic as masuk
+            return true;
+          } else {
+            // Count traffic where dari_arah matches the main approach direction
+            // Check both English and Indonesian formats
+            return dari === englishApproach.toLowerCase() || dari === indonesianApproach.toLowerCase();
+          }
+        });
+        
+        const keluarRows = slotRows.filter(row => {
+          const ke = row.ke_arah?.toLowerCase();
+          
+          if (dbApproach === 'semua') {
+            // If approach is 'semua', count all traffic as keluar too
+            return true;
+          } else {
+            // Count traffic where ke_arah matches the main approach direction
+            // Check both English and Indonesian formats
+            return ke === englishApproach.toLowerCase() || ke === indonesianApproach.toLowerCase();
+          }
+        });
 
-        // Aggregate masuk traffic (all traffic arriving at intersection)
+        // Aggregate masuk traffic
         if (masukRows.length > 0) {
           timeSlot.masukSimpang = aggregateVehicleData(masukRows);
         }
 
-        // Aggregate keluar traffic (if implemented)
+        // Aggregate keluar traffic
         if (keluarRows.length > 0) {
           timeSlot.keluarSimpang = aggregateVehicleData(keluarRows);
         }
