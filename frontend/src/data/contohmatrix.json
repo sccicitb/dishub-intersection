@@ -16,18 +16,18 @@
         "Total": 0
       },
       "selatan": {
-        "barat": 1306,
+        "barat": 0,
         "selatan": 0,
-        "timur": 1289,
-        "utara": 1222,
-        "Total": 3817
+        "timur": 0,
+        "utara": 0,
+        "Total": 0
       },
       "timur": {
-        "barat": 1202,
-        "selatan": 1280,
+        "barat": 0,
+        "selatan": 0,
         "timur": 0,
-        "utara": 1252,
-        "Total": 3734
+        "utara": 0,
+        "Total": 0
       },
       "utara": {
         "barat": 0,
@@ -37,34 +37,34 @@
         "Total": 0
       },
       "Total": {
-        "barat": 2508,
-        "selatan": 1280,
-        "timur": 1289,
-        "utara": 2474,
-        "Total": 7551
+        "barat": 0,
+        "selatan": 0,
+        "timur": 0,
+        "utara": 0,
+        "Total": 0
       }
     },
     "arahPergerakan": {
       "Belok Kiri": {
         "barat": 0,
-        "selatan": 1289,
-        "timur": 1280,
+        "selatan": 0,
+        "timur": 0,
         "utara": 0,
-        "Total": 2569
+        "Total": 0
       },
       "Lurus": {
         "barat": 0,
-        "selatan": 1222,
-        "timur": 1202,
+        "selatan": 0,
+        "timur": 0,
         "utara": 0,
-        "Total": 2424
+        "Total": 0
       },
       "Belok Kanan": {
         "barat": 0,
-        "selatan": 1306,
-        "timur": 1252,
+        "selatan": 0,
+        "timur": 0,
         "utara": 0,
-        "Total": 2558
+        "Total": 0
       }
     }
   }

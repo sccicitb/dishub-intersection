@@ -14,7 +14,9 @@ const TableMatrix = ({
   selectedLocation = 0,
   onLocationChange = null,
   startDate = null,
-  endDate = null
+  endDate = null,
+  onSubmit = null,
+  isLoading = false
 }) => {
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [searchLocation, setSearchLocation] = useState('');
@@ -26,7 +28,7 @@ const TableMatrix = ({
       setFilteredLocations(simpangList);
     } else {
       const filtered = simpangList.filter(loc =>
-        (loc.nama || `Simpang ${loc.id}`).toLowerCase().includes(searchLocation.toLowerCase())
+        (loc.Nama_Simpang || `Simpang ${loc.id}`).toLowerCase().includes(searchLocation.toLowerCase())
       );
       setFilteredLocations(filtered);
     }
@@ -41,7 +43,7 @@ const TableMatrix = ({
   const getSelectedLocationName = () => {
     if (selectedLocation === 0) return '-- Pilih Lokasi --';
     const location = simpangList.find(loc => loc.id === selectedLocation);
-    return location?.nama || `Simpang ${selectedLocation}`;
+    return location?.Nama_Simpang || `Simpang ${selectedLocation}`;
   };
   const renderLoadingState = () => (
     <div className="bg-white px-8 py-5 rounded-lg w-full flex items-center justify-center min-h-[200px]">
@@ -84,7 +86,7 @@ const TableMatrix = ({
   return (
     <div className="space-y-6 flex flex-col gap-5 w-full p-5">
       {/* Location & Date Selection Header */}
-      <div className="bg-gradient-to-r from-[#232f61]/90 to-[#263669] px-8 py-5 rounded-lg w-full shadow-lg">
+      <div className="bg-gradient-to-r bg-[#314385]/90 px-8 py-5 rounded-lg w-full shadow-lg">
         <h2 className="font-bold text-lg mb-4 text-white flex items-center gap-2">
           Pilih Lokasi & Periode
         </h2>
@@ -148,14 +150,14 @@ const TableMatrix = ({
                       filteredLocations.map((location) => (
                         <button
                           key={location.id}
-                          onClick={() => handleLocationSelect(location.id, location.nama)}
+                          onClick={() => handleLocationSelect(location.id, location.Nama_Simpang)}
                           className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-blue-50 transition ${
                             selectedLocation === location.id ? 'bg-blue-100 border-l-4 border-blue-600' : ''
                           }`}
                         >
                           <FaMapMarkerAlt className={`${selectedLocation === location.id ? 'text-blue-600' : 'text-gray-400'}`} />
                           <span className={selectedLocation === location.id ? 'font-semibold text-blue-700' : ''}>
-                            {location.nama || `Simpang ${location.id}`}
+                            {location.Nama_Simpang || `Simpang ${location.id}`}
                           </span>
                         </button>
                       ))
@@ -165,7 +167,7 @@ const TableMatrix = ({
               )}
             </div>
           )}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
+        <div className="flex flex-col md:flex-row md:items-end gap-4 mt-4 md:space-x-2">
           {/* Location with Search */}
 
           {/* Start Date */}
@@ -192,6 +194,26 @@ const TableMatrix = ({
               onChange={(e) => onDateChange?.('end', e.target.value)}
               className="input input-bordered input-sm w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
             />
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex items-end gap-2">
+            <button
+              onClick={() => onSubmit?.()}
+              disabled={selectedLocation === 0}
+              className={`btn btn-md shadow-none border-none rounded-lg font-semibold transition w-full ${
+                selectedLocation === 0
+                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  : 'bg-green-700/90 text-white hover:bg-green-600 cursor-pointer'
+              }`}
+            >
+              Submit
+            </button>
+            {isLoading && (
+              <div className="flex items-center gap-1 text-sm text-[#314385] whitespace-nowrap">
+                <span className="animate-spin">⟳</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

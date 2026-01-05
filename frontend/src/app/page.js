@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense, lazy } from "react";
 import { vehicles } from "@/lib/apiAccess";
 import { survey } from "@/lib/apiService";
 import { maps } from "@/lib/apiService";
+import { exportSurveyDataToExcel } from '@/utils/exportExcel';
 import SocketConnection from "./components/testingSocket";
 import TableMatrix from "@/app/components/table/tableMatrix";
 import { useTrafficMatrix } from "@/hooks/useTrafficMatrix";
@@ -42,9 +43,21 @@ export default function Home () {
   }]);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isTabActive, setIsTabActive] = useState(true);
   const [activeFilter, setActiveFilter] = useState('day');
   const [activeFilterSection2, setActiveFilterSection2] = useState('day');
   const [periodDisplayText, setPeriodDisplayText] = useState('');
+  const [simpangFilter, setSimpangFilter] = useState('semua');
+  const [customRangeStart, setCustomRangeStart] = useState(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().split('T')[0];
+  });
+  const [customRangeEnd, setCustomRangeEnd] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
 
   const [incomingVehiclesBar2, setIncomingVehiclesBar2] = useState({
     labels: [],
@@ -71,9 +84,18 @@ export default function Home () {
   });
 
   const [selectedLocation, setSelectedLocation] = useState(0);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [startDate, setStartDate] = useState(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+  const [matrixSubmitCounter, setMatrixSubmitCounter] = useState(0);
   const [simpangList, setSimpangList] = useState([]);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const getPeriodDisplayText = (filter) => {
     const now = new Date();
@@ -143,9 +165,9 @@ export default function Home () {
       setIsLoading(true);
       try {
         const [vehicleResponse, arahResponse, typeResponse] = await Promise.all([
-          vehicles.getAll(activeFilter),
-          vehicles.getByArah(activeFilter),
-          vehicles.getByTipe(activeFilter)
+          vehicles.getAll(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
+          vehicles.getByArah(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
+          vehicles.getByTipe(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null)
         ]);
         processVehicleData(vehicleResponse);
         processArahData(arahResponse);
@@ -158,7 +180,7 @@ export default function Home () {
       }
     };
 
-    // Fungsi untuk memproses data jumlah kendaraan
+    // Proses data kendaraan total
     const processVehicleData = (response) => {
       try {
         if (response.status === 200 && response.data.data.length > 0) {
@@ -184,7 +206,7 @@ export default function Home () {
       }
     };
 
-    // Fungsi untuk memproses data berdasarkan arah
+    // Proses data arah kendaraan
     const processArahData = (response) => {
       try {
         if (response.status === 200 && response.data.data.length > 0) {
@@ -235,7 +257,7 @@ export default function Home () {
       }
     };
 
-    // Helper untuk memformat data arah
+    // Helper format data arah
     const formatArahData = (apiData, values, total, centerTitle, direction, color) => {
       return {
         labels: apiData.map(item => capitalizeFirstLetter(item.arah)),
@@ -251,7 +273,7 @@ export default function Home () {
       };
     };
 
-    // Fungsi untuk memproses data berdasarkan tipe kendaraan
+    // Proses data tipe kendaraan
     const processTypeData = (response) => {
       try {
         if (response.status === 200 && Array.isArray(response.data.data)) {
@@ -282,9 +304,9 @@ export default function Home () {
       }
     };
 
-    // Ekstrak data kendaraan
+    // Extract tipe kendaraan
     const extractVehicleData = (data) => {
-      // Definisi tipe kendaraan dan ikon
+      // Definisi tipe kendaraan
       const vehicleTypes = {
         'SM': { name: 'Sepeda Motor', icon: FaMotorcycle },
         'MP': { name: 'Mobil Penumpang', icon: FaCar },
@@ -298,7 +320,7 @@ export default function Home () {
         'KTB': { name: 'Kendaraan Tidak Bermotor', icon: FaCaravan }
       };
 
-      // Ekstrak data kendaraan
+      // Ekstrak data
       const vehicleData = [];
 
       data.forEach(item => {
@@ -320,7 +342,7 @@ export default function Home () {
       return vehicleData;
     };
 
-    // Helper untuk memformat data tipe kendaraan
+    // Helper format tipe kendaraan
     const formatTypeData = (vehicleData, total, direction, color) => {
       return {
         labels: vehicleData.map(item => item.name),
@@ -338,7 +360,7 @@ export default function Home () {
       };
     };
 
-    // Helper functions
+    // Capitalize string
     const capitalizeFirstLetter = (string) => {
       return string.charAt(0).toUpperCase() + string.slice(1);
     };
@@ -378,25 +400,51 @@ export default function Home () {
 
     fetchAllData();
 
-    // Jika perlu refresh data secara berkala, uncomment kode berikut
-    // const intervalId = setInterval(fetchAllData, 60000); // Refresh setiap menit
-    // return () => clearInterval(intervalId);
+    // Auto-refresh 30 menit hanya saat tab aktif
+    let intervalId;
+    const handleVisibility = () => {
+      if (document.hidden) {
+        setIsTabActive(false);
+        if (intervalId) clearInterval(intervalId);
+      } else {
+        setIsTabActive(true);
+        setIsRefreshing(true);
+        fetchAllData().then(() => setIsRefreshing(false));
+        intervalId = setInterval(() => {
+          setIsRefreshing(true);
+          fetchAllData().then(() => setIsRefreshing(false));
+        }, 1800000); // 30 menit
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibility);
+    intervalId = setInterval(() => {
+      if (!document.hidden) {
+        setIsRefreshing(true);
+        fetchAllData().then(() => setIsRefreshing(false));
+      }
+    }, 1800000);
+    
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
 
-  }, [activeFilter]);
+  }, [activeFilter, simpangFilter, customRangeStart, customRangeEnd]);
 
   useEffect(() => {
     setIsClient(true);
-    // Initialize period display text
-    setPeriodDisplayText(getPeriodDisplayText(activeFilter));
-    
-    // Fetch simpang list for dropdown
+    // Inisialisasi & fetch simpang list
     const fetchSimpangList = async () => {
       try {
         const response = await maps.getAllSimpang();
-        console.log("test:"+response);
-        console.log(response.data);
         if (response.status === 200 && Array.isArray(response.data.simpang)) {
           setSimpangList(response.data.simpang);
+          // Set default lokasi ke simpang pertama
+          if (response.data.simpang.length > 0) {
+            setSelectedLocation(response.data.simpang[0].id);
+            setMatrixSubmitCounter(prev => prev + 1);
+          }
         }
       } catch (error) {
         console.error("Error fetching simpang list:", error);
@@ -418,30 +466,144 @@ export default function Home () {
     loadDefaultMatrix 
   } = useTrafficMatrix();
 
+  // Helper function untuk check apakah data benar-benar ada (bukan semua 0)
+  const hasValidMatrixData = () => {
+    if (!dataChord?.asalTujuan) return false;
+    
+    const asalTujuan = dataChord.asalTujuan;
+    let totalCount = 0;
+    
+    for (const from in asalTujuan) {
+      for (const to in asalTujuan[from]) {
+        totalCount += asalTujuan[from][to] || 0;
+      }
+    }
+    
+    return totalCount > 0;
+  };
+
   // Load default matrix on component mount
   useEffect(() => {
     loadDefaultMatrix();
   }, [loadDefaultMatrix]);
 
+  // Helper function untuk generate date range berdasarkan filter
+  const getDateRangeForExport = () => {
+    const now = new Date();
+    let startDate, endDate;
+
+    endDate = now.toISOString().split('T')[0];
+
+    switch (activeFilter) {
+      case 'day':
+        startDate = endDate;
+        break;
+      case 'week':
+        const monday = new Date(now);
+        const currentDay = now.getDay();
+        monday.setDate(now.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
+        startDate = monday.toISOString().split('T')[0];
+        break;
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        break;
+      case 'quarter':
+        const quarterStart = Math.floor(now.getMonth() / 3) * 3;
+        startDate = new Date(now.getFullYear(), quarterStart, 1).toISOString().split('T')[0];
+        break;
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+        break;
+      case 'customrange':
+        startDate = customRangeStart;
+        endDate = customRangeEnd;
+        break;
+      default:
+        startDate = endDate;
+    }
+
+    return { startDate, endDate };
+  };
+
+  // Handle export to Excel
+  const handleExportExcel = async () => {
+    setExportLoading(true);
+    try {
+      const { startDate, endDate } = getDateRangeForExport();
+      const fileName = `dashboard-traffic-${activeFilter}-${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      // Cari nama simpang dari list
+      let simpangName = 'Semua Simpang';
+      if (simpangFilter !== 'semua') {
+        const selectedSimpang = simpangList.find(s => s.id === parseInt(simpangFilter));
+        simpangName = selectedSimpang ? `${selectedSimpang.Nama_Simpang} (ID: ${selectedSimpang.id})` : simpangFilter;
+      }
+
+      console.log('🔄 Starting export:', { activeFilter, simpangFilter, simpangName, startDate, endDate });
+
+      const result = await exportSurveyDataToExcel(
+        startDate,
+        endDate,
+        simpangFilter,
+        fileName,
+        activeFilter,
+        simpangName
+      );
+
+      if (!result.success) {
+        console.error('Export failed:', result);
+        alert('Gagal export Excel:\n' + (result.message || 'Unknown error'));
+      } else {
+        alert('✅ Export berhasil! File sudah didownload.');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('❌ Terjadi kesalahan saat export Excel:\n' + error.message);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   // Fetch traffic matrix when location or dates change
   useEffect(() => {
-    if (selectedLocation !== 0 && startDate && endDate) {
+    if (matrixSubmitCounter > 0 && selectedLocation !== 0) {
       fetchTrafficMatrix(selectedLocation, startDate, endDate).catch(() => {
-        // If fetch fails, fallback to default matrix is handled in hook
         console.log("Using default matrix due to fetch failure");
       });
     }
-  }, [selectedLocation, startDate, endDate, fetchTrafficMatrix]);
+  }, [matrixSubmitCounter]);
 
   if (!isClient) return null;
 
   return (
     <div className="p-4 text-base-700 flex flex-col items-center gap-8 overflow-y-hidden text-[13px]">
+      {/* Indikator refresh non-blocking */}
+      {isRefreshing && (
+        <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg">
+          <span className="animate-spin">⟳</span>
+          <span className="text-sm">Memperbarui data...</span>
+        </div>
+      )}
+      
       <Suspense fallback={<div>Loading Charts...</div>}>
         <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
         <div className="w-[90%]">
           {/* Filter buttons and Period display on same row */}
           <div className="flex flex-wrap items-center gap-4 mb-8">
+            {/* Simpang Filter Dropdown */}
+            <select
+              value={simpangFilter}
+              onChange={(e) => setSimpangFilter(e.target.value)}
+              className="px-3 py-1.5 rounded-md bg-base-300 border border-base-300 hover:border-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-900/90 cursor-pointer"
+            >
+              <option value="semua">Semua Simpang</option>
+              {simpangList.map((simpang) => (
+                <option key={simpang.id} value={simpang.id}>
+                  Camera {simpang.Nama_Simpang || `Lokasi`} ({simpang.id})
+                </option>
+              ))}
+            </select>
+
             {/* Filter buttons */}
             <button
               onClick={() => handleFilterChange('day')}
@@ -488,6 +650,39 @@ export default function Home () {
             >
               Tahun Ini
             </button>
+            
+            {/* Custom Date Range Button */}
+            <button
+              onClick={() => {
+                setActiveFilter('customrange');
+                setPeriodDisplayText('');
+              }}
+              className={`px-3 py-1.5 rounded-md ${activeFilter === 'customrange'
+                ? 'bg-blue-950 text-white'
+                : 'bg-base-300 hover:bg-blue-200'
+                }`}
+            >
+              Custom Range
+            </button>
+
+            {/* Custom Date Range Inputs - Show only when custom range is selected */}
+            {activeFilter === 'customrange' && (
+              <div className="flex gap-2 items-center">
+                <input
+                  type="date"
+                  value={customRangeStart}
+                  onChange={(e) => setCustomRangeStart(e.target.value)}
+                  className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <span className="text-gray-500">hingga</span>
+                <input
+                  type="date"
+                  value={customRangeEnd}
+                  onChange={(e) => setCustomRangeEnd(e.target.value)}
+                  className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+            )}
 
             {/* Period Display - appears after filter buttons */}
             {periodDisplayText && (
@@ -495,6 +690,24 @@ export default function Home () {
                 📅 Periode: {periodDisplayText}
               </div>
             )}
+
+            {/* Export Excel Button */}
+            <button
+              onClick={handleExportExcel}
+              disabled={exportLoading}
+              className="px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
+            >
+              {exportLoading ? (
+                <>
+                  <span className="animate-spin">⟳</span>
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  📊 Export Excel
+                </>
+              )}
+            </button>
           </div>
 
           {isLoading ? (
@@ -532,36 +745,47 @@ export default function Home () {
               </div>
             </div>
             <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100">
-              <GrafikRoad />
+              <GrafikRoad 
+                filter={activeFilter} 
+                simpang_id={simpangFilter} 
+                startDate={activeFilter === 'customrange' ? customRangeStart : null}
+                endDate={activeFilter === 'customrange' ? customRangeEnd : null}
+              />
             </div>
           </div>
         )}
       </Suspense>
-      <div className="w-[90%] py-5 block bg-base-200 rounded-xl">
-        <div className="w-full lg:flex overflow-x-auto place-items-center gap-4">
-          <div className="w-fit block m-auto">
-            <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
-          </div>
-          <div className="max-w-4xl mx-auto w-full">
-            <TableMatrix
-              categories={categories}
-              asalTujuan={dataChord?.asalTujuan || {}}
-              arahPergerakan={dataChord?.arahPergerakan || {}}
-              loading={matrixLoading}
-              error={matrixError}
-              simpangList={simpangList}
-              selectedLocation={selectedLocation}
-              onLocationChange={(locationId) => setSelectedLocation(locationId)}
-              onDateChange={(type, date) => {
-                if (type === 'start') setStartDate(date);
-                if (type === 'end') setEndDate(date);
-              }}
-              startDate={startDate}
-              endDate={endDate}
-            />
+      {!matrixError && dataChord?.arahPergerakan && Object.keys(dataChord.arahPergerakan).length > 0 && (
+        <div className="w-[90%] py-5 block bg-base-200 rounded-xl">
+          <div className="w-full lg:flex overflow-x-auto place-items-center gap-4">
+            {hasValidMatrixData() && (
+              <div className="w-fit block m-auto">
+                <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
+              </div>
+            )}
+            <div className=" w-full">
+              <TableMatrix
+                categories={categories}
+                asalTujuan={dataChord?.asalTujuan || {}}
+                arahPergerakan={dataChord?.arahPergerakan || {}}
+                loading={matrixLoading}
+                error={matrixError}
+                simpangList={simpangList}
+                selectedLocation={selectedLocation}
+                onLocationChange={(locationId) => setSelectedLocation(locationId)}
+                onDateChange={(type, date) => {
+                  if (type === 'start') setStartDate(date);
+                  if (type === 'end') setEndDate(date);
+                }}
+                startDate={startDate}
+                endDate={endDate}
+                onSubmit={() => setMatrixSubmitCounter(matrixSubmitCounter + 1)}
+                isLoading={matrixLoading}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="w-[90%]">
         <div className="w-full bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">CCTV Live Stream & Model Deteksi Kendaraan</div>
