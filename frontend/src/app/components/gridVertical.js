@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HiMiniArrowTurnUpLeft, HiOutlineArrowTurnUpRight, HiMiniArrowLongUp } from "react-icons/hi2";
+import Tooltip from './Tooltip';
 
 const GridVertical = ({ position, data, category = false, col }) => {
   const [displayData, setDisplayData] = useState({
@@ -12,6 +13,13 @@ const GridVertical = ({ position, data, category = false, col }) => {
   const itemsPerPage = col ? col : 4;
   const typeVehicle = {
     type: ["sm", "mp", "ks", "ktb"]
+  };
+
+  // Helper function untuk check apakah content valid untuk tooltip
+  const isValidContent = (content) => {
+    if (content === '---' || content === '0' || content === 0) return false;
+    if (typeof content === 'string' && !content.trim()) return false;
+    return true;
   };
 
   useEffect(() => {
@@ -42,9 +50,11 @@ const GridVertical = ({ position, data, category = false, col }) => {
       <div className={`flex ${!position ? "flex-col-reverse" : "flex-col"} w-full h-full justify-end items-center`}>
         <div className={`grid ${col ? 'grid-rows-' + col + ' ' : 'grid-rows-4'} h-full`}>
           {(position ? [...displayData.row1].reverse() : displayData.row1).map((item) => (
-            <div key={item.id} className="p-2 text-center m-auto truncate">
-              {item.content}
-            </div>
+            <Tooltip key={item.id} content={isValidContent(item.content) ? item.content : null} position="right">
+              <div className="p-2 text-center m-auto truncate cursor-help">
+                {item.content}
+              </div>
+            </Tooltip>
           ))}
         </div>
         <HiMiniArrowTurnUpLeft className={`text-2xl p-0.5 ${position ? 'tranform rotate-180 scale-x-[-1] ' : 'transform scale-x-[-1]'}`} />
@@ -54,9 +64,11 @@ const GridVertical = ({ position, data, category = false, col }) => {
       <div className={`flex ${!position ? "flex-col-reverse" : "flex-col"} w-full h-full justify-end items-center`}>
         <div className={`grid ${col ? 'grid-rows-' + col + ' ' : 'grid-rows-4'} h-full`}>
           {(position ? [...displayData.row2].reverse() : displayData.row2).map((item) => (
-            <div key={item.id} className="p-2 text-center m-auto truncate">
-              {item.content}
-            </div>
+            <Tooltip key={item.id} content={isValidContent(item.content) ? item.content : null} position="right">
+              <div className="p-2 text-center m-auto truncate cursor-help">
+                {item.content}
+              </div>
+            </Tooltip>
           ))}
         </div>
         <HiMiniArrowLongUp className={`text-2xl p-0.5 ${position ? 'transform rotate-180' : ''}`} />
@@ -66,9 +78,11 @@ const GridVertical = ({ position, data, category = false, col }) => {
       <div className={`flex ${!position ? "flex-col-reverse" : "flex-col"} w-full h-full justify-end items-center`}>
         <div className={`grid ${col ? 'grid-rows-' + col + ' ' : 'grid-rows-4'} h-full`}>
           {(position ? [...displayData.row3].reverse() : displayData.row3).map((item) => (
-            <div key={item.id} className="p-2 text-center m-auto truncate">
-              {item.content}
-            </div>
+            <Tooltip key={item.id} content={isValidContent(item.content) ? item.content : null} position="right">
+              <div className="p-2 text-center m-auto truncate cursor-help">
+                {item.content}
+              </div>
+            </Tooltip>
           ))}
         </div>
         <HiOutlineArrowTurnUpRight className={`text-2xl p-0.5 ${position ? ' transform scale-x-[-1] rotate-180' : 'transform scale-x-[-1]'}`} />

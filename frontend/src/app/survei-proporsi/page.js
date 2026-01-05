@@ -3,15 +3,15 @@
 import { useState, useEffect, Suspense, lazy } from "react";
 import { io } from 'socket.io-client'
 import { cameras, survey, logCamera } from '@/lib/apiService';
+import { exportSurveyDataToExcel } from '@/utils/exportExcel';
 
 // Lazy load components
-const VehicleTable = lazy(() => import("@/app/components/vehicleTable"));
-const SurveyInfoTable = lazy(() => import("@/app/components/surveyorTable"));
-const SelectionButtons = lazy(() => import("@/app/components/selectionButton"));
+// const VehicleTable = lazy(() => import("@/app/components/vehicleTable"));
+// const SurveyInfoTable = lazy(() => import("@/app/components/surveyorTable"));
+// const SelectionButtons = lazy(() => import("@/app/components/selectionButton"));
 const GridVertical = lazy(() => import('@/app/components/gridVertical'));
 const GridHorizontal = lazy(() => import('@/app/components/gridHorizontal'));
-const GrafikRoad = lazy(() => import("@/app/components/roadChart"));
-const CameraStatus2 = lazy(() => import("@/app/components/cameraStatusVer2"));
+// const CameraStatus2 = lazy(() => import("@/app/components/cameraStatusVer2"));
 const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const CameraStatusTimeline = lazy(() => import('@/app/components/cameraStatusTime'))
@@ -23,10 +23,10 @@ function SurveiProporsi () {
   const [socketConnected, setSocketConnected] = useState(false);
 
   // Filter states
-  const [activeSurveyor, setActiveSurveyor] = useState('Semua');
-  const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
-  const [activePendekatan, setActivePendekatan] = useState('Semua');
-  const [activePergerakan, setActivePergerakan] = useState('Semua');
+  // const [activeSurveyor, setActiveSurveyor] = useState('Semua');
+  // const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
+  // const [activePendekatan, setActivePendekatan] = useState('Semua');
+  // const [activePergerakan, setActivePergerakan] = useState('Semua');
 
   // Camera and location states Date and category states
   const [activeCamera, setActiveCamera] = useState(null);
@@ -39,6 +39,12 @@ function SurveiProporsi () {
   const [selectedCategory, setSelectedCategory] = useState('luar_kota');
   const [dateInput, setDateInput] = useState('');
   const [intersectionData, setIntersectionData] = useState({});
+  const [submitCounter, setSubmitCounter] = useState(0);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [customRangeEnd, setCustomRangeEnd] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
 
   // Constants
   const categoryNames = [
@@ -58,7 +64,8 @@ function SurveiProporsi () {
   };
 
   const formatDateToYMDForAPI = (dateStr) => {
-    return dateStr.replace(/-/g, '/');
+    // dateStr is already in YYYY-MM-DD format from HTML date input
+    return dateStr;
   };
 
   // Initialize date to yesterday
@@ -205,7 +212,14 @@ function SurveiProporsi () {
     if (!cameraId) return;
 
     try {
-      const res = await logCamera.getById(cameraId);
+      // Format date untuk API (YYYY-MM-DD)
+      let apiDate = null;
+      if (filterDate) {
+        const dateObj = new Date(filterDate);
+        apiDate = dateObj.toISOString().split('T')[0];
+      }
+
+      const res = await logCamera.getByCameraId(cameraId, apiDate);
       const logs = Array.isArray(res?.data?.logs) ? res.data.logs : [];
 
       // Filter logs berdasarkan tanggal jika filterDate disediakan
@@ -241,21 +255,15 @@ function SurveiProporsi () {
     }
   };
 
-  // Fetch data when dependencies change
-  // useEffect(() => {
-  //   if (activeCamera && selectedCategory && dateInput) {
-  //     fetchSurveyProporsi(activeCamera, selectedCategory, formatDateToYMDForAPI(dateInput));
-  //     getLogCamera(activeCamera);
-  //   }
-  // }, [activeCamera, selectedCategory, dateInput]);
-
+  // Fetch data hanya saat submit button diklik
   useEffect(() => {
-    if (activeSimpangId && selectedCategory && dateInput) {
-      fetchSurveyProporsi(activeSimpangId, selectedCategory, formatDateToYMDForAPI(dateInput));
-      // Pass dateInput untuk filter tanggal
+    if (submitCounter > 0 && activeSimpangId && selectedCategory && dateInput) {
+      fetchSurveyProporsi(activeSimpangId, selectedCategory, dateInput);
+      // Pass camera_id untuk fetch status log
+      // getLogCamera(activeSimpangId, dateInput);
       getLogCamera(activeCamera, dateInput);
     }
-  }, [activeSimpangId, activeCamera, selectedCategory, dateInput]);
+  }, [submitCounter]);
 
   function handleClickSimpang (loc) {
     let name = loc.Nama_Simpang
@@ -293,6 +301,39 @@ function SurveiProporsi () {
     setDateInput(e.target.value);
   };
 
+  // Handle export to Excel
+  const handleExportExcel = async () => {
+    if (!dateInput || !activeSimpangId) {
+      alert('Pilih tanggal dan simpang terlebih dahulu');
+      return;
+    }
+
+    setExportLoading(true);
+    try {
+      const simpangName = `${activeSimpang} (ID: ${activeSimpangId})`;
+      
+      const result = await exportSurveyDataToExcel(
+        dateInput,
+        dateInput,
+        activeSimpangId,
+        `survei-proporsi-${dateInput}.xlsx`,
+        'day', // Selalu single day di proporsi page
+        simpangName
+      );
+
+      if (!result.success) {
+        alert('Gagal export Excel: ' + (result.message || 'Unknown error'));
+      } else {
+        alert('✅ Export berhasil! File sudah didownload.');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Terjadi kesalahan saat export Excel');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   // Loading fallback component
   const LoadingFallback = ({ message = "Loading..." }) => (
     <div className="text-center font-medium m-auto w-full p-4">
@@ -320,7 +361,7 @@ function SurveiProporsi () {
         {/* Main Content Section */}
         <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
           <Suspense fallback={<LoadingFallback />}>
-            <RecentVehicle hg={350} data={streamData[activeCamera]}/>
+            <RecentVehicle hg={350} data={streamData[activeCamera]} />
           </Suspense>
 
           <div className="py-1 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
@@ -337,34 +378,59 @@ function SurveiProporsi () {
         </div>
 
         {/* Controls Section */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 items-center mb-4">
-          <div className="form-control w-full flex flex-col gap-2">
-            <label className="label">
-              <span className="label-text font-medium">Kategori:</span>
-            </label>
-            <select
-              className="select select-bordered"
-              value={selectedCategory}
-              onChange={handleCategoryChange}
-            >
-              {categoryNames.map((item) => (
-                <option key={item.name} value={item.name}>
-                  {item.display}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
 
-          <div className="form-control w-full flex flex-col gap-2">
-            <label className="label">
-              <span className="label-text font-medium">Pilih Tanggal:</span>
-            </label>
-            <input
-              type="date"
-              className="input input-bordered"
-              value={dateInput}
-              onChange={handleDateChange}
-            />
+          <div className="w-full flex not-md:flex-wrap gap-4 items-end">
+            <div className="form-control w-fit flex flex-col gap-2">
+              <label className="label">
+                <span className="label-text font-medium">Kategori:</span>
+              </label>
+              <select
+                className="select select-bordered w-fit max-w-md"
+                value={selectedCategory}
+                onChange={handleCategoryChange}
+              >
+                {categoryNames.map((item) => (
+                  <option key={item.name} value={item.name}>
+                    {item.display}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-control w-full flex flex-col gap-2">
+              <label className="label">
+                <span className="label-text font-medium">Pilih Tanggal:</span>
+              </label>
+              <input
+                type="date"
+                className="input input-bordered"
+                value={dateInput}
+                onChange={handleDateChange}
+              />
+            </div>
+
+            <button
+              onClick={() => setSubmitCounter(submitCounter + 1)}
+              className="btn btn-md bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition w-fit"
+            >
+              Submit
+            </button>
+
+            <button
+              onClick={handleExportExcel}
+              disabled={exportLoading || !dateInput || !activeSimpangId}
+              className="btn btn-md bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {exportLoading ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  Exporting...
+                </>
+              ) : (
+                'Export Excel'
+              )}
+            </button>
           </div>
         </div>
 
@@ -433,11 +499,6 @@ function SurveiProporsi () {
             />
           </Suspense>
         </div>
-
-        {/* Road Chart */}
-        <Suspense fallback={<LoadingFallback />}>
-          <GrafikRoad />
-        </Suspense>
       </div>
     </div>
   );

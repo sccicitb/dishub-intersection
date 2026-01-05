@@ -464,7 +464,7 @@ function SurveiSimpangPage () {
               <span>{fetchError}</span>
             </div>
           ) : Array.isArray(vehicleData) && vehicleData.length > 0 ? (
-            <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} isEditor={isEditor}/>
+            <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} isEditor={isEditor} exportExcel/>
           ) : (
             <div className="w-full flex justify-center items-center py-20">
               <div className="text-center">

@@ -38,10 +38,11 @@ const getStatusPer5Minutes = (dataArray) => {
       .padStart(2, "0");
     const timeSlot = `${hour}:${roundedMinute}`;
 
+    // status 1 = aktif, status 0 = tidak aktif
     const status = item.status === 1 ? 1 : 0;
 
-    // Simpan status jika belum ada atau status 1 (error) lebih prioritas
-    if (!(timeSlot in statusMap) || status === 1) {
+    // Simpan status jika belum ada atau status 0 (tidak aktif) lebih prioritas
+    if (!(timeSlot in statusMap) || status === 0) {
       statusMap[timeSlot] = status;
     }
   });
@@ -77,14 +78,15 @@ const CameraStatusTimeline = ({ cameraStatusData = [], selectedDate = null }) =>
       <div className="flex w-full">
         {slots.map((slot) => {
           const status = statusPer5Min[slot];
-          let bgColor = "bg-red-500"; // default mati (tidak ada data)
-          if (status === 0) bgColor = "bg-green-500"; // kamera hidup
-          else if (status === 1) bgColor = "bg-yellow-400"; // kamera error / status 1
+          // status 1 = aktif (hijau), status 0 = tidak aktif (merah), undefined = tidak ada data (abu-abu)
+          let bgColor = "bg-gray-400"; // default tidak ada data
+          if (status === 1) bgColor = "bg-green-500"; // kamera aktif
+          else if (status === 0) bgColor = "bg-red-500"; // kamera tidak aktif
 
           return (
             <div
               key={slot}
-              title={`${slot} - Status: ${status !== undefined ? status === 0 ? 'Menyala' : 'Mati' : "tidak ada data"}`}
+              title={`${slot} - Status: ${status !== undefined ? status === 1 ? 'Aktif' : 'Tidak Aktif' : "Tidak ada data"}`}
               className={`${bgColor} w-2 h-5`}
             />
           );

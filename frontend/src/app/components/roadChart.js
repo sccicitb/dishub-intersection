@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import TrafficFlowChart from '@/app/components/trafficChart';
 import { vehicles } from '@/lib/apiAccess';
 
-export default function GrafikRoad() {
+export default function GrafikRoad({ filter = 'day', simpang_id = 'semua', startDate = null, endDate = null }) {
   const [trafficData, setTrafficData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,31 +14,43 @@ export default function GrafikRoad() {
       try {
         setLoading(true);
   
-        const hourlyResponse = await vehicles.getByJam();
-        const minuteResponse = await vehicles.getByMinute();
-  
-        // console.log("Hourly data:", hourlyResponse.data);
-        // console.log("Minute data:", minuteResponse.data);
-  
-        const hourlyData = hourlyResponse.data?.data;
+        // getRataPerJam hanya support preset filters (day/week/month/year), tidak support customrange
+        // Jadi untuk customrange, hanya fetch getRataPer15Menit
+        let hourlyResponse, hourlyData;
+        
+        if (filter === 'customrange') {
+          // Skip getRataPerJam untuk customrange, gunakan null
+          hourlyData = null;
+        } else {
+          hourlyResponse = await vehicles.getByJam(filter, simpang_id);
+          hourlyData = hourlyResponse.data?.data;
+        }
+        
+        const minuteResponse = await vehicles.getByMinute(filter, simpang_id, filter === 'customrange' ? startDate : null, filter === 'customrange' ? endDate : null);
         const minuteData = minuteResponse.data?.data;
   
-        if (Array.isArray(hourlyData) && Array.isArray(minuteData)) {
-          const formattedData = formatTrafficData(hourlyData, minuteData);
+        // console.log("Hourly data:", hourlyData);
+        // console.log("Minute data:", minuteData);
+  
+        if (Array.isArray(minuteData)) {
+          // Jika hourlyData kosong, gunakan minuteData saja
+          const formattedData = hourlyData && Array.isArray(hourlyData) 
+            ? formatTrafficData(hourlyData, minuteData)
+            : formatTrafficDataFromMinute(minuteData);
           setTrafficData(formattedData || []);
         } else {
-          throw new Error("Invalid data format received");
+          throw new Error("Minute data is not available");
         }
       } catch (err) {
         console.error("Error fetching traffic data:", err);
         setError("Failed to load traffic data. Please try again later.");
-        setTrafficData([]); // pastikan set kosong agar UI tetap bisa render
+        setTrafficData([]);
       } finally {
         setLoading(false);
       }
     };
     fetchTrafficData();
-  }, []);
+  }, [filter, simpang_id, startDate, endDate]);
 
   // Format API data for the chart component
 
@@ -99,6 +111,51 @@ export default function GrafikRoad() {
       };
     } catch (err) {
       console.error("Error formatting traffic data:", err);
+      return null;
+    }
+  };
+
+  // Format traffic data dari minute data saja (untuk customrange)
+  const formatTrafficDataFromMinute = (minuteData) => {
+    try {
+      if (!minuteData || minuteData.length === 0) {
+        console.warn("Empty minute data received");
+        return null;
+      }
+
+      const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+      const inData = Array(24).fill(0);
+      const outData = Array(24).fill(0);
+
+      // Aggregate minute data by hour
+      minuteData.forEach(item => {
+        const jam = parseInt(item.jam);
+        if (jam >= 0 && jam < 24) {
+          inData[jam] += parseInt(item.total_IN) || 0;
+          outData[jam] += parseInt(item.total_OUT) || 0;
+        }
+      });
+
+      const north = inData.map(val => Math.round(val * 0.3));
+      const south = outData.map(val => Math.round(val * 0.3));
+      const east = inData.map(val => Math.round(val * 0.2));
+      const west = outData.map(val => Math.round(val * 0.2));
+
+      const peakData = findPeak15MinData(minuteData);
+      const validatedPeakData = peakData.map(val => isNaN(val) ? 0 : val);
+
+      return {
+        hours,
+        north,
+        south,
+        east,
+        west,
+        inData,
+        outData,
+        peakData: validatedPeakData
+      };
+    } catch (err) {
+      console.error("Error formatting minute data:", err);
       return null;
     }
   };
