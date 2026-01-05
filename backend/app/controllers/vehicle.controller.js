@@ -27,6 +27,9 @@ exports.findAll = (req, res) => {
 
 exports.getChartMasukKeluar = (req, res) => {
   const filter = req.query.filter || 'day'; // Get filter from query params
+  const simpang = req.query.simpang || 'semua'; // Get simpang from query params (default: semua)
+  const startDate = req.query['start-date']; // Get start-date for customrange
+  const endDate = req.query['end-date']; // Get end-date for customrange
   
   Vehicle.getChartMasukKeluar((err, data) => {
     if (err) {
@@ -37,8 +40,8 @@ exports.getChartMasukKeluar = (req, res) => {
     }
 
     const enriched = data.map((item) => {
-      const simpang = simpangMap[item.ID_Simpang] || 'unknown';
-      const status = getArusStatus(simpang, item.dari_arah, item.ke_arah);
+      const simpangName = simpangMap[item.ID_Simpang] || 'unknown';
+      const status = getArusStatus(simpangName, item.dari_arah, item.ke_arah);
       return {
         ...item,
       };
@@ -50,11 +53,14 @@ exports.getChartMasukKeluar = (req, res) => {
       status: "ok",
       data: enriched,
     });
-  }, filter);
+  }, filter, simpang, startDate, endDate);
 };
 
 exports.getGroupTipeKendaraan = (req, res) => {
   const filter = req.query.filter || 'day'; // Get filter from query params
+  const simpang = req.query.simpang || 'semua'; // Get simpang from query params (default: semua)
+  const startDate = req.query['start-date']; // Get start-date for customrange
+  const endDate = req.query['end-date']; // Get end-date for customrange
   
   Vehicle.getGroupTipeKendaraan((err, data) => {
     if (err) {
@@ -68,11 +74,14 @@ exports.getGroupTipeKendaraan = (req, res) => {
         data: data,
       });
     }
-  }, filter);
+  }, filter, simpang, startDate, endDate);
 };
 
 exports.getMasukKeluarByArah = (req, res) => {
   const filter = req.query.filter || 'day'; // Get filter from query params
+  const simpang = req.query.simpang || 'semua'; // Get simpang from query params (default: semua)
+  const startDate = req.query['start-date']; // Get start-date for customrange
+  const endDate = req.query['end-date']; // Get end-date for customrange
   
   Vehicle.getMasukKeluarByArah((err, data) => {
     if (err) {
@@ -86,7 +95,7 @@ exports.getMasukKeluarByArah = (req, res) => {
         data: data,
       });
     }
-  }, filter);
+  }, filter, simpang, startDate, endDate);
 };
 
 exports.getRataPerJam = (req, res) => {
@@ -109,6 +118,9 @@ exports.getRataPerJam = (req, res) => {
 
 exports.getRataPer15Menit = (req, res) => {
   const filter = req.query.filter || 'day'; // Get filter from query params
+  const simpang = req.query.simpang || 'semua'; // Get simpang from query params (default: semua)
+  const startDate = req.query['start-date']; // Get start-date for customrange
+  const endDate = req.query['end-date']; // Get end-date for customrange
   
   Vehicle.getRataPer15Menit((err, data) => {
     if (err) {
@@ -122,7 +134,7 @@ exports.getRataPer15Menit = (req, res) => {
         data: data,
       });
     }
-  }, filter);
+  }, filter, simpang, startDate, endDate);
 };
 
 // =====================================================

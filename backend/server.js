@@ -2,7 +2,10 @@ const express = require("express");
 // const bodyParser = require("body-parser"); /* deprecated */
 const cors = require("cors");
 const checkCameraStatus = require('./jobs/checkCameraStatus');
+const updateCameraStatusFromSurvey = require('./jobs/updateCameraStatusFromSurvey');
+
 checkCameraStatus(); // jalanin cron saat server start
+updateCameraStatusFromSurvey(); // jalanin cron untuk update status dari survey API
 
 const app = express();
 

@@ -11,8 +11,8 @@ module.exports = function (app) {
 
   // Camera Status Management - Viewer+ for GET, Operator+ for POST
   router.post('/cameras/status-log', authenticateToken, requireOperatorOrAdmin, statusCameraController.createCameraStatusLog);
-  // router.get('/cameras/:id/status-log', authenticateToken, requireViewerOrHigher, statusCameraController.getCameraStatusLogs);
-  router.get('/cameras/:id/status-log', statusCameraController.getCameraStatusLogs);
+  router.get('/cameras/status-log', statusCameraController.getCameraStatusLogs); // Query by simpang_id
+  router.get('/cameras/status-log-idcamera', statusCameraController.getCameraStatusLogsByCameraId); // Query by camera_id
   router.get('/cameras/status-latest', statusCameraController.getLatestCameraStatus);
   router.get('/cameras/down-today', statusCameraController.getCamerasDownToday);
 

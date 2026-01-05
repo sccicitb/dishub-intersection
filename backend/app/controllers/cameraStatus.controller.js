@@ -1,6 +1,7 @@
 const db = require('../config/db'); // koneksi mysql2/promise
 
 // POST /api/cameras/status-log
+// status: 1 = aktif, 0 = tidak aktif/mati
 exports.createCameraStatusLog = async (req, res) => {
   const { camera_id, status } = req.body;
 
@@ -20,12 +21,14 @@ exports.createCameraStatusLog = async (req, res) => {
       [status, camera_id]
     );
 
+    const statusLabel = status === 1 ? 'aktif' : 'tidak aktif/mati';
     return res.status(201).json({
       message: 'Status log saved and camera status updated',
       data: {
         id: insertResult.insertId,
         camera_id,
         status,
+        status_label: statusLabel,
         recorded_at: new Date().toISOString()
       }
     });
@@ -35,19 +38,310 @@ exports.createCameraStatusLog = async (req, res) => {
   }
 };
 
-// GET /api/cameras/:id/status-log
+// GET /api/cameras/status-log
+// Query params: simpang_id (required), date (optional YYYY-MM-DD)
+// Response: status = 1 (aktif) jika ada data di survey, status = 0 (tidak aktif/mati) jika tidak ada data
 exports.getCameraStatusLogs = async (req, res) => {
-  const { id } = req.params;
+  const { simpang_id, date } = req.query;
+
+  if (!simpang_id) {
+    return res.status(400).json({ error: 'simpang_id is required' });
+  }
 
   try {
-    const [rows] = await db.execute(
-      `SELECT id, status, recorded_at FROM camera_status_logs WHERE camera_id = ? ORDER BY recorded_at DESC LIMIT 100`,
-      [id]
+    // Get camera based on simpang_id
+    const [cameras] = await db.execute(
+      `SELECT id FROM cameras WHERE ID_Simpang = ? LIMIT 1`,
+      [simpang_id]
     );
 
-    return res.status(200).json({ camera_id: id, logs: rows });
+    if (cameras.length === 0) {
+      return res.status(404).json({ error: 'Camera not found for this simpang_id' });
+    }
+
+    // Build query dengan optional date filter
+    let query = `SELECT id, recorded_at FROM camera_status_logs WHERE camera_id = ?`;
+    const params = [cameraId];
+    
+    if (date) {
+      // Validate date format YYYY-MM-DD
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+      }
+      // Filter by date range (full day) - convert UTC to WIB (UTC+7)
+      query += ` AND DATE(CONVERT_TZ(recorded_at, '+00:00', '+07:00')) = ?`;
+      params.push(date);
+    }
+    
+    query += ` ORDER BY recorded_at DESC LIMIT 100`;
+    
+    console.log(`[DEBUG] Query: ${query}, Params:`, params);
+    
+    const [rows] = await db.execute(query, params);
+    
+    console.log(`[DEBUG] Found ${rows.length} logs for camera ${cameraId}` + (date ? ` on date ${date}` : ''));
+
+    // Jika tidak ada logs, langsung return empty
+    if (rows.length === 0) {
+      console.log(`[DEBUG] ⚠️ No logs found. Returning empty logs array.`);
+      return res.status(200).json({ 
+        camera_id: cameraId,
+        simpang_id: parseInt(simpang_id),
+        filter_date: date || null,
+        logs: [] 
+      });
+    }
+
+    // Untuk setiap log, cek apakah ada data di survey pada tanggal tersebut
+    const surveyModel = require('../models/survey.model');
+    const subCodeMap = require('../helpers/subCodeMap');
+    const fs = require('fs');
+    const path = require('path');
+
+    // Load classification
+    const classificationPath = path.join(__dirname, '../data/classification.json');
+    const classificationJson = JSON.parse(fs.readFileSync(classificationPath, 'utf-8'));
+    
+    const rawSubCodes = classificationJson
+      .filter(item => item.type === 'luar_kota')
+      .map(item => item.subCode);
+    const includedSubCodes = rawSubCodes.map(code => subCodeMap[code] || code);
+
+    // Map logs dengan status dari survey
+    const logsWithLabel = await Promise.all(rows.map(async (log) => {
+      try {
+        // Extract date from recorded_at (YYYY-MM-DD)
+        const logDate = new Date(log.recorded_at).toISOString().split('T')[0];
+
+        console.log(`[DEBUG Simpang ${simpang_id}] Checking log ${log.id} for date ${logDate}`);
+
+        // Query survey data untuk tanggal spesifik dan simpang ini
+        const surveyData = await surveyModel.getVehicleDataGrouped(
+          {
+            simpangId: simpang_id,
+            approach: 'semua',
+            direction: null,
+            date: logDate, // Pass tanggal dari log
+            classificationType: 'luar_kota'
+          },
+          includedSubCodes,
+          '5min'
+        );
+
+        console.log(`[DEBUG Simpang ${simpang_id}] surveyData keys:`, Object.keys(surveyData));
+        console.log(`[DEBUG Simpang ${simpang_id}] surveyData:`, JSON.stringify(surveyData).substring(0, 200));
+
+        // Cek apakah ada data (structure baru: { vehicleData: [...] })
+        let hasData = false;
+        let dataCount = 0;
+        
+        if (surveyData && surveyData.vehicleData && Array.isArray(surveyData.vehicleData)) {
+          dataCount = surveyData.vehicleData.length;
+          
+          // Cek apakah ada minimal satu timeSlot dengan total > 0
+          for (const periodItem of surveyData.vehicleData) {
+            if (periodItem.timeSlots && Array.isArray(periodItem.timeSlots)) {
+              for (const timeSlot of periodItem.timeSlots) {
+                if (timeSlot.data && timeSlot.data.total > 0) {
+                  hasData = true;
+                  console.log(`[DEBUG Simpang ${simpang_id}] ✅ Found data in period ${periodItem.period} at ${timeSlot.time}`);
+                  break;
+                }
+              }
+              if (hasData) break;
+            }
+          }
+        }
+
+        const status = hasData ? 1 : 0;
+        const statusLabel = status === 1 ? 'aktif' : 'tidak aktif/mati';
+
+        console.log(`[DEBUG Simpang ${simpang_id}] Final status for log ${log.id}: ${status} (hasData=${hasData}, totalPeriods=${dataCount})\n`);
+
+        return {
+          id: log.id,
+          status: status,
+          status_label: statusLabel,
+          recorded_at: log.recorded_at
+        };
+      } catch (err) {
+        console.error(`[ERROR Simpang ${simpang_id}] Error checking survey data for log ${log.id}:`, err.message);
+        console.error(err.stack);
+        
+        // Fallback
+        return {
+          id: log.id,
+          status: 0,
+          status_label: 'tidak aktif/mati',
+          recorded_at: log.recorded_at
+        };
+      }
+    }));
+
+    return res.status(200).json({ 
+      camera_id: cameraId,
+      simpang_id: parseInt(simpang_id),
+      filter_date: date || null,
+      logs: logsWithLabel 
+    });
   } catch (err) {
     console.error('Error fetching status logs:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// GET /api/cameras/status-log-idcamera
+// Query params: camera_id (required), date (optional YYYY-MM-DD)
+// Response: status = 1 (aktif) jika ada data di survey, status = 0 (tidak aktif/mati) jika tidak ada data
+// Query by CAMERA_ID
+exports.getCameraStatusLogsByCameraId = async (req, res) => {
+  const { camera_id, date } = req.query;
+
+  if (!camera_id) {
+    return res.status(400).json({ error: 'camera_id is required' });
+  }
+
+  try {
+    const cameraId = parseInt(camera_id);
+    
+    // Get camera to get simpang_id
+    const [cameras] = await db.execute(
+      `SELECT ID_Simpang FROM cameras WHERE id = ? LIMIT 1`,
+      [cameraId]
+    );
+
+    if (cameras.length === 0) {
+      return res.status(404).json({ error: 'Camera not found' });
+    }
+
+    const simpangId = cameras[0].ID_Simpang;
+    console.log(`[DEBUG] Camera ${cameraId} → Simpang ${simpangId}`);
+    
+    // Build query dengan optional date filter
+    let query = `SELECT id, recorded_at FROM camera_status_logs WHERE camera_id = ?`;
+    const params = [cameraId];
+    
+    if (date) {
+      // Validate date format YYYY-MM-DD
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+      }
+      // Filter by date range (full day) - convert UTC to WIB (UTC+7)
+      query += ` AND DATE(CONVERT_TZ(recorded_at, '+00:00', '+07:00')) = ?`;
+      params.push(date);
+    }
+    
+    query += ` ORDER BY recorded_at DESC LIMIT 100`;
+    
+    console.log(`[DEBUG] Query: ${query}, Params:`, params);
+    
+    const [rows] = await db.execute(query, params);
+    
+    console.log(`[DEBUG] Found ${rows.length} logs for camera ${cameraId}` + (date ? ` on date ${date}` : ''));
+
+    // Jika tidak ada logs, langsung return empty
+    if (rows.length === 0) {
+      console.log(`[DEBUG] ⚠️ No logs found. Returning empty logs array.`);
+      return res.status(200).json({ 
+        camera_id: cameraId,
+        simpang_id: simpangId,
+        filter_date: date || null,
+        logs: [] 
+      });
+    }
+
+    // Untuk setiap log, cek apakah ada data di survey pada tanggal tersebut
+    const surveyModel = require('../models/survey.model');
+    const subCodeMap = require('../helpers/subCodeMap');
+    const fs = require('fs');
+    const path = require('path');
+
+    // Load classification
+    const classificationPath = path.join(__dirname, '../data/classification.json');
+    const classificationJson = JSON.parse(fs.readFileSync(classificationPath, 'utf-8'));
+    
+    const rawSubCodes = classificationJson
+      .filter(item => item.type === 'luar_kota')
+      .map(item => item.subCode);
+    const includedSubCodes = rawSubCodes.map(code => subCodeMap[code] || code);
+
+    // Map logs dengan status dari survey
+    const logsWithLabel = await Promise.all(rows.map(async (log) => {
+      try {
+        // Extract date from recorded_at (YYYY-MM-DD)
+        const logDate = new Date(log.recorded_at).toISOString().split('T')[0];
+
+        console.log(`[DEBUG Camera ${cameraId}] Checking log ${log.id} for date ${logDate}`);
+
+        // Query survey data untuk tanggal spesifik dan simpang ini
+        const surveyData = await surveyModel.getVehicleDataGrouped(
+          {
+            simpangId: simpangId,
+            approach: 'semua',
+            direction: null,
+            date: logDate,
+            classificationType: 'luar_kota'
+          },
+          includedSubCodes,
+          '5min'
+        );
+
+        console.log(`[DEBUG Camera ${cameraId}] surveyData keys:`, Object.keys(surveyData));
+
+        // Cek apakah ada data (structure baru: { vehicleData: [...] })
+        let hasData = false;
+        let dataCount = 0;
+        
+        if (surveyData && surveyData.vehicleData && Array.isArray(surveyData.vehicleData)) {
+          dataCount = surveyData.vehicleData.length;
+          
+          // Cek apakah ada minimal satu timeSlot dengan total > 0
+          for (const periodItem of surveyData.vehicleData) {
+            if (periodItem.timeSlots && Array.isArray(periodItem.timeSlots)) {
+              for (const timeSlot of periodItem.timeSlots) {
+                if (timeSlot.data && timeSlot.data.total > 0) {
+                  hasData = true;
+                  console.log(`[DEBUG Camera ${cameraId}] ✅ Found data in period ${periodItem.period}`);
+                  break;
+                }
+              }
+              if (hasData) break;
+            }
+          }
+        }
+
+        const status = hasData ? 1 : 0;
+        const statusLabel = status === 1 ? 'aktif' : 'tidak aktif/mati';
+
+        console.log(`[DEBUG Camera ${cameraId}] Final status for log ${log.id}: ${status}\n`);
+
+        return {
+          id: log.id,
+          status: status,
+          status_label: statusLabel,
+          recorded_at: log.recorded_at
+        };
+      } catch (err) {
+        console.error(`[ERROR Camera ${cameraId}] Error checking survey data for log ${log.id}:`, err.message);
+        
+        // Fallback
+        return {
+          id: log.id,
+          status: 0,
+          status_label: 'tidak aktif/mati',
+          recorded_at: log.recorded_at
+        };
+      }
+    }));
+
+    return res.status(200).json({ 
+      camera_id: cameraId,
+      simpang_id: simpangId,
+      filter_date: date || null,
+      logs: logsWithLabel 
+    });
+  } catch (err) {
+    console.error('Error fetching status logs by camera_id:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
