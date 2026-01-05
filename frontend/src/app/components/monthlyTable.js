@@ -170,7 +170,7 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
 
   return (
     <div>
-      <div className="flex flex-wrap w-full gap-3 items-center mb-4">
+      {/* <div className="flex flex-wrap w-full gap-3 items-center mb-4">
         <label htmlFor="year-input" className="pl-5 text-sm font-medium text-gray-700">
           Pilih Tahun:
         </label>
@@ -187,7 +187,7 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
         {exportExcel && (
           <ExportMonthButton monthlyData={monthlyData} fileName="Data-Bulanan" selectedYear={selectedYear} />
         )}
-      </div>
+      </div> */}
       {!loading && (
         <div className="mx-auto p-4 overflow-x-auto">
           <table className="table-auto border-collapse border border-base-300 w-full">

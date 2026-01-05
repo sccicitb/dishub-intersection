@@ -289,32 +289,7 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
     <div className="mx-auto p-4">
       <div className="items-center flex mb-4 flex-wrap gap-3">
 
-        {type === "dailyRange" ? (
-          <div className="flex flex-wrap items-center not-lg:my-2 gap-4">
-            <div className="flex gap-2 items-center">
-              <label htmlFor="start-date" className="mr-2 font-medium">Dari:</label>
-              <input
-                type="date"
-                id="start-date"
-                value={startDate}
-                onChange={handleStartDateChange}
-                max={endDate}
-                className="px-5 py-1 input input-md"
-              />
-            </div>
-            <div className="flex gap-2 items-center">
-              <label htmlFor="end-date" className="mr-2 font-medium">Sampai:</label>
-              <input
-                type="date"
-                id="end-date"
-                value={endDate}
-                onChange={handleEndDateChange}
-                min={startDate}
-                className="px-5 py-1 input input-md"
-              />
-            </div>
-          </div>
-        ) : (
+        {type !== "dailyRange" && (
           <div className="flex items-center gap-2">
             <label htmlFor="year-input" className="mr-2 font-medium text-nowrap">
               Pilih Tahun:
