@@ -1,13 +1,16 @@
 "use client"
 import React, { useState, useEffect } from 'react';
+import { useAuth } from "@/app/context/authContext";
 // import monthlyData from '@/data/DataTableDaysMonth.json';
 import { ExportMonthButton } from '@/app/components/exportExcel';
 
 const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loading, exportExcel = false }) => {
   const [vehicleData, setVehicleData] = useState({
+
     dailyData: [],
     lhrkData: []
   });
+  const { isAdmin } = useAuth();
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -184,7 +187,7 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
           className="input input-md w-24"
           placeholder="YYYY"
         />
-        {exportExcel && (
+        {exportExcel && isAdmin && (
           <ExportMonthButton monthlyData={monthlyData} fileName="Data-Bulanan" selectedYear={selectedYear} />
         )}
       </div> */}

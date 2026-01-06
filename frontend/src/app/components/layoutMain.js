@@ -41,6 +41,7 @@ const Layout = ({ children }) => {
 
     const roleBasedMenus = {
       '/manajemen-user': ['admin'],
+      '/manajemen-kamera': ['admin'],
       "/form-sa-i": ['admin', 'operator'],
       "/form-sa-ii": ['admin', 'operator'],
       "/form-sa-iii": ['admin', 'operator'],

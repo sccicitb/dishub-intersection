@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense, lazy } from "react";
+import { useAuth } from "@/app/context/authContext";
 import { vehicles } from "@/lib/apiAccess";
 import { survey } from "@/lib/apiService";
 import { maps } from "@/lib/apiService";
@@ -28,6 +29,7 @@ const FaCaravan = lazy(() => import("react-icons/fa").then(mod => ({ default: mo
 
 
 export default function Home () {
+  const { isAdmin } = useAuth();
   const [isClient, setIsClient] = useState(false)
   const [vehicleData, setVehicleData] = useState(null);
   const [chartData, setChartData] = useState([{
@@ -692,22 +694,24 @@ export default function Home () {
             )}
 
             {/* Export Excel Button */}
-            <button
-              onClick={handleExportExcel}
-              disabled={exportLoading}
-              className="px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
-            >
-              {exportLoading ? (
-                <>
-                  <span className="animate-spin">⟳</span>
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  📊 Export Excel
-                </>
-              )}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={handleExportExcel}
+                disabled={exportLoading}
+                className="px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
+              >
+                {exportLoading ? (
+                  <>
+                    <span className="animate-spin">⟳</span>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    📊 Export Excel
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           {isLoading ? (

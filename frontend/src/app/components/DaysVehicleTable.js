@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useAuth } from "@/app/context/authContext";
 // import monthlyData from '@/data/DataTableDaysMonth.json';
 import { ExportDayButton } from '@/app/components/exportExcel';
 
 const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEndDate, selectedYear: parentSelectedYear, selectedMonth: parentSelectedMonth, setSelectedMonth: setParentSelectedMonth,
   setSelectedYear: setParentSelectedYear, type, exportExcel = false
 }) => {
-
-  const [isDateRangeMode, setIsDateRangeMode] = useState(false);
+  const { isAdmin } = useAuth();
   const [vehicleData, setVehicleData] = useState({
     dailyData: [],
     lhrkData: []
@@ -320,9 +320,9 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
             />
           </div>
         )}
-        {exportExcel && type === "dailyRange" ? (
+        {isAdmin && exportExcel && type === "dailyRange" ? (
           <ExportDayButton dailyData={monthlyData} fileName="Data-Harian-Rentang" type="dailyRange" />
-        ) : exportExcel && type === "dailyMonth" && (
+        ) : isAdmin && exportExcel && type === "dailyMonth" && (
           <ExportDayButton dailyData={monthlyData} fileName="Data-Harian-Bulan" type="dailyMonth"/>
         )}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense, lazy } from "react";
+import { useAuth } from "@/app/context/authContext";
 import { io } from 'socket.io-client'
 import { cameras, survey, logCamera } from '@/lib/apiService';
 import { exportSurveyDataToExcel } from '@/utils/exportExcel';
@@ -18,6 +19,7 @@ const CameraStatusTimeline = lazy(() => import('@/app/components/cameraStatusTim
 const MapComponent = lazy(() => import("@/app/components/map"));
 
 function SurveiProporsi () {
+  const { isAdmin } = useAuth();
   // Loading and UI states
   const [loading, setLoading] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
@@ -417,20 +419,22 @@ function SurveiProporsi () {
               Submit
             </button>
 
-            <button
-              onClick={handleExportExcel}
-              disabled={exportLoading || !dateInput || !activeSimpangId}
-              className="btn btn-md bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition w-fit disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {exportLoading ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  Exporting...
-                </>
-              ) : (
-                'Export Excel'
-              )}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={handleExportExcel}
+                disabled={exportLoading || !dateInput || !activeSimpangId}
+                className="btn btn-md bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {exportLoading ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    Exporting...
+                  </>
+                ) : (
+                  'Export Excel'
+                )}
+              </button>
+            )}
           </div>
         </div>
 
