@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useAuth } from "@/app/context/authContext";
 import HourVehicleTable from '@/app/components/HourVehicleTable';
 import MonthlyVehicleTable from '@/app/components/monthlyTable';
 import DaysVehicleTable from '@/app/components/DaysVehicleTable';
@@ -15,8 +16,7 @@ const classificationMap = {
 };
 
 const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePergerakan, activeClassification }) => {
-  // const initialMonth = new Date().toISOString().slice(0, 7); // format: 'YYYY-MM'
-  const today = new Date().toISOString().split('T')[0];
+  const { isAdmin } = useAuth();
   const year = today.split('-')[0];
   const month = today.split('-')[1];
 

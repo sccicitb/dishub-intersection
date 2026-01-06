@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useAuth } from "@/app/context/authContext";
 import dataTable from '@/data/DataTableHour.json';
 import { ExportButton } from './exportExcel';
 
 const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification, customSize, pdf, isEditor, exportExcel = false }) => {
-  // Style khusus untuk PDF
+  const { isAdmin } = useAuth();
   const pdfTableStyle = pdf ? {
     borderCollapse: 'collapse',
     width: '100%',
@@ -490,7 +491,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
   return (
     <div className="mx-auto p-4 overflow-x-auto gap-5 flex flex-col">
-      {isEditor && exportExcel && (
+      {isEditor && exportExcel && isAdmin && (
         <div className={`w-full gap-5 flex overflow-x-auto join ${pdf ? 'hidden' : ''}`}>
           <ExportButton vehicleData={vehicleData} fileName='Data_Kendaraan_perjam' classification={classification} />
         </div>
@@ -563,18 +564,11 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 SM
               </th>
               <th
-                colSpan={2}
+                colSpan={3}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 MP
-              </th>
-              <th
-                rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                TR
               </th>
               <th
                 rowSpan={2}
@@ -631,6 +625,12 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 AUP
+              </th>
+              <th
+                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                style={pdf ? pdfHeaderStyle : {}}
+              >
+                TR
               </th>
             </tr>
           </thead>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense, lazy } from 'react';
+import { useAuth } from "@/app/context/authContext";
 import { survey, maps, cameras } from '@/lib/apiService';
 import { getCuacaJogja } from '@/lib/weatherAccess';
 import { toast, ToastContainer } from 'react-toastify';
@@ -27,6 +28,7 @@ const KeluarMasukTable = lazy(() => import('../components/table/keluarMasukTable
 // };
 
 function MovePage () {
+  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [vehicleData, setVehicleData] = useState(null);
   // const [directionData, setDirectionData] = useState(null);
@@ -326,20 +328,22 @@ function MovePage () {
               Submit
             </button>
 
-            <button
-              onClick={handleExportExcel}
-              disabled={exportLoading || !dateInput || !activeSimpang}
-              className="btn btn-md bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {exportLoading ? (
-                <>
-                  <span className="animate-spin">⟳</span>
-                  Exporting...
-                </>
-              ) : (
-                '📊 Export Excel'
-              )}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={handleExportExcel}
+                disabled={exportLoading || !dateInput || !activeSimpang}
+                className="btn btn-md bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {exportLoading ? (
+                  <>
+                    <span className="animate-spin">⟳</span>
+                    Exporting...
+                  </>
+                ) : (
+                  '📊 Export Excel'
+                )}
+              </button>
+            )}
 
             <div className='content-center w-fit flex text-nowrap gap-2 rounded-lg text-sm p-2 bg-[#232f61] text-white font-semibold'>
               <div className='m-auto'>Keluar-Masuk Simpang</div>
