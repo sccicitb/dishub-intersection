@@ -198,56 +198,39 @@ const getValidSimpangIds = async () => {
   }
 };
 
-/**
- * ✅ NEW: Location-specific traffic flow rules helper
- * Based on the official traffic flow rules for each intersection
- */
 const getLocationSpecificFlowCases = () => {
   return {
-    // Generate CASE statements for counting IN traffic
     getInCases: () => `
       CASE 
-        -- Prambanan (ID: 2) - Masuk rules
-        WHEN ID_Simpang = 2 AND dari_arah = 'east' AND ke_arah = 'south' THEN 1
-        WHEN ID_Simpang = 2 AND dari_arah = 'east' AND ke_arah = 'west' THEN 1
-        WHEN ID_Simpang = 2 AND dari_arah = 'south' AND ke_arah = 'west' THEN 1
-        WHEN ID_Simpang = 2 AND dari_arah = 'north' AND ke_arah = 'west' THEN 1
+        -- Tempel (ID: 5) - Arah Utara - IN: menuju Selatan
+        WHEN ID_Simpang = 5 AND ke_arah = 'south' THEN 1
         
-        -- Piyungan (ID: 4) - Masuk rules  
-        WHEN ID_Simpang = 4 AND dari_arah = 'east' AND ke_arah = 'west' THEN 1
+        -- Prambanan (ID: 2) - Arah Timur - IN: menuju Barat
+        WHEN ID_Simpang = 2 AND ke_arah = 'west' THEN 1
         
-        -- Demen Glagah (ID: 3) - Masuk rules
-        WHEN ID_Simpang = 3 AND dari_arah = 'south' AND ke_arah = 'east' THEN 1
-        WHEN ID_Simpang = 3 AND dari_arah = 'west' AND ke_arah = 'east' THEN 1
-        WHEN ID_Simpang = 3 AND dari_arah = 'north' AND ke_arah = 'south' THEN 1
+        -- Piyungan (ID: 4) - Arah Selatan - IN: menuju Barat atau Utara
+        WHEN ID_Simpang = 4 AND ke_arah IN ('west', 'north') THEN 1
         
-        -- Tempel (ID: 5) - Masuk rules
-        WHEN ID_Simpang = 5 AND dari_arah = 'east' AND ke_arah = 'south' THEN 1
-        WHEN ID_Simpang = 5 AND dari_arah = 'west' AND ke_arah = 'south' THEN 1
+        -- Glagah (ID: 3) - Arah Barat - IN: menuju Timur
+        WHEN ID_Simpang = 3 AND ke_arah = 'east' THEN 1
         
         ELSE NULL
       END
     `,
     
-    // Generate CASE statements for counting OUT traffic
     getOutCases: () => `
       CASE 
-        -- Prambanan (ID: 2) - Keluar rules
-        WHEN ID_Simpang = 2 AND dari_arah = 'south' AND ke_arah = 'east' THEN 1
-        WHEN ID_Simpang = 2 AND dari_arah = 'west' AND ke_arah = 'east' THEN 1
-        WHEN ID_Simpang = 2 AND dari_arah = 'north' AND ke_arah = 'east' THEN 1
+        -- Tempel (ID: 5) - Arah Utara - OUT: menuju Utara
+        WHEN ID_Simpang = 5 AND ke_arah = 'north' THEN 1
         
-        -- Piyungan (ID: 4) - Keluar rules
-        WHEN ID_Simpang = 4 AND dari_arah = 'west' AND ke_arah = 'east' THEN 1
+        -- Prambanan (ID: 2) - Arah Timur -   OUT: menuju Timur
+        WHEN ID_Simpang = 2 AND ke_arah = 'east' THEN 1
         
-        -- Demen Glagah (ID: 3) - Keluar rules  
-        WHEN ID_Simpang = 3 AND dari_arah = 'east' AND ke_arah = 'west' THEN 1
-        WHEN ID_Simpang = 3 AND dari_arah = 'south' AND ke_arah = 'west' THEN 1
+        -- Piyungan (ID: 4) - Arah Selatan - OUT: menuju Timur atau Selatan
+        WHEN ID_Simpang = 4 AND ke_arah IN ('east', 'south') THEN 1
         
-        -- Tempel (ID: 5) - Keluar rules
-        WHEN ID_Simpang = 5 AND dari_arah = 'east' AND ke_arah = 'north' THEN 1
-        WHEN ID_Simpang = 5 AND dari_arah = 'south' AND ke_arah = 'north' THEN 1
-        WHEN ID_Simpang = 5 AND dari_arah = 'west' AND ke_arah = 'north' THEN 1
+        -- Glagah (ID: 3) - Arah Barat - OUT: menuju Barat
+        WHEN ID_Simpang = 3 AND ke_arah = 'west' THEN 1
         
         ELSE NULL
       END
@@ -467,13 +450,12 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day', simpang = 'semua', st
 
 // ✅ NEW: Get origin-destination matrix for traffic analysis
 // Adopts date range pattern from existing functions for consistency
-Vehicle.getAsalTujuanMatrix = async (simpangId, startDate, endDate) => {
+Vehicle.getAsalTujuanMatrix = async (simpangId, filter = 'day', startDate = null, endDate = null) => {
   try {
-    // ✅ ADOPTED: Same date formatting pattern as existing functions
-    const formattedStartDate = `${startDate} 00:00:00`;
-    const formattedEndDate = `${endDate} 23:59:59`;
+    // Generate date filter clause using existing helper function
+    const dateFilterClause = getDateFilterClause(filter, startDate, endDate);
     
-    // ✅ ADOPTED: Same query structure pattern with COUNT(*) for performance
+    // Query with dynamic date filtering
     const sql = `
       SELECT 
         dari_arah,
@@ -481,13 +463,12 @@ Vehicle.getAsalTujuanMatrix = async (simpangId, startDate, endDate) => {
         COUNT(*) as total_vehicles
       FROM arus 
       WHERE ID_Simpang = ? 
-        AND waktu BETWEEN ? AND ?
+        AND ${dateFilterClause}
       GROUP BY dari_arah, ke_arah
       ORDER BY dari_arah, ke_arah
     `;
     
-    // ✅ ADOPTED: Same parameter order and execution pattern
-    const [rows] = await db.query(sql, [simpangId, formattedStartDate, formattedEndDate]);
+    const [rows] = await db.query(sql, [simpangId]);
     return rows;
   } catch (error) {
     throw new Error(`Error getting asal-tujuan matrix: ${error.message}`);
@@ -621,11 +602,43 @@ Vehicle.buildAsalTujuanMatrix = (asalTujuanData) => {
   }
 };
 
-// ✅ NEW: Get complete traffic matrix (both asal-tujuan and arah pergerakan)
-Vehicle.getCompleteTrafficMatrix = async (simpangId, startDate, endDate) => {
+// ✅ NEW: Get origin-destination matrix for all simpangs
+Vehicle.getAsalTujuanMatrixAll = async (filter = 'day', startDate = null, endDate = null) => {
   try {
-    // Get raw origin-destination data from database
-    const asalTujuanData = await Vehicle.getAsalTujuanMatrix(simpangId, startDate, endDate);
+    // Generate date filter clause using existing helper function
+    const dateFilterClause = getDateFilterClause(filter, startDate, endDate);
+    
+    const sql = `
+      SELECT 
+        dari_arah,
+        ke_arah,
+        COUNT(*) as total_vehicles
+      FROM arus 
+      WHERE ${dateFilterClause}
+      GROUP BY dari_arah, ke_arah
+      ORDER BY dari_arah, ke_arah
+    `;
+    
+    const [rows] = await db.query(sql, []);
+    return rows;
+  } catch (error) {
+    throw new Error(`Error getting asal-tujuan matrix for all simpangs: ${error.message}`);
+  }
+};
+
+// ✅ NEW: Get complete traffic matrix (both asal-tujuan and arah pergerakan)
+// Support simpangId='semua' to aggregate all simpangs
+Vehicle.getCompleteTrafficMatrix = async (simpangId, filter = 'day', startDate = null, endDate = null) => {
+  try {
+    let asalTujuanData;
+    
+    if (simpangId === 'semua') {
+      // Get data from all simpangs
+      asalTujuanData = await Vehicle.getAsalTujuanMatrixAll(filter, startDate, endDate);
+    } else {
+      // Get data from specific simpang
+      asalTujuanData = await Vehicle.getAsalTujuanMatrix(simpangId, filter, startDate, endDate);
+    }
     
     // Process into movement direction matrix (BKi, Lurus, BKa)
     const arahPergerakanData = Vehicle.processMovementDirection(asalTujuanData);
@@ -640,6 +653,439 @@ Vehicle.getCompleteTrafficMatrix = async (simpangId, startDate, endDate) => {
     };
   } catch (error) {
     throw new Error(`Error getting complete traffic matrix: ${error.message}`);
+  }
+};
+
+// ✅ NEW: Get traffic matrix with vehicle categories breakdown
+// Query the database to get vehicle counts by category, origin, and destination
+Vehicle.getTrafficMatrixByCategory = async (simpangId, startDate, endDate) => {
+  try {
+    const formattedStartDate = `${startDate} 00:00:00`;
+    const formattedEndDate = `${endDate} 23:59:59`;
+    
+    // Query to get all vehicle categories (columns) grouped by origin-destination
+    const sql = `
+      SELECT 
+        dari_arah,
+        ke_arah,
+        SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB
+      FROM arus 
+      WHERE ID_Simpang = ? 
+        AND waktu BETWEEN ? AND ?
+      ORDER BY dari_arah, ke_arah
+    `;
+    
+    const [rows] = await db.query(sql, [simpangId, formattedStartDate, formattedEndDate]);
+    return rows;
+  } catch (error) {
+    throw new Error(`Error getting traffic matrix by category: ${error.message}`);
+  }
+};
+
+// ✅ NEW: Build arah pergerakan matrix based on movement direction (Belok Kiri, Lurus, Belok Kanan)
+// Each movement type contains breakdown by origin direction and vehicle categories
+Vehicle.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
+  try {
+    console.log(`[TRACE] buildArahPergerakanByCategory called with ${asalTujuanCategoryData.length} rows`);
+    if (asalTujuanCategoryData.length > 0) {
+      console.log(`[TRACE] First row structure:`, Object.keys(asalTujuanCategoryData[0]));
+      console.log(`[TRACE] First row data:`, asalTujuanCategoryData[0]);
+    }
+    
+    // Define vehicle categories
+    const vehicleCategories = {
+      'SM': 'Sepeda Motor',
+      'MP': 'Mobil Penumpang',
+      'AUP': 'Angkutan Umum',
+      'TR': 'Truk Ringan',
+      'BS': 'Bus Sedang',
+      'TS': 'Truk Sedang',
+      'TB': 'Truk Berat',
+      'BB': 'Bus Besar',
+      'GANDENG': 'Gandeng/Semitrailer',
+      'KTB': 'Kendaraan Tidak Bermotor'
+    };
+    
+    // Direction mapping from English to Indonesian
+    const directionMap = {
+      'east': 'timur',
+      'west': 'barat', 
+      'south': 'selatan',
+      'north': 'utara'
+    };
+    
+    const directions = ['barat', 'selatan', 'timur', 'utara'];
+    const movementTypes = ['Belok Kiri', 'Lurus', 'Belok Kanan'];
+    
+    // Initialize result matrix: movement -> direction -> category
+    const result = {};
+    movementTypes.forEach(movement => {
+      result[movement] = {};
+      directions.forEach(dir => {
+        result[movement][dir] = {};
+        Object.keys(vehicleCategories).forEach(catCode => {
+          const catName = vehicleCategories[catCode];
+          result[movement][dir][catName] = 0;
+        });
+        result[movement][dir]['Total'] = 0;
+      });
+      result[movement]['Total'] = {};
+      Object.keys(vehicleCategories).forEach(catCode => {
+        const catName = vehicleCategories[catCode];
+        result[movement]['Total'][catName] = 0;
+      });
+      result[movement]['Total']['Total'] = 0;
+    });
+    
+    let processedCount = 0;
+    
+    // Process each origin-destination pair
+    asalTujuanCategoryData.forEach(row => {
+      const { dari_arah, ke_arah } = row;
+      
+      // ✅ FIX: Validate dari_arah exists in directionMap
+      if (!directionMap[dari_arah]) {
+        console.warn(`[WARNING] dari_arah '${dari_arah}' not found in directionMap, skipping row:`, row);
+        return;
+      }
+      
+      const dariArahId = directionMap[dari_arah];
+      
+      // Determine movement type based on origin and destination
+      let movementType = null;
+      
+      if (dari_arah === 'east') {
+        if (ke_arah === 'south') movementType = 'Belok Kiri';      // East → South = BKi
+        else if (ke_arah === 'north') movementType = 'Belok Kanan'; // East → North = BKa
+        else if (ke_arah === 'west') movementType = 'Lurus';        // East → West = Lurus
+      }
+      else if (dari_arah === 'west') {
+        if (ke_arah === 'north') movementType = 'Belok Kiri';       // West → North = BKi
+        else if (ke_arah === 'south') movementType = 'Belok Kanan'; // West → South = BKa
+        else if (ke_arah === 'east') movementType = 'Lurus';        // West → East = Lurus
+      }
+      else if (dari_arah === 'north') {
+        if (ke_arah === 'west') movementType = 'Belok Kiri';        // North → West = BKi
+        else if (ke_arah === 'east') movementType = 'Belok Kanan';  // North → East = BKa
+        else if (ke_arah === 'south') movementType = 'Lurus';       // North → South = Lurus
+      }
+      else if (dari_arah === 'south') {
+        if (ke_arah === 'east') movementType = 'Belok Kiri';        // South → East = BKi
+        else if (ke_arah === 'west') movementType = 'Belok Kanan';  // South → West = BKa
+        else if (ke_arah === 'north') movementType = 'Lurus';       // South → North = Lurus
+      }
+      
+      // ✅ FIX: Validate movement type is determined
+      if (!movementType) {
+        console.warn(`[WARNING] movement type not determined for ${dari_arah} → ${ke_arah}, skipping row:`, row);
+        return;
+      }
+      
+      processedCount++;
+      
+      // Process all vehicle categories and add to matrix
+      Object.keys(vehicleCategories).forEach(catCode => {
+        const catName = vehicleCategories[catCode];
+        // ✅ IMPORTANT: Convert to integer to handle string values from database
+        const count = parseInt(row[catCode]) || 0;
+        
+        // ✅ FIX: Add even if count is 0 (for complete data coverage)
+        // Only skip if value is null/undefined
+        if (count !== null && count !== undefined) {
+          result[movementType][dariArahId][catName] += count;
+          result[movementType][dariArahId]['Total'] += count;
+          
+          // Add to total
+          result[movementType]['Total'][catName] += count;
+          result[movementType]['Total']['Total'] += count;
+        }
+      });
+    });
+    
+    console.log(`[TRACE] buildArahPergerakanByCategory processed ${processedCount}/${asalTujuanCategoryData.length} rows`);
+    console.log(`[TRACE] Result totals:`, {
+      'Belok Kiri': result['Belok Kiri']['Total']['Total'],
+      'Lurus': result['Lurus']['Total']['Total'],
+      'Belok Kanan': result['Belok Kanan']['Total']['Total']
+    });
+    
+    return result;
+  } catch (error) {
+    console.error(`[ERROR] buildArahPergerakanByCategory error:`, error);
+    throw new Error(`Error building arah pergerakan by category: ${error.message}`);
+  }
+};
+
+// ✅ NEW: Build asal-tujuan matrix with vehicle categories (sum of all categories)
+Vehicle.buildAsalTujuanMatrixFromCategory = (asalTujuanCategoryData) => {
+  try {
+    const directions = ['barat', 'selatan', 'timur', 'utara'];
+    
+    // Direction mapping
+    const directionMap = {
+      'east': 'timur',
+      'west': 'barat', 
+      'south': 'selatan',
+      'north': 'utara'
+    };
+    
+    // Initialize matrix
+    const result = {};
+    directions.forEach(dir => {
+      result[dir] = {};
+      directions.forEach(destDir => {
+        result[dir][destDir] = 0;
+      });
+      result[dir]['Total'] = 0;
+    });
+    result['Total'] = {};
+    directions.forEach(dir => {
+      result['Total'][dir] = 0;
+    });
+    result['Total']['Total'] = 0;
+    
+    // Process data
+    asalTujuanCategoryData.forEach(row => {
+      const { dari_arah, ke_arah } = row;
+      const dariArahId = directionMap[dari_arah];
+      const keArahId = directionMap[ke_arah];
+      
+      // Sum all vehicle categories
+      const totalCount = Object.keys(row)
+        .filter(key => !['dari_arah', 'ke_arah'].includes(key))
+        .reduce((sum, key) => sum + (row[key] || 0), 0);
+      
+      if (dariArahId && keArahId && totalCount > 0) {
+        result[dariArahId][keArahId] += totalCount;
+        result[dariArahId]['Total'] += totalCount;
+        result['Total'][keArahId] += totalCount;
+        result['Total']['Total'] += totalCount;
+      }
+    });
+    
+    return result;
+  } catch (error) {
+    throw new Error(`Error building asal-tujuan matrix from category: ${error.message}`);
+  }
+};
+
+// ✅ NEW: Get complete traffic matrix with vehicle category breakdown
+Vehicle.getCompleteTrafficMatrixByCategory = async (simpangId, startDate, endDate) => {
+  try {
+    // Get raw data with vehicle categories
+    const categoryData = await Vehicle.getTrafficMatrixByCategory(simpangId, startDate, endDate);
+    
+    // Build asal-tujuan matrix from category data
+    const asalTujuanMatrix = Vehicle.buildAsalTujuanMatrixFromCategory(categoryData);
+    
+    // Build arah pergerakan matrix based on vehicle categories
+    const arahPergerakanMatrix = Vehicle.buildArahPergerakanByCategory(categoryData);
+    
+    return {
+      asalTujuan: asalTujuanMatrix,
+      arahPergerakan: arahPergerakanMatrix
+    };
+  } catch (error) {
+    throw new Error(`Error getting complete traffic matrix by category: ${error.message}`);
+  }
+};
+
+// ✅ NEW: Get raw data from arus table with pagination and filtering
+// Supports filters: day, week, month, quarter, year, customrange
+// And simpang filtering
+Vehicle.getRawArusData = async (page, limit, filters = {}) => {
+  try {
+    const offset = (page - 1) * limit;
+    let whereClause = 'WHERE 1=1';
+    const queryParams = [];
+    
+    // Build WHERE clause for simpang filter
+    if (filters.simpang_id) {
+      whereClause += ' AND ID_Simpang = ?';
+      queryParams.push(filters.simpang_id);
+    }
+    
+    // Build WHERE clause for date filter
+    if (filters.filter) {
+      try {
+        const dateFilter = getDateFilterClause(
+          filters.filter,
+          filters.start_date || null,
+          filters.end_date || null
+        );
+        whereClause += ` AND ${dateFilter}`;
+      } catch (error) {
+        throw new Error(`Invalid filter: ${error.message}`);
+      }
+    }
+    
+    // Get total count
+    const countSql = `SELECT COUNT(*) as total FROM arus ${whereClause}`;
+    const [countResult] = await db.query(countSql, queryParams);
+    const total = countResult[0].total;
+    
+    // Get data with pagination
+    const dataSql = `
+      SELECT 
+        id,
+        ID_Simpang,
+        tipe_pendekat,
+        dari_arah,
+        ke_arah,
+        SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB,
+        waktu,
+        created_at,
+        updated_at
+      FROM arus
+      ${whereClause}
+      ORDER BY waktu DESC
+      LIMIT ? OFFSET ?
+    `;
+    
+    queryParams.push(limit, offset);
+    const [rows] = await db.query(dataSql, queryParams);
+    
+    return {
+      total: total,
+      data: rows
+    };
+  } catch (error) {
+    throw new Error(`Error getting raw arus data: ${error.message}`);
+  }
+};
+
+// ✅ NEW: Get traffic matrix by time periods with movement types and direction breakdown
+// Uses BETWEEN approach like survey.model which is proven working
+Vehicle.getTrafficMatrixByTimePeriods = async (simpangId, date) => {
+  try {
+    // Convert date format from YYYY/MM/DD to YYYY-MM-DD if needed
+    const formattedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
+    const startDateTime = `${formattedDate} 00:00:00`;
+    const endDateTime = `${formattedDate} 23:59:59`;
+    
+    // Define time periods in Indonesia
+    const timePeriods = {
+      'Dini Hari': { start: 0, end: 5 },      // 00:00 - 05:59
+      'Pagi Hari': { start: 6, end: 11 },     // 06:00 - 11:59
+      'Siang Hari': { start: 12, end: 17 },   // 12:00 - 17:59
+      'Sore Hari': { start: 18, end: 23 }     // 18:00 - 23:59
+    };
+
+    const result = {};
+    
+    for (const [periodName, { start, end }] of Object.entries(timePeriods)) {
+      // Build query using BETWEEN (proven working approach)
+      // ✅ CAST all vehicle columns to UNSIGNED to ensure proper integer aggregation
+      let query = `
+        SELECT 
+          dari_arah,
+          ke_arah,
+          SUM(CAST(SM AS UNSIGNED)) as SM,
+          SUM(CAST(MP AS UNSIGNED)) as MP,
+          SUM(CAST(AUP AS UNSIGNED)) as AUP,
+          SUM(CAST(TR AS UNSIGNED)) as TR,
+          SUM(CAST(BS AS UNSIGNED)) as BS,
+          SUM(CAST(TS AS UNSIGNED)) as TS,
+          SUM(CAST(TB AS UNSIGNED)) as TB,
+          SUM(CAST(BB AS UNSIGNED)) as BB,
+          SUM(CAST(GANDENG AS UNSIGNED)) as GANDENG,
+          SUM(CAST(KTB AS UNSIGNED)) as KTB
+        FROM arus 
+        WHERE waktu BETWEEN ? AND ?
+          AND HOUR(waktu) >= ? AND HOUR(waktu) <= ?
+      `;
+      const params = [startDateTime, endDateTime, start, end];
+
+      if (simpangId !== 'semua') {
+        query += ` AND ID_Simpang = ?`;
+        params.push(parseInt(simpangId));
+      }
+
+      query += ` GROUP BY dari_arah, ke_arah ORDER BY dari_arah, ke_arah`;
+
+      console.log(`[DEBUG] Period ${periodName}: params=[${params.join(', ')}]`);
+      const [rows] = await db.query(query, params);
+      
+      console.log(`[DEBUG] Period ${periodName}: ${rows.length} rows`);
+      if (rows.length > 0) {
+        console.log(`[DEBUG] Period ${periodName} sample:`, rows[0]);
+      }
+      
+      // Process into movement direction matrix
+      const arahPergerakanData = Vehicle.buildArahPergerakanByCategory(rows);
+      result[periodName] = arahPergerakanData;
+    }
+
+    return result;
+  } catch (error) {
+    console.error(`[ERROR] getTrafficMatrixByTimePeriods:`, error.message);
+    throw new Error(`Error getting traffic matrix by time periods: ${error.message}`);
+  }
+};
+
+// ✅ NEW: Get traffic matrix by hour with movement types and direction breakdown
+// Uses BETWEEN approach like survey.model which is proven working
+Vehicle.getTrafficMatrixByHours = async (simpangId, date) => {
+  try {
+    // Convert date format from YYYY/MM/DD to YYYY-MM-DD if needed
+    const formattedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
+    const startDateTime = `${formattedDate} 00:00:00`;
+    const endDateTime = `${formattedDate} 23:59:59`;
+    
+    console.log(`[TRACE] getTrafficMatrixByHours - simpangId: ${simpangId}, date range: ${startDateTime} to ${endDateTime}`);
+    const result = {};
+    
+    // Generate hour labels (00:00-00:59, 01:00-01:59, ..., 23:00-23:59)
+    for (let hour = 0; hour < 24; hour++) {
+      const hourLabel = `${String(hour).padStart(2, '0')}:00-${String(hour).padStart(2, '0')}:59`;
+      
+      // Build query using BETWEEN (proven working approach)
+      // ✅ CAST all vehicle columns to UNSIGNED to ensure proper integer aggregation
+      let query = `
+        SELECT 
+          dari_arah,
+          ke_arah,
+          SUM(CAST(SM AS UNSIGNED)) as SM,
+          SUM(CAST(MP AS UNSIGNED)) as MP,
+          SUM(CAST(AUP AS UNSIGNED)) as AUP,
+          SUM(CAST(TR AS UNSIGNED)) as TR,
+          SUM(CAST(BS AS UNSIGNED)) as BS,
+          SUM(CAST(TS AS UNSIGNED)) as TS,
+          SUM(CAST(TB AS UNSIGNED)) as TB,
+          SUM(CAST(BB AS UNSIGNED)) as BB,
+          SUM(CAST(GANDENG AS UNSIGNED)) as GANDENG,
+          SUM(CAST(KTB AS UNSIGNED)) as KTB
+        FROM arus 
+        WHERE waktu BETWEEN ? AND ?
+          AND HOUR(waktu) = ?
+      `;
+      const params = [startDateTime, endDateTime, hour];
+
+      if (simpangId !== 'semua') {
+        query += ` AND ID_Simpang = ?`;
+        params.push(parseInt(simpangId));
+      }
+
+      query += ` GROUP BY dari_arah, ke_arah ORDER BY dari_arah, ke_arah`;
+
+      console.log(`[DEBUG] Hour ${hourLabel}: params=[${params.join(', ')}]`);
+      const [rows] = await db.query(query, params);
+      
+      console.log(`[DEBUG] Hour ${hourLabel}: ${rows.length} rows`);
+      if (rows.length > 0) {
+        console.log(`[DEBUG] Hour ${hourLabel} sample:`, rows[0]);
+      }
+      
+      // Process into movement direction matrix with vehicle categories
+      const arahPergerakanData = Vehicle.buildArahPergerakanByCategory(rows);
+      result[hourLabel] = arahPergerakanData;
+    }
+
+    console.log(`[TRACE] getTrafficMatrixByHours completed`);
+    return result;
+  } catch (error) {
+    console.error(`[ERROR] getTrafficMatrixByHours:`, error.message);
+    throw new Error(`Error getting traffic matrix by hour: ${error.message}`);
   }
 };
 

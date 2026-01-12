@@ -14,6 +14,7 @@ var corsOptions = {
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",
+    "http://localhost:3004",
     "http://63.250.52.19:9091",  
     "http://63.250.52.19:6060",  // sementara untuk demo
     "https://dishub-dashboard-v2.layanancerdas.id",
@@ -61,6 +62,9 @@ app.get("/", (req, res) => {
 });
 
 require("./app/routes/vehicle.routes.js")(app);
+require("./app/routes/trafficMatrix.routes.js")(app);
+require("./app/routes/vehicleDetailSummary.routes.js")(app);
+require("./app/routes/vehicleDetailByTime.routes.js")(app);
 require("./app/routes/holiday.routes.js")(app);
 require("./app/routes/maps.routes.js")(app);
 require('./app/routes/camera.routes.js')(app);
