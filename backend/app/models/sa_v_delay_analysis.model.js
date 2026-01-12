@@ -23,7 +23,6 @@ const SaVDelayAnalysis = function(delayAnalysis) {
 SaVDelayAnalysis.create = (newDelayAnalysis, result) => {
   sql.query("INSERT INTO sa_v_delay_analysis SET ?", newDelayAnalysis, (err, res) => {
     if (err) {
-      console.log("error: ", err);
       result(err, null);
       return;
     }

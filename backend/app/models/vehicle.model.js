@@ -85,8 +85,6 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       const startUTC = new Date(`${mondayStr}T00:00:00+07:00`);
       const endUTC = new Date(`${sundayStr}T23:59:59+07:00`);
       
-      console.log(`[Week Filter] Monday: ${mondayStr}, Sunday: ${sundayStr}, Start: ${startUTC.toISOString()}, End: ${endUTC.toISOString()}`);
-      
       return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
     }
       
@@ -107,8 +105,6 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       
       const startUTC = new Date(`${firstDayStr}T00:00:00+07:00`);
       const endUTC = new Date(`${lastDayStr}T23:59:59+07:00`);
-      
-      console.log(`[Month Filter] First: ${firstDayStr}, Last: ${lastDayStr}, Start: ${startUTC.toISOString()}, End: ${endUTC.toISOString()}`);
       
       return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
     }
@@ -131,8 +127,6 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       const startUTC = new Date(`${firstDayStr}T00:00:00+07:00`);
       const endUTC = new Date(`${lastDayStr}T23:59:59+07:00`);
       
-      console.log(`[Quarter Filter] Q${quarter + 1} - First: ${firstDayStr}, Last: ${lastDayStr}, Start: ${startUTC.toISOString()}, End: ${endUTC.toISOString()}`);
-      
       return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
     }
       
@@ -152,8 +146,6 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       const startUTC = new Date(`${firstDayStr}T00:00:00+07:00`);
       const endUTC = new Date(`${lastDayStr}T23:59:59+07:00`);
       
-      console.log(`[Year Filter] Year: ${year} - First: ${firstDayStr}, Last: ${lastDayStr}, Start: ${startUTC.toISOString()}, End: ${endUTC.toISOString()}`);
-      
       return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
     }
       
@@ -163,8 +155,6 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const startUTC = new Date(`${todayJakarta}T00:00:00+07:00`);
       const endUTC = new Date(`${todayJakarta}T23:59:59+07:00`);
-      
-      console.log(`[Day Filter - Default] Today: ${todayJakarta}, Start: ${startUTC.toISOString()}, End: ${endUTC.toISOString()}`);
       
       return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
     }
@@ -686,11 +676,6 @@ Vehicle.getTrafficMatrixByCategory = async (simpangId, startDate, endDate) => {
 // Each movement type contains breakdown by origin direction and vehicle categories
 Vehicle.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
   try {
-    console.log(`[TRACE] buildArahPergerakanByCategory called with ${asalTujuanCategoryData.length} rows`);
-    if (asalTujuanCategoryData.length > 0) {
-      console.log(`[TRACE] First row structure:`, Object.keys(asalTujuanCategoryData[0]));
-      console.log(`[TRACE] First row data:`, asalTujuanCategoryData[0]);
-    }
     
     // Define vehicle categories
     const vehicleCategories = {
@@ -745,7 +730,6 @@ Vehicle.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
       
       // ✅ FIX: Validate dari_arah exists in directionMap
       if (!directionMap[dari_arah]) {
-        console.warn(`[WARNING] dari_arah '${dari_arah}' not found in directionMap, skipping row:`, row);
         return;
       }
       
@@ -777,7 +761,6 @@ Vehicle.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
       
       // ✅ FIX: Validate movement type is determined
       if (!movementType) {
-        console.warn(`[WARNING] movement type not determined for ${dari_arah} → ${ke_arah}, skipping row:`, row);
         return;
       }
       
@@ -802,16 +785,8 @@ Vehicle.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
       });
     });
     
-    console.log(`[TRACE] buildArahPergerakanByCategory processed ${processedCount}/${asalTujuanCategoryData.length} rows`);
-    console.log(`[TRACE] Result totals:`, {
-      'Belok Kiri': result['Belok Kiri']['Total']['Total'],
-      'Lurus': result['Lurus']['Total']['Total'],
-      'Belok Kanan': result['Belok Kanan']['Total']['Total']
-    });
-    
     return result;
   } catch (error) {
-    console.error(`[ERROR] buildArahPergerakanByCategory error:`, error);
     throw new Error(`Error building arah pergerakan by category: ${error.message}`);
   }
 };
@@ -1003,13 +978,7 @@ Vehicle.getTrafficMatrixByTimePeriods = async (simpangId, date) => {
 
       query += ` GROUP BY dari_arah, ke_arah ORDER BY dari_arah, ke_arah`;
 
-      console.log(`[DEBUG] Period ${periodName}: params=[${params.join(', ')}]`);
       const [rows] = await db.query(query, params);
-      
-      console.log(`[DEBUG] Period ${periodName}: ${rows.length} rows`);
-      if (rows.length > 0) {
-        console.log(`[DEBUG] Period ${periodName} sample:`, rows[0]);
-      }
       
       // Process into movement direction matrix
       const arahPergerakanData = Vehicle.buildArahPergerakanByCategory(rows);
@@ -1018,7 +987,6 @@ Vehicle.getTrafficMatrixByTimePeriods = async (simpangId, date) => {
 
     return result;
   } catch (error) {
-    console.error(`[ERROR] getTrafficMatrixByTimePeriods:`, error.message);
     throw new Error(`Error getting traffic matrix by time periods: ${error.message}`);
   }
 };
@@ -1032,7 +1000,6 @@ Vehicle.getTrafficMatrixByHours = async (simpangId, date) => {
     const startDateTime = `${formattedDate} 00:00:00`;
     const endDateTime = `${formattedDate} 23:59:59`;
     
-    console.log(`[TRACE] getTrafficMatrixByHours - simpangId: ${simpangId}, date range: ${startDateTime} to ${endDateTime}`);
     const result = {};
     
     // Generate hour labels (00:00-00:59, 01:00-01:59, ..., 23:00-23:59)
@@ -1068,23 +1035,15 @@ Vehicle.getTrafficMatrixByHours = async (simpangId, date) => {
 
       query += ` GROUP BY dari_arah, ke_arah ORDER BY dari_arah, ke_arah`;
 
-      console.log(`[DEBUG] Hour ${hourLabel}: params=[${params.join(', ')}]`);
       const [rows] = await db.query(query, params);
-      
-      console.log(`[DEBUG] Hour ${hourLabel}: ${rows.length} rows`);
-      if (rows.length > 0) {
-        console.log(`[DEBUG] Hour ${hourLabel} sample:`, rows[0]);
-      }
       
       // Process into movement direction matrix with vehicle categories
       const arahPergerakanData = Vehicle.buildArahPergerakanByCategory(rows);
       result[hourLabel] = arahPergerakanData;
     }
 
-    console.log(`[TRACE] getTrafficMatrixByHours completed`);
     return result;
   } catch (error) {
-    console.error(`[ERROR] getTrafficMatrixByHours:`, error.message);
     throw new Error(`Error getting traffic matrix by hour: ${error.message}`);
   }
 };

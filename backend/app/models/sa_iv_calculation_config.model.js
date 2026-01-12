@@ -10,7 +10,7 @@ const SaIVCalculationConfig = function(calculationConfig) {
 SaIVCalculationConfig.create = (newCalculationConfig, result) => {
   sql.query("INSERT INTO sa_iv_calculation_config SET ?", newCalculationConfig, (err, res) => {
     if (err) {
-      console.log("error: ", err);
+
       result(err, null);
       return;
     }

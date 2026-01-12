@@ -245,7 +245,6 @@ exports.getCompleteSurvey = async (req, res) => {
 // Update complete SA-IV survey - OPTIMIZED VERSION
 exports.updateCompleteSurvey = async (req, res) => {
   const headerId = req.params.surveyId;
-  console.log("Payload:", JSON.stringify(req.body, null, 2));
   const { surveyHeader, capacityAnalysis, phaseAnalysis } = req.body;
 
   if (!surveyHeader || !capacityAnalysis) {

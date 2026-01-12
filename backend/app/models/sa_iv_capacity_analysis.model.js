@@ -21,7 +21,6 @@ const SaIVCapacityAnalysis = function(capacityAnalysis) {
 SaIVCapacityAnalysis.create = (newCapacityAnalysis, result) => {
   sql.query("INSERT INTO sa_iv_capacity_analysis SET ?", newCapacityAnalysis, (err, res) => {
     if (err) {
-      console.log("error: ", err);
       result(err, null);
       return;
     }

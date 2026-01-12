@@ -14,7 +14,6 @@ const SaIIVehicleData = function(vehicleData) {
 SaIIVehicleData.create = (newVehicleData, result) => {
   sql.query("INSERT INTO sa_ii_vehicle_data SET ?", newVehicleData, (err, res) => {
     if (err) {
-      console.log("error: ", err);
       result(err, null);
       return;
     }

@@ -3,8 +3,8 @@ import Cookies from 'js-cookie';
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL
   ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
-  // : 'http://localhost:9090/api';
-  : 'https://dishub-dashboard-v2.layanancerdas.id/api';
+  : 'http://localhost:9090/api';
+  // : 'https://dishub-dashboard-v2.layanancerdas.id/api';
   // : 'http://63.250.52.19:9090/api';
 const axiosInstance = axios.create({
   baseURL,
@@ -22,14 +22,6 @@ axiosInstance.interceptors.request.use(function (config) {
   if (token && token !== 'mocked.jwt.token') {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
-  // Debug logging (remove in production)
-  // console.log('API Request:', {
-  //   url: config.url,
-  //   method: config.method,
-  //   data: config.data,
-  //   headers: config.headers
-  // });
 
   return config;
 }, function (error) {

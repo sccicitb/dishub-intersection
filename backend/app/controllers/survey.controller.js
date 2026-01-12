@@ -64,10 +64,6 @@ const getVehicleSummaryData = async (req, res) => {
       classificationType: req.query.classification || 'luar_kota'
     };
 
-    console.log('DEBUG - Query approach:', req.query.approach, '-> normalized:', filters.approach);
-
-    console.log('Filters normalized:', filters);
-
     // 1.1. Ambil subCode list (array) berdasarkan klasifikasi
     const classificationPath = path.join(__dirname, '../data/classification.json');
     const classificationJson = JSON.parse(fs.readFileSync(classificationPath, 'utf-8'));
@@ -365,9 +361,6 @@ const getKMTabelData = async (req, res) => {
     // Calculate execution time for performance monitoring
     const executionTime = Date.now() - startTime;
 
-    // Log successful request for monitoring
-    console.log(`[KM-Tabel] SUCCESS: simpang=${simpangId}, date=${date}, interval=${requestInterval}, approach=${requestApproach}, time=${executionTime}ms`);
-
     // Return success response with performance metadata
     return res.json({
       success: true,
@@ -385,13 +378,6 @@ const getKMTabelData = async (req, res) => {
   } catch (error) {
     const executionTime = Date.now() - startTime;
     
-    // Log error for monitoring
-    console.error(`[KM-Tabel] ERROR: ${error.message}`, {
-      query: req.query,
-      execution_time_ms: executionTime,
-      stack: error.stack
-    });
-
     // Handle validation errors
     if (error.message.includes('Validation failed')) {
       return res.status(400).json({
@@ -457,8 +443,6 @@ const getTrafficMatrix = async (req, res) => {
 
     // Normalize approach parameter
     const normalizedApproach = approach ? normalizeDirection(approach) : 'semua';
-
-    console.log('Traffic Matrix Request:', { simpang_id, date: normalizedDate, approach: normalizedApproach });
 
     // Call model to get matrix data
     const result = await surveyModel.getTrafficMatrix(simpang_id, normalizedDate, normalizedApproach);

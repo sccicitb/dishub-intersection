@@ -29,7 +29,6 @@ exports.getMasukKeluarDetailBySimpang = (req, res) => {
 
   VehicleDetailSummary.getMasukKeluarDetailBySimpang(simpang_id, date, (err, data) => {
     if (err) {
-      console.error('[ERROR] getMasukKeluarDetailBySimpang:', err);
       return res.status(500).json({
         status: "error",
         message: err.message || "Error retrieving vehicle detail summary"
@@ -77,7 +76,7 @@ exports.getMasukKeluarDetailBySimpangs = (req, res) => {
 
   VehicleDetailSummary.getMasukKeluarDetailBySimpangs(idsArray, date, (err, data) => {
     if (err) {
-      console.error('[ERROR] getMasukKeluarDetailBySimpangs:', err);
+
       return res.status(500).json({
         status: "error",
         message: err.message || "Error retrieving vehicle detail summary"

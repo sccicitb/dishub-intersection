@@ -10,7 +10,7 @@ const EMPConfiguration = function(empConfig) {
 EMPConfiguration.create = (newEMPConfig, result) => {
   sql.query("INSERT INTO emp_configurations SET ?", newEMPConfig, (err, res) => {
     if (err) {
-      console.log("error: ", err);
+
       result(err, null);
       return;
     }

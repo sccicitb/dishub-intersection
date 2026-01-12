@@ -206,7 +206,6 @@ exports.getTrafficMatrix = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("Error getting traffic matrix:", error);
     res.status(500).json({
       success: false,
       message: `Error retrieving traffic matrix: ${error.message}`

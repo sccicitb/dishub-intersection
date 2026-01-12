@@ -18,7 +18,7 @@ const SaIPendekat = function(pendekat) {
 SaIPendekat.create = (newPendekat, result) => {
   sql.query("INSERT INTO sa_i_pendekat SET ?", newPendekat, (err, res) => {
     if (err) {
-      console.log("error: ", err);
+
       result(err, null);
       return;
     }

@@ -38,8 +38,6 @@ exports.getTrafficMatrixByFilter = async (req, res) => {
       });
     }
     
-    console.log(`[INFO] getTrafficMatrixByFilter - simpang_id: ${simpang_id}, date: ${date}, interval: ${interval}`);
-    
     // ✅ OPTIMIZED: Single batch query now instead of N queries
     // This should be much faster - 10-30 seconds for 5min interval instead of 2+ minutes
     const startTime = Date.now();
@@ -53,8 +51,6 @@ exports.getTrafficMatrixByFilter = async (req, res) => {
       'Sore Hari': '15:00 - 17:59',
       'Malam Hari': '18:00 - 23:59'
     };
-    
-    console.log(`[INFO] getTrafficMatrixByFilter completed in ${elapsedTime}ms`);
     
     res.status(200).json({
       success: true,
@@ -70,7 +66,6 @@ exports.getTrafficMatrixByFilter = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error(`[ERROR] getTrafficMatrixByFilter:`, error.message);
     res.status(500).json({
       success: false,
       message: error.message

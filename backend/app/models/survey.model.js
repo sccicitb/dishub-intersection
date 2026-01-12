@@ -87,14 +87,6 @@ const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, i
 
   const [rows] = await db.query(query, params);
 
-  // Debug logging
-  console.log(`[getVehicleDataGrouped] Query: ${query}`);
-  console.log(`[getVehicleDataGrouped] Params: ${JSON.stringify(params)}`);
-  console.log(`[getVehicleDataGrouped] Rows returned: ${rows.length}`);
-  if (rows.length > 0) {
-    console.log(`[getVehicleDataGrouped] First row sample:`, rows[0]);
-  }
-
   // DELEGATE GROUPING/AGGREGATION TO HELPER, pass interval AND includedSubCodes
   const vehicleData = getPeriodsAndSlots(rows, interval, includedSubCodes).map(period => ({
     period: period.name,
@@ -357,7 +349,7 @@ const getValidSimpangIds = async () => {
     return simpangRows.map(row => row.id);
   } catch (error) {
     // ✅ OPTIMIZED: Use GROUP BY instead of DISTINCT for fallback
-    console.warn('Using fallback simpang IDs:', error.message);
+
     const [arusRows] = await db.query(`
       SELECT ID_Simpang 
       FROM arus 
@@ -672,8 +664,6 @@ const getAvailableDirections = async (simpangId) => {
 
     const [rows] = await db.query(query, [simpangId]);
     const directions = rows.map(row => row.direction);
-
-    console.log(`[getAvailableDirections] Simpang ${simpangId} has directions:`, directions);
 
     return directions;
   } catch (error) {

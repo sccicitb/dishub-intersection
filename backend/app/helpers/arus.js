@@ -97,7 +97,6 @@ function getPeriodsAndSlots(arusRows, interval = '15min', vehicleCodes = null) {
 
   // Default vehicle codes if not provided
   const VEHICLE_CODES = vehicleCodes || ['SM', 'MP', 'AUP', 'TR', 'BS', 'TS', 'TB', 'BB', 'GANDENG', 'KTB'];
-  console.log(`[getPeriodsAndSlots] START: interval=${interval} (${intervalMinutes}min), rows=${arusRows.length}, vehicleCodes=${VEHICLE_CODES.join(',')}`);
 
   return PERIODS.map(period => {
     const slots = generateTimeSlots(period.start, period.end, intervalMinutes);
@@ -124,16 +123,9 @@ function getPeriodsAndSlots(arusRows, interval = '15min', vehicleCodes = null) {
           jam = row.waktu.toTimeString().slice(0, 5);
         } else {
           // Fallback for other formats
-          console.warn('Unexpected waktu format:', row.waktu, typeof row.waktu);
           return false;
         }
         const inSlot = jam >= slotStart && jam < slotEnd;
-        
-        // Debug log untuk slot pertama
-        if (!slotDebugLogged && slotStart === '06:00' && period.name === 'Pagi') {
-          console.log(`[DEBUG] Sample row waktu: ${row.waktu}, parsed jam: ${jam}, slot: ${slotStart}-${slotEnd}, inSlot: ${inSlot}`);
-          slotDebugLogged = true;
-        }
         
         return inSlot;
       });
@@ -161,10 +153,6 @@ function getPeriodsAndSlots(arusRows, interval = '15min', vehicleCodes = null) {
       };
       const status = slotData.length > 0 ? 1 : 0;
       
-      // Log untuk slot dengan data
-      if (data.total > 0) {
-        console.log(`[getPeriodsAndSlots] ${period.name} ${slotStart}-${slotEnd}: ${slotData.length} rows, total=${data.total}, mp=${data.mp}, sm=${data.sm}`);
-      }
       periodTotalVehicles += data.total;
 
       return {
@@ -173,7 +161,7 @@ function getPeriodsAndSlots(arusRows, interval = '15min', vehicleCodes = null) {
         data
       };
     });
-    console.log(`[getPeriodsAndSlots] ✓ ${period.name}: totalVehicles=${periodTotalVehicles}`);
+
     
     return {
       name: period.name,

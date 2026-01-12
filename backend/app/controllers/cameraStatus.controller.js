@@ -75,15 +75,10 @@ exports.getCameraStatusLogs = async (req, res) => {
     
     query += ` ORDER BY recorded_at DESC LIMIT 100`;
     
-    console.log(`[DEBUG] Query: ${query}, Params:`, params);
-    
     const [rows] = await db.execute(query, params);
-    
-    console.log(`[DEBUG] Found ${rows.length} logs for camera ${cameraId}` + (date ? ` on date ${date}` : ''));
 
     // Jika tidak ada logs, langsung return empty
     if (rows.length === 0) {
-      console.log(`[DEBUG] ⚠️ No logs found. Returning empty logs array.`);
       return res.status(200).json({ 
         camera_id: cameraId,
         simpang_id: parseInt(simpang_id),
@@ -113,8 +108,6 @@ exports.getCameraStatusLogs = async (req, res) => {
         // Extract date from recorded_at (YYYY-MM-DD)
         const logDate = new Date(log.recorded_at).toISOString().split('T')[0];
 
-        console.log(`[DEBUG Simpang ${simpang_id}] Checking log ${log.id} for date ${logDate}`);
-
         // Query survey data untuk tanggal spesifik dan simpang ini
         const surveyData = await surveyModel.getVehicleDataGrouped(
           {
@@ -127,9 +120,6 @@ exports.getCameraStatusLogs = async (req, res) => {
           includedSubCodes,
           '5min'
         );
-
-        console.log(`[DEBUG Simpang ${simpang_id}] surveyData keys:`, Object.keys(surveyData));
-        console.log(`[DEBUG Simpang ${simpang_id}] surveyData:`, JSON.stringify(surveyData).substring(0, 200));
 
         // Cek apakah ada data (structure baru: { vehicleData: [...] })
         let hasData = false;
@@ -144,7 +134,6 @@ exports.getCameraStatusLogs = async (req, res) => {
               for (const timeSlot of periodItem.timeSlots) {
                 if (timeSlot.data && timeSlot.data.total > 0) {
                   hasData = true;
-                  console.log(`[DEBUG Simpang ${simpang_id}] ✅ Found data in period ${periodItem.period} at ${timeSlot.time}`);
                   break;
                 }
               }
@@ -155,8 +144,6 @@ exports.getCameraStatusLogs = async (req, res) => {
 
         const status = hasData ? 1 : 0;
         const statusLabel = status === 1 ? 'aktif' : 'tidak aktif/mati';
-
-        console.log(`[DEBUG Simpang ${simpang_id}] Final status for log ${log.id}: ${status} (hasData=${hasData}, totalPeriods=${dataCount})\n`);
 
         return {
           id: log.id,
@@ -215,7 +202,6 @@ exports.getCameraStatusLogsByCameraId = async (req, res) => {
     }
 
     const simpangId = cameras[0].ID_Simpang;
-    console.log(`[DEBUG] Camera ${cameraId} → Simpang ${simpangId}`);
     
     // Determine the date to filter (use provided date or today)
     let filterDate = date;
@@ -249,11 +235,7 @@ exports.getCameraStatusLogsByCameraId = async (req, res) => {
       ORDER BY recorded_at ASC
     `;
     
-    console.log(`[DEBUG] Query camera ${cameraId} on date ${filterDate}, isToday=${isToday}`);
-    
     const [rows] = await db.execute(query, [cameraId, filterDate]);
-    
-    console.log(`[DEBUG] Found ${rows.length} logs for camera ${cameraId} on date ${filterDate}`);
 
     // Create a map of time -> status for quick lookup
     const logMap = {};
@@ -306,9 +288,7 @@ exports.getCameraStatusLogsByCameraId = async (req, res) => {
       const timeSlot = `${String(row.jam).padStart(2, '0')}:${String(row.menit).padStart(2, '0')}:00`;
       timeSlotsWithArusData.add(timeSlot);
     });
-    
-    console.log(`[DEBUG] Time slots with arus data: ${Array.from(timeSlotsWithArusData).join(', ')}`);
-
+        
     // Generate all 5-minute intervals for the day (00:00 to 23:55)
     const timeline = [];
     let lastKnownStatus = null; // Track last known status for interpolation
