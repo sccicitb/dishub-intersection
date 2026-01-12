@@ -16,7 +16,9 @@ const TableMatrix = ({
   startDate = null,
   endDate = null,
   onSubmit = null,
-  isLoading = false
+  isLoading = false,
+  onFilterChange = null,
+  selectedFilter = 'customrange'
 }) => {
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [searchLocation, setSearchLocation] = useState('');
@@ -42,6 +44,7 @@ const TableMatrix = ({
 
   const getSelectedLocationName = () => {
     if (selectedLocation === 0) return '-- Pilih Lokasi --';
+    if (selectedLocation === 'semua') return 'Semua Simpang';
     const location = simpangList.find(loc => loc.id === selectedLocation);
     return location?.Nama_Simpang || `Simpang ${selectedLocation}`;
   };
@@ -142,6 +145,19 @@ const TableMatrix = ({
 
                   {/* Location List */}
                   <div className="max-h-48 overflow-y-auto">
+                    {/* Semua Simpang Option */}
+                    <button
+                      onClick={() => handleLocationSelect('semua', 'Semua Simpang')}
+                      className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-blue-50 transition ${
+                        selectedLocation === 'semua' ? 'bg-blue-100 border-l-4 border-blue-600' : ''
+                      }`}
+                    >
+                      <FaMapMarkerAlt className={`${selectedLocation === 'semua' ? 'text-blue-600' : 'text-gray-400'}`} />
+                      <span className={selectedLocation === 'semua' ? 'font-semibold text-blue-700' : ''}>
+                        Semua Simpang
+                      </span>
+                    </button>
+
                     {filteredLocations.length === 0 ? (
                       <div className="px-4 py-3 text-sm text-gray-500 text-center">
                         Tidak ada lokasi yang ditemukan
@@ -168,7 +184,24 @@ const TableMatrix = ({
             </div>
           )}
         <div className="flex flex-col md:flex-row md:items-end gap-4 mt-4 md:space-x-2">
-          {/* Location with Search */}
+          {/* Filter Type */}
+          <div>
+            <label className="block text-xs font-semibold text-blue-50 mb-2">
+              Filter Periode
+            </label>
+            <select
+              value={selectedFilter || 'customrange'}
+              onChange={(e) => onFilterChange?.(e.target.value)}
+              className="select select-bordered select-sm w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
+            >
+              <option value="day">Hari Ini</option>
+              <option value="week">Minggu Ini</option>
+              <option value="month">Bulan Ini</option>
+              <option value="quarter">Quarter Ini</option>
+              <option value="year">Tahun Ini</option>
+              <option value="customrange">Custom Range</option>
+            </select>
+          </div>
 
           {/* Start Date */}
           <div>
@@ -179,7 +212,8 @@ const TableMatrix = ({
               type="date"
               value={startDate || ''}
               onChange={(e) => onDateChange?.('start', e.target.value)}
-              className="input input-bordered input-sm w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
+              disabled={selectedFilter !== 'customrange'}
+              className="input input-bordered input-sm w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white disabled:bg-gray-100"
             />
           </div>
 
@@ -192,7 +226,8 @@ const TableMatrix = ({
               type="date"
               value={endDate || ''}
               onChange={(e) => onDateChange?.('end', e.target.value)}
-              className="input input-bordered input-sm w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
+              disabled={selectedFilter !== 'customrange'}
+              className="input input-bordered input-sm w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white disabled:bg-gray-100"
             />
           </div>
 

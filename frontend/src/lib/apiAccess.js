@@ -42,6 +42,45 @@ export const vehicles = {
     }
     return getRequest(url);
   },
+  getRawData: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null, page = 1, limit = 100) => {
+    let url = `/vehicles/raw-data?filter=${filter}&page=${page}&limit=${limit}`;
+    
+    // Add simpang parameter (uses 'simpang' for 'semua', 'simpang_id' for specific IDs)
+    if (simpang_id === 'semua' || simpang_id === 'all') {
+      url += `&simpang=semua`;
+    } else {
+      url += `&simpang_id=${simpang_id}`;
+    }
+    
+    // Add date range for customrange filter
+    if (filter === 'customrange' && startDate && endDate) {
+      url += `&start-date=${startDate}&end-date=${endDate}`;
+    }
+    
+    return getRequest(url);
+  },
+  getTrafficMatrix: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
+    let url = `/vehicles/traffic-matrix?simpang_id=${simpang_id}&filter=${filter}`;
+    
+    // Add date range for customrange filter
+    if (filter === 'customrange' && startDate && endDate) {
+      url += `&start-date=${startDate}&end-date=${endDate}`;
+    }
+    
+    return getRequest(url);
+  },
+  getTrafficMatrixByCategory: (simpang_id, startDate, endDate) => {
+    let url = `/vehicles/traffic-matrix-by-category?simpang_id=${simpang_id}&start_date=${startDate}&end_date=${endDate}`;
+    return getRequest(url);
+  },
+  getTrafficMatrixByHours: (simpang_id, date_time) => {
+    let url = `/vehicles/traffic-matrix-by-hours?simpang_id=${simpang_id}&date=${date_time}`;
+    return getRequest(url);
+  },
+  getTrafficMatrixByFilter: (simpang_id, date_time, interval = '1hour') => {
+    let url = `/traffic-matrix/by-filter?simpang_id=${simpang_id}&date=${date_time}&interval=${interval}`;
+    return getRequest(url);
+  },
 }
 
 export const maps = {

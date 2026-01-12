@@ -58,7 +58,6 @@ function SurveiLhrkPage () {
       return;
     }
     try {
-      console.log(building)
       const title = building.camera.name || "Tanpa Nama";
       setActiveSimpang(title);
       setActiveCamera(building.camera.id);
@@ -68,13 +67,29 @@ function SurveiLhrkPage () {
   };
 
   function handleClickSimpang (loc) {
-    let name = loc.Nama_Simpang
+    console.log("handleClickSimpang received:", loc);
+    
+    // Handle "Semua Simpang" case
+    if (loc && loc.simpang === "semua") {
+      setActiveTitle("Survei Semua Simpang");
+      setActiveSID("semua");
+      setActiveSimpangId("semua");
+      return;
+    }
+
+    // Handle individual simpang case
+    if (!loc || !loc.Nama_Simpang) {
+      console.error("Invalid loc data:", loc);
+      return;
+    }
+
+    let name = loc.Nama_Simpang;
     if (!name.toLowerCase().includes("simpang")) {
-      name = "Simpang " + name
+      name = "Simpang " + name;
     }
     setActiveTitle("Survei " + name);
-    setActiveSID(loc.id)
-    setActiveSimpangId(loc.id)
+    setActiveSID(loc.id);
+    setActiveSimpangId(loc.id);
   }
   return (
     <div>

@@ -20,17 +20,19 @@ export const exportSurveyDataToExcel = async (startDate, endDate, simpangId, fil
   try {
     console.log('📥 Starting export with params:', { startDate, endDate, simpangId, fileName, filterType, simpangName });
     
-    // Fetch data dari ketiga API
-    const [arahData, tipeData, masukKeluarData] = await Promise.all([
+    // Fetch data dari API
+    const [arahData, tipeData, masukKeluarData, rawData] = await Promise.all([
       vehicles.getByArah('customrange', simpangId, startDate, endDate),
       vehicles.getByTipe('customrange', simpangId, startDate, endDate),
       vehicles.getAll('customrange', simpangId, startDate, endDate),
+      vehicles.getRawData('customrange', simpangId, startDate, endDate, 1, 500),
     ]);
 
     // Siapkan data untuk setiap sheet - handle nested data structure
     const arahSheetData = formatArahData(arahData?.data?.data || []);
     const tipeSheetData = formatTipeData(tipeData?.data?.data || []);
     const masukKeluarSheetData = formatMasukKeluarData(masukKeluarData?.data?.data || []);
+    const rawDataSheetData = formatRawData(rawData?.data?.data || []);
 
     // Buat sheet Info dengan periode filter
     const infoSheetData = [
@@ -44,7 +46,7 @@ export const exportSurveyDataToExcel = async (startDate, endDate, simpangId, fil
     ];
 
     // Validasi minimal ada data di salah satu sheet
-    if (arahSheetData.length === 0 && tipeSheetData.length === 0 && masukKeluarSheetData.length === 0) {
+    if (arahSheetData.length === 0 && tipeSheetData.length === 0 && masukKeluarSheetData.length === 0 && rawDataSheetData.length === 0) {
       console.warn('⚠️ All sheets are empty - proceeding anyway');
     }
 
@@ -68,10 +70,15 @@ export const exportSurveyDataToExcel = async (startDate, endDate, simpangId, fil
     const masukKeluarSheet = XLSX.utils.json_to_sheet(masukKeluarSheetData.length > 0 ? masukKeluarSheetData : [{ 'Jam/Waktu': 'Tidak ada data', 'Masuk (IN)': 0, 'Keluar (OUT)': 0, 'Total': 0 }]);
     XLSX.utils.book_append_sheet(workbook, masukKeluarSheet, 'Masuk Keluar');
 
+    // Tambah sheet 4: Raw Data
+    const rawDataSheet = XLSX.utils.json_to_sheet(rawDataSheetData.length > 0 ? rawDataSheetData : [{ 'Data': 'Tidak ada data' }]);
+    XLSX.utils.book_append_sheet(workbook, rawDataSheet, 'Data Raw');
+
     // Set column width untuk semua sheet
     setColumnWidths(arahSheet);
     setColumnWidths(tipeSheet);
     setColumnWidths(masukKeluarSheet);
+    setColumnWidths(rawDataSheet);
 
     // Download file
     XLSX.writeFile(workbook, fileName);
@@ -174,6 +181,31 @@ const formatMasukKeluarData = (data) => {
     'Masuk (IN)': item.total_IN || item.IN || 0,
     'Keluar (OUT)': item.total_OUT || item.OUT || 0,
     'Total': (parseInt(item.total_IN || item.IN || 0) + parseInt(item.total_OUT || item.OUT || 0)).toString(),
+  }));
+};
+
+/**
+ * Format data raw dari API
+ */
+const formatRawData = (data) => {
+  if (!Array.isArray(data) || data.length === 0) return [];
+
+  return data.map(item => ({
+    "ID_Simpang": item.ID_Simpang|| 5,
+    "tipe_pendekat": item.tipe_pendekat|| "P",
+    "dari_arah": item.dari_arah|| "south",
+    "ke_arah": item.ke_arah|| null,
+    "SM": item.SM|| 0,
+    "MP": item.MP|| 0,
+    "AUP": item.AUP|| 0,
+    "TR": item.TR|| 0,
+    "BS": item.BS|| 0,
+    "TS": item.TS|| 0,
+    "TB": item.TB|| 0,
+    "BB": item.BB|| 0,
+    "GANDENG": item.GANDENG|| 0,
+    "KTB": item.KTB|| 0,
+    "waktu": item.waktu|| "2026-01-06T09:38:31.000Z",
   }));
 };
 

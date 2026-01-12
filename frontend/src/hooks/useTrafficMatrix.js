@@ -22,7 +22,7 @@ export const useTrafficMatrix = () => {
     return data_matrix;
   }, []);
 
-  const fetchTrafficMatrix = useCallback(async (simpang_id, startDate, endDate) => {
+  const fetchTrafficMatrix = useCallback(async (simpang_id, startDate, endDate, filter = 'customrange') => {
     setLoading(true);
     setError(null);
     
@@ -31,11 +31,12 @@ export const useTrafficMatrix = () => {
         throw new Error('simpang_id is required');
       }
       
-      if (!startDate || !endDate) {
-        throw new Error('startDate and endDate are required');
+      // For customrange filter, dates are required
+      if (filter === 'customrange' && (!startDate || !endDate)) {
+        throw new Error('startDate and endDate are required for customrange filter');
       }
 
-      const response = await survey.getTrafficMatrix(simpang_id, startDate, endDate);
+      const response = await survey.getTrafficMatrix(simpang_id, startDate, endDate, filter);
       
       if (response.status === 200 && response.data?.data) {
         const matrixData = response.data.data;
@@ -47,12 +48,12 @@ export const useTrafficMatrix = () => {
         return matrixData;
       } else if (response.status === 200 && (!response.data?.data || Object.keys(response.data.data).length === 0)) {
         // Jika data kosong, load default
-        throw new Error('No data available for selected period');
+        throw new Error('Data tidak tersedia dari API');
       } else {
-        throw new Error('Invalid response format from API');
+        throw new Error('Gagal mengambil data traffic matrix');
       }
     } catch (err) {
-      const errorMessage = err.message || 'Failed to fetch traffic matrix';
+      const errorMessage = err.message || 'Gagal mengambil data traffic matrix';
       setError(errorMessage);
       console.error('Error fetching traffic matrix:', err);
       
@@ -64,7 +65,7 @@ export const useTrafficMatrix = () => {
         const transformedMatrix = transformMatrixData(defaultData);
         setDataMatrix(transformedMatrix);
       } catch (fallbackErr) {
-        console.error('Failed to load fallback matrix:', fallbackErr);
+        console.error('Gagal memuat matrix fallback:', fallbackErr);
       }
       
       return null;

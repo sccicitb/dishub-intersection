@@ -44,6 +44,7 @@ export default function Home () {
 
   }]);
 
+  const [filterChangeMatrix, setFilterChangeMatrix] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isTabActive, setIsTabActive] = useState(true);
@@ -569,7 +570,7 @@ export default function Home () {
   // Fetch traffic matrix when location or dates change
   useEffect(() => {
     if (matrixSubmitCounter > 0 && selectedLocation !== 0) {
-      fetchTrafficMatrix(selectedLocation, startDate, endDate).catch(() => {
+      fetchTrafficMatrix(selectedLocation, startDate, endDate, filterChangeMatrix).catch(() => {
         console.log("Using default matrix due to fetch failure");
       });
     }
@@ -783,7 +784,9 @@ export default function Home () {
                 }}
                 startDate={startDate}
                 endDate={endDate}
+                onFilterChange={(filter) => setFilterChangeMatrix(filter)}
                 onSubmit={() => setMatrixSubmitCounter(matrixSubmitCounter + 1)}
+                selectedFilter={filterChangeMatrix}
                 isLoading={matrixLoading}
               />
             </div>
