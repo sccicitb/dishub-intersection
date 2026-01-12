@@ -201,7 +201,7 @@ export default function GrafikRoad({ filter = 'day', simpang_id = 'semua', start
         </div>
       ) : !trafficData ? (
         <div className="flex justify-center items-center h-96">
-          <p className="text-yellow-500">No data available</p>
+          <p className="text-yellow-500">Data tidak tersedia</p>
         </div>
       ) : (
         <TrafficFlowChart trafficData={trafficData} />

@@ -10,6 +10,23 @@ const SurveyInfoTable = ({ fetchStatus, id, cuaca }) => {
   // Fetch simpang data first to get the ID
   const fetchSimpangData = async (id) => {
     try {
+      // Skip fetch if "semua" is selected
+      if (id === "semua") {
+        setDataSurvey([
+          { label: 'Cuaca', value: `${cuaca ? cuaca?.cuaca : ''}` || "" },
+          { label: 'Metode Survei', value: "Semua Metode" },
+          { label: 'Lokasi', value: "Semua Lokasi" },
+          { label: 'Kabupaten/Kota', value: "Semua Simpang" },
+          { label: 'Kecamatan', value: "-" },
+          { label: 'Lebar Jalur', value: "-" },
+          { label: 'Jumlah Lajur', value: "-" },
+          { label: 'Median', value: "-" },
+          { label: 'Belok Kiri Jalan Terus', value: "-" },
+          { label: 'Hambatan Samping', value: "-" },
+        ])
+        return;
+      }
+
       const simpangRes = await maps.getById(id);
       const data = simpangRes ? simpangRes.data : {}
       setDataSurvey([

@@ -486,6 +486,19 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
             onToggle={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
             label="Pilih Lokasi"
           >
+            <DropdownItem
+              label="Semua Simpang"
+              icon={<FaMapMarkerAlt />}
+              onClick={() => {
+                fitBoundsToAll();
+                // onClickSimpang({ simpang: "semua", name: "semua simpang", buildings: buildings });
+                handleCameraSelect({ id: "semua", name: "Semua Kamera", socket_event: "all" });
+                // Collect all cameras from all buildings
+                // const allCameras = buildings.flatMap(building => building.cameras || []);
+                // setCameraModal({ isOpen: true, cameras: allCameras });
+                setIsLocationDropdownOpen(false);
+              }}
+            />
             {buildings.map((building) => (
               <DropdownItem
                 key={building.id}
@@ -542,6 +555,17 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
             <div className="bg-white rounded-xl p-5 shadow-lg w-80 max-w-full">
               <h2 className="text-xs font-semibold mb-4">Pilih Kamera</h2>
               <div className="space-y-2">
+                {/* <button
+                  className="w-full text-left rounded-xl btn btn-sm hover:bg-gray-100 border-blue-300 bg-blue-50"
+                  onClick={() => {
+                    handleCameraSelect({ id: "semua", name: "Semua Kamera", socket_event: "all" });
+                  }}
+                >
+                  <div className="flex flex-col items-center">
+                    <span className="font-semibold">Semua Kamera</span>
+                    <small className="text-blue-600">Pilih semua kamera dari semua simpang</small>
+                  </div>
+                </button> */}
                 {cameraModal.cameras.map((camera) => {
                   console.log(camera)
                   return (
