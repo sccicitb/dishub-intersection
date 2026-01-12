@@ -29,5 +29,25 @@ module.exports = app => {
   // Get complete traffic matrix (asal-tujuan + arah pergerakan)
   router.get("/traffic-matrix", Vehicles.getTrafficMatrix);
 
+  // Get traffic matrix with vehicle categories breakdown
+  router.get("/traffic-matrix-by-category", Vehicles.getTrafficMatrixByCategory);
+
+  // =====================================================
+  // RAW DATA ROUTES (NEW)
+  // =====================================================
+
+  // Get raw arus data with pagination
+  router.get("/raw-data", Vehicles.getRawArusData);
+
+  // =====================================================
+  // TRAFFIC MATRIX BY TIME PERIODS (NEW)
+  // =====================================================
+
+  // Get traffic matrix by time periods (Dini Hari, Pagi, Siang, Sore, Malam)
+  router.get("/traffic-matrix-by-periods", Vehicles.getTrafficMatrixByTimePeriods);
+
+  // Get traffic matrix by hours (00:00-01:00, 01:00-02:00, ..., 23:00-23:59)
+  router.get("/traffic-matrix-by-hours", Vehicles.getTrafficMatrixByHours);
+
   app.use('/api/vehicles', router);
 };
