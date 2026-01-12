@@ -26,4 +26,7 @@ router.post('/:id/role', authenticateToken, requireAdmin, userController.assignR
 // DELETE /api/users/:id/role/:role_id - Remove role from user (admin only)
 router.delete('/:id/role/:role_id', authenticateToken, requireAdmin, userController.removeRole);
 
+// PUT /api/users/:id/change-password - Change password (user can only change their own)
+router.put('/:id/change-password', authenticateToken, userController.changePassword);
+
 module.exports = router; 

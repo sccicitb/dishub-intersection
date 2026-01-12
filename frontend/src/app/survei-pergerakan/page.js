@@ -1,32 +1,24 @@
 "use client";
 
-import { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect, Suspense, lazy, useRef } from 'react';
+import { useAuth } from "@/app/context/authContext";
 import { survey, maps, cameras } from '@/lib/apiService';
+import { vehicles } from '@/lib/apiAccess';
 import { getCuacaJogja } from '@/lib/weatherAccess';
 import { toast, ToastContainer } from 'react-toastify';
 import { exportPergerakanToExcel } from '@/utils/exportPergerakan';
 import 'react-toastify/dist/ReactToastify.css';
-// import VideoStream from '../components/videoStream';
 
 const ClasificationTable = lazy(() => import("@/app/components/clasificationTable"));
-const HourVehicleTable = lazy(() => import('@/app/components/HourVehicleTable'));
 const SurveyInfoTable = lazy(() => import("@/app/components/surveyorTable"));
 const SelectionButtons = lazy(() => import("@/app/components/selectionButton"));
-const DirectionVehicleTable = lazy(() => import("@/app/components/directionVehicleTable"));
-const DirectionTable = lazy(() => import('../components/pergerakanTable'));
 const MapComponent = lazy(() => import("@/app/components/map"));
-const KeluarMasukTable = lazy(() => import('../components/table/keluarMasukTable'));
-
-// import AdaptiveVideoPlayer from '../components/adaptiveCameraStream';
-// import BlobVideoPlayer from '../components/blobVideoPlayer';
-
-// const classificationMap = {
-//   "PKJI 2023 Luar Kota": "luar_kota",
-//   "PKJI 2023 Dalam Kota": "dalam_kota",
-//   "PKJI 2023 Tipikal": "tipikal",
-// };
+const TrafficMatrixByCategory = lazy(() => import("@/app/components/trafficMatrixByCategory"));
+const TrafficMatrixByFilter = lazy(() => import("@/app/components/trafficMatrixByFilter"));
+const VehicleDetailByInterval = lazy(() => import("@/app/components/vehicleDetailByInterval"));
 
 function MovePage () {
+  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [vehicleData, setVehicleData] = useState(null);
   // const [directionData, setDirectionData] = useState(null);
@@ -50,6 +42,16 @@ function MovePage () {
   const [errorKM, setErrorKM] = useState(null)
   const [submitCounter, setSubmitCounter] = useState(0)
   const [exportLoading, setExportLoading] = useState(false)
+  
+  // Toggle visibility for analysis components
+  const [showTrafficMatrixByCategory, setShowTrafficMatrixByCategory] = useState(true);
+  const [showTrafficMatrixByFilter, setShowTrafficMatrixByFilter] = useState(true);
+  const [showVehicleDetailByInterval, setShowVehicleDetailByInterval] = useState(true);
+
+  const trafficMatrixRef = useRef(null);
+  const trafficMatrixByHoursRef = useRef(null);
+  const trafficMatrixByFilterRef = useRef(null);
+  const vehicleDetailByIntervalRef = useRef(null);
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -64,15 +66,11 @@ function MovePage () {
 
   const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
 
-  // useEffect(() => {
-  //   import('@/data/sampleVehicleData.json').then((data) => {
-  //     setVehicleData(data.default);
-  //   });
-  //   import('@/data/DataDirection.json').then((data) => {
-  //     setDirectionData(data.default);
-  //   });
-  // }, []);
-
+  const fetchMatrix = async () => {
+    console.log('Fetching matrix with:', { activeSID, dateInput });
+    // This function will be passed to the component to trigger API fetch
+    // The component will handle the actual API call and data update
+  };
 
   useEffect(() => {
     // Fetch simpang data first to get the ID
@@ -260,6 +258,11 @@ function MovePage () {
     if (submitCounter > 0) {
       fetchSurvey();
       fetchSurveyKM();
+      fetchMatrix();
+      if (trafficMatrixRef.current) trafficMatrixRef.current.refetchData();
+      if (trafficMatrixByHoursRef.current) trafficMatrixByHoursRef.current.refetchData();
+      if (trafficMatrixByFilterRef.current) trafficMatrixByFilterRef.current.refetchData();
+      if (vehicleDetailByIntervalRef.current) vehicleDetailByIntervalRef.current.refetchData();
     }
   }, [submitCounter]);
 
@@ -320,54 +323,118 @@ function MovePage () {
               onChange={(e) => setDateInput(e.target.value)}
             />
             <button
-              onClick={() => setSubmitCounter(submitCounter + 1)}
+              onClick={() => {
+                setSubmitCounter(submitCounter + 1);
+                // Trigger fetch di TrafficMatrixByCategory component
+                if (trafficMatrixRef.current?.refetchData) {
+                  trafficMatrixRef.current.refetchData();
+                }
+                // Trigger fetch di TrafficMatrixByHours component
+                if (trafficMatrixByHoursRef.current?.refetchData) {
+                  trafficMatrixByHoursRef.current.refetchData();
+                }
+                // Trigger fetch di TrafficMatrixByFilter component
+                if (trafficMatrixByFilterRef.current?.refetchData) {
+                  trafficMatrixByFilterRef.current.refetchData();
+                }
+              }}
               className="btn btn-md bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
             >
               Submit
             </button>
 
-            <button
-              onClick={handleExportExcel}
-              disabled={exportLoading || !dateInput || !activeSimpang}
-              className="btn btn-md bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {exportLoading ? (
-                <>
-                  <span className="animate-spin">⟳</span>
-                  Exporting...
-                </>
-              ) : (
-                '📊 Export Excel'
-              )}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={handleExportExcel}
+                disabled={exportLoading || !dateInput || !activeSimpang}
+                className="btn btn-md bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {exportLoading ? (
+                  <>
+                    <span className="animate-spin">⟳</span>
+                    Exporting...
+                  </>
+                ) : (
+                  '📊 Export Excel'
+                )}
+              </button>
+            )}
+          </div>
+          {/* <DirectionTable vehicleData={vehicleData} classification={activeClassification} activePergerakan={activeDirection} activePendekatan={activePendekatan} /> */}
+          
+          {/* Analysis Components Section */}
+          <div className="mt-8 space-y-4">
+            <h2 className="text-2xl font-bold mb-4 text-[#232f61]">Analisis Data Pergerakan</h2>
+            
+            {/* Traffic Matrix By Category */}
+            <div className="border border-base-300 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setShowTrafficMatrixByCategory(!showTrafficMatrixByCategory)}
+                className="w-full px-6 py-4 bg-base-200 flex items-center justify-between font-semibold text-left cursor-pointer hover:bg-base-300 transition"
+              >
+                <span>Data Pergerakan Berdasarkan Kategori Kendaraan</span>
+                <span className={`transition-transform ${showTrafficMatrixByCategory ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+              <div style={{ display: showTrafficMatrixByCategory ? 'block' : 'none' }} className="p-6">
+                <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
+                  <TrafficMatrixByCategory 
+                    ref={trafficMatrixRef}
+                    simpangId={activeSID} 
+                    startDate={dateInput}
+                    endDate={dateInput}
+                    onFetch={fetchMatrix}
+                    simpangName={activeSimpang}
+                  />
+                </Suspense>
+              </div>
+            </div>
 
-            <div className='content-center w-fit flex text-nowrap gap-2 rounded-lg text-sm p-2 bg-[#232f61] text-white font-semibold'>
-              <div className='m-auto'>Keluar-Masuk Simpang</div>
-              <input
-                type="checkbox"
-                checked={kmTableStatus}
-                onChange={() => setKMTableStatus(!kmTableStatus)}
-                className="bg-white/50 checkbox checkbox-xs text-white m-auto"
-              />
+            {/* Traffic Matrix By Filter */}
+            <div className="border border-base-300 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setShowTrafficMatrixByFilter(!showTrafficMatrixByFilter)}
+                className="w-full px-6 py-4 bg-base-200 flex items-center justify-between font-semibold text-left cursor-pointer hover:bg-base-300 transition"
+              >
+                <span>Data Pergerakan Dengan Filter Interval</span>
+                <span className={`transition-transform ${showTrafficMatrixByFilter ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+              <div style={{ display: showTrafficMatrixByFilter ? 'block' : 'none' }} className="p-6">
+                <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
+                  <TrafficMatrixByFilter
+                    ref={trafficMatrixByFilterRef}
+                    simpangId={activeSID} 
+                    dateInput={dateInput}
+                    simpangName={activeSimpang}
+                  />
+                </Suspense>
+              </div>
+            </div>
+
+            {/* Vehicle Detail By Interval */}
+            <div className="border border-base-300 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setShowVehicleDetailByInterval(!showVehicleDetailByInterval)}
+                className="w-full px-6 py-4 bg-base-200 flex items-center justify-between font-semibold text-left cursor-pointer hover:bg-base-300 transition"
+              >
+                <span>Detail Kendaraan Per Interval</span>
+                <span className={`transition-transform ${showVehicleDetailByInterval ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+              <div style={{ display: showVehicleDetailByInterval ? 'block' : 'none' }} className="p-6">
+                <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
+                  <VehicleDetailByInterval
+                    ref={vehicleDetailByIntervalRef}
+                    simpangId={activeSID} 
+                    dateInput={dateInput}
+                    simpangName={activeSimpang}
+                  />
+                </Suspense>
+              </div>
             </div>
           </div>
-          <DirectionTable vehicleData={vehicleData} classification={activeClassification} activePergerakan={activeDirection} activePendekatan={activePendekatan} />
-          {kmTableStatus && (
-            <Suspense fallback={<div>Loading Keluar-Masuk Table...</div>}>
-              {errorKM && (
-                <div className="alert alert-error mb-4">
-                  <span>{errorKM}</span>
-                </div>
-              )}
-              <KeluarMasukTable
-                selectedDate={dateInput}
-                setSelectedDate={setDateInput}
-                loading={loadingKM}
-                data={dataKM}
-              />
-            </Suspense>
-          )}
-          <ClasificationTable typeClass={activeClassification} />
+          
+          <div className="mt-8">
+            <ClasificationTable typeClass={activeClassification} />
+          </div>
         </div>
       </Suspense>
     </div>

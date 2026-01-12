@@ -41,6 +41,9 @@ export const authApi = {
   // Assign role to user
   addUserRole: (id, data) => createRequest(`/users/${id}/role`, data),
   deleteUserRole: (id, role_id) => deleteRequest(`/users/${id}/role/${role_id}`, { role_id: role_id }),
+
+  // Change password
+  changePassword: (id, data) => updateRequest(`/users/${id}/change-password`, data),
 }
 
 export const maps = {
@@ -57,8 +60,8 @@ export const cameras = {
   getAll: () => getRequest(`/cameras/`),
   updateById: (id, data) => updateRequest(`/cameras/${id}`, data),
   createData: (data) => createRequest(`/cameras`, data),
-  deleteById: (id) => deleteRequest(`/cameras/${id}`)
-
+  deleteById: (id) => deleteRequest(`/cameras/${id}`),
+  getStatusLog: (camera_id, date) => getRequest(`/cameras/status-log-idcamera?camera_id=${camera_id}&date=${date}`),
 }
 
 export const calendar = {
@@ -121,8 +124,14 @@ export const survey = {
 
     return getRequest(`/surveys/data-summary?${params.join('&')}`);
   },
-  getTrafficMatrix: (simpang_id, startDate, endDate) => {
-    let params = [`simpang_id=${simpang_id}`, `start_date=${startDate}`, `end_date=${endDate}`];
+  getTrafficMatrix: (simpang_id, startDate, endDate, filter = 'customrange') => {
+    let params = [`simpang_id=${simpang_id}`, `filter=${filter}`];
+    
+    // Add date range for customrange filter
+    if (filter === 'customrange' && startDate && endDate) {
+      params.push(`start-date=${startDate}`, `end-date=${endDate}`);
+    }
+    
     return getRequest(`/vehicles/traffic-matrix?${params.join('&')}`);
   },
   getAllKM: (simpang_id, date, interval, approach) => {

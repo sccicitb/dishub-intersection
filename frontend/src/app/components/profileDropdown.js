@@ -37,7 +37,7 @@ export default function NavbarUserDropdown () {
         <div className="flex items-center bg-[#232f61]/80 text-white p-2 rounded-md">
           <span className="text-[11px] font-medium px-2 sm:w-fit w-20 truncate capitalize">Hi, {user?.roles?.map(item => item.name).join(', ') || ' '} User!</span>
           <div className="avatar bg-red-600 rounded-full w-5 h-5 flex items-center justify-center text-[9px] text-white font-medium text-center uppercase">
-            {user?.roles?.map(item => item.name[0]).join(', ') || 'User'}
+            {user?.roles?.[0]?.name[0] || 'U'}
           </div>
         </div>
         <FaAngleDown className={`text-lg text-base-100 transition-transform ${isOpen ? 'rotate-180' : ''}`} />

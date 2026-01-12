@@ -18,10 +18,69 @@ const AdminPage = () => {
   const [formUser, setFormUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
   const [updatingRole, setUpdatingRole] = useState(false);
+  const [modalTab, setModalTab] = useState('details'); // 'details' or 'password' (modal)
+  const [mainTab, setMainTab] = useState('user-management'); // 'user-management' or 'password' (main page)
+  const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null); // Current logged-in user
+  const [changeUserPasswordForm, setChangeUserPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
+  const [changeUserPasswordLoading, setChangeUserPasswordLoading] = useState(false);
+
+  // Helper function untuk ambil cookie value
+  const getCookieValue = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  };
 
   // Fetch users dari API
   useEffect(() => {
     fetchUsers();
+    // Get current logged-in user dari cookies
+    try {
+      // Cek dari cookies dengan nama 'user' yang berisi JSON
+      const userCookie = getCookieValue('user');
+      if (userCookie) {
+        try {
+          // Cookie value mungkin di-encode, jadi decode dulu
+          const decodedUser = decodeURIComponent(userCookie);
+          const parsedUser = JSON.parse(decodedUser);
+          if (parsedUser?.id) {
+            setCurrentUser({ id: parseInt(parsedUser.id) });
+            console.log('Current user from cookies:', parsedUser.name);
+            return;
+          }
+        } catch (e) {
+          console.warn('Gagal parse user dari cookies:', e);
+        }
+      }
+      
+      // Fallback: cek dari localStorage (format JSON)
+      let userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          if (parsedUser?.id) {
+            setCurrentUser({ id: parseInt(parsedUser.id) });
+            return;
+          }
+        } catch (e) {
+          console.warn('Gagal parse user dari localStorage:', e);
+        }
+      }
+      
+      // Fallback: cek dari berbagai kemungkinan key di localStorage
+      const userId = localStorage.getItem('id_user') || localStorage.getItem('userId');
+      if (userId) {
+        setCurrentUser({ id: parseInt(userId) });
+        return;
+      }
+      
+      console.warn('User ID tidak ditemukan di cookies atau localStorage');
+    } catch (err) {
+      console.warn('Error getting current user:', err);
+    }
   }, []);
 
   const fetchUsers = async () => {
@@ -194,6 +253,100 @@ const AdminPage = () => {
     }
   };
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    
+    // Check if currentUser exists
+    if (!currentUser || !currentUser.id) {
+      toast.error(`User tidak ditemukan. Silakan refresh halaman dan login ulang. `);
+      return;
+    }
+    
+    // Validation
+    if (!passwordForm.oldPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      toast.error('Semua field harus diisi');
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('Password baru dan konfirmasi tidak cocok');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      toast.error('Password baru minimal 6 karakter');
+      return;
+    }
+
+    // Konfirmasi sebelum update
+    const confirmed = window.confirm('Apakah Anda yakin ingin mengganti password?\n\nPassword lama tidak akan bisa digunakan lagi setelah perubahan ini.');
+    if (!confirmed) {
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const response = await authApi.changePassword(currentUser.id, {
+        oldPassword: passwordForm.oldPassword,
+        newPassword: passwordForm.newPassword,
+        confirmPassword: passwordForm.confirmPassword
+      });
+
+      toast.success(response.data.message || 'Password berhasil diubah');
+      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      toast.error('Error: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleChangeUserPassword = async (e) => {
+    e.preventDefault();
+
+    if (!selectedUser || !selectedUser.id) {
+      toast.error('User tidak ditemukan');
+      return;
+    }
+
+    if (!changeUserPasswordForm.newPassword || !changeUserPasswordForm.confirmPassword) {
+      toast.error('Semua field harus diisi');
+      return;
+    }
+
+    if (changeUserPasswordForm.newPassword !== changeUserPasswordForm.confirmPassword) {
+      toast.error('Password baru dan konfirmasi tidak cocok');
+      return;
+    }
+
+    if (changeUserPasswordForm.newPassword.length < 6) {
+      toast.error('Password baru minimal 6 karakter');
+      return;
+    }
+
+    // Konfirmasi sebelum update
+    const confirmed = window.confirm(`Apakah Anda yakin ingin mengganti password untuk user "${selectedUser.name}"?\n\nPassword lama tidak akan bisa digunakan lagi setelah perubahan ini.`);
+    if (!confirmed) {
+      return;
+    }
+
+    setChangeUserPasswordLoading(true);
+    try {
+      const response = await authApi.changePassword(selectedUser.id, {
+        newPassword: changeUserPasswordForm.newPassword,
+        confirmPassword: changeUserPasswordForm.confirmPassword
+      });
+
+      toast.success(response.data.message || 'Password user berhasil diubah');
+      setChangeUserPasswordForm({ newPassword: '', confirmPassword: '' });
+      setModalTab('details');
+    } catch (err) {
+      toast.error('Error: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setChangeUserPasswordLoading(false);
+    }
+  };
+
   const stats = {
     totalUsers: users.length,
     activeUsers: users.filter(user => user.status === 'active').length,
@@ -222,248 +375,410 @@ const AdminPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-base-200 p-4">
-      {/* <ModalFormUser
-        isOpen={isFormModalOpen}
-        onClose={() => { setAPI(formUser) }}
-        user={formUser}
-        onSuccess={fetchUsers}
-      /> */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Modals */}
       <ModalFormUser
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
         user={formUser}
         onSuccess={fetchUsers}
       />
+
       {/* Header */}
-      <div className="mb-8 px-2">
-        <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-        <p className="text-base-content/70 text-sm">Kelola pengguna dan sistem aplikasi</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="stat bg-base-100 shadow-lg rounded-lg">
-          <div className="stat-figure text-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-            </svg>
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Admin</h1>
+              <p className="text-sm text-slate-500 mt-1">Kelola pengguna dan sistem aplikasi</p>
+            </div>
           </div>
-          <div className="stat-title">Total Users</div>
-          <div className="stat-value text-primary">{stats.totalUsers}</div>
-          <div className="stat-desc">Semua pengguna terdaftar</div>
-        </div>
-
-        <div className="stat bg-base-100 shadow-lg rounded-lg">
-          <div className="stat-figure text-success">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-8 h-8 stroke-current">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <div className="stat-title">Active Users</div>
-          <div className="stat-value text-success">{stats.activeUsers}</div>
-          <div className="stat-desc">Pengguna aktif</div>
         </div>
       </div>
 
-      {/* Main Content Card */}
-      <div className="bg-base-100 rounded-lg shadow-lg p-6">
-        {/* Search and Actions */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <h2 className="text-xl font-semibold">User Management</h2>
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-            <button
-              className="btn btn-sm btn-success"
-              onClick={() => {
-                setFormUser(null);     // Create
-                setIsFormModalOpen(true);
-              }}
-            >
-              + Add User
-            </button>
-            <div className="form-control">
-              <div className="input-group">
-                <input
-                  type="text"
-                  placeholder="Cari user..."
-                  className="input input-bordered input-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tab Navigation */}
+        <div className="flex gap-1 mb-8 border-b border-slate-200">
+          <button
+            onClick={() => setMainTab('user-management')}
+            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+              mainTab === 'user-management'
+                ? 'text-[#232f61]/90 border-[#232f61]/90'
+                : 'text-slate-600 border-transparent hover:text-slate-900'
+            }`}
+          >
+            👥 Manajemen Pengguna
+          </button>
+          <button
+            onClick={() => setMainTab('password')}
+            className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+              mainTab === 'password'
+                ? 'text-[#232f61]/90 border-[#232f61]/90'
+                : 'text-slate-600 border-transparent hover:text-slate-900'
+            }`}
+          >
+            🔐 Password
+          </button>
+        </div>
+
+        {/* User Management Tab */}
+        {mainTab === 'user-management' && (
+          <div className="space-y-6">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white rounded-lg border border-slate-200 p-6 hover:shadow-md transition-shadow">
+                <div>
+                  <p className="text-slate-600 text-sm font-medium">Total Pengguna</p>
+                  <p className="text-3xl font-bold text-slate-900 mt-2">{stats.totalUsers}</p>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg border border-slate-200 p-6 hover:shadow-md transition-shadow">
+                <div>
+                  <p className="text-slate-600 text-sm font-medium">Pengguna Aktif</p>
+                  <p className="text-3xl font-bold text-green-600 mt-2">{stats.activeUsers}</p>
+                </div>
               </div>
             </div>
-            <button className="btn btn-sm btn-primary" onClick={fetchUsers}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
-          </div>
-        </div>
 
-        {/* Users Table */}
-        <div className="overflow-x-auto">
-          <table className="table table-sm table-zebra w-full">
-            <thead>
-              <tr>
-                <th className="text-center">#</th>
-                <th className="text-center">Name</th>
-                <th className="text-center">Email</th>
-                <th className="text-center">Status</th>
-                <th className="text-center">Tanggal Dibuat</th>
-                <th className="text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentUsers.length > 0 ? (
-                currentUsers.map((user, index) => (
-                  <tr key={user.id} className="hover">
-                    <td>{indexOfFirstUser + index + 1}</td>
-                    <td>
-                      <div className="flex items-center space-x-3">
-                        <div>
-                          <div className="font-semibold">{user.name || 'Unknown'}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{user.email || 'No email'}</td>
-                    <td className="text-center">
-                      <div className={`capitalize badge ${user.status === 'active' ? 'badge-success' : 'badge-warning'}`}>
-                        {user.status || 'Inactive'}
-                      </div>
-                    </td>
-                    <td className="text-center">{new Date(user.created_at).toLocaleDateString('id-ID') || 'N/A'}</td>
-                    <td className="text-center items-center flex w-full justify-center">
-                      <div className="flex space-x-2">
-                        <button
-                          className="btn btn-warning btn-sm"
-                          onClick={() => {
-                            setFormUser(user);
-                            setIsFormModalOpen(true);
-                          }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-info btn-sm"
-                          onClick={() => handleViewUser(user)}
-                        >
-                          View
-                        </button>
-                        <button
-                          className="btn btn-error btn-sm"
-                          onClick={() => handleDeleteConfirm(user.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="text-center py-8">
-                    <div className="text-base-content/50">
-                      {searchTerm ? 'Tidak ada user yang ditemukan' : 'Tidak ada data user'}
-                    </div>
-                  </td>
-                </tr>
+            {/* Users Card */}
+            <div className="bg-white rounded-lg border border-slate-200">
+              {/* Card Header */}
+              <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-slate-900">Pengguna</h2>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Cari pengguna..."
+                    className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#232f61]/90"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <button
+                    onClick={() => {
+                      setFormUser(null);
+                      setIsFormModalOpen(true);
+                    }}
+                    className="px-4 py-2 bg-[#232f61]/90 text-white rounded-lg text-sm font-medium hover:bg-[#232f61] transition-colors"
+                  >
+                    Tambah Pengguna
+                  </button>
+                  <button
+                    onClick={fetchUsers}
+                    className="px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
+                    title="Refresh"
+                  >
+                    ⟳
+                  </button>
+                </div>
+              </div>
+
+              {/* Users Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600">#</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600">Joined</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-slate-600">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentUsers.length > 0 ? (
+                      currentUsers.map((user, index) => (
+                        <tr key={user.id} className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4 text-sm text-slate-600">{indexOfFirstUser + index + 1}</td>
+                          <td className="px-6 py-4 text-sm font-medium text-slate-900">{user.name || 'Unknown'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600">{user.email || 'No email'}</td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                              user.status === 'active'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {user.status || 'Inactive'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-600">
+                            {new Date(user.created_at).toLocaleDateString('id-ID') || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => {
+                                  setFormUser(user);
+                                  setIsFormModalOpen(true);
+                                }}
+                                className="text-[#232f61]/90 hover:text-[#232f61] text-sm font-medium"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleViewUser(user)}
+                                className="text-slate-600 hover:text-slate-900 text-sm font-medium"
+                              >
+                                View
+                              </button>
+                              <button
+                                onClick={() => handleDeleteConfirm(user.id)}
+                                className="text-red-600 hover:text-red-900 text-sm font-medium"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-8 text-center text-slate-500">
+                          {searchTerm ? 'No users found' : 'No users'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="px-6 py-4 border-t border-slate-200 flex justify-center gap-1">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    className="px-3 py-2 border border-slate-300 rounded-lg text-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ← Prev
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                        currentPage === page
+                          ? 'bg-[#232f61]/90 text-white'
+                          : 'border border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    className="px-3 py-2 border border-slate-300 rounded-lg text-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next →
+                  </button>
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-6">
-            <div className="btn-group">
-              <button
-                className="btn"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(currentPage - 1)}
-              >
-                «
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  className={`btn ${currentPage === page ? 'btn-active' : ''}`}
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                className="btn"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
-              >
-                »
-              </button>
             </div>
           </div>
         )}
       </div>
 
+      {/* Password Tab */}
+        {mainTab === 'password' && (
+          <div className="bg-white rounded-lg border border-slate-200 max-w-md mx-auto">
+            <div className="px-6 py-8">
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">Ubah Password</h2>
+              <form onSubmit={handleChangePassword} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-slate-900 mb-2">
+                    Password Lama
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Masukkan password lama"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#232f61]/90 text-sm"
+                    value={passwordForm.oldPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                    disabled={passwordLoading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-900 mb-2">
+                    Password Baru
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Masukkan password baru (min 6 karakter)"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#232f61]/90 text-sm"
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    disabled={passwordLoading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-900 mb-2">
+                    Konfirmasi Password
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Konfirmasi password baru"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#232f61]/90 text-sm"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                    disabled={passwordLoading}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="w-full mt-6 px-4 py-2 bg-[#232f61]/90 text-white rounded-lg font-medium hover:bg-[#232f61] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {passwordLoading && <span className="loading loading-spinner loading-sm"></span>}
+                  {passwordLoading ? 'Processing...' : 'Update Password'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
       {/* User Detail Modal */}
       {isModalOpen && selectedUser && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-semibold text-xl mb-4">User Details</h3>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <label className="label font-semibold">Name:</label>
-                <p className="font-semibold text-gray-700">{selectedUser.name || 'N/A'}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="label font-semibold">Email:</label>
-                <p className="font-semibold text-gray-700">{selectedUser.email || 'N/A'}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="label font-semibold">Status:</label>
-                <div className={`badge capitalize ${selectedUser.status === 'active' ? 'badge-success' : 'badge-warning'}`}>
-                  {selectedUser.status || 'inactive'}
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="px-6 py-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">User Details</h3>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="flex gap-2 px-6 pt-4 border-b border-slate-200">
+              <button
+                onClick={() => setModalTab('details')}
+                className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  modalTab === 'details'
+                    ? 'text-[#232f61]/90 border-[#232f61]/90'
+                    : 'text-slate-600 border-transparent hover:text-slate-900'
+                }`}
+              >
+                Details
+              </button>
+              <button
+                onClick={() => setModalTab('password')}
+                className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  modalTab === 'password'
+                    ? 'text-[#232f61]/90 border-[#232f61]/90'
+                    : 'text-slate-600 border-transparent hover:text-slate-900'
+                }`}
+              >
+                🔐 Change Password
+              </button>
+            </div>
+            
+            {/* Details Tab */}
+            {modalTab === 'details' && (
+              <div className="px-6 py-4 space-y-4">
+                <div>
+                  <p className="text-sm text-slate-600">Name</p>
+                  <p className="text-base font-medium text-slate-900">{selectedUser.name || 'N/A'}</p>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="label font-semibold">Tanggal dibuat:</label>
-                <p className="font-semibold text-gray-700">
-                  {new Date(selectedUser.created_at).toLocaleString('id-ID') || 'N/A'}
-                </p>
-              </div>
-              <div className="flex items-start gap-2 flex-col sm:flex-row">
-                <label className="label font-semibold">Roles:</label>
-                <div className="flex flex-wrap gap-2">
+                <div>
+                  <p className="text-sm text-slate-600">Email</p>
+                  <p className="text-base font-medium text-slate-900">{selectedUser.email || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Status</p>
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-medium mt-1 ${
+                    selectedUser.status === 'active'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {selectedUser.status || 'inactive'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Joined</p>
+                  <p className="text-base font-medium text-slate-900">
+                    {new Date(selectedUser.created_at).toLocaleString('id-ID') || 'N/A'}
+                  </p>
+                </div>
+                {selectedUser.roles && selectedUser.roles.length > 0 && (
+                  <div>
+                    <p className="text-sm text-slate-600 mb-2">Roles</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedUser.roles.map((role) => (
+                        <span key={role.id} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                          {role.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-2 pt-4">
                   {roles.map((role) => {
                     const hasRole = selectedUser.roles?.some(r => r.id === role.id);
                     return (
                       <button
                         key={role.id}
-                        className={`badge cursor-pointer px-4 py-2 transition ${hasRole ? 'badge-primary' : 'badge-ghost'
-                          }`}
+                        onClick={() => handleToggleRole(role.id, hasRole)}
                         disabled={updatingRole}
-                        onClick={() =>
-                          handleToggleRole(role.id, hasRole)
-                        }
+                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                          hasRole
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                        } disabled:opacity-50`}
                       >
                         {role.name}
                       </button>
                     );
                   })}
-                  {updatingRole && <span className="loading loading-spinner loading-sm ml-2"></span>}
+                  {updatingRole && <span className="loading loading-spinner loading-sm"></span>}
                 </div>
               </div>
+            )}
 
-
-              {selectedUser.phone && (
-                <div className="flex items-center gap-2">
-                  <label className="label font-semibold">Phone:</label>
-                  <p className="font-semibold text-gray-700">{selectedUser.phone}</p>
-                </div>
-              )}
-            </div>
-            <div className="modal-action">
-              <button className="btn btn-sm" onClick={() => setIsModalOpen(false)}>
+            {/* Password Tab */}
+            {modalTab === 'password' && (
+              <div className="px-6 py-4">
+                <form onSubmit={handleChangeUserPassword} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Password Baru
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="Masukkan password baru (min 6 karakter)"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#232f61]/90 text-sm"
+                      value={changeUserPasswordForm.newPassword}
+                      onChange={(e) => setChangeUserPasswordForm({ ...changeUserPasswordForm, newPassword: e.target.value })}
+                      disabled={changeUserPasswordLoading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 mb-2">
+                      Konfirmasi Password
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="Konfirmasi password baru"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#232f61]/90 text-sm"
+                      value={changeUserPasswordForm.confirmPassword}
+                      onChange={(e) => setChangeUserPasswordForm({ ...changeUserPasswordForm, confirmPassword: e.target.value })}
+                      disabled={changeUserPasswordLoading}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={changeUserPasswordLoading}
+                    className="w-full mt-6 px-4 py-2 bg-[#232f61]/90 text-white rounded-lg font-medium hover:bg-[#232f61] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {changeUserPasswordLoading && <span className="loading loading-spinner loading-sm"></span>}
+                    {changeUserPasswordLoading ? 'Processing...' : 'Update Password'}
+                  </button>
+                </form>
+              </div>
+            )}
+            
+            <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-2">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              >
                 Close
               </button>
             </div>

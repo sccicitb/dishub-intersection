@@ -393,6 +393,119 @@ const removeRole = async (req, res) => {
   }
 };
 
+// Change password - user can change their own password, admin can change any password
+const changePassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+    const currentUserId = req.user.id;
+    const currentUser = req.user;
+
+    // Check if current user is admin
+    const isAdmin = currentUser.roles.some(role => role.name === 'admin');
+    const isOwnPassword = parseInt(id) === currentUserId;
+
+    // User can only change their own password, unless they are admin
+    if (!isOwnPassword && !isAdmin) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'You can only change your own password',
+        code: 403
+      });
+    }
+
+    // Validate input
+    if (!newPassword || !confirmPassword) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'New password and confirm password are required',
+        code: 400
+      });
+    }
+
+    // For non-admin users, verify old password is provided
+    if (!isAdmin && !oldPassword) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Old password is required',
+        code: 400
+      });
+    }
+
+    // Validate new password confirmation
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'New password and confirm password do not match',
+        code: 400
+      });
+    }
+
+    // Validate password length
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'New password must be at least 6 characters long',
+        code: 400
+      });
+    }
+
+    // Get target user
+    const user = await userModel.getUserById(id);
+    if (!user) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'User not found',
+        code: 404
+      });
+    }
+
+    // If oldPassword is provided, verify it first (for both users and admins)
+    if (oldPassword) {
+      const passwordMatch = await userModel.verifyPassword(oldPassword, user.password);
+      if (!passwordMatch) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Old password is incorrect',
+          code: 400
+        });
+      }
+
+      // Validate new password is different from old password
+      if (oldPassword === newPassword) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'New password must be different from old password',
+          code: 400
+        });
+      }
+    }
+
+    // Update password
+    const updated = await userModel.updatePassword(id, newPassword);
+    if (!updated) {
+      return res.status(500).json({
+        error: 'Internal Server Error',
+        message: 'Failed to update password',
+        code: 500
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'An error occurred while changing password',
+      code: 500
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -400,5 +513,6 @@ module.exports = {
   updateUser,
   deleteUser,
   assignRole,
-  removeRole
+  removeRole,
+  changePassword
 }; 

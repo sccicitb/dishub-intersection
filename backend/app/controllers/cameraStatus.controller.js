@@ -217,128 +217,177 @@ exports.getCameraStatusLogsByCameraId = async (req, res) => {
     const simpangId = cameras[0].ID_Simpang;
     console.log(`[DEBUG] Camera ${cameraId} → Simpang ${simpangId}`);
     
-    // Build query dengan optional date filter
-    let query = `SELECT id, recorded_at FROM camera_status_logs WHERE camera_id = ?`;
-    const params = [cameraId];
+    // Determine the date to filter (use provided date or today)
+    let filterDate = date;
+    let isToday = false;
     
-    if (date) {
-      // Validate date format YYYY-MM-DD
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
-      }
-      // Filter by date range (full day) - convert UTC to WIB (UTC+7)
-      query += ` AND DATE(CONVERT_TZ(recorded_at, '+00:00', '+07:00')) = ?`;
-      params.push(date);
+    if (!filterDate) {
+      // Get today's date in Jakarta timezone
+      const now = new Date();
+      const jakartaDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+      filterDate = jakartaDate.toISOString().split('T')[0];
+      isToday = true;
+    } else {
+      // Check if the provided date is today
+      const now = new Date();
+      const jakartaDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+      const todayStr = jakartaDate.toISOString().split('T')[0];
+      isToday = (filterDate === todayStr);
     }
     
-    query += ` ORDER BY recorded_at DESC LIMIT 100`;
-    
-    console.log(`[DEBUG] Query: ${query}, Params:`, params);
-    
-    const [rows] = await db.execute(query, params);
-    
-    console.log(`[DEBUG] Found ${rows.length} logs for camera ${cameraId}` + (date ? ` on date ${date}` : ''));
-
-    // Jika tidak ada logs, langsung return empty
-    if (rows.length === 0) {
-      console.log(`[DEBUG] ⚠️ No logs found. Returning empty logs array.`);
-      return res.status(200).json({ 
-        camera_id: cameraId,
-        simpang_id: simpangId,
-        filter_date: date || null,
-        logs: [] 
-      });
+    // Validate date format YYYY-MM-DD
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(filterDate)) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
     }
 
-    // Untuk setiap log, cek apakah ada data di survey pada tanggal tersebut
-    const surveyModel = require('../models/survey.model');
-    const subCodeMap = require('../helpers/subCodeMap');
-    const fs = require('fs');
-    const path = require('path');
-
-    // Load classification
-    const classificationPath = path.join(__dirname, '../data/classification.json');
-    const classificationJson = JSON.parse(fs.readFileSync(classificationPath, 'utf-8'));
+    // Query logs for the specific date - convert recorded_at from UTC to Jakarta timezone (+07:00)
+    const query = `
+      SELECT id, status, CONVERT_TZ(recorded_at, '+00:00', '+07:00') as recorded_at 
+      FROM camera_status_logs 
+      WHERE camera_id = ? 
+        AND DATE(CONVERT_TZ(recorded_at, '+00:00', '+07:00')) = ?
+      ORDER BY recorded_at ASC
+    `;
     
-    const rawSubCodes = classificationJson
-      .filter(item => item.type === 'luar_kota')
-      .map(item => item.subCode);
-    const includedSubCodes = rawSubCodes.map(code => subCodeMap[code] || code);
+    console.log(`[DEBUG] Query camera ${cameraId} on date ${filterDate}, isToday=${isToday}`);
+    
+    const [rows] = await db.execute(query, [cameraId, filterDate]);
+    
+    console.log(`[DEBUG] Found ${rows.length} logs for camera ${cameraId} on date ${filterDate}`);
 
-    // Map logs dengan status dari survey
-    const logsWithLabel = await Promise.all(rows.map(async (log) => {
-      try {
-        // Extract date from recorded_at (YYYY-MM-DD)
-        const logDate = new Date(log.recorded_at).toISOString().split('T')[0];
+    // Create a map of time -> status for quick lookup
+    const logMap = {};
+    let lastLogTime = null;
+    
+    rows.forEach((log) => {
+      // Extract time directly from recorded_at without conversion
+      const time = log.recorded_at.toISOString().split('T')[1].substring(0, 8); // HH:MM:SS
+      
+      // Format recorded_at as-is from database (no additional conversion)
+      const recordedAtFormatted = log.recorded_at.toISOString().slice(0, 19).replace('T', ' ');
+      
+      const logEntry = {
+        id: log.id,
+        status: log.status,
+        status_label: log.status === 1 ? 'aktif' : 'tidak aktif/mati',
+        recorded_at: recordedAtFormatted
+      };
+      
+      logMap[time] = logEntry;
+      lastLogTime = time; // Track last log time
+    });
 
-        console.log(`[DEBUG Camera ${cameraId}] Checking log ${log.id} for date ${logDate}`);
+    // Get current time in Jakarta timezone if today
+    let currentTimeStr = null;
+    if (isToday) {
+      const now = new Date();
+      const jakartaDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+      const hours = String(jakartaDate.getHours()).padStart(2, '0');
+      const minutes = String(jakartaDate.getMinutes()).padStart(2, '0');
+      currentTimeStr = `${hours}:${minutes}:00`;
+    }
 
-        // Query survey data untuk tanggal spesifik dan simpang ini
-        const surveyData = await surveyModel.getVehicleDataGrouped(
-          {
-            simpangId: simpangId,
-            approach: 'semua',
-            direction: null,
-            date: logDate,
-            classificationType: 'luar_kota'
-          },
-          includedSubCodes,
-          '5min'
-        );
+    // Query arus table to check for vehicle data on this date and time
+    const arusQuery = `
+      SELECT DISTINCT 
+        HOUR(waktu) as jam,
+        MINUTE(waktu) as menit
+      FROM arus
+      WHERE ID_Simpang = ?
+        AND DATE(waktu) = ?
+      ORDER BY jam ASC, menit ASC
+    `;
+    
+    const [arusRows] = await db.execute(arusQuery, [simpangId, filterDate]);
+    
+    // Create a set of time slots (HH:MM:00) with vehicle data in arus table
+    const timeSlotsWithArusData = new Set();
+    arusRows.forEach(row => {
+      const timeSlot = `${String(row.jam).padStart(2, '0')}:${String(row.menit).padStart(2, '0')}:00`;
+      timeSlotsWithArusData.add(timeSlot);
+    });
+    
+    console.log(`[DEBUG] Time slots with arus data: ${Array.from(timeSlotsWithArusData).join(', ')}`);
 
-        console.log(`[DEBUG Camera ${cameraId}] surveyData keys:`, Object.keys(surveyData));
+    // Generate all 5-minute intervals for the day (00:00 to 23:55)
+    const timeline = [];
+    let lastKnownStatus = null; // Track last known status for interpolation
+    let lastRecordedAt = null; // Track last recorded_at for interpolation
+    let firstLogEncountered = false; // Track if we've hit the first log entry
 
-        // Cek apakah ada data (structure baru: { vehicleData: [...] })
-        let hasData = false;
-        let dataCount = 0;
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 5) {
+        const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
         
-        if (surveyData && surveyData.vehicleData && Array.isArray(surveyData.vehicleData)) {
-          dataCount = surveyData.vehicleData.length;
+        // Check if there's a log at this exact time
+        if (logMap[timeStr]) {
+          const logData = logMap[timeStr];
+          lastKnownStatus = logData.status;
+          lastRecordedAt = logData.recorded_at;
+          firstLogEncountered = true;
           
-          // Cek apakah ada minimal satu timeSlot dengan total > 0
-          for (const periodItem of surveyData.vehicleData) {
-            if (periodItem.timeSlots && Array.isArray(periodItem.timeSlots)) {
-              for (const timeSlot of periodItem.timeSlots) {
-                if (timeSlot.data && timeSlot.data.total > 0) {
-                  hasData = true;
-                  console.log(`[DEBUG Camera ${cameraId}] ✅ Found data in period ${periodItem.period}`);
-                  break;
-                }
-              }
-              if (hasData) break;
-            }
+          timeline.push({
+            time: timeStr,
+            status: logData.status,
+            status_label: logData.status_label,
+            recorded_at: logData.recorded_at
+          });
+        } else {
+          // Check if this is after the last log and today is the filter date
+          if (isToday && lastLogTime && timeStr > lastLogTime) {
+            // After last log on today - send null for no data yet
+            timeline.push({
+              time: timeStr,
+              status: null,
+              status_label: null,
+              recorded_at: null
+            });
+          } else if (!firstLogEncountered && timeSlotsWithArusData.has(timeStr)) {
+            // Before first log entry - if there's vehicle data in arus, assume camera is on
+            timeline.push({
+              time: timeStr,
+              status: 1,
+              status_label: 'aktif (inferred dari arus)',
+              recorded_at: null
+            });
+            lastKnownStatus = 1; // Set status for interpolation
+          } else if (lastKnownStatus === 0) {
+            // Last known status is 0 (mati) - keep it as mati (interpolate)
+            timeline.push({
+              time: timeStr,
+              status: 0,
+              status_label: 'tidak aktif/mati',
+              recorded_at: lastRecordedAt
+            });
+          } else if (lastKnownStatus === 1) {
+            // Last known status is 1 (aktif) - keep it as aktif (interpolate)
+            timeline.push({
+              time: timeStr,
+              status: 1,
+              status_label: 'aktif',
+              recorded_at: lastRecordedAt
+            });
+          } else if (timeSlotsWithArusData.has(timeStr)) {
+            // No log data but there's vehicle data in arus table at this exact time - assume camera is on
+            timeline.push({
+              time: timeStr,
+              status: 1,
+              status_label: 'aktif (inferred dari arus)',
+              recorded_at: null
+            });
+            lastKnownStatus = 1; // Update last known status for subsequent interpolation
           }
         }
-
-        const status = hasData ? 1 : 0;
-        const statusLabel = status === 1 ? 'aktif' : 'tidak aktif/mati';
-
-        console.log(`[DEBUG Camera ${cameraId}] Final status for log ${log.id}: ${status}\n`);
-
-        return {
-          id: log.id,
-          status: status,
-          status_label: statusLabel,
-          recorded_at: log.recorded_at
-        };
-      } catch (err) {
-        console.error(`[ERROR Camera ${cameraId}] Error checking survey data for log ${log.id}:`, err.message);
-        
-        // Fallback
-        return {
-          id: log.id,
-          status: 0,
-          status_label: 'tidak aktif/mati',
-          recorded_at: log.recorded_at
-        };
       }
-    }));
+    }
 
     return res.status(200).json({ 
       camera_id: cameraId,
       simpang_id: simpangId,
-      filter_date: date || null,
-      logs: logsWithLabel 
+      filter_date: filterDate,
+      is_today: isToday,
+      total_logs: rows.length,
+      timeline_5min: timeline
     });
   } catch (err) {
     console.error('Error fetching status logs by camera_id:', err);

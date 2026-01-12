@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense, lazy } from "react";
+import { useAuth } from "@/app/context/authContext";
 import { vehicles } from "@/lib/apiAccess";
 import { survey } from "@/lib/apiService";
 import { maps } from "@/lib/apiService";
@@ -28,6 +29,7 @@ const FaCaravan = lazy(() => import("react-icons/fa").then(mod => ({ default: mo
 
 
 export default function Home () {
+  const { isAdmin } = useAuth();
   const [isClient, setIsClient] = useState(false)
   const [vehicleData, setVehicleData] = useState(null);
   const [chartData, setChartData] = useState([{
@@ -42,6 +44,7 @@ export default function Home () {
 
   }]);
 
+  const [filterChangeMatrix, setFilterChangeMatrix] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isTabActive, setIsTabActive] = useState(true);
@@ -567,7 +570,7 @@ export default function Home () {
   // Fetch traffic matrix when location or dates change
   useEffect(() => {
     if (matrixSubmitCounter > 0 && selectedLocation !== 0) {
-      fetchTrafficMatrix(selectedLocation, startDate, endDate).catch(() => {
+      fetchTrafficMatrix(selectedLocation, startDate, endDate, filterChangeMatrix).catch(() => {
         console.log("Using default matrix due to fetch failure");
       });
     }
@@ -692,22 +695,24 @@ export default function Home () {
             )}
 
             {/* Export Excel Button */}
-            <button
-              onClick={handleExportExcel}
-              disabled={exportLoading}
-              className="px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
-            >
-              {exportLoading ? (
-                <>
-                  <span className="animate-spin">⟳</span>
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  📊 Export Excel
-                </>
-              )}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={handleExportExcel}
+                disabled={exportLoading}
+                className="px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
+              >
+                {exportLoading ? (
+                  <>
+                    <span className="animate-spin">⟳</span>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    📊 Export Excel
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           {isLoading ? (
@@ -779,7 +784,9 @@ export default function Home () {
                 }}
                 startDate={startDate}
                 endDate={endDate}
+                onFilterChange={(filter) => setFilterChangeMatrix(filter)}
                 onSubmit={() => setMatrixSubmitCounter(matrixSubmitCounter + 1)}
+                selectedFilter={filterChangeMatrix}
                 isLoading={matrixLoading}
               />
             </div>

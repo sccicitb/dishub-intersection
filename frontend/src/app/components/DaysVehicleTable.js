@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useAuth } from "@/app/context/authContext";
 // import monthlyData from '@/data/DataTableDaysMonth.json';
 import { ExportDayButton } from '@/app/components/exportExcel';
 
 const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEndDate, selectedYear: parentSelectedYear, selectedMonth: parentSelectedMonth, setSelectedMonth: setParentSelectedMonth,
   setSelectedYear: setParentSelectedYear, type, exportExcel = false
 }) => {
+  const { isAdmin } = useAuth();
 
   const [isDateRangeMode, setIsDateRangeMode] = useState(false);
   const [vehicleData, setVehicleData] = useState({
@@ -289,40 +291,10 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
     <div className="mx-auto p-4">
       <div className="items-center flex mb-4 flex-wrap gap-3">
 
-        {type !== "dailyRange" && (
-          <div className="flex items-center gap-2">
-            <label htmlFor="year-input" className="mr-2 font-medium text-nowrap">
-              Pilih Tahun:
-            </label>
-            <input
-              type="number"
-              id="year-input"
-              min="2000"
-              max="2100"
-              value={selectedYear || ''}
-              onChange={handleYearChange}
-              className="input input-md w-24"
-              placeholder="YYYY"
-            />
-
-            <label htmlFor="month-input" className="ml-4 mr-2 font-medium text-nowrap">
-              Pilih Bulan:
-            </label>
-            <input
-              type="number"
-              id="month-input"
-              min="1"
-              max="12"
-              value={selectedMonthNumber}
-              onChange={handleMonthChange}
-              className="input input-md w-20"
-              placeholder="MM"
-            />
-          </div>
-        )}
-        {exportExcel && type === "dailyRange" ? (
+        
+        {isAdmin && exportExcel && type === "dailyRange" ? (
           <ExportDayButton dailyData={monthlyData} fileName="Data-Harian-Rentang" type="dailyRange" />
-        ) : exportExcel && type === "dailyMonth" && (
+        ) : isAdmin && exportExcel && type === "dailyMonth" && (
           <ExportDayButton dailyData={monthlyData} fileName="Data-Harian-Bulan" type="dailyMonth"/>
         )}
       </div>
