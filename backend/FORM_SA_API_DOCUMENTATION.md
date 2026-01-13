@@ -348,11 +348,11 @@ This API documentation directly supports the frontend requirements from `Require
   - Index 2: BKa (Belok Kanan/Right Turn)
 
 **Features**:
-- ✅ **Dynamic simpang linking**: Uses survey's `simpang_id` to retrieve data
-- ✅ **Real-time aggregation**: Combines SQL queries with Node.js business logic
-- ✅ **Traffic engineering rules**: Proper movement categorization based on direction
-- ✅ **Complete vehicle coverage**: All vehicle types and movement directions
-- ✅ **Production ready**: Fully tested and working end-to-end
+- **Dynamic simpang linking**: Uses survey's `simpang_id` to retrieve data
+- **Real-time aggregation**: Combines SQL queries with Node.js business logic
+- **Traffic engineering rules**: Proper movement categorization based on direction
+- **Complete vehicle coverage**: All vehicle types and movement directions
+- **Production ready**: Fully tested and working end-to-end
 
 ### **SA-III: Intersection Sketch**
 

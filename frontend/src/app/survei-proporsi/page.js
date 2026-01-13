@@ -111,12 +111,12 @@ function SurveiProporsi () {
       socket = io('https://sxe-data.layanancerdas.id');
 
       socket.on('connect', () => {
-        console.log('Socket connected');
+
         setSocketConnected(true);
       });
 
       socket.on('disconnect', () => {
-        console.log('Socket disconnected');
+
         setSocketConnected(false);
       });
 

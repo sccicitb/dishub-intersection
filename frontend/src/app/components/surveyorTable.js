@@ -68,7 +68,7 @@ const SurveyInfoTable = ({ fetchStatus, id, cuaca }) => {
   }, [id])
 
   const setUploadFormulir = (option) => {
-    console.log(option);
+
   }
   return (
     <div className="w-full max-w-4xl mx-auto py-2 gap-5 flex flex-col">

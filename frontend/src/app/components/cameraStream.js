@@ -148,12 +148,12 @@ const CameraStream = () => {
     const socket = io('https://sxe-data.layanancerdas.id');
 
     socket.on('connect', () => {
-      console.log('Socket connected');
+
       setSocketConnected(true);
     });
 
     socket.on('disconnect', () => {
-      console.log('Socket disconnected');
+
       setSocketConnected(false);
     });
 
@@ -205,7 +205,7 @@ const CameraStream = () => {
                 videoUrl={cam.url}
                 title={`Video ${cam.name}`}
                 large
-                onClick={() => console.log(`Clicked on ${cam.name}`)}
+                }
               />
               <div className="p-3 bg-gray-100">
                 <p className="text-sm text-gray-600">Stream Type: HLS</p>
@@ -222,7 +222,6 @@ const CameraStream = () => {
                 videoUrl={cam.url}
                 title={`Video ${cam.name}`}
                 large
-                onClick={() => console.log(`Clicked on ${cam.name}`)}
               />
             </div>
           )

@@ -16,7 +16,7 @@ describe("Holiday Model", () => {
     { date: "2025-06-01", event_type: "Cuti Bersama", description: "Hari Pancasila" }
   ];
 
-  // ✅ getAll
+  // getAll
   it("should fetch all holidays", async () => {
     db.query.mockResolvedValueOnce([[sampleData[0], sampleData[1]]]);
 
@@ -27,7 +27,7 @@ describe("Holiday Model", () => {
     expect(callback).toHaveBeenCalledWith(null, [sampleData[0], sampleData[1]]);
   });
 
-  // ✅ getPaginated
+  // getPaginated
   it("should get paginated results", async () => {
     db.query.mockResolvedValueOnce([[sampleData[0]]]);
 
@@ -41,7 +41,7 @@ describe("Holiday Model", () => {
     expect(callback).toHaveBeenCalledWith(null, [sampleData[0]]);
   });
 
-  // ✅ countAll
+  // countAll
   it("should return total count", async () => {
     db.query.mockResolvedValueOnce([[{ total: 24 }]]);
 
@@ -52,7 +52,7 @@ describe("Holiday Model", () => {
     expect(callback).toHaveBeenCalledWith(null, 24);
   });
 
-  // ✅ create
+  // create
   it("should create new holiday", async () => {
     db.query.mockResolvedValueOnce([{ insertId: 123 }]);
 
@@ -66,7 +66,7 @@ describe("Holiday Model", () => {
     expect(callback).toHaveBeenCalledWith(null, { id: 123, ...sampleData[0] });
   });
 
-  // ✅ update
+  // update
   it("should update existing holiday", async () => {
     db.query.mockResolvedValueOnce([{ affectedRows: 1 }]);
 
@@ -80,7 +80,7 @@ describe("Holiday Model", () => {
     expect(callback).toHaveBeenCalledWith(null, { affectedRows: 1 });
   });
 
-  // ✅ delete
+  // delete
   it("should delete a holiday", async () => {
     db.query.mockResolvedValueOnce([{ affectedRows: 1 }]);
 
@@ -91,7 +91,7 @@ describe("Holiday Model", () => {
     expect(callback).toHaveBeenCalledWith(null, { affectedRows: 1 });
   });
 
-  // ✅ replaceAll
+  // replaceAll
   it("should replace all holidays", async () => {
     db.query
       .mockResolvedValueOnce([{}]) // DELETE
@@ -106,7 +106,7 @@ describe("Holiday Model", () => {
     expect(callback).toHaveBeenCalledWith(null, { replaced: sampleData.length });
   });
 
-  // ✅ appendOrUpdate
+  // appendOrUpdate
   it("should update if date exists and insert if not", async () => {
     db.query
       .mockResolvedValueOnce([[{ id: 1 }]]) // exists

@@ -23,7 +23,6 @@ exports.getMasukKeluarDetailByTime = (req, res) => {
 
   VehicleDetailByTime.getMasukKeluarDetailByTime(simpang_id, date, interval, (err, data) => {
     if (err) {
-      console.error('[ERROR] getMasukKeluarDetailByTime:', err);
       return res.status(500).json({
         status: "error",
         message: err.message || "Error retrieving vehicle detail summary"

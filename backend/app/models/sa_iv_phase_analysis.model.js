@@ -14,7 +14,6 @@ const SaIVPhaseAnalysis = function(phaseAnalysis) {
 SaIVPhaseAnalysis.create = (newPhaseAnalysis, result) => {
   sql.query("INSERT INTO sa_iv_phase_analysis SET ?", newPhaseAnalysis, (err, res) => {
     if (err) {
-      console.log("error: ", err);
       result(err, null);
       return;
     }

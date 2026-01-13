@@ -10,8 +10,8 @@
 **File**: `app/models/trafficMatrix.model.js`
 
 **Perubahan:**
-- ✅ **Sebelum**: 288 queries individual untuk interval 5min
-- ✅ **Sesudah**: 1 query batch besar, filter di JavaScript
+- **Sebelum**: 288 queries individual untuk interval 5min
+- **Sesudah**: 1 query batch besar, filter di JavaScript
 
 **Query baru:**
 ```sql
@@ -29,8 +29,8 @@ GROUP BY dari_arah, ke_arah, HOUR(waktu), MINUTE(waktu)
 **File**: `app/controllers/trafficMatrix.controller.js`
 
 **Perubahan:**
-- ✅ Menambahkan `processingTime` di response
-- ✅ Log timing di console untuk debugging
+- Menambahkan `processingTime` di response
+- Log timing di console untuk debugging
 
 **Response baru:**
 ```json
@@ -138,10 +138,10 @@ fetch(url, {
 
 ---
 
-**Status**: ✅ READY TO DEPLOY
+**Status**: READY TO DEPLOY
 
 **Testing**:
-- ✅ Batch query working
-- ✅ Processing time tracking working
-- ✅ Response format validated
-- ✅ 5min interval under 30 seconds
+- Batch query working
+- Processing time tracking working
+- Response format validated
+- 5min interval under 30 seconds

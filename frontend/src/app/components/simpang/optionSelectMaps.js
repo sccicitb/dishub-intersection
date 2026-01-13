@@ -180,7 +180,7 @@ const OptionSelectMaps = ({
             )
           }))
           .filter(item => item.cameras.length > 0);
-        console.log("Merged buildings with cameras:", valid);
+
         setBuildings(merged);
       } catch (err) {
         console.error("Failed to fetch data:", err);

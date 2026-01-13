@@ -23,7 +23,6 @@ const SaIIIPhaseData = function(phaseData) {
 SaIIIPhaseData.create = (newPhaseData, result) => {
   sql.query("INSERT INTO sa_iii_phase_data SET ?", newPhaseData, (err, res) => {
     if (err) {
-      console.log("error: ", err);
       result(err, null);
       return;
     }

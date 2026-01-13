@@ -60,7 +60,7 @@ const TableMatrix = ({
   const renderErrorState = () => (
     <div className="bg-red-50 px-8 py-5 rounded-lg w-full border border-red-200">
       <div className="flex items-center gap-2">
-        <span className="text-red-500 font-semibold">⚠️ Error:</span>
+        <span className="text-red-500 font-semibold">Error:</span>
         <p className="text-sm text-red-700">{error}</p>
       </div>
     </div>
@@ -246,7 +246,7 @@ const TableMatrix = ({
             </button>
             {isLoading && (
               <div className="flex items-center gap-1 text-sm text-[#314385] whitespace-nowrap">
-                <span className="animate-spin">⟳</span>
+                <span className="animate-spin">⏳</span>
               </div>
             )}
           </div>
@@ -290,7 +290,7 @@ const TableMatrix = ({
       {/* Tabel Arah Pergerakan */}
       <div className="bg-white px-8 py-5 rounded-lg w-full shadow-sm">
         <h3 className="font-semibold text-base mb-3 text-gray-700 flex items-center gap-2">
-          <span className="text-lg">↔</span> Matriks Arah Pergerakan (kendaraan)
+          <span className="text-lg">→</span> Matriks Arah Pergerakan (kendaraan)
         </h3>
         <div className="overflow-x-auto">
           <table className="table table-auto w-full text-center text-sm">

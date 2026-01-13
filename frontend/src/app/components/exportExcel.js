@@ -9,28 +9,28 @@ export const exportVehicleDataToExcel = (vehicleData, fileName, classification) 
   const classificationOptions = ['PKJI 2023 Luar Kota', 'PKJI 2023 Dalam Kota', 'Tipikal'];
 
   // Debug: log untuk memeriksa classification yang diterima
-  console.log('Classification received:', classification);
-  console.log('Available options:', classificationOptions);
+
+
 
   let headers = [];
   let merges = [];
 
   if (classification === classificationOptions[0]) {
-    console.log(classificationOptions[0]);
+
     headers = [
       ['Periode', 'Status Camera', 'Waktu', 'Kendaraan Bermotor (Lih. kend/jam)', '', '', '', '', '', '', '', 'Kend. Tak Bermotor', '', 'Total (Lih. kend/jam)'],
       ['', '', 'Interval 15 menit', 'SM', 'MP', '', '', 'TR', 'BS', 'TS', 'BB', 'TB', 'Gandeng / Semitrailer', 'KTB', ''],
       ['', '', '', '', 'MP', 'AUP', 'TR', '', '', '', '', '', '', '', '']
     ];
   } else if (classification === classificationOptions[1]) {
-    console.log(classificationOptions[1]);
+
     headers = [
       ['Periode', 'Status Camera', 'Waktu', 'Kendaraan Bermotor (Lih. kend/jam)', '', '', '', '', '', '', '', '', 'Kend. Tak Bermotor'],
       ['', '', 'Interval', 'SM', 'MP', '', '', 'KS', '', '', '', '', 'KTB'],
       ['', '', '', '', 'MP', 'AUP', 'TR', 'BS', 'TS', 'BB', 'TB', 'Gandeng / Semitrailer', '']
     ];
   } else if (classification === classificationOptions[2]) {
-    console.log(classificationOptions[2]);
+
     headers = [
       ['Periode', 'Status Camera', 'Waktu', 'Kendaraan Bermotor (Lih. kend/jam)', '', '', '', '', '', '', '', '', 'Kend. Tak Bermotor'],
       ['', '', 'Interval', 'SM', 'MP', '', '', 'Bus', '', 'Truk', '', '', 'KTB'],

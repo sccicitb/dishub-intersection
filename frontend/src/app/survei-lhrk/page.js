@@ -67,7 +67,7 @@ function SurveiLhrkPage () {
   };
 
   function handleClickSimpang (loc) {
-    console.log("handleClickSimpang received:", loc);
+
     
     // Handle "Semua Simpang" case
     if (loc && loc.simpang === "semua") {
