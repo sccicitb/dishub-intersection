@@ -66,7 +66,6 @@ export const vehicles = {
     if (filter === 'customrange' && startDate && endDate) {
       url += `&start-date=${startDate}&end-date=${endDate}`;
     }
-    
     return getRequest(url);
   },
   getTrafficMatrixByCategory: (simpang_id, startDate, endDate) => {
@@ -81,6 +80,10 @@ export const vehicles = {
     let url = `/traffic-matrix/by-filter?simpang_id=${simpang_id}&date=${date_time}&interval=${interval}`;
     return getRequest(url);
   },
+  getVehicleDetailByHour: (simpang_id, date) => {
+    let url = `/vehicles/detail-summary-by-30min?simpang_id=${simpang_id}&date=${date}`;
+    return getRequest(url);
+  }
 }
 
 export const maps = {

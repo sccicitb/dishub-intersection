@@ -251,4 +251,209 @@ VehicleDetailSummary.getMasukKeluarDetailBySimpangs = async (simpangIds, date, c
   }
 };
 
+// Helper function to initialize arah summary structure
+const initializeArahSummary = () => {
+  const summary = {
+    'north': { IN: {}, OUT: {} },
+    'south': { IN: {}, OUT: {} },
+    'east': { IN: {}, OUT: {} },
+    'west': { IN: {}, OUT: {} }
+  };
+
+  Object.keys(summary).forEach(arah => {
+    ['IN', 'OUT'].forEach(dir => {
+      Object.keys(VEHICLE_TYPES).forEach(type => {
+        summary[arah][dir][type] = 0;
+      });
+      summary[arah][dir].total = 0;
+    });
+  });
+
+  return summary;
+};
+
+// Helper function to process rows into arah summary
+const processRowsToArahSummary = (rows) => {
+  const arahSummary = initializeArahSummary();
+
+  rows.forEach(row => {
+    const dari = row.dari_arah;
+    const ke = row.ke_arah;
+    
+    // Determine which arah and direction (IN/OUT)
+    let targetArah = dari;
+    let direction = 'IN';
+
+    if (Object.keys(arahSummary).includes(ke)) {
+      targetArah = ke;
+      direction = 'OUT';
+    }
+
+    // Add vehicle counts
+    if (arahSummary[targetArah] && arahSummary[targetArah][direction]) {
+      Object.keys(VEHICLE_TYPES).forEach(type => {
+        const count = parseInt(row[type]) || 0;
+        arahSummary[targetArah][direction][type] += count;
+        arahSummary[targetArah][direction].total += count;
+      });
+    }
+  });
+
+  // Format response
+  const result = [];
+  Object.keys(arahSummary).forEach(arah => {
+    result.push({
+      arah: arah,
+      IN: arahSummary[arah].IN,
+      OUT: arahSummary[arah].OUT
+    });
+  });
+
+  return result;
+};
+
+// Get detailed masuk/keluar by arah with 30-minute intervals
+VehicleDetailSummary.getMasukKeluarDetailBy30Min = async (simpangId, date) => {
+  try {
+    if (!simpangId) {
+      throw new Error('simpang_id is required');
+    }
+
+    const dateRange = getDateFilterClause(date);
+
+    // Single optimized query that groups by 30-minute intervals
+    const query = `
+      SELECT 
+        HOUR(waktu) as hour_slot,
+        FLOOR(MINUTE(waktu) / 30) as minute_slot,
+        dari_arah,
+        ke_arah,
+        SUM(CAST(SM AS UNSIGNED)) as SM,
+        SUM(CAST(MP AS UNSIGNED)) as MP,
+        SUM(CAST(AUP AS UNSIGNED)) as AUP,
+        SUM(CAST(TR AS UNSIGNED)) as TR,
+        SUM(CAST(BS AS UNSIGNED)) as BS,
+        SUM(CAST(TS AS UNSIGNED)) as TS,
+        SUM(CAST(TB AS UNSIGNED)) as TB,
+        SUM(CAST(BB AS UNSIGNED)) as BB,
+        SUM(CAST(GANDENG AS UNSIGNED)) as GANDENG,
+        SUM(CAST(KTB AS UNSIGNED)) as KTB
+      FROM arus
+      WHERE ID_Simpang = ?
+        AND waktu BETWEEN ? AND ?
+      GROUP BY HOUR(waktu), FLOOR(MINUTE(waktu) / 30), dari_arah, ke_arah
+      ORDER BY HOUR(waktu), FLOOR(MINUTE(waktu) / 30), dari_arah, ke_arah
+    `;
+
+    const [rows] = await db.execute(query, [
+      simpangId,
+      dateRange.startDateTime,
+      dateRange.endDateTime
+    ]);
+
+    // Group results by time slot
+    const slotData = {};
+    
+    rows.forEach(row => {
+      const hour = row.hour_slot;
+      const minuteSlot = row.minute_slot; // 0 or 1
+      const startMin = minuteSlot === 0 ? '00' : '30';
+      const endMin = minuteSlot === 0 ? '29' : '59';
+      const slotLabel = `${String(hour).padStart(2, '0')}:${startMin}-${String(hour).padStart(2, '0')}:${endMin}`;
+      
+      if (!slotData[slotLabel]) {
+        slotData[slotLabel] = [];
+      }
+      
+      slotData[slotLabel].push(row);
+    });
+
+    // Process each slot into arah summary
+    const result = {};
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute of [0, 30]) {
+        const startMin = minute === 0 ? '00' : '30';
+        const endMin = minute === 0 ? '29' : '59';
+        const slotLabel = `${String(hour).padStart(2, '0')}:${startMin}-${String(hour).padStart(2, '0')}:${endMin}`;
+        
+        const rowsForSlot = slotData[slotLabel] || [];
+        result[slotLabel] = processRowsToArahSummary(rowsForSlot);
+      }
+    }
+
+    return result;
+  } catch (error) {
+    console.error('[ERROR] getMasukKeluarDetailBy30Min:', error);
+    throw error;
+  }
+};
+
+// Get detailed masuk/keluar by arah with hourly intervals
+VehicleDetailSummary.getMasukKeluarDetailByHour = async (simpangId, date) => {
+  try {
+    if (!simpangId) {
+      throw new Error('simpang_id is required');
+    }
+
+    const dateRange = getDateFilterClause(date);
+
+    // Single optimized query that groups by hour
+    const query = `
+      SELECT 
+        HOUR(waktu) as hour_slot,
+        dari_arah,
+        ke_arah,
+        SUM(CAST(SM AS UNSIGNED)) as SM,
+        SUM(CAST(MP AS UNSIGNED)) as MP,
+        SUM(CAST(AUP AS UNSIGNED)) as AUP,
+        SUM(CAST(TR AS UNSIGNED)) as TR,
+        SUM(CAST(BS AS UNSIGNED)) as BS,
+        SUM(CAST(TS AS UNSIGNED)) as TS,
+        SUM(CAST(TB AS UNSIGNED)) as TB,
+        SUM(CAST(BB AS UNSIGNED)) as BB,
+        SUM(CAST(GANDENG AS UNSIGNED)) as GANDENG,
+        SUM(CAST(KTB AS UNSIGNED)) as KTB
+      FROM arus
+      WHERE ID_Simpang = ?
+        AND waktu BETWEEN ? AND ?
+      GROUP BY HOUR(waktu), dari_arah, ke_arah
+      ORDER BY HOUR(waktu), dari_arah, ke_arah
+    `;
+
+    const [rows] = await db.execute(query, [
+      simpangId,
+      dateRange.startDateTime,
+      dateRange.endDateTime
+    ]);
+
+    // Group results by hour slot
+    const slotData = {};
+    
+    rows.forEach(row => {
+      const hour = row.hour_slot;
+      const hourLabel = `${String(hour).padStart(2, '0')}:00-${String(hour).padStart(2, '0')}:59`;
+      
+      if (!slotData[hourLabel]) {
+        slotData[hourLabel] = [];
+      }
+      
+      slotData[hourLabel].push(row);
+    });
+
+    // Process each hour into arah summary
+    const result = {};
+    for (let hour = 0; hour < 24; hour++) {
+      const hourLabel = `${String(hour).padStart(2, '0')}:00-${String(hour).padStart(2, '0')}:59`;
+      
+      const rowsForHour = slotData[hourLabel] || [];
+      result[hourLabel] = processRowsToArahSummary(rowsForHour);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('[ERROR] getMasukKeluarDetailByHour:', error);
+    throw error;
+  }
+};
+
 module.exports = VehicleDetailSummary;

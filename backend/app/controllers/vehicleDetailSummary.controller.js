@@ -91,3 +91,97 @@ exports.getMasukKeluarDetailBySimpangs = (req, res) => {
     });
   });
 };
+
+// Get detailed masuk/keluar by arah with 30-minute intervals
+exports.getMasukKeluarDetailBy30Min = async (req, res) => {
+  try {
+    const simpang_id = req.query.simpang_id;
+    const date = req.query.date;
+
+    // Validate required parameters
+    if (!simpang_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "simpang_id query parameter is required"
+      });
+    }
+
+    if (!date) {
+      return res.status(400).json({
+        status: "error",
+        message: "date query parameter is required in YYYY-MM-DD format"
+      });
+    }
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid date format. Use YYYY-MM-DD format"
+      });
+    }
+
+    const result = await VehicleDetailSummary.getMasukKeluarDetailBy30Min(simpang_id, date);
+
+    res.json({
+      status: "ok",
+      simpang_id: parseInt(simpang_id),
+      date: date,
+      slots: result
+    });
+  } catch (error) {
+    console.error("Error getting detail summary by 30min:", error);
+    res.status(500).json({
+      status: "error",
+      message: error.message || "Error retrieving vehicle detail summary by 30min"
+    });
+  }
+};
+
+// Get detailed masuk/keluar by arah with hourly intervals
+exports.getMasukKeluarDetailByHour = async (req, res) => {
+  try {
+    const simpang_id = req.query.simpang_id;
+    const date = req.query.date;
+
+    // Validate required parameters
+    if (!simpang_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "simpang_id query parameter is required"
+      });
+    }
+
+    if (!date) {
+      return res.status(400).json({
+        status: "error",
+        message: "date query parameter is required in YYYY-MM-DD format"
+      });
+    }
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid date format. Use YYYY-MM-DD format"
+      });
+    }
+
+    const result = await VehicleDetailSummary.getMasukKeluarDetailByHour(simpang_id, date);
+
+    res.json({
+      status: "ok",
+      simpang_id: parseInt(simpang_id),
+      date: date,
+      slots: result
+    });
+  } catch (error) {
+    console.error("Error getting detail summary by hour:", error);
+    res.status(500).json({
+      status: "error",
+      message: error.message || "Error retrieving vehicle detail summary by hour"
+    });
+  }
+};

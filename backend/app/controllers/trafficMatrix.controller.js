@@ -45,7 +45,32 @@ const getTrafficMatrixHandler = (interval) => async (req, res) => {
 };
 
 // GET /api/traffic-matrix/by-filter
-exports.getTrafficMatrixByFilter = getTrafficMatrixHandler('1hour');
+exports.getTrafficMatrixByFilter = async (req, res) => {
+  try {
+    const { simpang_id, date, interval = '1hour' } = req.query;
+    const error = validateParams(simpang_id, date);
+    if (error) {
+      return res.status(400).json({ success: false, message: error });
+    }
+
+    const startTime = Date.now();
+    const result = await TrafficMatrix.getTrafficMatrixByFilter(simpang_id, date, interval);
+    const elapsed = Date.now() - startTime;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        simpang_id, date, interval,
+        timePeriods: TIME_PERIODS,
+        slotCount: Object.keys(result).length,
+        processingTime: `${elapsed}ms`,
+        slots: result
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 // GET /api/traffic-matrix/by-hours
 exports.getTrafficMatrixByHours = getTrafficMatrixHandler('1hour');

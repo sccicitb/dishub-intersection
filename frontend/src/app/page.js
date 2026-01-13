@@ -10,6 +10,8 @@ import SocketConnection from "./components/testingSocket";
 import TableMatrix from "@/app/components/table/tableMatrix";
 import { useTrafficMatrix } from "@/hooks/useTrafficMatrix";
 
+const GraficByHourInOut = lazy(() => import("@/app/components/graficByHourInOut"));
+const GraficCategoryTraffic = lazy(() => import("@/app/components/graficCategoryTraffic"));
 const LintasChart = lazy(() => import("@/app/components/lintasChart"));
 const TotalChart = lazy(() => import("@/app/components/totalChart"));
 const GrafikRoad = lazy(() => import("@/app/components/roadChart"));
@@ -419,7 +421,7 @@ export default function Home () {
         }, 1800000); // 30 menit
       }
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibility);
     intervalId = setInterval(() => {
       if (!document.hidden) {
@@ -427,7 +429,7 @@ export default function Home () {
         fetchAllData().then(() => setIsRefreshing(false));
       }
     }, 1800000);
-    
+
     return () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibility);
@@ -454,34 +456,34 @@ export default function Home () {
         setSimpangList([]);
       }
     };
-    
+
     fetchSimpangList();
   }, [])
 
   // Traffic Matrix Hook
-  const { 
-    dataChord, 
-    dataMatrix, 
-    categories, 
-    loading: matrixLoading, 
+  const {
+    dataChord,
+    dataMatrix,
+    categories,
+    loading: matrixLoading,
     error: matrixError,
     fetchTrafficMatrix,
-    loadDefaultMatrix 
+    loadDefaultMatrix
   } = useTrafficMatrix();
 
   // Helper function untuk check apakah data benar-benar ada (bukan semua 0)
   const hasValidMatrixData = () => {
     if (!dataChord?.asalTujuan) return false;
-    
+
     const asalTujuan = dataChord.asalTujuan;
     let totalCount = 0;
-    
+
     for (const from in asalTujuan) {
       for (const to in asalTujuan[from]) {
         totalCount += asalTujuan[from][to] || 0;
       }
     }
-    
+
     return totalCount > 0;
   };
 
@@ -557,11 +559,11 @@ export default function Home () {
         console.error('Export failed:', result);
         alert('Gagal export Excel:\n' + (result.message || 'Unknown error'));
       } else {
-        alert('âœ… Export berhasil! File sudah didownload.');
+        alert('Export berhasil! File sudah didownload.');
       }
     } catch (error) {
       console.error('Export error:', error);
-      alert('âŒ Terjadi kesalahan saat export Excel:\n' + error.message);
+      alert('Terjadi kesalahan saat export Excel:\n' + error.message);
     } finally {
       setExportLoading(false);
     }
@@ -587,7 +589,7 @@ export default function Home () {
           <span className="text-sm">Memperbarui data...</span>
         </div>
       )}
-      
+
       <Suspense fallback={<div>Loading Charts...</div>}>
         <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
         <div className="w-[90%]">
@@ -653,7 +655,7 @@ export default function Home () {
             >
               Tahun Ini
             </button>
-            
+
             {/* Custom Date Range Button */}
             <button
               onClick={() => {
@@ -749,9 +751,9 @@ export default function Home () {
               </div>
             </div>
             <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100">
-              <GrafikRoad 
-                filter={activeFilter} 
-                simpang_id={simpangFilter} 
+              <GrafikRoad
+                filter={activeFilter}
+                simpang_id={simpangFilter}
                 startDate={activeFilter === 'customrange' ? customRangeStart : null}
                 endDate={activeFilter === 'customrange' ? customRangeEnd : null}
               />
@@ -793,6 +795,14 @@ export default function Home () {
         </div>
       )}
 
+      <h2 className="card-title text-gray-700">Analisis Lalu Lintas Terkini</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-[90%] p-3 bg-stone-100 rounded-lg">
+
+        {/* <GraficCategoryTraffic category="masuk"/> */}
+        {/* <GraficCategoryTraffic category="keluar"/> */}
+        <GraficByHourInOut category="in" />
+        <GraficByHourInOut category="out" />
+      </div>
       <div className="w-[90%]">
         <div className="w-full bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">CCTV Live Stream & Model Deteksi Kendaraan</div>
         <CameraStream />
