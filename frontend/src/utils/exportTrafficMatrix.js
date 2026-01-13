@@ -1,12 +1,12 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
-export const exportTrafficMatrixByCategory = async (data, simpangId, dateRange) => {
+export const exportTrafficMatrixByCategory = async (data, simpangId, dateRange, simpangName = '') => {
   if (!data || !data.arahPergerakan) {
     alert('No data to export');
     return;
   }
 
-  const wb = XLSX.utils.book_new();
+  const wb = new ExcelJS.Workbook();
 
   // Vehicle categories
   const vehicleCategories = [
@@ -29,12 +29,13 @@ export const exportTrafficMatrixByCategory = async (data, simpangId, dateRange) 
   const infoData = [
     ['Traffic Matrix by Category'],
     ['Simpang ID', data.simpang_id],
+    ['Nama Simpang', simpangName || data.simpang_id],
     ['Tanggal Mulai', data.date_range.start_date],
     ['Tanggal Selesai', data.date_range.end_date],
     ['Tanggal Export', new Date().toLocaleString('id-ID')],
   ];
-  const wsInfo = XLSX.utils.aoa_to_sheet(infoData);
-  XLSX.utils.book_append_sheet(wb, wsInfo, 'Info');
+  const wsInfo = wb.addWorksheet('Info');
+  infoData.forEach(row => wsInfo.addRow(row));
 
   // ===== SHEET 2: MATRIX TABLE =====
   const tableData = [];
@@ -88,18 +89,14 @@ export const exportTrafficMatrixByCategory = async (data, simpangId, dateRange) 
   });
   tableData.push(totalRow);
 
-  const wsTable = XLSX.utils.aoa_to_sheet(tableData);
+  const wsTable = wb.addWorksheet('Traffic Matrix');
+  tableData.forEach(row => wsTable.addRow(row));
 
   // Apply column widths
-  const colWidths = [{ wch: 20 }]; // First column
-  for (let i = 0; i < movements.length; i++) {
-    for (let j = 0; j < directionNames.length + 1; j++) {
-      colWidths.push({ wch: 12 });
-    }
+  wsTable.getColumn(1).width = 20;
+  for (let i = 2; i <= wsTable.columnCount; i++) {
+    wsTable.getColumn(i).width = 12;
   }
-  wsTable['!cols'] = colWidths;
-
-  XLSX.utils.book_append_sheet(wb, wsTable, 'Traffic Matrix');
 
   // ===== SHEET 3: SUMMARY BY MOVEMENT =====
   const summaryData = [['Movement Summary']];
@@ -132,9 +129,12 @@ export const exportTrafficMatrixByCategory = async (data, simpangId, dateRange) 
   grandTotalRow.push(grandTotal);
   summaryData.push(grandTotalRow);
 
-  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-  wsSummary['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+  const wsSummary = wb.addWorksheet('Summary');
+  summaryData.forEach(row => wsSummary.addRow(row));
+  wsSummary.getColumn(1).width = 20;
+  for (let i = 2; i <= 6; i++) {
+    wsSummary.getColumn(i).width = 12;
+  }
 
   // ===== SHEET 4: SUMMARY BY DIRECTION =====
   const directionSummaryData = [['Direction Summary']];
@@ -152,11 +152,21 @@ export const exportTrafficMatrixByCategory = async (data, simpangId, dateRange) 
     directionSummaryData.push(row);
   });
 
-  const wsDirectionSummary = XLSX.utils.aoa_to_sheet(directionSummaryData);
-  wsDirectionSummary['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
-  XLSX.utils.book_append_sheet(wb, wsDirectionSummary, 'Direction Summary');
+  const wsDirectionSummary = wb.addWorksheet('Direction Summary');
+  directionSummaryData.forEach(row => wsDirectionSummary.addRow(row));
+  wsDirectionSummary.getColumn(1).width = 20;
+  for (let i = 2; i <= 5; i++) {
+    wsDirectionSummary.getColumn(i).width = 12;
+  }
 
   // Save file
   const fileName = `Traffic_Matrix_Simpang${simpangId}_${dateRange.start_date}.xlsx`;
-  XLSX.writeFile(wb, fileName);
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
 };

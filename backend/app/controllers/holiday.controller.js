@@ -1,7 +1,7 @@
 const Holiday = require("../models/holiday.model");
 const fs = require("fs");
 const path = require("path");
-const xlsx = require("xlsx");
+const ExcelJS = require("exceljs");
 const csv = require("csv-parser");
 const { parseHolidayFile } = require("../helpers/holidayParser");
 const { formatTanggalIndo } = require("../helpers/formatTanggal");

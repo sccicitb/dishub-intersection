@@ -74,7 +74,7 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
   const handleExport = async () => {
     try {
       setExporting(true);
-      await exportVehicleDetailByInterval(data, data.simpang_id, dateInput, interval);
+      await exportVehicleDetailByInterval(data, data.simpang_id, dateInput, interval, simpangName);
     } catch (err) {
       console.error('Error exporting data:', err);
       alert('Gagal export data');

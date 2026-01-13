@@ -176,7 +176,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
                 Submit
               </button>
               {isAdmin && (
-                <ExportMonthButton monthlyData={vehicleData} fileName="Data-Bulanan" selectedYear={selectedYear} />
+                <ExportDayButton dailyData={vehicleData} fileName="Data-Harian-Bulan" type="dailyMonth" />
               )}
             </div>
           )}

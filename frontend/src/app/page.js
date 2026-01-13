@@ -3,13 +3,13 @@
 import { useEffect, useState, Suspense, lazy } from "react";
 import { useAuth } from "@/app/context/authContext";
 import { vehicles } from "@/lib/apiAccess";
-import { survey } from "@/lib/apiService";
 import { maps } from "@/lib/apiService";
 import { exportSurveyDataToExcel } from '@/utils/exportExcel';
-import SocketConnection from "./components/testingSocket";
 import TableMatrix from "@/app/components/table/tableMatrix";
 import { useTrafficMatrix } from "@/hooks/useTrafficMatrix";
 
+const GraficByHourInOut = lazy(() => import("@/app/components/graficByHourInOut"));
+const GraficCategoryTraffic = lazy(() => import("@/app/components/graficCategoryTraffic"));
 const LintasChart = lazy(() => import("@/app/components/lintasChart"));
 const TotalChart = lazy(() => import("@/app/components/totalChart"));
 const GrafikRoad = lazy(() => import("@/app/components/roadChart"));
@@ -49,9 +49,10 @@ export default function Home () {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isTabActive, setIsTabActive] = useState(true);
   const [activeFilter, setActiveFilter] = useState('day');
-  const [activeFilterSection2, setActiveFilterSection2] = useState('day');
   const [periodDisplayText, setPeriodDisplayText] = useState('');
   const [simpangFilter, setSimpangFilter] = useState('semua');
+  const [namaLokasi, setNamaLokasi] = useState('Semua Simpang');
+  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
   const [customRangeStart, setCustomRangeStart] = useState(() => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -154,16 +155,47 @@ export default function Home () {
     }
   };
 
+  const calculateDateRange = (filterType) => {
+    const now = new Date();
+    // Gunakan jam 12 siang untuk menghindari masalah pergeseran tanggal akibat timezone
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+
+    if (filterType === 'day') {
+    }
+    else if (filterType === 'month') {
+      // Set start ke tanggal 1 di bulan berjalan
+      start.setDate(1);
+    }
+    else if (filterType === 'year') {
+      // Set start ke 1 Januari di tahun berjalan
+      start.setMonth(0);
+      start.setDate(1);
+    }
+
+    // Fungsi helper untuk merubah objek Date ke string YYYY-MM-DD
+    const toDateString = (dateObj) => {
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    return {
+      startDate: toDateString(start),
+      endDate: toDateString(end)
+    };
+  };
+
   const handleFilterChange = (filter) => {
+    const range = calculateDateRange(filter);
+    setDateRange(range);
     setActiveFilter(filter);
     setPeriodDisplayText(getPeriodDisplayText(filter));
   };
 
-  const handleFilterSection2 = (filter) => {
-    setActiveFilterSection2(filter);
-  };
-
   useEffect(() => {
+
     const fetchAllData = async () => {
       setIsLoading(true);
       try {
@@ -419,7 +451,7 @@ export default function Home () {
         }, 1800000); // 30 menit
       }
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibility);
     intervalId = setInterval(() => {
       if (!document.hidden) {
@@ -427,7 +459,10 @@ export default function Home () {
         fetchAllData().then(() => setIsRefreshing(false));
       }
     }, 1800000);
-    
+
+    const range = calculateDateRange(activeFilter);
+    setDateRange(range);
+
     return () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibility);
@@ -454,34 +489,34 @@ export default function Home () {
         setSimpangList([]);
       }
     };
-    
+
     fetchSimpangList();
   }, [])
 
   // Traffic Matrix Hook
-  const { 
-    dataChord, 
-    dataMatrix, 
-    categories, 
-    loading: matrixLoading, 
+  const {
+    dataChord,
+    dataMatrix,
+    categories,
+    loading: matrixLoading,
     error: matrixError,
     fetchTrafficMatrix,
-    loadDefaultMatrix 
+    loadDefaultMatrix
   } = useTrafficMatrix();
 
   // Helper function untuk check apakah data benar-benar ada (bukan semua 0)
   const hasValidMatrixData = () => {
     if (!dataChord?.asalTujuan) return false;
-    
+
     const asalTujuan = dataChord.asalTujuan;
     let totalCount = 0;
-    
+
     for (const from in asalTujuan) {
       for (const to in asalTujuan[from]) {
         totalCount += asalTujuan[from][to] || 0;
       }
     }
-    
+
     return totalCount > 0;
   };
 
@@ -557,11 +592,11 @@ export default function Home () {
         console.error('Export failed:', result);
         alert('Gagal export Excel:\n' + (result.message || 'Unknown error'));
       } else {
-        alert('âœ… Export berhasil! File sudah didownload.');
+        alert('Export berhasil! File sudah didownload.');
       }
     } catch (error) {
       console.error('Export error:', error);
-      alert('âŒ Terjadi kesalahan saat export Excel:\n' + error.message);
+      alert('Terjadi kesalahan saat export Excel:\n' + error.message);
     } finally {
       setExportLoading(false);
     }
@@ -578,16 +613,31 @@ export default function Home () {
 
   if (!isClient) return null;
 
+  const handleSimpangChange = (e) => {
+    const selectedId = e.target.value;
+    
+    // 1. Simpan ID ke state simpangFilter
+    setSimpangFilter(selectedId);
+  
+    // 2. Cari data simpang yang cocok dari list untuk mendapatkan namanya
+    const selectedData = simpangList.find(item => String(item.id) === String(selectedId));
+    
+    if (selectedData) {
+      setNamaLokasi(selectedData.Nama_Simpang);
+    } else {
+      setNamaLokasi("Semua Simpang");
+    }
+  };
+
   return (
     <div className="p-4 text-base-700 flex flex-col items-center gap-8 overflow-y-hidden text-[13px]">
       {/* Indikator refresh non-blocking */}
       {isRefreshing && (
         <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg">
-          <span className="animate-spin">âŸ³</span>
           <span className="text-sm">Memperbarui data...</span>
         </div>
       )}
-      
+
       <Suspense fallback={<div>Loading Charts...</div>}>
         <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
         <div className="w-[90%]">
@@ -596,7 +646,7 @@ export default function Home () {
             {/* Simpang Filter Dropdown */}
             <select
               value={simpangFilter}
-              onChange={(e) => setSimpangFilter(e.target.value)}
+              onChange={handleSimpangChange}
               className="px-3 py-1.5 rounded-md bg-base-300 border border-base-300 hover:border-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-900/90 cursor-pointer"
             >
               <option value="semua">Semua Simpang</option>
@@ -653,7 +703,7 @@ export default function Home () {
             >
               Tahun Ini
             </button>
-            
+
             {/* Custom Date Range Button */}
             <button
               onClick={() => {
@@ -749,9 +799,9 @@ export default function Home () {
               </div>
             </div>
             <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100">
-              <GrafikRoad 
-                filter={activeFilter} 
-                simpang_id={simpangFilter} 
+              <GrafikRoad
+                filter={activeFilter}
+                simpang_id={simpangFilter}
                 startDate={activeFilter === 'customrange' ? customRangeStart : null}
                 endDate={activeFilter === 'customrange' ? customRangeEnd : null}
               />
@@ -793,6 +843,14 @@ export default function Home () {
         </div>
       )}
 
+      <h2 className="card-title text-gray-700">Analisis Lalu Lintas Terkini</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-[90%] p-3 bg-stone-100 rounded-lg">
+
+        {/* <GraficCategoryTraffic category="masuk"/> */}
+        {/* <GraficCategoryTraffic category="keluar"/> */}
+        <GraficByHourInOut category="in" dateRange={dateRange} id_simpang={simpangFilter} nama_simpang={namaLokasi} />
+        <GraficByHourInOut category="out" dateRange={dateRange} id_simpang={simpangFilter} nama_simpang={namaLokasi} />
+      </div>
       <div className="w-[90%]">
         <div className="w-full bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">CCTV Live Stream & Model Deteksi Kendaraan</div>
         <CameraStream />

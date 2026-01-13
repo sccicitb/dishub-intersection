@@ -1,5 +1,5 @@
 const fs = require("fs");
-const xlsx = require("xlsx");
+const ExcelJS = require("exceljs");
 const csv = require("csv-parser");
 const path = require("path");
 
@@ -27,9 +27,21 @@ async function parseHolidayFile(filePath, ext) {
   }
 
   if (ext === ".xlsx" || ext === ".xls") {
-    const workbook = xlsx.readFile(filePath);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = xlsx.utils.sheet_to_json(sheet);
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(filePath);
+    const worksheet = workbook.worksheets[0];
+    const rows = [];
+    
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // Skip header
+      const rowData = {};
+      row.eachCell((cell, colNumber) => {
+        const header = worksheet.getRow(1).getCell(colNumber).value;
+        rowData[header] = cell.value;
+      });
+      rows.push(rowData);
+    });
+    
     return processRows(rows);
   }
 
