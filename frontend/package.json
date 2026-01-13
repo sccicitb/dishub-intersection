@@ -20,6 +20,7 @@
     "chartjs-plugin-datalabels": "^2.2.0",
     "d3": "^7.9.0",
     "daisyui": "^5.0.0",
+    "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "formidable": "^3.5.2",
     "hls.js": "^1.6.5",
@@ -40,8 +41,7 @@
     "socket.io-client": "^4.8.1",
     "tesseract.js": "^6.0.0",
     "uuid": "^11.1.0",
-    "ws": "^8.18.2",
-    "xlsx": "^0.18.5"
+    "ws": "^8.18.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.12",

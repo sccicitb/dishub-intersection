@@ -1,12 +1,12 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
-export const exportVehicleDetailByInterval = async (data, simpangId, dateInput, interval) => {
+export const exportVehicleDetailByInterval = async (data, simpangId, dateInput, interval, simpangName = '') => {
   if (!data || !data.slots) {
     alert('No data to export');
     return;
   }
 
-  const wb = XLSX.utils.book_new();
+  const wb = new ExcelJS.Workbook();
 
   // Vehicle category mapping
   const vehicleCategoryMap = {
@@ -50,12 +50,13 @@ export const exportVehicleDetailByInterval = async (data, simpangId, dateInput, 
   const infoData = [
     ['Vehicle Detail by Interval'],
     ['Simpang ID', data.simpang_id],
+    ['Nama Simpang', simpangName || data.simpang_id],
     ['Tanggal', data.date],
     ['Interval', interval],
     ['Tanggal Export', new Date().toLocaleString('id-ID')],
   ];
-  const wsInfo = XLSX.utils.aoa_to_sheet(infoData);
-  XLSX.utils.book_append_sheet(wb, wsInfo, 'Info');
+  const wsInfo = wb.addWorksheet('Info');
+  infoData.forEach(row => wsInfo.addRow(row));
 
   // ===== SHEET 2: DETAIL TABLE =====
   const detailedTableData = [];
@@ -174,10 +175,17 @@ export const exportVehicleDetailByInterval = async (data, simpangId, dateInput, 
   grandTotalRow.push(globalGrandTotal);
   detailedTableData.push(grandTotalRow);
 
-  const wsDetailed = XLSX.utils.aoa_to_sheet(detailedTableData);
-  XLSX.utils.book_append_sheet(wb, wsDetailed, 'Detail');
+  const wsDetailed = wb.addWorksheet('Detail');
+  detailedTableData.forEach(row => wsDetailed.addRow(row));
 
-  // Write file
+  // Save file
   const fileName = `Vehicle_Detail_Simpang${simpangId}_${dateInput}_${interval}.xlsx`;
-  XLSX.writeFile(wb, fileName);
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
 };

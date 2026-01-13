@@ -1,12 +1,12 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
-export const exportTrafficMatrixByFilter = async (data, simpangId, dateInput, interval, statusLog = null) => {
+export const exportTrafficMatrixByFilter = async (data, simpangId, dateInput, interval, statusLog = null, simpangName = '') => {
   if (!data || !data.slots) {
     alert('No data to export');
     return;
   }
 
-  const wb = XLSX.utils.book_new();
+  const wb = new ExcelJS.Workbook();
 
   // Vehicle categories
   const vehicleCategories = [
@@ -77,12 +77,13 @@ export const exportTrafficMatrixByFilter = async (data, simpangId, dateInput, in
   const infoData = [
     ['Traffic Matrix by Filter'],
     ['Simpang ID', data.simpang_id],
+    ['Nama Simpang', simpangName || data.simpang_id],
     ['Tanggal', data.date],
     ['Interval', interval],
     ['Tanggal Export', new Date().toLocaleString('id-ID')],
   ];
-  const wsInfo = XLSX.utils.aoa_to_sheet(infoData);
-  XLSX.utils.book_append_sheet(wb, wsInfo, 'Info');
+  const wsInfo = wb.addWorksheet('Info');
+  infoData.forEach(row => wsInfo.addRow(row));
 
   // ===== SHEET 2: DETAILED TABLE (Per Time Slot) =====
   const detailedTableData = [];
@@ -207,8 +208,8 @@ export const exportTrafficMatrixByFilter = async (data, simpangId, dateInput, in
   grandTotalRow.push(globalGrandTotal);
   detailedTableData.push(grandTotalRow);
 
-  const wsDetailed = XLSX.utils.aoa_to_sheet(detailedTableData);
-  XLSX.utils.book_append_sheet(wb, wsDetailed, 'Detailed');
+  const wsDetailed = wb.addWorksheet('Detailed');
+  detailedTableData.forEach(row => wsDetailed.addRow(row));
 
   // ===== SHEET 3: SUMMARY (Per Time Period) =====
   const summaryTableData = [];
@@ -327,10 +328,17 @@ export const exportTrafficMatrixByFilter = async (data, simpangId, dateInput, in
   summaryGrandTotalRow.push(summaryGlobalGrandTotal);
   summaryTableData.push(summaryGrandTotalRow);
 
-  const wsSummary = XLSX.utils.aoa_to_sheet(summaryTableData);
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+  const wsSummary = wb.addWorksheet('Summary');
+  summaryTableData.forEach(row => wsSummary.addRow(row));
 
-  // Write file
+  // Save file
   const fileName = `Traffic_Matrix_Filter_Simpang${simpangId}_${dateInput}_${interval}.xlsx`;
-  XLSX.writeFile(wb, fileName);
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  window.URL.revokeObjectURL(url);
 };

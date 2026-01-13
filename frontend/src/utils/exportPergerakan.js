@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 /**
  * Export survei pergerakan data ke Excel dengan 2 tabel utama
@@ -29,25 +29,29 @@ export const exportPergerakanToExcel = async (vehicleData, dataKM, dateInput, si
     const keluarMasukSheetData = formatKeluarMasukData(dataKM || []);
 
     // Buat workbook
-    const workbook = XLSX.utils.book_new();
+    const workbook = new ExcelJS.Workbook();
 
     // Sheet 1: Info
-    const infoSheet = XLSX.utils.json_to_sheet(infoSheetData);
-    XLSX.utils.book_append_sheet(workbook, infoSheet, 'Info');
-    setColumnWidths(infoSheet);
+    const infoSheet = workbook.addWorksheet('Info');
+    addDataToWorksheet(infoSheet, infoSheetData);
 
     // Sheet 2: Pergerakan
-    const pergerakanSheet = XLSX.utils.json_to_sheet(pergerakanSheetData.length > 0 ? pergerakanSheetData : [{ 'Periode': 'Tidak ada data' }]);
-    XLSX.utils.book_append_sheet(workbook, pergerakanSheet, 'Pergerakan');
-    setColumnWidths(pergerakanSheet);
+    const pergerakanSheet = workbook.addWorksheet('Pergerakan');
+    addDataToWorksheet(pergerakanSheet, pergerakanSheetData.length > 0 ? pergerakanSheetData : [{ 'Periode': 'Tidak ada data' }]);
 
     // Sheet 3: Keluar-Masuk
-    const keluarMasukSheet = XLSX.utils.json_to_sheet(keluarMasukSheetData.length > 0 ? keluarMasukSheetData : [{ 'Periode': 'Tidak ada data' }]);
-    XLSX.utils.book_append_sheet(workbook, keluarMasukSheet, 'Keluar-Masuk');
-    setColumnWidths(keluarMasukSheet);
+    const keluarMasukSheet = workbook.addWorksheet('Keluar-Masuk');
+    addDataToWorksheet(keluarMasukSheet, keluarMasukSheetData.length > 0 ? keluarMasukSheetData : [{ 'Periode': 'Tidak ada data' }]);
 
     // Download
-    XLSX.writeFile(workbook, fileName);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
 
 
     return { success: true, message: 'Export berhasil' };
@@ -242,127 +246,27 @@ const formatKeluarMasukData = (dataKM) => {
 };
 
 /**
- * Add multi-level headers untuk Pergerakan sheet
- * Level 1: Periode, Waktu, Timur, Barat, Utara, Selatan
- * Level 2: Kendaraan Bermotor, Kend. Tak Bermotor, Total
- * Level 3: SM, MP, KS/AUP
+ * Helper function to add data to worksheet from array of objects
  */
-const addPergerakanHeaders = (sheet, hasData) => {
-  if (!hasData) return;
-
-  // Insert 3 rows di atas data untuk headers
-  const newSheet = {};
-
-  // Row 1: Direction headers (Periode, Waktu, Timur, Barat, Utara, Selatan)
-  const row1 = {
-    'A1': { t: 's', v: 'Periode' },
-    'B1': { t: 's', v: 'Waktu\nInterval\n15 menit' },
-    'C1': { t: 's', v: 'Timur' },
-    'H1': { t: 's', v: 'Barat' },
-    'M1': { t: 's', v: 'Utara' },
-    'R1': { t: 's', v: 'Selatan' }
-  };
-
-  // Row 2: Kendaraan Bermotor, Kend. Tak Bermotor, Total groups
-  const row2 = {
-    'C2': { t: 's', v: 'Kendaraan Bermotor' },
-    'F2': { t: 's', v: 'Kend. Tak\nBermotor' },
-    'G2': { t: 's', v: 'Total' },
-    'H2': { t: 's', v: 'Kendaraan Bermotor' },
-    'K2': { t: 's', v: 'Kend. Tak\nBermotor' },
-    'L2': { t: 's', v: 'Total' },
-    'M2': { t: 's', v: 'Kendaraan Bermotor' },
-    'P2': { t: 's', v: 'Kend. Tak\nBermotor' },
-    'Q2': { t: 's', v: 'Total' },
-    'R2': { t: 's', v: 'Kendaraan Bermotor' },
-    'U2': { t: 's', v: 'Kend. Tak\nBermotor' },
-    'V2': { t: 's', v: 'Total' }
-  };
-
-  // Row 3: Vehicle types (SM, MP, KS/AUP, KTB - repeated 4 times)
-  const row3 = {};
-  const vehicleTypes = ['SM', 'MP', 'KS/AUP', 'KTB'];
-  const directionCols = [
-    { start: 'C', offset: 0 },
-    { start: 'H', offset: 0 },
-    { start: 'M', offset: 0 },
-    { start: 'R', offset: 0 }
-  ];
-
-  directionCols.forEach((dir, idx) => {
-    vehicleTypes.forEach((type, typeIdx) => {
-      const colCode = String.fromCharCode(dir.start.charCodeAt(0) + typeIdx);
-      row3[`${colCode}3`] = { t: 's', v: type };
-    });
+const addDataToWorksheet = (worksheet, data) => {
+  if (!data || data.length === 0) return;
+  
+  // Get all unique headers from all objects
+  const headersSet = new Set();
+  data.forEach(row => {
+    Object.keys(row).forEach(key => headersSet.add(key));
   });
-
-  // Merge cells
-  const merges = [
-    // Periode & Waktu rowspan
-    { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, // Periode (A1:A3)
-    { s: { r: 0, c: 1 }, e: { r: 2, c: 1 } }, // Waktu (B1:B3)
-    // Direction colspans
-    { s: { r: 0, c: 2 }, e: { r: 0, c: 6 } }, // Timur (C1:G1)
-    { s: { r: 0, c: 7 }, e: { r: 0, c: 11 } }, // Barat (H1:L1)
-    { s: { r: 0, c: 12 }, e: { r: 0, c: 16 } }, // Utara (M1:Q1)
-    { s: { r: 0, c: 17 }, e: { r: 0, c: 21 } }, // Selatan (R1:V1)
-    // Kendaraan Bermotor colspans
-    { s: { r: 1, c: 2 }, e: { r: 1, c: 4 } }, // Timur KB (C2:E2)
-    { s: { r: 1, c: 7 }, e: { r: 1, c: 9 } }, // Barat KB (H2:J2)
-    { s: { r: 1, c: 12 }, e: { r: 1, c: 14 } }, // Utara KB (M2:O2)
-    { s: { r: 1, c: 17 }, e: { r: 1, c: 19 } }, // Selatan KB (R2:T2)
-    // KTB & Total rowspan
-    { s: { r: 1, c: 5 }, e: { r: 2, c: 5 } }, // Timur KTB (F2:F3)
-    { s: { r: 1, c: 6 }, e: { r: 2, c: 6 } }, // Timur Total (G2:G3)
-    { s: { r: 1, c: 10 }, e: { r: 2, c: 10 } }, // Barat KTB (K2:K3)
-    { s: { r: 1, c: 11 }, e: { r: 2, c: 11 } }, // Barat Total (L2:L3)
-    { s: { r: 1, c: 15 }, e: { r: 2, c: 15 } }, // Utara KTB (P2:P3)
-    { s: { r: 1, c: 16 }, e: { r: 2, c: 16 } }, // Utara Total (Q2:Q3)
-    { s: { r: 1, c: 20 }, e: { r: 2, c: 20 } }, // Selatan KTB (U2:U3)
-    { s: { r: 1, c: 21 }, e: { r: 2, c: 21 } }, // Selatan Total (V2:V3)
-  ];
-
-  // Copy existing data dan add headers
-  Object.keys(sheet).forEach(key => {
-    if (key.startsWith('!')) return; // Skip sheet metadata
-    const match = key.match(/([A-Z]+)(\d+)/);
-    if (match) {
-      const col = match[1];
-      const row = parseInt(match[2]);
-      const newRow = row + 3; // Shift data down 3 rows
-      const newKey = `${col}${newRow}`;
-      newSheet[newKey] = sheet[key];
-    }
-  });
-
-  // Add header cells
-  Object.assign(newSheet, row1, row2, row3);
-
-  // Copy sheet metadata
-  if (sheet['!cols']) newSheet['!cols'] = sheet['!cols'];
-  if (sheet['!rows']) newSheet['!rows'] = sheet['!rows'];
-
-  // Add merges
-  newSheet['!merges'] = merges;
-
-  // Replace sheet contents
-  Object.keys(sheet).forEach(key => delete sheet[key]);
-  Object.assign(sheet, newSheet);
-};
-
-/**
- * Set column width otomatis
- */
-const setColumnWidths = (sheet) => {
-  if (!sheet['!cols']) {
-    sheet['!cols'] = [];
-  }
-
-  const defaultWidth = 15;
-  const cols = Object.keys(sheet).filter(key => key.match(/^[A-Z]+1$/));
-  cols.forEach((col, idx) => {
-    if (!sheet['!cols'][idx]) {
-      sheet['!cols'][idx] = { wch: defaultWidth };
-    }
+  const headers = Array.from(headersSet);
+  
+  // Set columns
+  worksheet.columns = headers.map(header => ({
+    header: header,
+    key: header,
+    width: 20
+  }));
+  
+  // Add rows
+  data.forEach(row => {
+    worksheet.addRow(row);
   });
 };

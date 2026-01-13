@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { vehicles } from '@/lib/apiAccess';
 
 /**
@@ -51,37 +51,37 @@ export const exportSurveyDataToExcel = async (startDate, endDate, simpangId, fil
     }
 
     // Buat workbook dengan multiple sheets
-    const workbook = XLSX.utils.book_new();
+    const workbook = new ExcelJS.Workbook();
 
     // Tambah sheet 0: Info
-    const infoSheet = XLSX.utils.json_to_sheet(infoSheetData);
-    XLSX.utils.book_append_sheet(workbook, infoSheet, 'Info');
-    setColumnWidths(infoSheet);
+    const infoSheet = workbook.addWorksheet('Info');
+    addDataToWorksheet(infoSheet, infoSheetData);
 
     // Tambah sheet 1: Masuk/Keluar Arah
-    const arahSheet = XLSX.utils.json_to_sheet(arahSheetData.length > 0 ? arahSheetData : [{ 'Arah': 'Tidak ada data', 'Masuk (IN)': 0, 'Keluar (OUT)': 0, 'Total': 0 }]);
-    XLSX.utils.book_append_sheet(workbook, arahSheet, 'Masuk Keluar Arah');
+    const arahSheet = workbook.addWorksheet('Masuk Keluar Arah');
+    addDataToWorksheet(arahSheet, arahSheetData.length > 0 ? arahSheetData : [{ 'Arah': 'Tidak ada data', 'Masuk (IN)': 0, 'Keluar (OUT)': 0, 'Total': 0 }]);
 
     // Tambah sheet 2: Tipe Kendaraan
-    const tipeSheet = XLSX.utils.json_to_sheet(tipeSheetData.length > 0 ? tipeSheetData : [{ 'Tipe Kendaraan': 'Tidak ada data', 'Masuk (IN)': 0, 'Keluar (OUT)': 0, 'Total': 0 }]);
-    XLSX.utils.book_append_sheet(workbook, tipeSheet, 'Tipe Kendaraan');
+    const tipeSheet = workbook.addWorksheet('Tipe Kendaraan');
+    addDataToWorksheet(tipeSheet, tipeSheetData.length > 0 ? tipeSheetData : [{ 'Tipe Kendaraan': 'Tidak ada data', 'Masuk (IN)': 0, 'Keluar (OUT)': 0, 'Total': 0 }]);
 
     // Tambah sheet 3: Chart Masuk/Keluar
-    const masukKeluarSheet = XLSX.utils.json_to_sheet(masukKeluarSheetData.length > 0 ? masukKeluarSheetData : [{ 'Jam/Waktu': 'Tidak ada data', 'Masuk (IN)': 0, 'Keluar (OUT)': 0, 'Total': 0 }]);
-    XLSX.utils.book_append_sheet(workbook, masukKeluarSheet, 'Masuk Keluar');
+    const masukKeluarSheet = workbook.addWorksheet('Masuk Keluar');
+    addDataToWorksheet(masukKeluarSheet, masukKeluarSheetData.length > 0 ? masukKeluarSheetData : [{ 'Jam/Waktu': 'Tidak ada data', 'Masuk (IN)': 0, 'Keluar (OUT)': 0, 'Total': 0 }]);
 
     // Tambah sheet 4: Raw Data
-    const rawDataSheet = XLSX.utils.json_to_sheet(rawDataSheetData.length > 0 ? rawDataSheetData : [{ 'Data': 'Tidak ada data' }]);
-    XLSX.utils.book_append_sheet(workbook, rawDataSheet, 'Data Raw');
-
-    // Set column width untuk semua sheet
-    setColumnWidths(arahSheet);
-    setColumnWidths(tipeSheet);
-    setColumnWidths(masukKeluarSheet);
-    setColumnWidths(rawDataSheet);
+    const rawDataSheet = workbook.addWorksheet('Data Raw');
+    addDataToWorksheet(rawDataSheet, rawDataSheetData.length > 0 ? rawDataSheetData : [{ 'Data': 'Tidak ada data' }]);
 
     // Download file
-    XLSX.writeFile(workbook, fileName);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
     
 
     return { success: true, message: 'Export berhasil' };
@@ -210,19 +210,27 @@ const formatRawData = (data) => {
 };
 
 /**
- * Set column width otomatis
+ * Helper function to add data to worksheet from array of objects
  */
-const setColumnWidths = (sheet) => {
-  if (!sheet['!cols']) {
-    sheet['!cols'] = [];
-  }
-
-  // Set default width
-  const defaultWidth = 15;
-  const cols = Object.keys(sheet).filter(key => key.match(/^[A-Z]+1$/));
-  cols.forEach((col, idx) => {
-    if (!sheet['!cols'][idx]) {
-      sheet['!cols'][idx] = { wch: defaultWidth };
-    }
+const addDataToWorksheet = (worksheet, data) => {
+  if (!data || data.length === 0) return;
+  
+  // Get all unique headers from all objects
+  const headersSet = new Set();
+  data.forEach(row => {
+    Object.keys(row).forEach(key => headersSet.add(key));
+  });
+  const headers = Array.from(headersSet);
+  
+  // Set columns
+  worksheet.columns = headers.map(header => ({
+    header: header,
+    key: header,
+    width: 20
+  }));
+  
+  // Add rows
+  data.forEach(row => {
+    worksheet.addRow(row);
   });
 };
