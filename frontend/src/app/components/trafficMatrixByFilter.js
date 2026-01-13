@@ -22,7 +22,6 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
       setLoading(true);
       setError(null);
       const response = await vehicles.getTrafficMatrixByFilter(simpangId, dateInput, selectedInterval);
-      console.log('Traffic Matrix by Filter response:', response.data);
       setData(response.data.data);
       
       // Fetch camera for this simpang
@@ -34,7 +33,7 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
           setCameraId(camera.id);
           // Fetch status log for this camera
           const statusRes = await cameras.getStatusLog(camera.id, dateInput);
-          console.log('Camera Status Log response:', statusRes.data);
+
           setStatusLog(statusRes.data);
         }
       } catch (statusErr) {
@@ -86,10 +85,6 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
     );
   }
 
-  console.log('API Data:', data);
-  console.log('Slots:', data.slots);
-  console.log('TimePeriods:', data.timePeriods);
-
   const timeSlots = Object.keys(data.slots || {}).sort();
   const movements = ['Belok Kiri', 'Lurus', 'Belok Kanan'];
   const directions = ['barat', 'selatan', 'timur', 'utara'];
@@ -129,17 +124,45 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
   };
 
   // Helper function to get status for a time slot
+  // Aggregates status from all 5-minute entries within the time slot
   const getStatusForTimeSlot = (timeSlot) => {
     if (!statusLog || !statusLog.timeline_5min) return null;
     
-    // timeSlot format: "00:00-00:59", extract start time "00:00"
-    const [slotStart] = timeSlot.split('-');
-    // Convert to HH:MM:SS format by adding ":00"
-    const timeWithSeconds = `${slotStart}:00`;
+    // timeSlot format: "00:00-00:59" or "07:00-07:04" or "07:00-07:29" depending on interval
+    const [slotStart, slotEnd] = timeSlot.split('-');
     
-    // Find matching entry in timeline_5min
-    const timelineEntry = statusLog.timeline_5min.find(entry => entry.time === timeWithSeconds);
-    return timelineEntry ? timelineEntry.status : null;
+    // Convert times to minutes since midnight for comparison
+    const parseTimeToMinutes = (timeStr) => {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+    
+    const startMinutes = parseTimeToMinutes(slotStart);
+    const endMinutes = parseTimeToMinutes(slotEnd);
+    
+    // Check if any status entry in this time slot is active (status = 1)
+    let hasActive = false;
+    let hasInactive = false;
+    
+    statusLog.timeline_5min.forEach(entry => {
+      // entry.time format: "HH:MM:SS"
+      const [hours, minutes] = entry.time.split(':').map(Number);
+      const entryMinutes = hours * 60 + minutes;
+      
+      // Check if this entry falls within the time slot
+      if (entryMinutes >= startMinutes && entryMinutes <= endMinutes) {
+        if (entry.status === 1) {
+          hasActive = true;
+        } else if (entry.status === 0) {
+          hasInactive = true;
+        }
+      }
+    });
+    
+    // Return 1 if any camera is active, 0 if all are inactive, null if no data
+    if (hasActive) return 1;
+    if (hasInactive) return 0;
+    return null;
   };
   
   // Vehicle categories to display

@@ -292,7 +292,7 @@ const ManajemenKamera = () => {
         toast.success("Lokasi Kamera berhasil ditambahkan!!", {
           position: 'top-right'
         });
-        console.log("Data berhasil ditambahkan!");
+
         // Refresh data setelah berhasil
         await fetchMaps();
       } else {
@@ -326,7 +326,7 @@ const ManajemenKamera = () => {
         toast.success("Kamera berhasil ditambahkan!!", {
           position: 'top-right'
         });
-        console.log("Data berhasil ditambahkan!");
+
         // Refresh data setelah berhasil
         await fetchMaps();
       } else {
@@ -360,7 +360,7 @@ const ManajemenKamera = () => {
         toast.success("Kamera berhasil diperbaharui!!", {
           position: 'top-right'
         });
-        console.log("Data berhasil diperbaharui!");
+
         // Refresh data setelah berhasil
         await fetchMaps();
         await fetchCameras();
@@ -410,7 +410,7 @@ const ManajemenKamera = () => {
         toast.success("Maps berhasil diperbaharui!!", {
           position: 'top-right'
         });
-        console.log("Data berhasil diperbaharui!");
+
         // Refresh data setelah berhasil
         await fetchMaps();
       } else {
@@ -433,7 +433,7 @@ const ManajemenKamera = () => {
         toast.success("Kamera berhasil dihapus!!", {
           position: 'top-right'
         });
-        console.log("Data berhasil dihapus!");
+
         // Refresh data setelah berhasil
         await fetchCameras();
         await fetchMaps();
@@ -457,7 +457,7 @@ const ManajemenKamera = () => {
         toast.success("Kamera berhasil dihapus!!", {
           position: 'top-right'
         });
-        console.log("Data berhasil dihapus!");
+
         // Refresh data setelah berhasil
         await fetchMaps();
       } else {
@@ -476,7 +476,7 @@ const ManajemenKamera = () => {
     setIsLoadingCalendar(true);
     try {
       const res = await calendar.getAll(page, limit);
-      console.log("Calendar API Response:", res);
+
 
       if (res?.data?.holidays) {
         setDataKalender(res.data.holidays);
@@ -495,7 +495,7 @@ const ManajemenKamera = () => {
   const updateCalendar = async (data) => {
     try {
       if (!data) {
-        console.log("data tidak sesuai cek kembali!");
+
         toast.error("Data tidak valid!", { position: 'top-right' });
         return;
       }
@@ -531,7 +531,7 @@ const ManajemenKamera = () => {
   const deleteDataKalender = async (id) => {
     try {
       if (!id) {
-        console.log("data tidak sesuai cek kembali!");
+
         toast.error("ID tidak valid!", { position: 'top-right' });
         return;
       }
@@ -560,7 +560,7 @@ const ManajemenKamera = () => {
   const createCalendar = async (data) => {
     try {
       if (!data) {
-        console.log("data tidak sesuai cek kembali!");
+
         toast.error("Data tidak valid!", { position: 'top-right' });
         return;
       }

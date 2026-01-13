@@ -51,7 +51,7 @@ const FormSAIIPage = () => {
     setDataChart(DataEkuivalensi);
     setDataTerlindung(DataEkuivalensi.filter(item => item.type.toLowerCase() === "terlindungi"));
     setDataTerlawan(DataEkuivalensi.filter(item => item.type.toLowerCase() === "terlawanan"));
-    console.log(DataEkuivalensi);
+
   }, [])
 
   useEffect(() => {
@@ -97,7 +97,7 @@ const FormSAIIPage = () => {
 
       const filtered = combineData(buildingsData, data);
 
-      console.log(filtered);
+
       const validation = filtered
         .map(item => ({
           ...item,
@@ -127,13 +127,13 @@ const FormSAIIPage = () => {
     console.log("Payload:", JSON.stringify(payload, null, 2));
 
     // console.log('Payload gabungan:', payload, headerData);
-    console.log('id:', selectedId);
+
   }, [dataEmp, headerData, trafficData, selectedId]);
 
 
   useEffect(() => {
     fetchAllMap();
-    console.log('test fetch:');
+
 
   }, [headerData, selectedId])
 

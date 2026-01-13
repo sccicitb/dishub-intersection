@@ -309,7 +309,7 @@ function SurveiSimpangPage () {
         return;
       }
 
-      console.log("Setting camera:", { cameraId, cameraTitle, socketEvent, building });
+
 
 
       // Cek apakah camera yang dipilih adalah "not_yet_assign"

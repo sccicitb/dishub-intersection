@@ -51,8 +51,8 @@ const FaseVPage = () => {
     };
 
     setPayloadData(payload)
-    console.log('Payload gabungan:', payload, headerData);
-    console.log('id:', selectedId);
+
+
   }, [dataSAV, headerData, selectedId]);
 
   const fetchCreateSAV = async () => {

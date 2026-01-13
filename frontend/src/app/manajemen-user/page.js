@@ -48,7 +48,7 @@ const AdminPage = () => {
           const parsedUser = JSON.parse(decodedUser);
           if (parsedUser?.id) {
             setCurrentUser({ id: parseInt(parsedUser.id) });
-            console.log('Current user from cookies:', parsedUser.name);
+
             return;
           }
         } catch (e) {
@@ -408,7 +408,7 @@ const AdminPage = () => {
                 : 'text-slate-600 border-transparent hover:text-slate-900'
             }`}
           >
-            👥 Manajemen Pengguna
+            ðŸ‘¥ Manajemen Pengguna
           </button>
           <button
             onClick={() => setMainTab('password')}
@@ -418,7 +418,7 @@ const AdminPage = () => {
                 : 'text-slate-600 border-transparent hover:text-slate-900'
             }`}
           >
-            🔐 Password
+            ðŸ” Password
           </button>
         </div>
 
@@ -468,7 +468,7 @@ const AdminPage = () => {
                     className="px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
                     title="Refresh"
                   >
-                    ⟳
+                    âŸ³
                   </button>
                 </div>
               </div>
@@ -551,7 +551,7 @@ const AdminPage = () => {
                     onClick={() => setCurrentPage(currentPage - 1)}
                     className="px-3 py-2 border border-slate-300 rounded-lg text-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    ← Prev
+                    â† Prev
                   </button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
@@ -571,7 +571,7 @@ const AdminPage = () => {
                     onClick={() => setCurrentPage(currentPage + 1)}
                     className="px-3 py-2 border border-slate-300 rounded-lg text-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Next →
+                    Next â†’
                   </button>
                 </div>
               )}
@@ -666,7 +666,7 @@ const AdminPage = () => {
                     : 'text-slate-600 border-transparent hover:text-slate-900'
                 }`}
               >
-                🔐 Change Password
+                ðŸ” Change Password
               </button>
             </div>
             

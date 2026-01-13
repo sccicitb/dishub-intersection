@@ -76,7 +76,7 @@ const FormSAIIIPage = () => {
     // };
     dataKonflik ? payload = { surveyHeader: headerData, ...transformData(dataKonflik) } : {}
 
-    console.log('Payload gabungan:', payload);
+
     setPayloadData(payload);
   }, [dataKonflik, headerData]);
 

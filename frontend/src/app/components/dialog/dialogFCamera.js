@@ -386,7 +386,7 @@ const DialogFCamera = ({
                   onChange={(e) => {
                     const selectedId = parseInt(e.target.value, 10);
                     const selectedItem = mergedCameraData.find((item) => item.id === selectedId);
-                    console.log(selectedItem);
+
                     onFormCamerasChange({
                       ...formCameras,
                       ID_Simpang: selectedId,

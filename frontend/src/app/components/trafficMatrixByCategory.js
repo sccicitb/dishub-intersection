@@ -111,7 +111,7 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
             >
             {exporting ? (
               <>
-                <span className="animate-spin">⟳</span>
+                <span className="animate-spin">⏳</span>
                 Exporting...
               </>
             ) : (

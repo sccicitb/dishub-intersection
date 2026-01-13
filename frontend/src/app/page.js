@@ -542,7 +542,7 @@ export default function Home () {
         simpangName = selectedSimpang ? `${selectedSimpang.Nama_Simpang} (ID: ${selectedSimpang.id})` : simpangFilter;
       }
 
-      console.log('🔄 Starting export:', { activeFilter, simpangFilter, simpangName, startDate, endDate });
+
 
       const result = await exportSurveyDataToExcel(
         startDate,
@@ -557,11 +557,11 @@ export default function Home () {
         console.error('Export failed:', result);
         alert('Gagal export Excel:\n' + (result.message || 'Unknown error'));
       } else {
-        alert('✅ Export berhasil! File sudah didownload.');
+        alert('âœ… Export berhasil! File sudah didownload.');
       }
     } catch (error) {
       console.error('Export error:', error);
-      alert('❌ Terjadi kesalahan saat export Excel:\n' + error.message);
+      alert('âŒ Terjadi kesalahan saat export Excel:\n' + error.message);
     } finally {
       setExportLoading(false);
     }
@@ -571,7 +571,7 @@ export default function Home () {
   useEffect(() => {
     if (matrixSubmitCounter > 0 && selectedLocation !== 0) {
       fetchTrafficMatrix(selectedLocation, startDate, endDate, filterChangeMatrix).catch(() => {
-        console.log("Using default matrix due to fetch failure");
+
       });
     }
   }, [matrixSubmitCounter]);
@@ -583,7 +583,7 @@ export default function Home () {
       {/* Indikator refresh non-blocking */}
       {isRefreshing && (
         <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg">
-          <span className="animate-spin">⟳</span>
+          <span className="animate-spin">âŸ³</span>
           <span className="text-sm">Memperbarui data...</span>
         </div>
       )}
@@ -690,7 +690,7 @@ export default function Home () {
             {/* Period Display - appears after filter buttons */}
             {periodDisplayText && (
               <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap">
-                📅 Periode: {periodDisplayText}
+                Periode: {periodDisplayText}
               </div>
             )}
 
@@ -703,12 +703,11 @@ export default function Home () {
               >
                 {exportLoading ? (
                   <>
-                    <span className="animate-spin">⟳</span>
                     Exporting...
                   </>
                 ) : (
                   <>
-                    📊 Export Excel
+                    Export Excel
                   </>
                 )}
               </button>

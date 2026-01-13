@@ -60,7 +60,7 @@ export default function RecentVehicle ({ hg, data, allData, streamData }) {
 
   useEffect(() => {
     if (data?.message?.detections?.length > 0) {
-      console.log(data);
+
       setVehicles(prev => [
         ...prev,
         { data: data.message.detections, image: data.message.image_url, timestamp: data.message.timestamp, id_simpang: data.message.id_simpang }

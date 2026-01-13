@@ -18,7 +18,7 @@ const getFilterDisplayName = (filterType) => {
 
 export const exportSurveyDataToExcel = async (startDate, endDate, simpangId, fileName = 'survey_data.xlsx', filterType = 'customrange', simpangName = '') => {
   try {
-    console.log('📥 Starting export with params:', { startDate, endDate, simpangId, fileName, filterType, simpangName });
+
     
     // Fetch data dari API
     const [arahData, tipeData, masukKeluarData, rawData] = await Promise.all([
@@ -83,7 +83,7 @@ export const exportSurveyDataToExcel = async (startDate, endDate, simpangId, fil
     // Download file
     XLSX.writeFile(workbook, fileName);
     
-    console.log('✅ Export successful:', fileName);
+
     return { success: true, message: 'Export berhasil' };
   } catch (error) {
     console.error('❌ Error exporting to Excel:', error);
@@ -165,7 +165,7 @@ const formatTipeData = (data) => {
     }
   });
 
-  console.log('📊 Total tipe kendaraan di-process:', formattedData.length);
+
 
   return formattedData;
 };

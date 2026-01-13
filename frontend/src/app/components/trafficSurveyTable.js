@@ -344,7 +344,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
         setTrafficData({ surveyData: generated });
         setDataTraffic({ surveyData: generated });
       }
-      console.log("Data sent to parent:", generated);
+
     } catch (error) {
       console.error('Error fetching data:', error);
       setTrafficData({ surveyData: [] });
@@ -520,7 +520,7 @@ const TrafficSurveyTable = ({ dataEMP, selectedId, setDataTraffic, idSimpang }) 
   const renderTableRows = () => {
     const rows = [];
 
-    console.log("test", trafficData);
+
 
     // Jika trafficData kosong atau surveyData kosong, tampilkan row contoh kosong
     if (!trafficData || !trafficData.surveyData || trafficData.surveyData.length === 0) {

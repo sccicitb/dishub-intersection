@@ -43,7 +43,7 @@ const GridHorizontal = ({ position, data, category = false, col }) => {
       row2: prepareRowData(data?.row2 || []),
       row3: prepareRowData(data?.row3 || [])
     });
-    console.log(displayData);
+
   }, [data]);
 
   return (

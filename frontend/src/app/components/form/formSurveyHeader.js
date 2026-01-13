@@ -120,12 +120,12 @@ const SurveyFormSAHeader = ({ setDataHeader, setSelectedId, onResetAll }) => {
       // Kalau sedang edit (sudah ada id)
       if (cleanData.id > 0) {
         response = await apiCoreSurvey.updateByIdSurvey(cleanData.id, cleanData);
-        console.log('Data berhasil diupdate:', response);
+
         alert('Data berhasil diupdate!');
       } else {
         // Kalau tambah baru
         response = await apiCoreSurvey.createSurvey(cleanData);
-        console.log('Data berhasil dibuat:', response);
+
         alert('Data berhasil dibuat!');
       }
 
