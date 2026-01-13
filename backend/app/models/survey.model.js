@@ -39,11 +39,16 @@ function mapRowToAlias(row, includedSubCodes) {
 }
 
 const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, includedSubCodes, interval = '15min') => {
-  // Include ID_Simpang, dari_arah, ke_arah for proper filtering/grouping
-  let query = `SELECT waktu, ID_Simpang, dari_arah, ke_arah, ${includedSubCodes.join(', ')} FROM arus WHERE waktu IS NOT NULL`;
+  // Fallback ke VEHICLE_CODES jika includedSubCodes kosong
+  const codes = includedSubCodes && includedSubCodes.length > 0 
+    ? includedSubCodes 
+    : ['SM', 'MP', 'AUP', 'TR', 'BS', 'TS', 'BB', 'TB', 'GANDENG', 'KTB'];
+  
+  // Buat SELECT clause
+  const selectFields = codes.join(', ');
+  let query = `SELECT waktu, ID_Simpang, dari_arah, ke_arah, ${selectFields} FROM arus WHERE waktu IS NOT NULL`;
   const params = [];
 
-  // Filter kamera, pendekatan, arah
   if (simpangId) {
     query += ` AND ID_Simpang = ?`;
     params.push(simpangId);
@@ -59,7 +64,6 @@ const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, i
 
   // === Filter waktu ===
   if (date) {
-    // Convert date format from YYYY/MM/DD to YYYY-MM-DD if needed
     const formattedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
     query += ` AND waktu BETWEEN ? AND ?`;
     params.push(`${formattedDate} 00:00:00`, `${formattedDate} 23:59:59`);
@@ -72,7 +76,6 @@ const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, i
 
     let end = new Date(now);
     const minutes = now.getMinutes();
-    // default round up to 15min slot (bisa juga 1h, tinggal ubah logic)
     const roundedMinutes = Math.ceil((minutes + 1) / 15) * 15;
     if (roundedMinutes === 60) {
       end.setHours(end.getHours() + 1);
@@ -87,8 +90,8 @@ const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, i
 
   const [rows] = await db.query(query, params);
 
-  // DELEGATE GROUPING/AGGREGATION TO HELPER, pass interval AND includedSubCodes
-  const vehicleData = getPeriodsAndSlots(rows, interval, includedSubCodes).map(period => ({
+  // Pass codes yang digunakan ke getPeriodsAndSlots untuk aggregation yang tepat
+  const vehicleData = getPeriodsAndSlots(rows, interval, codes).map(period => ({
     period: period.name,
     timeSlots: period.timeSlots
   }));
@@ -96,7 +99,7 @@ const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, i
   return { vehicleData };
 };
 
-// ✅ OPTIMIZED: Use index-friendly date range instead of DATE() function
+// OPTIMIZED: Use index-friendly date range instead of DATE() function
 const getArusBySimpangDate = async (simpang_id, date) => {
   // Convert date format from YYYY/MM/DD to YYYY-MM-DD if needed
   const formattedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
@@ -119,7 +122,7 @@ const getArusSummaryByInterval = async (ID_Simpang, dbSubCodes, start, end) => {
   return rows;
 };
 
-// ✅ OPTIMIZED: Use index-friendly date range instead of DATE() function
+// OPTIMIZED: Use index-friendly date range instead of DATE() function
 const getSumForCell = async (ID_Simpang, dari_arah, ke_arah, jenis, date) => {
   // Convert date format from YYYY/MM/DD to YYYY-MM-DD if needed
   const formattedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
@@ -138,7 +141,7 @@ const getSumForCell = async (ID_Simpang, dari_arah, ke_arah, jenis, date) => {
   return Number(rows[0]?.total) || 0;
 };
 
-// ✅ OPTIMIZED: Use index-friendly date range instead of DATE() function
+// OPTIMIZED: Use index-friendly date range instead of DATE() function
 const getArusSummaryGrid = async (ID_Simpang, jenisKendaraanDB, queryDate) => {
   // Convert date format from YYYY/MM/DD to YYYY-MM-DD if needed
   const formattedDate = queryDate.includes('/') ? queryDate.replace(/\//g, '-') : queryDate;
@@ -163,10 +166,10 @@ const getArusSummaryGrid = async (ID_Simpang, jenisKendaraanDB, queryDate) => {
  *    startDate, endDate: 'YYYY-MM-DD'
  *
  *  Output: array of { date: '2025-02-03', sm: 100, mp: 50, aup: 0, …, total: 150 }
- *  ✅ OPTIMIZED: Eliminates DATE() function for 10x performance improvement
+ *  OPTIMIZED: Eliminates DATE() function for 10x performance improvement
  */
 async function getDailySummaryByDateRange(filters, includedSubCodes, startDate, endDate) {
-  // ✅ OPTIMIZED: Use date truncation with CAST to avoid DATE() function
+  // OPTIMIZED: Use date truncation with CAST to avoid DATE() function
   const sumFields = includedSubCodes
     .map(code => `SUM(\`${code}\`) AS \`${code}\``)
     .join(', ');
@@ -189,7 +192,7 @@ async function getDailySummaryByDateRange(filters, includedSubCodes, startDate, 
     params.push(filters.direction);
   }
   
-  // ✅ OPTIMIZED: Use CAST instead of DATE() for better performance
+  // OPTIMIZED: Use CAST instead of DATE() for better performance
   sql += ` GROUP BY CAST(waktu AS DATE) ORDER BY CAST(waktu AS DATE)`;
 
   const [rows] = await db.query(sql, params);
@@ -197,7 +200,7 @@ async function getDailySummaryByDateRange(filters, includedSubCodes, startDate, 
   // Tambahkan kolom total dan mapping alias
   return rows.map(row => ({
   date: row.date instanceof Date
-    ? row.date.toISOString().slice(0, 10)  // ✅ format 'YYYY-MM-DD'
+    ? row.date.toISOString().slice(0, 10)  // format 'YYYY-MM-DD'
     : row.date,
   ...mapRowToAlias(row, includedSubCodes)
 }));
@@ -336,11 +339,11 @@ async function getYearlySummary(startDateObj, filters, includedSubCodes, numYear
 
 /**
  * Helper function to get valid simpang IDs from database
- * ✅ OPTIMIZED: Uses EXISTS instead of IN subquery for better performance
+ * OPTIMIZED: Uses EXISTS instead of IN subquery for better performance
  */
 const getValidSimpangIds = async () => {
   try {
-    // ✅ OPTIMIZED: Use EXISTS instead of IN with subquery (2-3x faster)
+    // OPTIMIZED: Use EXISTS instead of IN with subquery (2-3x faster)
     const [simpangRows] = await db.query(`
       SELECT id FROM simpang s
       WHERE EXISTS (SELECT 1 FROM arus a WHERE a.ID_Simpang = s.id LIMIT 1)
@@ -348,7 +351,7 @@ const getValidSimpangIds = async () => {
     `);
     return simpangRows.map(row => row.id);
   } catch (error) {
-    // ✅ OPTIMIZED: Use GROUP BY instead of DISTINCT for fallback
+    // OPTIMIZED: Use GROUP BY instead of DISTINCT for fallback
 
     const [arusRows] = await db.query(`
       SELECT ID_Simpang 
@@ -426,7 +429,7 @@ const getKMTabelData = async (simpang_id, date, interval = '15min', approach = '
     minuteGroupField = `FLOOR(MINUTE(waktu) / ${minuteDivisor}) as minute_group,`;
   }
   
-  // ✅ OPTIMIZED: Use index-friendly date range instead of DATE() function
+  // OPTIMIZED: Use index-friendly date range instead of DATE() function
   const startDate = `${queryDate} 00:00:00`;
   const endDate = `${queryDate} 23:59:59`;
   

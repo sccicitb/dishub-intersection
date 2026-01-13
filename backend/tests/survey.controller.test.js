@@ -295,7 +295,7 @@ describe('survey.controller.js', () => {
 
       await surveyController.getVehicleSummaryData(req, res);
 
-      expect(surveyModel.getMonthlySummary).toHaveBeenCalledTimes(12); // ✅ semua bulan
+      expect(surveyModel.getMonthlySummary).toHaveBeenCalledTimes(12); // semua bulan
       expect(res.json).toHaveBeenCalledWith({
         dailyData: Array(12).fill(mockMonthData),
         lhrkData: expect.any(Array)

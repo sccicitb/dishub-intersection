@@ -18,7 +18,7 @@ const VEHICLE_TYPES = {
   KTB: "Kendaraan Tak Bermotor"
 };
 
-// ✅ Helper function to get date filter clause
+// Helper function to get date filter clause
 const getDateFilterClause = (date = null) => {
   if (!date) {
     throw new Error('date parameter is required in YYYY-MM-DD format');
@@ -40,7 +40,7 @@ const getDateFilterClause = (date = null) => {
   };
 };
 
-// ✅ Get detailed masuk/keluar by arah and vehicle type for specific simpang
+// Get detailed masuk/keluar by arah and vehicle type for specific simpang
 VehicleDetailSummary.getMasukKeluarDetailBySimpang = async (simpangId, date, callback) => {
   try {
     // Validate inputs
@@ -151,7 +151,7 @@ VehicleDetailSummary.getMasukKeluarDetailBySimpang = async (simpangId, date, cal
   }
 };
 
-// ✅ Get detailed masuk/keluar by arah and vehicle type for multiple simpangs
+// Get detailed masuk/keluar by arah and vehicle type for multiple simpangs
 VehicleDetailSummary.getMasukKeluarDetailBySimpangs = async (simpangIds, date, callback) => {
   try {
     if (!simpangIds || simpangIds.length === 0) {

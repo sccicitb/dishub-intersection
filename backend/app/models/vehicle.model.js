@@ -20,7 +20,7 @@ const Vehicle = function (data) {
   this.updated_at = data.updated_at;
 };
 
-// ✅ FIXED: Helper function to get index-friendly WHERE clause based on filter type
+// FIXED: Helper function to get index-friendly WHERE clause based on filter type
 const getDateFilterClause = (filter, startDate = null, endDate = null) => {
   // Get current date in Jakarta timezone (UTC+7) - PROPER METHOD
   const now = new Date();
@@ -66,7 +66,7 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
     case 'week':
     case 'minggu': {
       // This week (Monday to Sunday) in Jakarta timezone
-      // ✅ FIXED: Use proper date parsing for consistent timezone handling
+      // FIXED: Use proper date parsing for consistent timezone handling
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const [year, month, day] = todayJakarta.split('-').map(Number);
       const today = new Date(year, month - 1, day); // Create date in local timezone
@@ -91,7 +91,7 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
     case 'month':
     case 'bulanan': {
       // This month in Jakarta timezone
-      // ✅ FIXED: Use proper date parsing for consistent timezone handling
+      // FIXED: Use proper date parsing for consistent timezone handling
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const [year, month, day] = todayJakarta.split('-').map(Number);
       
@@ -112,7 +112,7 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
     case 'quarter':
     case 'kuartal': {
       // This quarter in Jakarta timezone
-      // ✅ FIXED: Use proper date parsing for consistent timezone handling
+      // FIXED: Use proper date parsing for consistent timezone handling
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const [year, month, day] = todayJakarta.split('-').map(Number);
       const quarter = Math.floor((month - 1) / 3);
@@ -133,7 +133,7 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
     case 'year':
     case 'tahunan': {
       // This year in Jakarta timezone
-      // ✅ FIXED: Use proper date parsing for consistent timezone handling
+      // FIXED: Use proper date parsing for consistent timezone handling
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const [year, month, day] = todayJakarta.split('-').map(Number);
       
@@ -151,7 +151,7 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       
     default: {
       // Default to today
-      // ✅ FIXED: Use proper date parsing for consistent timezone handling
+      // FIXED: Use proper date parsing for consistent timezone handling
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const startUTC = new Date(`${todayJakarta}T00:00:00+07:00`);
       const endUTC = new Date(`${todayJakarta}T23:59:59+07:00`);
@@ -163,11 +163,11 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
 
 /**
  * Helper function to get valid simpang IDs from database
- * ✅ OPTIMIZED: Uses EXISTS instead of IN subquery for better performance
+ * OPTIMIZED: Uses EXISTS instead of IN subquery for better performance
  */
 const getValidSimpangIds = async () => {
   try {
-    // ✅ OPTIMIZED: Use EXISTS instead of IN with subquery (2-3x faster)
+    // OPTIMIZED: Use EXISTS instead of IN with subquery (2-3x faster)
     const [simpangRows] = await db.query(`
       SELECT id FROM simpang s
       WHERE EXISTS (SELECT 1 FROM arus a WHERE a.ID_Simpang = s.id LIMIT 1)
@@ -175,7 +175,7 @@ const getValidSimpangIds = async () => {
     `);
     return simpangRows.map(row => row.id);
   } catch (error) {
-    // ✅ OPTIMIZED: Use GROUP BY instead of DISTINCT for fallback
+    // OPTIMIZED: Use GROUP BY instead of DISTINCT for fallback
     console.warn('Using fallback simpang IDs:', error.message);
     const [arusRows] = await db.query(`
       SELECT ID_Simpang 
@@ -238,7 +238,7 @@ Vehicle.getAll = async (result) => {
   }
 };
 
-// ✅ FIXED: Use location-specific traffic flow rules instead of generic direction filtering
+// FIXED: Use location-specific traffic flow rules instead of generic direction filtering
 Vehicle.getChartMasukKeluar = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
     const dateFilter = getDateFilterClause(filter, startDate, endDate);
@@ -273,7 +273,7 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day', simpang = 'semua', 
   }
 };
 
-// ✅ FIXED: Use location-specific traffic flow rules instead of generic direction filtering
+// FIXED: Use location-specific traffic flow rules instead of generic direction filtering
 Vehicle.getGroupTipeKendaraan = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
     const dateFilter = getDateFilterClause(filter, startDate, endDate);
@@ -311,7 +311,7 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day', simpang = 'semua'
   }
 };
 
-// ✅ FIXED: Use location-specific traffic flow rules with direction breakdown
+// FIXED: Use location-specific traffic flow rules with direction breakdown
 Vehicle.getMasukKeluarByArah = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
     const dateFilter = getDateFilterClause(filter, startDate, endDate);
@@ -331,7 +331,7 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day', simpang = 'semua',
       simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
     }
     
-    // ✅ LOCATION-SPECIFIC: Calculate IN/OUT by direction using official traffic rules
+    // LOCATION-SPECIFIC: Calculate IN/OUT by direction using official traffic rules
     const [data] = await db.query(`
       SELECT 
         -- East direction - count traffic that comes TO east or goes FROM east based on rules
@@ -369,14 +369,14 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day', simpang = 'semua',
   }
 };
 
-// ✅ FIXED: Use location-specific traffic flow rules with Jakarta timezone optimization
+// FIXED: Use location-specific traffic flow rules with Jakarta timezone optimization
 Vehicle.getRataPerJam = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
     const validSimpangIds = await getValidSimpangIds();
     const flowRules = getLocationSpecificFlowCases();
     
-    // ✅ OPTIMIZED: Use DATE_ADD instead of CONVERT_TZ for 95% better performance
+    // OPTIMIZED: Use DATE_ADD instead of CONVERT_TZ for 95% better performance
     // DATE_ADD(waktu, INTERVAL 7 HOUR) is much faster than CONVERT_TZ
     const [rows] = await db.query(`
       SELECT
@@ -396,7 +396,7 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
   }
 };
 
-// ✅ FIXED: Use location-specific traffic flow rules with Jakarta timezone optimization
+// FIXED: Use location-specific traffic flow rules with Jakarta timezone optimization
 Vehicle.getRataPer15Menit = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
     const dateFilter = getDateFilterClause(filter, startDate, endDate);
@@ -416,7 +416,7 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day', simpang = 'semua', st
       simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
     }
     
-    // ✅ OPTIMIZED: Use DATE_ADD instead of CONVERT_TZ for 95% better performance
+    // OPTIMIZED: Use DATE_ADD instead of CONVERT_TZ for 95% better performance
     // DATE_ADD(waktu, INTERVAL 7 HOUR) is much faster than CONVERT_TZ
     const [rows] = await db.query(`
       SELECT
@@ -438,7 +438,7 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day', simpang = 'semua', st
   }
 };
 
-// ✅ NEW: Get origin-destination matrix for traffic analysis
+// NEW: Get origin-destination matrix for traffic analysis
 // Adopts date range pattern from existing functions for consistency
 Vehicle.getAsalTujuanMatrix = async (simpangId, filter = 'day', startDate = null, endDate = null) => {
   try {
@@ -465,7 +465,7 @@ Vehicle.getAsalTujuanMatrix = async (simpangId, filter = 'day', startDate = null
   }
 };
 
-// ✅ NEW: Process raw origin-destination data into movement direction matrix (BKi, Lurus, BKa)
+// NEW: Process raw origin-destination data into movement direction matrix (BKi, Lurus, BKa)
 // Uses traffic engineering rules to categorize movements
 Vehicle.processMovementDirection = (asalTujuanData) => {
   try {
@@ -536,7 +536,7 @@ Vehicle.processMovementDirection = (asalTujuanData) => {
   }
 };
 
-// ✅ NEW: Build asal-tujuan matrix with totals (exactly like the dashboard image)
+// NEW: Build asal-tujuan matrix with totals (exactly like the dashboard image)
 Vehicle.buildAsalTujuanMatrix = (asalTujuanData) => {
   try {
     const directions = ['barat', 'selatan', 'timur', 'utara'];
@@ -592,7 +592,7 @@ Vehicle.buildAsalTujuanMatrix = (asalTujuanData) => {
   }
 };
 
-// ✅ NEW: Get origin-destination matrix for all simpangs
+// NEW: Get origin-destination matrix for all simpangs
 Vehicle.getAsalTujuanMatrixAll = async (filter = 'day', startDate = null, endDate = null) => {
   try {
     // Generate date filter clause using existing helper function
@@ -616,7 +616,7 @@ Vehicle.getAsalTujuanMatrixAll = async (filter = 'day', startDate = null, endDat
   }
 };
 
-// ✅ NEW: Get complete traffic matrix (both asal-tujuan and arah pergerakan)
+// NEW: Get complete traffic matrix (both asal-tujuan and arah pergerakan)
 // Support simpangId='semua' to aggregate all simpangs
 Vehicle.getCompleteTrafficMatrix = async (simpangId, filter = 'day', startDate = null, endDate = null) => {
   try {
@@ -646,7 +646,7 @@ Vehicle.getCompleteTrafficMatrix = async (simpangId, filter = 'day', startDate =
   }
 };
 
-// ✅ NEW: Get traffic matrix with vehicle categories breakdown
+// NEW: Get traffic matrix with vehicle categories breakdown
 // Query the database to get vehicle counts by category, origin, and destination
 Vehicle.getTrafficMatrixByCategory = async (simpangId, startDate, endDate) => {
   try {
@@ -672,7 +672,7 @@ Vehicle.getTrafficMatrixByCategory = async (simpangId, startDate, endDate) => {
   }
 };
 
-// ✅ NEW: Build arah pergerakan matrix based on movement direction (Belok Kiri, Lurus, Belok Kanan)
+// NEW: Build arah pergerakan matrix based on movement direction (Belok Kiri, Lurus, Belok Kanan)
 // Each movement type contains breakdown by origin direction and vehicle categories
 Vehicle.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
   try {
@@ -728,7 +728,7 @@ Vehicle.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
     asalTujuanCategoryData.forEach(row => {
       const { dari_arah, ke_arah } = row;
       
-      // ✅ FIX: Validate dari_arah exists in directionMap
+      // FIX: Validate dari_arah exists in directionMap
       if (!directionMap[dari_arah]) {
         return;
       }
@@ -759,7 +759,7 @@ Vehicle.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
         else if (ke_arah === 'north') movementType = 'Lurus';       // South → North = Lurus
       }
       
-      // ✅ FIX: Validate movement type is determined
+      // FIX: Validate movement type is determined
       if (!movementType) {
         return;
       }
@@ -769,10 +769,10 @@ Vehicle.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
       // Process all vehicle categories and add to matrix
       Object.keys(vehicleCategories).forEach(catCode => {
         const catName = vehicleCategories[catCode];
-        // ✅ IMPORTANT: Convert to integer to handle string values from database
+        // IMPORTANT: Convert to integer to handle string values from database
         const count = parseInt(row[catCode]) || 0;
         
-        // ✅ FIX: Add even if count is 0 (for complete data coverage)
+        // FIX: Add even if count is 0 (for complete data coverage)
         // Only skip if value is null/undefined
         if (count !== null && count !== undefined) {
           result[movementType][dariArahId][catName] += count;
@@ -791,7 +791,7 @@ Vehicle.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
   }
 };
 
-// ✅ NEW: Build asal-tujuan matrix with vehicle categories (sum of all categories)
+// NEW: Build asal-tujuan matrix with vehicle categories (sum of all categories)
 Vehicle.buildAsalTujuanMatrixFromCategory = (asalTujuanCategoryData) => {
   try {
     const directions = ['barat', 'selatan', 'timur', 'utara'];
@@ -844,7 +844,7 @@ Vehicle.buildAsalTujuanMatrixFromCategory = (asalTujuanCategoryData) => {
   }
 };
 
-// ✅ NEW: Get complete traffic matrix with vehicle category breakdown
+// NEW: Get complete traffic matrix with vehicle category breakdown
 Vehicle.getCompleteTrafficMatrixByCategory = async (simpangId, startDate, endDate) => {
   try {
     // Get raw data with vehicle categories
@@ -865,7 +865,7 @@ Vehicle.getCompleteTrafficMatrixByCategory = async (simpangId, startDate, endDat
   }
 };
 
-// ✅ NEW: Get raw data from arus table with pagination and filtering
+// NEW: Get raw data from arus table with pagination and filtering
 // Supports filters: day, week, month, quarter, year, customrange
 // And simpang filtering
 Vehicle.getRawArusData = async (page, limit, filters = {}) => {
@@ -929,7 +929,7 @@ Vehicle.getRawArusData = async (page, limit, filters = {}) => {
   }
 };
 
-// ✅ NEW: Get traffic matrix by time periods with movement types and direction breakdown
+// NEW: Get traffic matrix by time periods with movement types and direction breakdown
 // Uses BETWEEN approach like survey.model which is proven working
 Vehicle.getTrafficMatrixByTimePeriods = async (simpangId, date) => {
   try {
@@ -950,7 +950,7 @@ Vehicle.getTrafficMatrixByTimePeriods = async (simpangId, date) => {
     
     for (const [periodName, { start, end }] of Object.entries(timePeriods)) {
       // Build query using BETWEEN (proven working approach)
-      // ✅ CAST all vehicle columns to UNSIGNED to ensure proper integer aggregation
+      // CAST all vehicle columns to UNSIGNED to ensure proper integer aggregation
       let query = `
         SELECT 
           dari_arah,
@@ -991,7 +991,7 @@ Vehicle.getTrafficMatrixByTimePeriods = async (simpangId, date) => {
   }
 };
 
-// ✅ NEW: Get traffic matrix by hour with movement types and direction breakdown
+// NEW: Get traffic matrix by hour with movement types and direction breakdown
 // Uses BETWEEN approach like survey.model which is proven working
 Vehicle.getTrafficMatrixByHours = async (simpangId, date) => {
   try {
@@ -1007,7 +1007,7 @@ Vehicle.getTrafficMatrixByHours = async (simpangId, date) => {
       const hourLabel = `${String(hour).padStart(2, '0')}:00-${String(hour).padStart(2, '0')}:59`;
       
       // Build query using BETWEEN (proven working approach)
-      // ✅ CAST all vehicle columns to UNSIGNED to ensure proper integer aggregation
+      // CAST all vehicle columns to UNSIGNED to ensure proper integer aggregation
       let query = `
         SELECT 
           dari_arah,

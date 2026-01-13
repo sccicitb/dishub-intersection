@@ -1,204 +1,110 @@
-/**
- * KM Tabel Helper Functions
- * Supporting the KM Tabel API implementation
- * Based on traffic flow analysis results from Phase 1, Step 1.1
- */
+// Helper KM Tabel
 
-// REMOVED: isTrafficMasuk function - replaced with dynamic approach in survey.model.js
+const TIME_PERIODS = [
+  { name: 'Dini Hari', start: 0, end: 4 },
+  { name: 'Pagi', start: 5, end: 9 },
+  { name: 'Siang', start: 10, end: 14 },
+  { name: 'Sore', start: 15, end: 17 },
+  { name: 'Malam', start: 18, end: 23 }
+];
 
-/**
- * Maps database vehicle types to KM Tabel format
- * Returns object with sm, mp, ks, ktb counts
- * ✅ FIXED: Convert all database values to numbers to prevent string concatenation
- */
-function mapVehicleTypes(vehicleData) {
+// Konversi tipe kendaraan ke format KM Tabel
+function mapVehicleTypes(data) {
   return {
-    sm: Number(vehicleData.SM) || 0,                                    // Sepeda Motor
-    mp: Number(vehicleData.MP) || 0,                                    // Mobil Penumpang
-    ks: (Number(vehicleData.BS) || 0) + (Number(vehicleData.TS) || 0),         // Kendaraan Sedang (Bus Sedang + Truck Sedang)
-    ktb: (Number(vehicleData.BB) || 0) + (Number(vehicleData.TB) || 0) + 
-         (Number(vehicleData.GANDENG) || 0) + (Number(vehicleData.KTB) || 0)   // Kendaraan Berat
+    sm: Number(data.SM) || 0,
+    mp: Number(data.MP) || 0,
+    ks: (Number(data.BS) || 0) + (Number(data.TS) || 0),
+    ktb: (Number(data.BB) || 0) + (Number(data.TB) || 0) + 
+         (Number(data.GANDENG) || 0) + (Number(data.KTB) || 0)
   };
 }
 
-/**
- * Calculates total vehicles from KM Tabel format
- */
-function calculateTotalVehicles(kmVehicleData) {
-  return kmVehicleData.sm + kmVehicleData.mp + kmVehicleData.ks + kmVehicleData.ktb;
+// Total kendaraan dari format KM Tabel
+function calculateTotalVehicles(kmData) {
+  return kmData.sm + kmData.mp + kmData.ks + kmData.ktb;
 }
 
-/**
- * Determines time period based on hour (0-23)
- * Returns period name and index
- */
+// Cari periode jam (0-23)
 function getTimePeriod(hour) {
-  const periods = [
-    { name: 'Dini Hari', start: 0, end: 4, index: 0 },
-    { name: 'Pagi', start: 5, end: 9, index: 1 },
-    { name: 'Siang', start: 10, end: 14, index: 2 },
-    { name: 'Sore', start: 15, end: 17, index: 3 },
-    { name: 'Malam', start: 18, end: 23, index: 4 }
-  ];
-
-  for (const period of periods) {
-    if (hour >= period.start && hour <= period.end) {
-      return {
-        name: period.name,
-        index: period.index,
-        start: period.start,
-        end: period.end
-      };
-    }
-  }
-
-  // Fallback for invalid hour
-  return periods[0];
+  const period = TIME_PERIODS.find(p => hour >= p.start && hour <= p.end);
+  return period || TIME_PERIODS[0];
 }
 
-/**
- * Generates time slots for a specific interval
- * Returns array of time slot objects
- */
+// Buat slot waktu per interval (5min, 10min, 15min, 1hour)
 function generateTimeSlots(interval = '15min') {
   const slots = [];
+  const minuteMap = { '5min': 5, '10min': 10, '15min': 15, '1h': 60, '60min': 60 };
+  const minutes = minuteMap[interval] || 15;
   
-  // Determine minute increment based on interval
-  let minuteIncrement;
-  switch (interval) {
-    case '5min':
-      minuteIncrement = 5;
-      break;
-    case '10min':
-      minuteIncrement = 10;
-      break;
-    case '15min':
-      minuteIncrement = 15;
-      break;
-    case '1h':
-    case '60min':
-      minuteIncrement = 60;
-      break;
-    default:
-      minuteIncrement = 15; // fallback to 15min
-  }
-  
-  if (interval === '1h' || interval === '60min') {
-    // Special handling for 1-hour intervals
-    for (let hour = 0; hour < 24; hour++) {
-      const startTime = `${hour.toString().padStart(2, '0')}:00`;
-      const endTime = `${((hour + 1) % 24).toString().padStart(2, '0')}:00`;
-      
+  if (minutes === 60) {
+    // Slot per jam
+    for (let h = 0; h < 24; h++) {
       slots.push({
-        time: `${startTime} - ${endTime}`,
-        status: 1,
-        hour: hour,
+        time: `${String(h).padStart(2, '0')}:00 - ${String((h + 1) % 24).padStart(2, '0')}:00`,
+        hour: h,
         minute: 0,
         masukSimpang: { sm: 0, mp: 0, ks: 0, ktb: 0, total: 0 },
         keluarSimpang: { sm: 0, mp: 0, ks: 0, ktb: 0, total: 0 }
       });
     }
   } else {
-    // Handle minute-based intervals (5min, 10min, 15min)
-    for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += minuteIncrement) {
-        const startTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        const endMinute = minute + minuteIncrement;
-        const endHour = endMinute >= 60 ? hour + 1 : hour;
-        const adjustedEndMinute = endMinute >= 60 ? endMinute - 60 : endMinute;
-        const endTime = `${(endHour % 24).toString().padStart(2, '0')}:${adjustedEndMinute.toString().padStart(2, '0')}`;
-        
+    // Slot per menit (5, 10, 15)
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += minutes) {
+        const endM = m + minutes;
+        const [eh, em] = endM >= 60 ? [(h + 1) % 24, endM - 60] : [h, endM];
         slots.push({
-          time: `${startTime} - ${endTime}`,
-          status: 1,
-          hour: hour,
-          minute: minute,
-          minuteIncrement: minuteIncrement,
+          time: `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} - ${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`,
+          hour: h,
+          minute: m,
           masukSimpang: { sm: 0, mp: 0, ks: 0, ktb: 0, total: 0 },
           keluarSimpang: { sm: 0, mp: 0, ks: 0, ktb: 0, total: 0 }
         });
       }
     }
   }
-  
   return slots;
 }
 
-/**
- * Groups time slots by periods for KM Tabel format
- */
+// Kelompokkan slot berdasarkan periode waktu
 function groupSlotsByPeriods(timeSlots) {
-  const periods = [
-    { name: 'Dini Hari', start: 0, end: 4 },
-    { name: 'Pagi', start: 5, end: 9 },
-    { name: 'Siang', start: 10, end: 14 },
-    { name: 'Sore', start: 15, end: 17 },
-    { name: 'Malam', start: 18, end: 23 }
-  ];
-
-  return periods.map(period => ({
+  return TIME_PERIODS.map(period => ({
     period: period.name,
-    timeSlots: timeSlots.filter(slot => 
-      slot.hour >= period.start && slot.hour <= period.end
-    )
+    timeSlots: timeSlots.filter(slot => slot.hour >= period.start && slot.hour <= period.end)
   }));
 }
 
-/**
- * Validates KM Tabel API parameters
- */
+// Validasi parameter KM Tabel
 function validateKmTabelParams(params) {
   const errors = [];
   
-  // Required parameters
-  if (!params.simpang_id) {
-    errors.push('simpang_id is required');
-  } else if (![2, 3, 4, 5].includes(parseInt(params.simpang_id))) {
-    errors.push('simpang_id must be one of: 2, 3, 4, 5');
-  }
+  if (!params.simpang_id) errors.push('simpang_id diperlukan');
+  else if (![2, 3, 4, 5].includes(parseInt(params.simpang_id))) 
+    errors.push('simpang_id harus: 2, 3, 4, atau 5');
   
-  if (!params.date) {
-    errors.push('date is required');
-  } else {
-    // Validate date format (YYYY-MM-DD)
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(params.date)) {
-      errors.push('date must be in YYYY-MM-DD format');
-    }
-  }
+  if (!params.date) errors.push('date diperlukan (YYYY-MM-DD)');
+  else if (!/^\d{4}-\d{2}-\d{2}$/.test(params.date)) 
+    errors.push('date format YYYY-MM-DD');
   
-  // Optional parameters validation
-  if (params.interval && !['5min', '10min', '15min', '1h', '60min'].includes(params.interval)) {
-    errors.push('interval must be one of: "5min", "10min", "15min", "1h", "60min"');
-  }
+  if (params.interval && !['5min', '10min', '15min', '1h', '60min'].includes(params.interval))
+    errors.push('interval: 5min, 10min, 15min, 1h, atau 60min');
   
-  if (params.approach && !['north', 'south', 'east', 'west', 'utara', 'selatan', 'timur', 'barat', 'semua'].includes(params.approach)) {
-    errors.push('approach must be one of: north, south, east, west, utara, selatan, timur, barat, semua');
-  }
+  if (params.approach && !['north', 'south', 'east', 'west', 'utara', 'selatan', 'timur', 'barat', 'semua'].includes(params.approach))
+    errors.push('approach tidak valid');
   
-  return {
-    isValid: errors.length === 0,
-    errors: errors
-  };
+  return { isValid: errors.length === 0, errors };
 }
 
-/**
- * Creates empty KM Tabel structure
- */
+// Struktur KM Tabel kosong
 function createEmptyKmTabelStructure(interval = '15min') {
-  const timeSlots = generateTimeSlots(interval);
-  return {
-    vehicleData: groupSlotsByPeriods(timeSlots)
-  };
+  return { vehicleData: groupSlotsByPeriods(generateTimeSlots(interval)) };
 }
 
-/**
- * Formats date for MySQL queries
- */
+// Format tanggal untuk query SQL
 function formatDateForQuery(dateString) {
-  const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
+  return new Date(dateString).toISOString().split('T')[0];
 }
+
 
 /**
  * Gets SQL condition for time slot filtering

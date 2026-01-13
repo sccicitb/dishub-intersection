@@ -76,8 +76,7 @@ const generateTimeSlots = (interval) => {
 
   return slots;
 };
-
-// ✅ Get detailed masuk/keluar by time intervals for specific simpang
+// Get detailed masuk/keluar by time intervals for specific simpang
 VehicleDetailByTime.getMasukKeluarDetailByTime = async (simpangId, date, interval = '1hour', callback) => {
   try {
     // Validate inputs

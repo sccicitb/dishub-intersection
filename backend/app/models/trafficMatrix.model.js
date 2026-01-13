@@ -2,7 +2,7 @@ const db = require("../config/db");
 
 const TrafficMatrix = {};
 
-// ✅ NEW: Get camera status for a specific simpang and time range
+// NEW: Get camera status for a specific simpang and time range
 const getCameraStatusByTimeRange = async (simpangId, startDateTime, endDateTime) => {
   try {
     let query = `
@@ -55,7 +55,7 @@ const getCameraStatusByTimeRange = async (simpangId, startDateTime, endDateTime)
   }
 };
 
-// ✅ NEW: Get camera status for a specific hour
+// NEW: Get camera status for a specific hour
 const getCameraStatusByHour = async (simpangId, hour) => {
   try {
     let query = `
@@ -106,7 +106,7 @@ const getCameraStatusByHour = async (simpangId, hour) => {
   }
 };
 
-// ✅ NEW: Build arah pergerakan matrix based on movement direction (Belok Kiri, Lurus, Belok Kanan)
+// NEW: Build arah pergerakan matrix based on movement direction (Belok Kiri, Lurus, Belok Kanan)
 TrafficMatrix.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
   try {
     
@@ -161,7 +161,7 @@ TrafficMatrix.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
     asalTujuanCategoryData.forEach(row => {
       const { dari_arah, ke_arah } = row;
       
-      // ✅ FIX: Validate dari_arah exists in directionMap
+      // FIX: Validate dari_arah exists in directionMap
       if (!directionMap[dari_arah]) {
         return;
       }
@@ -192,7 +192,7 @@ TrafficMatrix.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
         else if (ke_arah === 'north') movementType = 'Lurus';       // South → North = Lurus
       }
       
-      // ✅ FIX: Validate movement type is determined
+      // FIX: Validate movement type is determined
       if (!movementType) {
         return;
       }
@@ -202,10 +202,10 @@ TrafficMatrix.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
       // Process all vehicle categories and add to matrix
       Object.keys(vehicleCategories).forEach(catCode => {
         const catName = vehicleCategories[catCode];
-        // ✅ IMPORTANT: Convert to integer to handle string values from database
+        // IMPORTANT: Convert to integer to handle string values from database
         const count = parseInt(row[catCode]) || 0;
         
-        // ✅ FIX: Add even if count is 0 (for complete data coverage)
+        // FIX: Add even if count is 0 (for complete data coverage)
         // Only skip if value is null/undefined
         if (count !== null && count !== undefined) {
           result[movementType][dariArahId][catName] += count;
@@ -224,7 +224,7 @@ TrafficMatrix.buildArahPergerakanByCategory = (asalTujuanCategoryData) => {
   }
 };
 
-// ✅ NEW: Get time period categories based on hour
+// NEW: Get time period categories based on hour
 // Period mapping:
 //   - Dini Hari: 00:00 - 06:00 (hours 0-5)
 //   - Pagi Hari: 06:00 - 12:00 (hours 6-11)
@@ -241,7 +241,7 @@ const getTimePeriodCategories = () => {
   };
 };
 
-// ✅ NEW: Get time period name for a specific hour
+// NEW: Get time period name for a specific hour
 const getTimePeriodByHour = (hour) => {
   const categories = getTimePeriodCategories();
   for (const [periodName, range] of Object.entries(categories)) {
@@ -252,7 +252,7 @@ const getTimePeriodByHour = (hour) => {
   return null;
 };
 
-// ✅ NEW: Generate time slots based on interval
+// NEW: Generate time slots based on interval
 // Interval: 5min, 10min, 30min, 1hour
 // Returns array of {label, startHour, startMin, endHour, endMin, timePeriod}
 const generateTimeSlots = (interval) => {
@@ -333,7 +333,7 @@ const generateTimeSlots = (interval) => {
   return slots;
 };
 
-// ✅ NEW: Get traffic matrix by filter (5min, 10min, 30min, 1hour) - OPTIMIZED with batch query
+// NEW: Get traffic matrix by filter (5min, 10min, 30min, 1hour) - OPTIMIZED with batch query
 TrafficMatrix.getTrafficMatrixByFilter = async (simpangId, date, interval = '1hour') => {
   try {
     // Validate interval
@@ -350,7 +350,7 @@ TrafficMatrix.getTrafficMatrixByFilter = async (simpangId, date, interval = '1ho
 
     const startTime = Date.now();
     
-    // ✅ OPTIMIZED: Use single batch query instead of individual queries per time slot
+    // OPTIMIZED: Use single batch query instead of individual queries per time slot
     // This reduces database round trips from ~288 to 1
     let query = `
       SELECT 
@@ -389,7 +389,7 @@ TrafficMatrix.getTrafficMatrixByFilter = async (simpangId, date, interval = '1ho
     const timeSlots = generateTimeSlots(interval);
     const result = {};
     
-    // ✅ OPTIMIZED: Process results in memory instead of querying per slot
+    // OPTIMIZED: Process results in memory instead of querying per slot
     // Group results by time slot
     for (const slot of timeSlots) {
       const slotData = [];
