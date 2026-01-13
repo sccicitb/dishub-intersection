@@ -125,8 +125,8 @@ const FormSAIPage = () => {
 
     // setPayload(payload)
 
-    console.log('Payload gabungan:', payload, headerData);
-    console.log('id:', selectedId);
+
+
   }, [lapangan, headerData, faseApil, selectedId]);
 
   const fetchCreateSAI = async () => {
@@ -203,7 +203,7 @@ const FormSAIPage = () => {
     //   localStorage.setItem('data', JSON.stringify(existing));
     //   console.log('Data berhasil disimpan ke sa1 dengan id:', headerId);
     // } else {
-    //   console.warn('⚠️ ID header tidak valid. Data tidak disimpan.');
+    //   console.warn('âš ï¸ ID header tidak valid. Data tidak disimpan.');
     // }
     // selectedId != 0 ? fetchCreateSAI() : fetchUpdateSAI(selectedId)
     toast.info(

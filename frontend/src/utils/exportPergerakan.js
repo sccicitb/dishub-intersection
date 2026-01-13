@@ -10,8 +10,8 @@ import * as XLSX from 'xlsx';
  */
 export const exportPergerakanToExcel = async (vehicleData, dataKM, dateInput, simpangName, fileName = 'survei-pergerakan.xlsx') => {
   try {
-    console.log('📥 Starting Pergerakan export with params:', { dateInput, simpangName, fileName });
-    console.log('📊 Data to export:', { vehicleData, dataKMLength: dataKM?.length });
+
+
 
     // Buat sheet Info
     const infoSheetData = [
@@ -49,7 +49,7 @@ export const exportPergerakanToExcel = async (vehicleData, dataKM, dateInput, si
     // Download
     XLSX.writeFile(workbook, fileName);
 
-    console.log('✅ Export successful:', fileName);
+
     return { success: true, message: 'Export berhasil' };
   } catch (error) {
     console.error('❌ Error exporting to Excel:', error);
@@ -151,7 +151,7 @@ const formatPergerakanData = (vehicleData) => {
     }
   });
 
-  console.log('📊 Pergerakan formatted:', formattedData.length, 'rows');
+
   return formattedData;
   return formattedData;
 };
@@ -237,7 +237,7 @@ const formatKeluarMasukData = (dataKM) => {
     });
   }
 
-  console.log('📊 Keluar-Masuk formatted:', formattedData.length, 'rows');
+
   return formattedData;
 };
 

@@ -377,11 +377,11 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
         fbka: existingRow.faktorPenyesuaian.fbka ?? 1.0
       };
 
-      console.log(`Found faktorPenyesuaian for ${kodePendekat} fase ${hijauFase}:`, faktor);
+
       return faktor;
     }
 
-    console.log(`No faktorPenyesuaian found for ${kodePendekat} fase ${hijauFase}, using default values`);
+
     return defaultFaktor;
   };
 
@@ -518,7 +518,6 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
 
   function convertPhaseDataToOriginal (phaseData) {
     const cleanNumber = (num) => {
-      // Kalau null, undefined, string kosong → kembalikan 0
       if (num === null || num === undefined || num === '') return 0;
 
       const parsed = parseFloat(num);
@@ -542,7 +541,7 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
     return {
       whh: whhGlobal,
       dataFase: phaseData.map((phase) => {
-        console.log('Processing phase:', phase, 'with whh:', whhGlobal);
+
         // dari array `jarak` ke object keyed by type
         const jarakObj = {};
         phase.jarak.forEach((item) => {
@@ -732,8 +731,8 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
         };
 
         // Merge dengan data dari SA4 response
-        console.log('Merging SA-IV response with table data');
-        console.log('SA-IV response:', sa4Result);
+
+
         const mergedTableData = mergeWithSAIVResponse(sa4Result, tempTableData);
 
         // Update state dengan data yang sudah di-merge
@@ -856,7 +855,7 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
               <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(18)/(17)</th>
               <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(19)/R<sub>ig</sub></th>
               <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">detik</th>
-              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(17)×(21)/S<br />SMP/jam</th>
+              <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(17)-(21)/S<br />SMP/jam</th>
               <th className="text-center text-xs font-semibold text-gray-900 border border-base-300 text-wrap">(18)/(22)</th>
 
             </tr>
@@ -1409,3 +1408,4 @@ export default function FormSAIVTable ({ setFormTableIV, selectedId }) {
     </div>
   );
 }
+

@@ -15,7 +15,6 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
   const addLog = (message) => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
-    console.log(message);
   };
 
   // Format detection function

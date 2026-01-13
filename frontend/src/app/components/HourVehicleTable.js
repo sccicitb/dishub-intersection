@@ -571,18 +571,11 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 MP
               </th>
               <th
-                rowSpan={2}
+                colSpan={2}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
-                BS
-              </th>
-              <th
-                rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                TS
+                KS
               </th>
               <th
                 rowSpan={2}
@@ -592,18 +585,11 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 BB
               </th>
               <th
-                rowSpan={2}
+                colSpan={2}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TB
-              </th>
-              <th
-                rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                Gandeng /<br />Semitrailer
               </th>
               <th
                 rowSpan={2}
@@ -631,6 +617,30 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TR
+              </th>
+              <th
+                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                style={pdf ? pdfHeaderStyle : {}}
+              >
+                BS
+              </th>
+              <th
+                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                style={pdf ? pdfHeaderStyle : {}}
+              >
+                TS
+              </th>
+              <th
+                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                style={pdf ? pdfHeaderStyle : {}}
+              >
+                TB
+              </th>
+              <th
+                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                style={pdf ? pdfHeaderStyle : {}}
+              >
+                Gandeng /<br />Semitrailer
               </th>
             </tr>
           </thead>

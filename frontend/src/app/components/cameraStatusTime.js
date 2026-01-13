@@ -47,10 +47,10 @@ const CameraStatusTimeline = ({ cameraId, selectedDate }) => {
       try {
         const response = await cameras.getStatusLog(cameraId, selectedDate);
         
-        console.log('Camera status response:', response);
+
         
         if (response?.data) {
-          console.log('Timeline data:', response.data.timeline_5min);
+
           setStatusData(response.data);
         } else {
           setStatusData({});

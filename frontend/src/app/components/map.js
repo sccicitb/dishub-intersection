@@ -63,15 +63,12 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
 
     const fetchData = async () => {
       try {
-        // setLoading(true);
         const camerasRes = await cameras.getAll();
         const data = camerasRes.data.cameras || [];
         setCamerasData(data);
         const buildingsRes = await maps.getAllSimpang();
         const buildingsData = buildingsRes.data.simpang || [];
-        // const filtered = filterBuildingsByActiveCameras(buildingsData, data);
         const filtered = combineData(buildingsData, data);
-        // console.log(filtered)
         setBuildings(filtered);
         setupMapData(filtered);
       } catch (err) {
@@ -110,13 +107,13 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
   }, []);
 
   // useEffect(() => {
-  //   console.log(buildings)
+  //   (buildings)
   // }, [buildings])
 
   // Helper function to filter buildings by active cameras
   const filterBuildingsByActiveCameras = (buildings, camerasData) => {
     const activeCameraIds = new Set();
-    // console.log(camerasData)
+    // (camerasData)
 
     camerasData.forEach(camera => {
       if (camera.status === 1) {
@@ -124,7 +121,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
       }
     });
 
-    // console.log(activeCameraIds)
+    // (activeCameraIds)
     return buildings
       .filter(building => {
         // Check if building has cameras
@@ -196,7 +193,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
     const checkAndSetReady = () => {
       if (map.isStyleLoaded() && map.loaded()) {
         setMapReady(true);
-        console.log('Map fully loaded and ready');
+
       } else {
         // Retry setelah 100ms jika belum ready
         setTimeout(checkAndSetReady, 5000);
@@ -244,7 +241,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
         zoom: 16,
         essential: true,
       });
-      // console.log(building)
+      // (building)
       !fState && onClickSimpang(building)
       // Handle cameras
       if (Array.isArray(building.cameras) && building.cameras.length > 0) {
@@ -284,8 +281,8 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
 
   // Handle camera selection
   const handleCameraSelect = (camera) => {
-    // if (camera.filter((data) => data.socketEvent === "not_yet_assign" ? console.log(camera) :onClick?.({ camera }) ))
-    // if (camera.socketEvent === "not_yet_assign" ? console.log(camera) : onClick?.({ camera }))
+    // if (camera.filter((data) => data.socketEvent === "not_yet_assign" ? (camera) :onClick?.({ camera }) ))
+    // if (camera.socketEvent === "not_yet_assign" ? (camera) : onClick?.({ camera }))
     onClick?.({ camera })
     setCameraModal({ isOpen: false, cameras: [] });
   };
@@ -567,7 +564,7 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
                   </div>
                 </button> */}
                 {cameraModal.cameras.map((camera) => {
-                  console.log(camera)
+                  (camera)
                   return (
                     <button
                       key={camera.id}

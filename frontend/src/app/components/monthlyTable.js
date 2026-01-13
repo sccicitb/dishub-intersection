@@ -56,7 +56,6 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
     // Accessing the correct structure for dailyData
     vehicleData?.dailyData?.map((monthItem, index) => {
       const monthlyTotal = monthItem.monthlyTotal || calculateMonthlyTotal(monthItem.days);
-      console.log('vehicleData.dailyData:', vehicleData.dailyData);
 
       rows.push(
         <tr key={`month-${index}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
