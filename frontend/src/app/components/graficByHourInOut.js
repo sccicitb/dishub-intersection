@@ -26,11 +26,14 @@ ChartJS.register(
   Filler
 );
 
-const TrafficTrendComponent = ({ category = "in" }) => {
+const TrafficTrendComponent = ({ category = "in", dateRange = {}, id_simpang = 2, nama_simpang = "" }) => {
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const categoryLabel = category === 'in' ? 'IN' : 'OUT';
+  
+  const { startDate = "", endDate = "" } = dateRange;
+  
   const categoryTrafficOpt = (cat) => {
     switch (cat) {
       case 'in':
@@ -46,7 +49,7 @@ const TrafficTrendComponent = ({ category = "in" }) => {
     try {
       setLoading(true);
       // Panggil API (Simpang 4 sesuai response contoh)
-      const response = await vehicles.getVehicleDetailByHour('4', '2026-01-08', '1hour');
+      const response = await vehicles.getVehicleDetailByHour(id_simpang, startDate, endDate, '1hour');
 
       if (response.status === 200) {
         setApiData(response.data); // Simpan seluruh objek response
@@ -62,7 +65,7 @@ const TrafficTrendComponent = ({ category = "in" }) => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [startDate, endDate, category, id_simpang]);
 
   // Mapping Data khusus untuk format Array di dalam Slot
   const chartData = useMemo(() => {
@@ -124,7 +127,7 @@ const TrafficTrendComponent = ({ category = "in" }) => {
       },
       title: {
         display: true,
-        text: `Trend Kendaraan Masuk (${[categoryLabel]}) - Simpang ${apiData.simpang_id}`,
+        text: `Trend Kendaraan Masuk (${[categoryLabel]}) - Simpang ${String(apiData.simpang_id).charAt(0).toUpperCase() + String(apiData.simpang_id).slice(1)} ${nama_simpang !== "Semua Simpang" ? `- ${nama_simpang}` : ''} `,
         font: { size: 16 }
       },
       tooltip: { mode: 'index', intersect: false }

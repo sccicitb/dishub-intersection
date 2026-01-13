@@ -97,39 +97,66 @@ exports.getMasukKeluarDetailBy30Min = async (req, res) => {
   try {
     const simpang_id = req.query.simpang_id;
     const date = req.query.date;
+    const start_date = req.query.start_date;
+    const end_date = req.query.end_date;
 
     // Validate required parameters
     if (!simpang_id) {
       return res.status(400).json({
         status: "error",
-        message: "simpang_id query parameter is required"
+        message: "simpang_id query parameter is required (use 'semua' for all simpangs)"
       });
     }
 
-    if (!date) {
+    // Check if either date or date range is provided
+    if (!date && (!start_date || !end_date)) {
       return res.status(400).json({
         status: "error",
-        message: "date query parameter is required in YYYY-MM-DD format"
+        message: "Either 'date' or both 'start_date' and 'end_date' are required in YYYY-MM-DD format"
       });
     }
 
     // Validate date format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(date)) {
+    if (date && !dateRegex.test(date)) {
       return res.status(400).json({
         status: "error",
         message: "Invalid date format. Use YYYY-MM-DD format"
       });
     }
 
-    const result = await VehicleDetailSummary.getMasukKeluarDetailBy30Min(simpang_id, date);
+    if (start_date && !dateRegex.test(start_date)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid start_date format. Use YYYY-MM-DD format"
+      });
+    }
 
-    res.json({
+    if (end_date && !dateRegex.test(end_date)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid end_date format. Use YYYY-MM-DD format"
+      });
+    }
+
+    const result = await VehicleDetailSummary.getMasukKeluarDetailBy30Min(simpang_id, date, start_date, end_date);
+
+    const displaySimpangId = simpang_id === 'semua' ? 'semua' : parseInt(simpang_id);
+
+    const response = {
       status: "ok",
-      simpang_id: parseInt(simpang_id),
-      date: date,
+      simpang_id: displaySimpangId,
       slots: result
-    });
+    };
+
+    if (date) {
+      response.date = date;
+    } else {
+      response.start_date = start_date;
+      response.end_date = end_date;
+    }
+
+    res.json(response);
   } catch (error) {
     console.error("Error getting detail summary by 30min:", error);
     res.status(500).json({
@@ -144,39 +171,66 @@ exports.getMasukKeluarDetailByHour = async (req, res) => {
   try {
     const simpang_id = req.query.simpang_id;
     const date = req.query.date;
+    const start_date = req.query.start_date;
+    const end_date = req.query.end_date;
 
     // Validate required parameters
     if (!simpang_id) {
       return res.status(400).json({
         status: "error",
-        message: "simpang_id query parameter is required"
+        message: "simpang_id query parameter is required (use 'semua' for all simpangs)"
       });
     }
 
-    if (!date) {
+    // Check if either date or date range is provided
+    if (!date && (!start_date || !end_date)) {
       return res.status(400).json({
         status: "error",
-        message: "date query parameter is required in YYYY-MM-DD format"
+        message: "Either 'date' or both 'start_date' and 'end_date' are required in YYYY-MM-DD format"
       });
     }
 
     // Validate date format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(date)) {
+    if (date && !dateRegex.test(date)) {
       return res.status(400).json({
         status: "error",
         message: "Invalid date format. Use YYYY-MM-DD format"
       });
     }
 
-    const result = await VehicleDetailSummary.getMasukKeluarDetailByHour(simpang_id, date);
+    if (start_date && !dateRegex.test(start_date)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid start_date format. Use YYYY-MM-DD format"
+      });
+    }
 
-    res.json({
+    if (end_date && !dateRegex.test(end_date)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid end_date format. Use YYYY-MM-DD format"
+      });
+    }
+
+    const result = await VehicleDetailSummary.getMasukKeluarDetailByHour(simpang_id, date, start_date, end_date);
+
+    const displaySimpangId = simpang_id === 'semua' ? 'semua' : parseInt(simpang_id);
+
+    const response = {
       status: "ok",
-      simpang_id: parseInt(simpang_id),
-      date: date,
+      simpang_id: displaySimpangId,
       slots: result
-    });
+    };
+
+    if (date) {
+      response.date = date;
+    } else {
+      response.start_date = start_date;
+      response.end_date = end_date;
+    }
+
+    res.json(response);
   } catch (error) {
     console.error("Error getting detail summary by hour:", error);
     res.status(500).json({
