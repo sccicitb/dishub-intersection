@@ -12,13 +12,10 @@ const app = express();
 var corsOptions = {
   origin: [
     "http://localhost:3000",
-    "http://127.0.0.1:3000",
     "http://localhost:3001",
-    "http://localhost:3004",
-    "http://63.250.52.19:9091",  
-    "http://63.250.52.19:6060",  // sementara untuk demo
+    "http://159.195.84.107:9091",
     "https://dishub-dashboard-v2.layanancerdas.id",
-    process.env.CORS_ORIGIN
+     process.env.CORS_ORIGIN
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: [
