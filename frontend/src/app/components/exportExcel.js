@@ -211,28 +211,28 @@ export const exportVehicleDataToExcel = async (vehicleData, fileName, classifica
     }
 
     // Menambahkan baris pemisah setelah periode "Siang" (index 2)
-    if (periodIndex === 2) {
-      const dividerRow = Array(12).fill('');
-      dividerRow[0] = 'Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)';
+    // if (periodIndex === 2) {
+    //   const dividerRow = Array(12).fill('');
+    //   dividerRow[0] = 'Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)';
 
-      const excelRow = worksheet.getRow(rowIndex + 1);
-      dividerRow.forEach((cell, colIdx) => {
-        const excelCell = excelRow.getCell(colIdx + 1);
-        excelCell.value = cell;
-        excelCell.font = { bold: true };
-        excelCell.alignment = { horizontal: 'center' };
-        excelCell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FFD3D3D3' }
-        };
-      });
+    //   const excelRow = worksheet.getRow(rowIndex + 1);
+    //   dividerRow.forEach((cell, colIdx) => {
+    //     const excelCell = excelRow.getCell(colIdx + 1);
+    //     excelCell.value = cell;
+    //     excelCell.font = { bold: true };
+    //     excelCell.alignment = { horizontal: 'center' };
+    //     excelCell.fill = {
+    //       type: 'pattern',
+    //       pattern: 'solid',
+    //       fgColor: { argb: 'FFD3D3D3' }
+    //     };
+    //   });
 
-      // Menambahkan merger untuk baris pemisah
-      worksheet.mergeCells(rowIndex + 1, 1, rowIndex + 1, 13);
+    //   // Menambahkan merger untuk baris pemisah
+    //   worksheet.mergeCells(rowIndex + 1, 1, rowIndex + 1, 13);
 
-      rowIndex++;
-    }
+    //   rowIndex++;
+    // }
   });
 
   // Apply merges for headers

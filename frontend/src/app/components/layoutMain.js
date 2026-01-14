@@ -44,10 +44,9 @@ const Layout = ({ children }) => {
     const roleBasedMenus = {
       '/manajemen-user': ['admin'],
       '/manajemen-kamera': ['admin'],
-      "/survei-simpang": ['admin', 'operator'],
-      "/survei-pergerakan": ['admin', 'operator'],
-      "/survei-proporsi": ['admin', 'operator'],
-      "/survei-lhrk": ['admin', 'operator'],
+      "/variasi-lalu-lintas": ['admin', 'operator'],
+      "/pencacahan-lalu-lintas": ['admin', 'operator'],
+      "/komposisi-lalu-lintas": ['admin', 'operator'],
       "/form-sa-i": ['admin', 'operator'],
       "/form-sa-ii": ['admin', 'operator'],
       "/form-sa-iii": ['admin', 'operator'],

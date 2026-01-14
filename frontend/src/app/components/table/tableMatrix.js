@@ -261,12 +261,13 @@ const TableMatrix = ({
         <div className="overflow-x-auto">
           <table className="table table-auto w-full text-center text-sm">
             <thead>
-              <tr className="bg-gradient-to-r from-blue-50 
+              <tr className="bg-gradient-to-r from-blue-50
               to-blue-100 border-b-2 border-blue-200">
                 <th className="p-3 font-semibold text-gray-700 text-left">dari → ke</th>
                 {categories.map((c) => (
                   <th key={c} className="p-3 font-semibold text-gray-700 capitalize">{c}</th>
                 ))}
+                <th className="p-3 font-semibold text-gray-700">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -280,6 +281,11 @@ const TableMatrix = ({
                       </span>
                     </td>
                   ))}
+                  <td className="border border-gray-200 p-3 text-gray-600">
+                    <span className="inline-block bg-blue-100 px-2 py-1 rounded text-blue-800 font-medium">
+                      {asalTujuan[from]['Total'] ?? '-'}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from "@/app/context/authContext";
 // import monthlyData from '@/data/DataTableDaysMonth.json';
 import { ExportDayButton } from '@/app/components/exportExcel';
+import { formatNumber } from '@/utils/numberFormat';
 
 const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEndDate, selectedYear: parentSelectedYear, selectedMonth: parentSelectedMonth, setSelectedMonth: setParentSelectedMonth,
   setSelectedYear: setParentSelectedYear, type, exportExcel = false
@@ -214,17 +215,17 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
         <tr key={`day-${index}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
           <td className="border border-base-300 text-sm text-center">{getWeekAndDayInfo(day.date)}</td>
           <td className="border border-base-300 text-sm text-center">{formatDateNoDays(day.date)}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.sm || 0 : day?.sm || 0}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.mp || 0 : day?.mp || 0}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.aup || 0 : day?.aup || 0}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.tr || 0 : day?.tr || 0}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.bs || 0 : day?.bs || 0}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.ts || 0 : day?.ts || 0}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.bb || 0 : day?.bb || 0}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.tb || 0 : day?.tb || 0}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.gandengSemitrailer || 0 : day?.gandengSemitrailer || 0}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.ktb || 0 : day?.ktb || 0}</td>
-          <td className="border border-base-300 text-sm text-center">{type === "dailyMonth" ? day?.data?.total || 0 : day?.total || 0}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.sm || 0 : day?.sm || 0)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.mp || 0 : day?.mp || 0)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.aup || 0 : day?.aup || 0)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.tr || 0 : day?.tr || 0)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.bs || 0 : day?.bs || 0)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.ts || 0 : day?.ts || 0)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.bb || 0 : day?.bb || 0)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.tb || 0 : day?.tb || 0)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.gandengSemitrailer || 0 : day?.gandengSemitrailer || 0)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.ktb || 0 : day?.ktb || 0)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.total || 0 : day?.total || 0)}</td>
         </tr>
       )
     });
@@ -346,7 +347,7 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
                 <td className="border border-base-300 text-sm text-center" colSpan={2}>LHR</td>
                 {Object.entries(calculateDailyAverage()).map(([key, value], idx) => (
                   <td key={idx} className="border border-base-300 text-sm text-center">
-                    {value}
+                    {formatNumber(value)}
                   </td>
                 ))}
               </tr>

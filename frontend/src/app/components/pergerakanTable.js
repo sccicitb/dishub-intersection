@@ -81,18 +81,18 @@ const DirectionTable = ({ vehicleData, classification, activePergerakan, activeP
         rowCount++;
       });
 
-      if (periodIndex === 2) {
-        rows.push(
-          <tr key={`divider-${periodIndex}`}>
-            <td
-              colSpan={22}
-              className="border border-base-300 font-semibold px-2 py-1 text-xs text-center bg-base-200"
-            >
-              Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
-            </td>
-          </tr>
-        );
-      }
+      // if (periodIndex === 2) {
+      //   rows.push(
+      //     <tr key={`divider-${periodIndex}`}>
+      //       <td
+      //         colSpan={22}
+      //         className="border border-base-300 font-semibold px-2 py-1 text-xs text-center bg-base-200"
+      //       >
+      //         Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
+      //       </td>
+      //     </tr>
+      //   );
+      // }
     });
 
     return rows.length > 0 ? rows : (

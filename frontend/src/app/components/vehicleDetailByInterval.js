@@ -3,9 +3,12 @@
 import React from 'react';
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { getRequest } from '@/lib/apiService';
-import { exportVehicleDetailByInterval } from '@/utils/exportVehicleDetailByInterval';
+import { useAuth } from "@/app/context/authContext";
 
 const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName }, ref) => {
+  const { userRoles } = useAuth();
+  const isOperator = userRoles.includes('operator');
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -175,7 +178,7 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
               value={interval}
               onChange={handleIntervalChange}
               className="select select-bordered select-sm w-full"
-              disabled={loading}
+              disabled={loading || isOperator}
             >
               <option value="5min">5 Menit</option>
               <option value="10min">10 Menit</option>
