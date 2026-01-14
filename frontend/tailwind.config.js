@@ -9,6 +9,10 @@ export default {
   darkMode: "class",
   theme: {
     extend: {
+      fontFamily: {
+        ubuntu: ["var(--font-ubuntu)", "system-ui", "sans-serif"],
+        mono: ["var(--font-ubuntu-mono)", "monospace"],
+      },
         colors: {
         // 'primary': 'oklch(0.7 0.2 230)' becomes:
         'primary': '#3b82f6', 

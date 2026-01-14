@@ -1,12 +1,12 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Ubuntu, Ubuntu_Mono } from "next/font/google";
 import { headers } from "next/headers"; // Ganti dari cookies() ke headers()
 import "./globals.css";
 import LoadingBar from "@/app/components/loadingBar";
 import LayoutMain from "@/app/components/layoutMain";
 import { AuthProvider } from "@/app/context/authContext";
 import { Suspense } from "react";
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const ubuntu = Ubuntu({ weight: ["400", "500", "700"], variable: "--font-ubuntu", subsets: ["latin"] });
+const ubuntuMono = Ubuntu_Mono({ weight: ["400", "700"], variable: "--font-ubuntu-mono", subsets: ["latin"] });
 
 export const metadata = {
   title: "Dishub Viana",
@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en" data-theme="light" attribute="class">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${ubuntu.variable} ${ubuntuMono.variable} antialiased font-ubuntu`}>
         <AuthProvider>
           <LayoutMain>
             <LoadingBar />
