@@ -354,12 +354,20 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day', simpang = 'semua',
         ${simpangFilter};
     `);
     
-    // Transform single row result to array format expected by frontend
+    // Direction mapping from English to Indonesian
+    const directionMap = {
+      'east': 'timur',
+      'north': 'utara',
+      'south': 'selatan',
+      'west': 'barat'
+    };
+
+    // Transform single row result to array format expected by frontend with Indonesian directions
     const rows = [
-      { arah: 'east', total_IN: data[0].east_total_IN || 0, total_OUT: data[0].east_total_OUT || 0 },
-      { arah: 'north', total_IN: data[0].north_total_IN || 0, total_OUT: data[0].north_total_OUT || 0 },
-      { arah: 'south', total_IN: data[0].south_total_IN || 0, total_OUT: data[0].south_total_OUT || 0 },
-      { arah: 'west', total_IN: data[0].west_total_IN || 0, total_OUT: data[0].west_total_OUT || 0 }
+      { arah: directionMap['east'], total_IN: data[0].east_total_IN || 0, total_OUT: data[0].east_total_OUT || 0 },
+      { arah: directionMap['north'], total_IN: data[0].north_total_IN || 0, total_OUT: data[0].north_total_OUT || 0 },
+      { arah: directionMap['south'], total_IN: data[0].south_total_IN || 0, total_OUT: data[0].south_total_OUT || 0 },
+      { arah: directionMap['west'], total_IN: data[0].west_total_IN || 0, total_OUT: data[0].west_total_OUT || 0 }
     ];
     
     result(null, rows);
@@ -529,7 +537,17 @@ Vehicle.processMovementDirection = (asalTujuanData) => {
         }
       }
     });
-    
+
+    // Add totals per direction across all movement types
+    result['Total'] = {};
+    directions.forEach(dir => {
+      result['Total'][dir] = 0;
+      movementTypes.forEach(type => {
+        result['Total'][dir] += result[type][dir];
+      });
+    });
+    result['Total']['Total'] = directions.reduce((sum, dir) => sum + result['Total'][dir], 0);
+
     return result;
   } catch (error) {
     throw new Error(`Error processing movement direction: ${error.message}`);

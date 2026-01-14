@@ -29,7 +29,8 @@ const FaCaravan = lazy(() => import("react-icons/fa").then(mod => ({ default: mo
 
 
 export default function Home () {
-  const { isAdmin } = useAuth();
+  const { isAdmin, userRoles } = useAuth();
+  const isViewer = userRoles.includes('viewer');
   const [isClient, setIsClient] = useState(false)
   const [vehicleData, setVehicleData] = useState(null);
   const [chartData, setChartData] = useState([{
@@ -615,13 +616,13 @@ export default function Home () {
 
   const handleSimpangChange = (e) => {
     const selectedId = e.target.value;
-    
+
     // 1. Simpan ID ke state simpangFilter
     setSimpangFilter(selectedId);
-  
+
     // 2. Cari data simpang yang cocok dari list untuk mendapatkan namanya
     const selectedData = simpangList.find(item => String(item.id) === String(selectedId));
-    
+
     if (selectedData) {
       setNamaLokasi(selectedData.Nama_Simpang);
     } else {
@@ -640,138 +641,141 @@ export default function Home () {
 
       <Suspense fallback={<div>Loading Charts...</div>}>
         <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
-        <div className="w-[90%]">
-          {/* Filter buttons and Period display on same row */}
-          <div className="flex flex-wrap items-center gap-4 mb-8">
-            {/* Simpang Filter Dropdown */}
-            <select
-              value={simpangFilter}
-              onChange={handleSimpangChange}
-              className="px-3 py-1.5 rounded-md bg-base-300 border border-base-300 hover:border-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-900/90 cursor-pointer"
-            >
-              <option value="semua">Semua Simpang</option>
-              {simpangList.map((simpang) => (
-                <option key={simpang.id} value={simpang.id}>
-                  Camera {simpang.Nama_Simpang || `Lokasi`} ({simpang.id})
-                </option>
-              ))}
-            </select>
+        {(!isAdmin === !isViewer) ? (
+          <>
+            <div className="w-[90%]">
+              {/* Filter buttons and Period display on same row */}
+              <div className="flex flex-wrap items-center gap-4 mb-8">
+                {/* Simpang Filter Dropdown */}
+                <select
+                  value={simpangFilter}
+                  onChange={handleSimpangChange}
+                  className="px-3 py-1.5 rounded-md bg-base-300 border border-base-300 hover:border-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-900/90 cursor-pointer"
+                >
+                  <option value="semua">Semua Simpang</option>
+                  {simpangList.map((simpang) => (
+                    <option key={simpang.id} value={simpang.id}>
+                      Camera {simpang.Nama_Simpang || `Lokasi`} ({simpang.id})
+                    </option>
+                  ))}
+                </select>
 
-            {/* Filter buttons */}
-            <button
-              onClick={() => handleFilterChange('day')}
-              className={`px-3 py-1.5 rounded-md ${activeFilter === 'day'
-                ? 'bg-blue-950 text-white'
-                : 'bg-base-300 hover:bg-blue-200'
-                }`}
-            >
-              Hari Ini
-            </button>
-            <button
-              onClick={() => handleFilterChange('week')}
-              className={`px-3 py-1.5 rounded-md ${activeFilter === 'week'
-                ? 'bg-blue-950 text-white'
-                : 'bg-base-300 hover:bg-blue-200'
-                }`}
-            >
-              Minggu Ini
-            </button>
-            <button
-              onClick={() => handleFilterChange('month')}
-              className={`px-3 py-1.5 rounded-md ${activeFilter === 'month'
-                ? 'bg-blue-950 text-white'
-                : 'bg-base-300 hover:bg-blue-200'
-                }`}
-            >
-              Bulan Ini
-            </button>
-            <button
-              onClick={() => handleFilterChange('quarter')}
-              className={`px-3 py-1.5 rounded-md ${activeFilter === 'quarter'
-                ? 'bg-blue-950 text-white'
-                : 'bg-base-300 hover:bg-blue-200'
-                }`}
-            >
-              Quarter Ini
-            </button>
-            <button
-              onClick={() => handleFilterChange('year')}
-              className={`px-3 py-1.5 rounded-md ${activeFilter === 'year'
-                ? 'bg-blue-950 text-white'
-                : 'bg-base-300 hover:bg-blue-200'
-                }`}
-            >
-              Tahun Ini
-            </button>
+                {/* Filter buttons */}
+                <button
+                  onClick={() => handleFilterChange('day')}
+                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'day'
+                    ? 'bg-blue-950 text-white'
+                    : 'bg-base-300 hover:bg-blue-200'
+                    }`}
+                >
+                  Hari Ini
+                </button>
+                <button
+                  onClick={() => handleFilterChange('week')}
+                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'week'
+                    ? 'bg-blue-950 text-white'
+                    : 'bg-base-300 hover:bg-blue-200'
+                    }`}
+                >
+                  Minggu Ini
+                </button>
+                <button
+                  onClick={() => handleFilterChange('month')}
+                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'month'
+                    ? 'bg-blue-950 text-white'
+                    : 'bg-base-300 hover:bg-blue-200'
+                    }`}
+                >
+                  Bulan Ini
+                </button>
+                <button
+                  onClick={() => handleFilterChange('quarter')}
+                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'quarter'
+                    ? 'bg-blue-950 text-white'
+                    : 'bg-base-300 hover:bg-blue-200'
+                    }`}
+                >
+                  Quarter Ini
+                </button>
+                <button
+                  onClick={() => handleFilterChange('year')}
+                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'year'
+                    ? 'bg-blue-950 text-white'
+                    : 'bg-base-300 hover:bg-blue-200'
+                    }`}
+                >
+                  Tahun Ini
+                </button>
 
-            {/* Custom Date Range Button */}
-            <button
-              onClick={() => {
-                setActiveFilter('customrange');
-                setPeriodDisplayText('');
-              }}
-              className={`px-3 py-1.5 rounded-md ${activeFilter === 'customrange'
-                ? 'bg-blue-950 text-white'
-                : 'bg-base-300 hover:bg-blue-200'
-                }`}
-            >
-              Custom Range
-            </button>
+                {/* Custom Date Range Button */}
+                <button
+                  onClick={() => {
+                    setActiveFilter('customrange');
+                    setPeriodDisplayText('');
+                  }}
+                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'customrange'
+                    ? 'bg-blue-950 text-white'
+                    : 'bg-base-300 hover:bg-blue-200'
+                    }`}
+                >
+                  Custom Range
+                </button>
 
-            {/* Custom Date Range Inputs - Show only when custom range is selected */}
-            {activeFilter === 'customrange' && (
-              <div className="flex gap-2 items-center">
-                <input
-                  type="date"
-                  value={customRangeStart}
-                  onChange={(e) => setCustomRangeStart(e.target.value)}
-                  className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-                <span className="text-gray-500">hingga</span>
-                <input
-                  type="date"
-                  value={customRangeEnd}
-                  onChange={(e) => setCustomRangeEnd(e.target.value)}
-                  className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-            )}
-
-            {/* Period Display - appears after filter buttons */}
-            {periodDisplayText && (
-              <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap">
-                Periode: {periodDisplayText}
-              </div>
-            )}
-
-            {/* Export Excel Button */}
-            {isAdmin && (
-              <button
-                onClick={handleExportExcel}
-                disabled={exportLoading}
-                className="px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
-              >
-                {exportLoading ? (
-                  <>
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    Export Excel
-                  </>
+                {/* Custom Date Range Inputs - Show only when custom range is selected */}
+                {activeFilter === 'customrange' && (
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="date"
+                      value={customRangeStart}
+                      onChange={(e) => setCustomRangeStart(e.target.value)}
+                      className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    <span className="text-gray-500">hingga</span>
+                    <input
+                      type="date"
+                      value={customRangeEnd}
+                      onChange={(e) => setCustomRangeEnd(e.target.value)}
+                      className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                  </div>
                 )}
-              </button>
-            )}
-          </div>
 
-          {isLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="font-medium">Loading chart data...</div>
+                {/* Period Display - appears after filter buttons */}
+                {periodDisplayText && (
+                  <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap">
+                    Periode: {periodDisplayText}
+                  </div>
+                )}
+
+                {/* Export Excel Button */}
+                {isAdmin && (
+                  <button
+                    onClick={handleExportExcel}
+                    disabled={exportLoading}
+                    className="px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
+                  >
+                    {exportLoading ? (
+                      <>
+                        Exporting...
+                      </>
+                    ) : (
+                      <>
+                        Export Excel
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="font-medium">Loading chart data...</div>
+                </div>
+              ) : (
+                <TotalChart data={chartData} />
+              )}
             </div>
-          ) : (
-            <TotalChart data={chartData} />
-          )}
-        </div>
+          </>
+        ) : (<></>)}
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="font-medium">Loading chart data...</div>
@@ -809,6 +813,7 @@ export default function Home () {
           </div>
         )}
       </Suspense>
+
       {!matrixError && dataChord?.arahPergerakan && Object.keys(dataChord.arahPergerakan).length > 0 && (
         <div className="w-[90%] py-5 block bg-base-200 rounded-xl">
           <div className="w-full lg:flex overflow-x-auto place-items-center gap-4">
@@ -859,6 +864,7 @@ export default function Home () {
         </div>
         <MapComponent />
       </div>
+
     </div>
   );
 }

@@ -5,8 +5,12 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { vehicles } from '@/lib/apiAccess';
 import { cameras } from '@/lib/apiService';
 import { exportTrafficMatrixByFilter } from '@/utils/exportTrafficMatrixByFilter';
+import { useAuth } from "@/app/context/authContext";
 
 const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName }, ref) => {
+  const { userRoles } = useAuth();
+  const isOperator = userRoles.includes('operator');
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -194,11 +198,11 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
           </div>
           <div>
             <span className="text-gray-600">Interval:</span>
-            <select 
+            <select
               value={interval}
               onChange={handleIntervalChange}
               className="select select-bordered select-sm w-full"
-              disabled={loading}
+              disabled={loading || isOperator}
             >
               <option value="5min">5 Menit</option>
               <option value="10min">10 Menit</option>

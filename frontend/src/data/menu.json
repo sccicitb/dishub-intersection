@@ -5,35 +5,19 @@
     "icon": "AiFillHome"
   },
   {
-    "name": "Survei",
-    "icon": "RiRoadMapLine",
-    "children": [
-      {
-        "name": "Pencacahan Lalu Lintas",
-        "url": "/pencacahan-lalu-lintas",
-        "icon": "RiRoadMapLine"
-      },
-      {
-        "name": "Komposisi Lalu Lintas",
-        "url": "/komposisi-lalu-lintas",
-        "icon": "FaChartPie"
-      },
-      {
-        "name": "Variasi Lalu Lintas",
-        "url": "/variasi-lalu-lintas",
-        "icon": "RiDatabaseLine"
-      }
-    ]
+    "name": "Pencacahan Lalu Lintas",
+    "url": "/pencacahan-lalu-lintas",
+    "icon": "RiRoadMapLine"
   },
   {
-    "name": "Manajemen Kamera",
-    "url": "/manajemen-kamera",
-    "icon": "RiCamera3Line"
+    "name": "Komposisi Lalu Lintas",
+    "url": "/komposisi-lalu-lintas",
+    "icon": "FaChartPie"
   },
   {
-    "name": "Manajemen Pengguna",
-    "url": "/manajemen-user",
-    "icon": "FaShieldAlt"
+    "name": "Variasi Lalu Lintas",
+    "url": "/variasi-lalu-lintas",
+    "icon": "RiDatabaseLine"
   },
   {
     "name": "Kinerja Simpang",
@@ -65,5 +49,15 @@
         "icon": "RiProgress6Line"
       }
     ]
+  },
+  {
+    "name": "Manajemen Kamera",
+    "url": "/manajemen-kamera",
+    "icon": "RiCamera3Line"
+  },
+  {
+    "name": "Manajemen Pengguna",
+    "url": "/manajemen-user",
+    "icon": "FaShieldAlt"
   }
 ]

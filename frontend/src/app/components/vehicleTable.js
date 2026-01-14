@@ -112,7 +112,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
               >
                 Submit
               </button>
-              <ExportButton vehicleData={vehicleData} fileName='Data_Kendaraan_perjam' classification={activeClassification} />
+              {isAdmin && <ExportButton vehicleData={vehicleData} fileName='Data_Kendaraan_perjam' classification={activeClassification} />}
             </div>
           )}
           {activeTab === 'monthly' && (
@@ -202,7 +202,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
               >
                 Submit
               </button>
-              <ExportDayButton dailyData={vehicleData} fileName={activeTab === 'dailyRange' ? "Data-Harian-Rentang" : "Data-Harian-Bulan"} type={activeTab} />
+              {isAdmin && <ExportDayButton dailyData={vehicleData} fileName={activeTab === 'dailyRange' ? "Data-Harian-Rentang" : "Data-Harian-Bulan"} type={activeTab} />}
             </div>
           )}
           {activeTab === 'yearly' && (
@@ -213,7 +213,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
               >
                 Submit
               </button>
-              <ExportYearButton yearlyData={vehicleData} fileName="Data-Tahunan" />
+              {isAdmin && <ExportYearButton yearlyData={vehicleData} fileName="Data-Tahunan" />}
             </div>
           )}
         </div>
