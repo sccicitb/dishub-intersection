@@ -520,25 +520,25 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 </th>
               ) : null}
               <th
-                colSpan={2}
+                colSpan={1}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Waktu
               </th>
               <th
-                colSpan={7}
+                colSpan={9}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Kendaraan Bermotor (Lih. kend/jam)
               </th>
               <th
-                colSpan={2}
+                rowSpan={3}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
-                Kend. Tak Bermotor
+                KTB
               </th>
               <th
                 rowSpan={3}
@@ -590,13 +590,6 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TB
-              </th>
-              <th
-                rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                KTB
               </th>
             </tr>
             <tr className={pdf ? '' : "bg-base-300"}>
@@ -678,11 +671,11 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 Kendaraan Bermotor (Lih. kend/jam)
               </th>
               <th
-                colSpan={1}
+                rowSpan={3}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
-                Kend. Tak Bermotor
+                KTB
               </th>
             </tr>
             <tr className={pdf ? '' : "bg-base-300"}>
@@ -713,13 +706,6 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 KS
-              </th>
-              <th
-                rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                KTB
               </th>
             </tr>
             <tr className={pdf ? '' : "bg-base-300"}>
@@ -800,18 +786,18 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 Waktu
               </th>
               <th
-                colSpan={8}
+                colSpan={9}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Kendaraan Bermotor (Lih. kend/jam)
               </th>
               <th
-                colSpan={2}
+                rowSpan={3}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
-                Kend. Tak Bermotor
+                KTB
               </th>
             </tr>
             <tr className={pdf ? '' : "bg-base-300"}>
@@ -849,13 +835,6 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Truk
-              </th>
-              <th
-                rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                KTB
               </th>
             </tr>
             <tr className={pdf ? '' : "bg-base-300"}>
