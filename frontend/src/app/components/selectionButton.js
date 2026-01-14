@@ -81,7 +81,7 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
   const classificationOptions = ['PKJI 2023 Luar Kota', 'PKJI 2023 Dalam Kota', 'Tipikal'];
 
   return (
-    <div className="mx-auto space-y-1 w-full h-fit lg:w-[90%]">
+    <div className="mx-auto space-y-1 w-full h-fit lg:w-[100%]">
       {/* <div className="space-y-1">
         <h3 className="text-[14px] font-medium">Pilih Surveyor</h3>
         <div className="join w-full gap-5 flex overflow-x-auto p-2">

@@ -170,10 +170,10 @@ exports.getCameraStatusLogsByCameraId = async (req, res) => {
     }
 
     const query = `
-      SELECT id, status, CONVERT_TZ(recorded_at, '+00:00', '+07:00') as recorded_at 
+      SELECT id, status, recorded_at 
       FROM camera_status_logs 
       WHERE camera_id = ? 
-        AND DATE(CONVERT_TZ(recorded_at, '+00:00', '+07:00')) = ?
+        AND DATE(recorded_at) = ?
       ORDER BY recorded_at ASC
     `;
     
@@ -183,8 +183,16 @@ exports.getCameraStatusLogsByCameraId = async (req, res) => {
     let lastLogTime = null;
     
     rows.forEach((log) => {
-      const time = log.recorded_at.toISOString().split('T')[1].substring(0, 8);
-      const recordedAtFormatted = log.recorded_at.toISOString().slice(0, 19).replace('T', ' ');
+      // Format waktu langsung dari database (sudah waktu Jakarta)
+      const year = log.recorded_at.getFullYear();
+      const month = String(log.recorded_at.getMonth() + 1).padStart(2, '0');
+      const day = String(log.recorded_at.getDate()).padStart(2, '0');
+      const hours = String(log.recorded_at.getHours()).padStart(2, '0');
+      const minutes = String(log.recorded_at.getMinutes()).padStart(2, '0');
+      const seconds = String(log.recorded_at.getSeconds()).padStart(2, '0');
+      
+      const time = `${hours}:${minutes}:${seconds}`;
+      const recordedAtFormatted = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       
       logMap[time] = {
         id: log.id,
@@ -195,50 +203,92 @@ exports.getCameraStatusLogsByCameraId = async (req, res) => {
       lastLogTime = time;
     });
 
+    // Query untuk mengambil data kendaraan yang ada (grouping per 5 menit)
+    const startDateTime = `${filterDate} 00:00:00`;
+    const endDateTime = `${filterDate} 23:59:59`;
+    
     const [arusRows] = await db.execute(
-      `SELECT DISTINCT HOUR(waktu) as jam, MINUTE(waktu) as menit 
-       FROM arus WHERE ID_Simpang = ? AND DATE(waktu) = ? ORDER BY jam ASC, menit ASC`,
-      [simpangId, filterDate]
+      `SELECT 
+        HOUR(waktu) as jam, 
+        FLOOR(MINUTE(waktu) / 5) * 5 as menit_interval,
+        COUNT(*) as total
+       FROM arus 
+       WHERE ID_Simpang = ? 
+         AND waktu BETWEEN ? AND ?
+       GROUP BY HOUR(waktu), FLOOR(MINUTE(waktu) / 5)
+       ORDER BY jam ASC, menit_interval ASC`,
+      [simpangId, startDateTime, endDateTime]
     );
     
     const timeSlotsWithArusData = new Set();
     arusRows.forEach(row => {
-      timeSlotsWithArusData.add(`${String(row.jam).padStart(2, '0')}:${String(row.menit).padStart(2, '0')}:00`);
+      const timeStr = `${String(row.jam).padStart(2, '0')}:${String(row.menit_interval).padStart(2, '0')}:00`;
+      timeSlotsWithArusData.add(timeStr);
     });
         
     const timeline = [];
-    let lastKnownStatus = null;
-    let lastRecordedAt = null;
-    let firstLogEncountered = false;
+    
+    // Hitung waktu sekarang dalam menit untuk perbandingan
+    const now = new Date();
+    const jakartaNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+    const currentTimeInMinutes = jakartaNow.getHours() * 60 + jakartaNow.getMinutes();
 
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 5) {
         const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+        const slotTimeInMinutes = hour * 60 + minute;
+        
+        // Cek apakah interval ini sudah lewat atau belum terjadi
+        const isFutureTime = isToday && slotTimeInMinutes > currentTimeInMinutes;
+        
+        // Cek apakah ada data kendaraan di interval ini
+        const hasArusData = timeSlotsWithArusData.has(timeStr);
         
         if (logMap[timeStr]) {
           const logData = logMap[timeStr];
-          lastKnownStatus = logData.status;
-          lastRecordedAt = logData.recorded_at;
-          firstLogEncountered = true;
           
-          timeline.push({
-            time: timeStr, status: logData.status,
-            status_label: logData.status_label, recorded_at: logData.recorded_at
-          });
-        } else {
-          if (isToday && lastLogTime && timeStr > lastLogTime) {
-            timeline.push({ time: timeStr, status: null, status_label: null, recorded_at: null });
-          } else if (timeSlotsWithArusData.has(timeStr)) {
+          // Jika ada data kendaraan, status pasti aktif (override apapun status log)
+          if (hasArusData) {
             timeline.push({
-              time: timeStr, status: 1,
-              status_label: 'aktif (dari arus)', recorded_at: null
+              time: timeStr, 
+              status: 1,
+              status_label: 'aktif (ada data kendaraan)', 
+              recorded_at: logData.recorded_at
             });
-            lastKnownStatus = 1;
-          } else if (lastKnownStatus !== null) {
+          } else {
+            // Tidak ada data kendaraan, gunakan status dari log
             timeline.push({
-              time: timeStr, status: lastKnownStatus,
-              status_label: lastKnownStatus === 1 ? 'aktif' : 'tidak aktif',
-              recorded_at: lastRecordedAt
+              time: timeStr, 
+              status: logData.status,
+              status_label: logData.status_label, 
+              recorded_at: logData.recorded_at
+            });
+          }
+        } else {
+          // Tidak ada log di interval ini
+          if (hasArusData) {
+            // Ada data kendaraan tapi tidak ada log, berarti aktif
+            timeline.push({
+              time: timeStr, 
+              status: 1,
+              status_label: 'aktif (ada data kendaraan)', 
+              recorded_at: null
+            });
+          } else if (isFutureTime) {
+            // Interval waktu yang belum terjadi
+            timeline.push({ 
+              time: timeStr, 
+              status: null, 
+              status_label: null, 
+              recorded_at: null 
+            });
+          } else {
+            // Interval sudah lewat, tidak ada log dan tidak ada data kendaraan = tidak aktif
+            timeline.push({ 
+              time: timeStr, 
+              status: 0, 
+              status_label: 'tidak aktif', 
+              recorded_at: null 
             });
           }
         }
@@ -246,8 +296,13 @@ exports.getCameraStatusLogsByCameraId = async (req, res) => {
     }
 
     return res.status(200).json({ 
-      camera_id: cameraId, simpang_id: simpangId, filter_date: filterDate,
-      is_today: isToday, total_logs: rows.length, timeline_5min: timeline
+      camera_id: cameraId, 
+      simpang_id: simpangId, 
+      filter_date: filterDate,
+      is_today: isToday, 
+      total_logs: rows.length,
+      total_arus_intervals: timeSlotsWithArusData.size,
+      timeline_5min: timeline
     });
   } catch (err) {
     console.error(err);
