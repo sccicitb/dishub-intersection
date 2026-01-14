@@ -179,7 +179,7 @@ const ManajemenKamera = () => {
     hambatan_samping: "",
     cuaca: "",
     lebar_jalur: 0,
-    jumlah_lajur: 0,
+    jumlah_lajur: 1,
     median: "",
     belok_kiri_jalan_terus: "",
     metode_survei: "",
@@ -189,6 +189,7 @@ const ManajemenKamera = () => {
   const [statusDialogCameras, setStatusDialogCameras] = useState(false)
   const [mergedCameraData, setMergedCameraData] = useState([]);
   const [videoStream, setVideoStream] = useState({})
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
   useEffect(() => {
     console.log(isAdmin, isEditor)
@@ -197,6 +198,7 @@ const ManajemenKamera = () => {
 
   //# Fetch GET Camera (Maps)
   const fetchMaps = async () => {
+    setIsLoadingData(true);
     try {
       const res = await maps.getAllSimpang();
       // const location = res.data.buildings;
@@ -207,10 +209,13 @@ const ManajemenKamera = () => {
     } catch (err) {
       console.error("Failed to fetch location:", err);
       toast.error("Gagal mengambil data lokasi kamera!", { position: 'top-right' });
+    } finally {
+      setIsLoadingData(false);
     }
   };
 
   const fetchCameras = async () => {
+    setIsLoadingData(true);
     try {
       const res = await cameras.getAll();
       // console.log(res.data.cameras)
@@ -229,6 +234,8 @@ const ManajemenKamera = () => {
         toast.error("Terjadi kesalahan saat menghubungi API kamera.", { position: 'top-right' });
       }
       console.error("Failed to fetch cameras:", err);
+    } finally {
+      setIsLoadingData(false);
     }
   };
 
@@ -292,9 +299,6 @@ const ManajemenKamera = () => {
         toast.success("Lokasi Kamera berhasil ditambahkan!!", {
           position: 'top-right'
         });
-
-        // Refresh data setelah berhasil
-        await fetchMaps();
       } else {
         toast.error("Data tidak berhasil ditambahkan, silakan coba lagi!", {
           position: 'top-right'
@@ -303,6 +307,7 @@ const ManajemenKamera = () => {
     } catch (err) {
       console.error("Gagal menambahkan Lokasi Kamera:", err);
       toast.error("Gagal menambahkan Lokasi Kamera!", { position: 'top-right' });
+      throw err;
     }
   };
 
@@ -326,9 +331,6 @@ const ManajemenKamera = () => {
         toast.success("Kamera berhasil ditambahkan!!", {
           position: 'top-right'
         });
-
-        // Refresh data setelah berhasil
-        await fetchMaps();
       } else {
         toast.error("Data tidak berhasil ditambahkan, silakan coba lagi!", {
           position: 'top-right'
@@ -337,6 +339,7 @@ const ManajemenKamera = () => {
     } catch (err) {
       console.error("Gagal menambahkan kamera:", err);
       toast.error("Gagal menambahkan kamera!", { position: 'top-right' });
+      throw err;
     }
   };
 
@@ -360,10 +363,6 @@ const ManajemenKamera = () => {
         toast.success("Kamera berhasil diperbaharui!!", {
           position: 'top-right'
         });
-
-        // Refresh data setelah berhasil
-        await fetchMaps();
-        await fetchCameras();
       } else {
         toast.error("Data tidak berhasil diperbaharui, silakan coba lagi!", {
           position: 'top-right'
@@ -372,6 +371,7 @@ const ManajemenKamera = () => {
     } catch (err) {
       console.error("Gagal memperbaharui kamera:", err);
       toast.error("Gagal memperbaharui kamera!", { position: 'top-right' });
+      throw err;
     }
   };
 
@@ -410,9 +410,6 @@ const ManajemenKamera = () => {
         toast.success("Maps berhasil diperbaharui!!", {
           position: 'top-right'
         });
-
-        // Refresh data setelah berhasil
-        await fetchMaps();
       } else {
         toast.error("Data tidak berhasil diperbaharui, silakan coba lagi!", {
           position: 'top-right'
@@ -421,6 +418,7 @@ const ManajemenKamera = () => {
     } catch (err) {
       console.error("Gagal memperbaharui Maps:", err);
       toast.error("Gagal memperbaharui Maps!", { position: 'top-right' });
+      throw err;
     }
   };
 
@@ -644,6 +642,36 @@ const ManajemenKamera = () => {
     fetchCalendar(currentPage, itemsPerPage);
   }, [currentPage, itemsPerPage]);
 
+  // Update form ketika dataMapsID berubah (setelah fetchMapsById)
+  useEffect(() => {
+    if (dataMapsID && Object.keys(dataMapsID).length > 0 && actionDialog === "edit_maps") {
+      setFormMaps({
+        id: dataMapsID.id || 0,
+        category: dataMapsID.kategori || "",
+        model_detection: dataMapsID.Status_Non_Aktif || false,
+        name: dataMapsID.Nama_Simpang || "",
+        location: {
+          latitude: dataMapsID.latitude || "",
+          longitude: dataMapsID.longitude || ""
+        },
+        socket_event: dataMapsID.socket_event || "",
+        kota: dataMapsID.Kota || "Jogja",
+        ukuran_kota: dataMapsID.Ukuran_Kota || "",
+        tanggal: dataMapsID?.Tanggal?.split("T")[0] || "",
+        periode: dataMapsID.Periode || "",
+        ditangani_oleh: dataMapsID.Ditangani_Oleh || "",
+        kecamatan: dataMapsID.Kecamatan || "",
+        hambatan_samping: dataMapsID.Hambatan_Samping || "",
+        cuaca: dataMapsID.Cuaca || "",
+        lebar_jalur: dataMapsID.Lebar_Jalur || 0,
+        jumlah_lajur: dataMapsID.Jumlah_Lajur > 0 ? dataMapsID.Jumlah_Lajur : 1,
+        median: dataMapsID.Median || "",
+        belok_kiri_jalan_terus: dataMapsID.Belok_Kiri_Jalan_Terus || "",
+        metode_survei: dataMapsID.Metode_Survei || "",
+      });
+    }
+  }, [dataMapsID, actionDialog]);
+
   const handleToggle = (id, data, checked) => {
     if (!id) return console.warn("id tidak tersedia");
 
@@ -734,19 +762,43 @@ const ManajemenKamera = () => {
   };
 
   const handleAddNewCamera = () => {
+    // Hitung total kamera yang ada
+    const totalCameras = dataCameras.length;
+    
+    // Cek apakah sudah mencapai maksimal 4 kamera
+    if (totalCameras >= 4) {
+      toast.error("Maksimal 4 kamera telah tercapai. Anda tidak dapat menambahkan kamera lagi karena pembatasan sistem.", {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+      return;
+    }
+    
     setActionDialog("create_cameras")
     setStatusDialogCameras(false)
     setShowDialog(true);
   };
 
   const handleAddNewMaps = () => {
+    // Hitung total lokasi/maps yang ada
+    const totalMaps = dataSimpang.length;
+    
+    // Cek apakah sudah mencapai maksimal 4 lokasi
+    if (totalMaps >= 4) {
+      toast.error("Maksimal 4 lokasi telah tercapai. Anda tidak dapat menambahkan lokasi lagi karena pembatasan sistem.", {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+      return;
+    }
+    
     setActionDialog("create_maps")
     setStatusDialogCameras(true)
     setShowDialog(true);
   };
 
 
-  const handleSelectCameras = (id, select, data) => {
+  const handleSelectCameras = async (id, select, data) => {
     console.log(data)
     if (!select) return console.error("select tidak diketahui")
     setActionDialog(select)
@@ -771,36 +823,13 @@ const ManajemenKamera = () => {
     } else if (select === "delete_maps") {
       deleteMaps(id)
     } else if (select === "edit_maps") {
-      fetchMapsById(id)
-      console.log(data)
-      setFormMaps({
-        id: id,
-        category: dataMapsID.kategori || data.category || "",
-        model_detection: dataMapsID.model_detection || data.model_detection || false,
-        name: dataMapsID.name || data.Nama_Simpang || "",
-        location: {
-          latitude: dataMapsID.latitude || data.location || "",
-          longitude: dataMapsID.longitude || data.location || ""
-        },
-        socket_event: dataMapsID.socket_event || data.socket_event,
-        kategori: dataMapsID.category || data.category,
-        kota: dataMapsID.Kota || data.kota || "Jogja",
-        ukuran_kota: dataMapsID.Ukuran_Kota || data.ukuran_kota,
-        tanggal: dataMapsID?.Tanggal?.split("T")[0] || data.tanggal,
-        periode: dataMapsID.Periode || data.Periode,
-        ditangani_oleh: dataMapsID.Ditangani_Oleh || data.ditangani_oleh,
-        kecamatan: dataMapsID.Kecamatan || data.Kecamatan,
-        kategori: dataMapsID.kategori || data.kategori,
-        hambatan_samping: dataMapsID.Hambatan_Samping || data.hambatan_samping,
-        cuaca: dataMapsID.Cuaca || data.cuaca,
-        lebar_jalur: dataMapsID.Lebar_Jalur || data.Lebar_Jalur,
-        jumlah_lajur: dataMapsID.Jumlah_Lajur || data.Jumlah_Lajur,
-        median: dataMapsID.Median || data.Median,
-        belok_kiri_jalan_terus: dataMapsID.Belok_Kiri_Jalan_Terus || data.Belok_Kiri_Jalan_Terus,
-        metode_survei: dataMapsID.Metode_Survei || data.Metode_Survei,
-      });
+      // Fetch data terbaru dari API dan tunggu sampai selesai
+      await fetchMapsById(id);
+      
+      // Tunggu sebentar untuk memastikan state dataMapsID sudah update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       setShowDialog(true);
-
     } else {
       handleAddNewCamera()
     }
@@ -843,7 +872,7 @@ const ManajemenKamera = () => {
       hambatan_samping: "",
       cuaca: "",
       lebar_jalur: 0,
-      jumlah_lajur: 0,
+      jumlah_lajur: 1,
       median: "",
       belok_kiri_jalan_terus: "",
       metode_survei: "",
@@ -944,7 +973,9 @@ const ManajemenKamera = () => {
   };
 
   const handleSave = async () => {
+    setIsLoadingData(true);
     try {
+      // Execute create/update operation
       if (!statusDialogCameras && actionDialog === "create_cameras") {
         await createCameras(formCameras);
       }
@@ -958,12 +989,18 @@ const ManajemenKamera = () => {
         await createMaps(formMaps);
       }
 
-      // Refresh data
-      await fetchCameras();
-      await fetchMaps();
+      // Refresh data dan tunggu sampai selesai
+      await Promise.all([fetchCameras(), fetchMaps()]);
+      
+      // Delay 3 detik untuk memastikan state update selesai dan data ter-refresh
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Close dialog setelah semua selesai
       closeDialog();
     } catch (error) {
       console.error("Error saving:", error);
+    } finally {
+      setIsLoadingData(false);
     }
   };
 
@@ -985,6 +1022,7 @@ const ManajemenKamera = () => {
             onFormCamerasChange={setFormCameras}
             onSave={handleSave}
             onClose={closeDialog}
+            isLoading={isLoadingData}
           />
         )}
 
@@ -1129,155 +1167,183 @@ const ManajemenKamera = () => {
               searchValue={inputValue}
               editorStatus={isAdmin}
               addNewCamera={handleAddNewCamera}
+              cameraCount={dataCameras.length}
+              maxCameras={4}
+              mapsCount={dataSimpang.length}
+              maxMaps={4}
             >
               <div className="h-[65vh] overflow-y-auto my-2">
-                {optionCamera === "peta" ? (
+                {isLoadingData ? (
+                  <div className="flex flex-col items-center justify-center h-full space-y-4">
+                    <span className="loading loading-spinner loading-lg text-[#314385]"></span>
+                    <p className="text-gray-600 font-medium">Memuat data...</p>
+                  </div>
+                ) : optionCamera === "peta" ? (
                   <MapComponent sizeHeight={"60vh"} onClick={() => { }} onClickSimpang={() => { }} />
                 ) : optionCamera === "daftar" ? (
-                  <div className="overflow-x-auto w-full bg-base-200 mt-5">
-                    <table className="table table-sm">
-                      <thead className="bg-stone-900/90 text-white text-xs">
-                        <tr className="text-center">
-                          <th rowSpan={2}>No</th>
-                          <th rowSpan={2}>Lokasi</th>
-                          <th rowSpan={2} colSpan={2}>Kamera</th>
-                          <th rowSpan={2}>Tautan Socket</th>
-                          <th colSpan={2}>Koordinat</th>
-                          {/* <th rowSpan={2}>Thumbnail</th> */}
-                          <th rowSpan={2}>Resolution</th>
-                          <th rowSpan={2}>Status</th>
-                          {isEditor && (
-                            <th rowSpan={2}>Action</th>
-                          )}
-                        </tr>
-                        <tr>
-                          <td>Latitude</td>
-                          <td>Longitude</td>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(() => {
-                          let rowNumber = 1; // Counter untuk nomor urut
-
-                          return filteredBuildings?.flatMap((dataSimpang, i) => {
-                            const cameras = Array.isArray(dataSimpang.camera) ? dataSimpang.camera : [];
-                            console.log(dataSimpang)
-                            if (cameras.length === 0) {
-                              return (
-                                <tr key={`no-camera-${i}`} className="text-xs font-normal text-left">
-                                  <td className="text-center">{rowNumber++}</td>
-                                  <td className='cursor-pointer flex items-center gap-1'>
-                                    {isAdmin && (
-                                      <div>
-                                        <button
-                                          className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                          onClick={() => handleSelectCameras(dataSimpang.id, 'edit_maps', dataSimpang)}
-                                        >
-                                          <FaPencil className="text-green-300 text-lg" />
-                                        </button>
-                                        <button
-                                          className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                          onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
-                                        >
-                                          <FaTrashCan className="text-red-300 text-lg" />
-                                        </button>
-                                      </div>
-                                    )}
-                                    <div className='text-nowrap'>{dataSimpang.Nama_Simpang}</div>
-                                  </td>
-                                  <td colSpan={3} className='text-left text-nowrap'>Tidak ada kamera</td>
-                                  <td className='max-w-5 truncate'>{dataSimpang?.latitude || '-'}</td>
-                                  <td className='max-w-5 truncate'>{dataSimpang?.longitude || '-'}</td>
-                                  <td className='text-center'>-</td>
-                                  <td className='text-center'>-</td>
-                                  {isEditor && (
-                                    <td className='flex justify-center gap-1'>
+                  <div className="space-y-6 mt-5">
+                    {/* Tabel Daftar Lokasi/Simpang */}
+                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                      <div className="bg-stone-800 px-4 py-3">
+                        <h3 className="text-white font-semibold text-sm">Daftar Lokasi Simpang</h3>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="table table-sm w-full">
+                          <thead className="bg-stone-800 text-white text-xs">
+                            <tr className="text-center">
+                              <th className="w-12">No</th>
+                              <th className="text-left">Nama Lokasi</th>
+                              <th>Latitude</th>
+                              <th>Longitude</th>
+                              <th>Kategori</th>
+                              {isAdmin && <th className="w-24">Aksi</th>}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredBuildings?.map((dataSimpang, i) => (
+                              <tr key={`simpang-${i}`} className="text-xs hover:bg-base-200">
+                                <td className="text-center">{i + 1}</td>
+                                <td className="font-medium text-left">{dataSimpang.Nama_Simpang}</td>
+                                <td className="text-center">{dataSimpang?.latitude || '-'}</td>
+                                <td className="text-center">{dataSimpang?.longitude || '-'}</td>
+                                <td className="text-center capitalize">
+                                  <span className="badge badge-sm badge-outline">{dataSimpang?.kategori || '-'}</span>
+                                </td>
+                                {isAdmin && (
+                                  <td className="text-center">
+                                    <div className="flex gap-2 justify-center">
                                       <button
-                                        className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                        onClick={() => { }}
-                                      >
-                                        <FaPencil className="text-green-300 text-lg" />
-                                      </button>
-                                      {isAdmin && (
-                                        <button
-                                          className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                          onClick={() => handleSelectCameras(dataSimpang.id, 'delete_cameras')}
-                                        >
-                                          <FaTrashCan className="text-red-300 text-lg" />
-                                        </button>
-                                      )}
-                                    </td>
-                                  )}
-                                </tr>
-                              );
-                            }
-
-                            return cameras.map((cam, j) => (
-                              <tr key={`cam-${i}-${j}`} className="text-xs font-normal text-left items-center">
-                                <td className="text-center">{rowNumber++}</td>
-                                <td className='cursor-pointer flex items-center gap-1'>
-                                  {isAdmin && (
-                                    <div className='flex items-center gap-1'>
-                                      <button
-                                        className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                        className="btn btn-xs btn-ghost text-green-600 hover:bg-green-50"
                                         onClick={() => handleSelectCameras(dataSimpang.id, 'edit_maps', dataSimpang)}
+                                        title="Edit Lokasi"
                                       >
-                                        <FaPencil className="text-green-300 text-lg" />
+                                        <FaPencil />
                                       </button>
                                       <button
-                                        className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
+                                        className="btn btn-xs btn-ghost text-red-600 hover:bg-red-50"
                                         onClick={() => handleSelectCameras(dataSimpang.id, 'delete_maps')}
+                                        title="Hapus Lokasi"
                                       >
-                                        <FaTrashCan className="text-red-300 text-lg" />
+                                        <FaTrashCan />
                                       </button>
-                                    </div>
-                                  )}
-                                  <div className='text-nowrap'>{dataSimpang.Nama_Simpang}</div>
-                                </td>
-                                <td colSpan={2} className='text-nowrap'>{cam.name}</td>
-                                <td>{cam.socket_event || '-'}</td>
-                                <td className='max-w-5 truncate'>{dataSimpang?.latitude || '-'}</td>
-                                <td className='max-w-5 truncate'>{dataSimpang?.longitude || '-'}</td>
-                                <td className="text-center">{cam.resolution || '-'}</td>
-                                <td>
-                                  <input
-                                    type="checkbox"
-                                    className={`toggle ${cam.status ? 'checked:toggle-success' : 'toggle-error'} toggle-sm`}
-                                    checked={cam.status}
-                                    onChange={(e) => handleToggle(cam.id, cam, e.target.checked)}
-                                  />
-                                </td>
-                                {isEditor && (
-                                  <td>
-                                    <div className="flex gap-1 justify-center">
-                                      <button
-                                        className="p-1 hover:bg-transparent focus:outline-none cursor-pointer"
-                                        onClick={() => handleSelectCameras(cam.id, 'edit_cameras', cam)}
-                                      >
-                                        <FaPencil className="text-green-300 text-lg" />
-                                      </button>
-                                      {isAdmin && (
-
-                                        <button
-                                          className={`p-1 hover:bg-transparent focus:outline-none ${cam.socket_event === "not_yet_assign" ? "cursor-pointer" : "btn-disabled cursor-not-allowed"}`}
-                                          onClick={() => {
-                                            if (cam.socket_event !== "not_yet_assign") return;
-                                            handleSelectCameras(cam.id, 'delete_cameras');
-                                          }}
-                                        >
-                                          <FaTrashCan className="text-red-300 text-lg" />
-                                        </button>
-                                      )}
                                     </div>
                                   </td>
                                 )}
                               </tr>
-                            ));
-                          });
-                        })()}
-                      </tbody>
+                            ))}
+                            {filteredBuildings?.length === 0 && (
+                              <tr>
+                                <td colSpan={isAdmin ? 6 : 5} className="text-center py-8 text-gray-500">
+                                  Tidak ada data lokasi
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
 
-                    </table>
+                    {/* Tabel Daftar Kamera */}
+                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                      <div className="bg-stone-800 px-4 py-3">
+                        <h3 className="text-white font-semibold text-sm">Daftar Kamera</h3>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="table table-sm w-full">
+                          <thead className="bg-stone-800 text-white text-xs">
+                            <tr className="text-center">
+                              <th className="w-12">No</th>
+                              <th className="text-left">Nama Kamera</th>
+                              <th className="text-left">Lokasi</th>
+                              <th>Socket Event</th>
+                              <th>Resolution</th>
+                              <th>Status</th>
+                              {isEditor && <th className="w-24">Aksi</th>}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(() => {
+                              let rowNumber = 1;
+                              const allCameras = filteredBuildings?.flatMap((dataSimpang) => {
+                                const cameras = Array.isArray(dataSimpang.camera) ? dataSimpang.camera : [];
+                                return cameras.map(cam => ({
+                                  ...cam,
+                                  simpangName: dataSimpang.Nama_Simpang,
+                                  simpangId: dataSimpang.id
+                                }));
+                              }) || [];
+
+                              return allCameras.map((cam, idx) => (
+                                <tr key={`camera-${idx}`} className="text-xs hover:bg-base-200">
+                                  <td className="text-center">{rowNumber++}</td>
+                                  <td className="font-medium text-left">{cam.name}</td>
+                                  <td className="text-left">{cam.simpangName}</td>
+                                  <td className="text-center">
+                                    {cam.socket_event && cam.socket_event !== "not_yet_assign" ? (
+                                      <span className="badge badge-sm badge-info">{cam.socket_event}</span>
+                                    ) : (
+                                      <span className="badge badge-sm badge-ghost">URL Video</span>
+                                    )}
+                                  </td>
+                                  <td className="text-center">{cam.resolution || '-'}</td>
+                                  <td className="text-center">
+                                    <input
+                                      type="checkbox"
+                                      className={`toggle ${cam.status ? 'toggle-success' : 'toggle-error'} toggle-sm`}
+                                      checked={cam.status}
+                                      onChange={(e) => handleToggle(cam.id, cam, e.target.checked)}
+                                    />
+                                  </td>
+                                  {isEditor && (
+                                    <td className="text-center">
+                                      <div className="flex gap-2 justify-center">
+                                        <button
+                                          className="btn btn-xs btn-ghost text-green-600 hover:bg-green-50"
+                                          onClick={() => handleSelectCameras(cam.id, 'edit_cameras', cam)}
+                                          title="Edit Kamera"
+                                        >
+                                          <FaPencil />
+                                        </button>
+                                        {isAdmin && (
+                                          <button
+                                            className={`btn btn-xs btn-ghost ${cam.socket_event === "not_yet_assign" ? 'text-red-600 hover:bg-red-50' : 'btn-disabled text-gray-400'}`}
+                                            onClick={() => {
+                                              if (cam.socket_event !== "not_yet_assign") return;
+                                              handleSelectCameras(cam.id, 'delete_cameras');
+                                            }}
+                                            disabled={cam.socket_event !== "not_yet_assign"}
+                                            title={cam.socket_event !== "not_yet_assign" ? "Kamera dengan socket event tidak dapat dihapus" : "Hapus Kamera"}
+                                          >
+                                            <FaTrashCan />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </td>
+                                  )}
+                                </tr>
+                              ));
+                            })()}
+                            {(() => {
+                              const allCameras = filteredBuildings?.flatMap((dataSimpang) => {
+                                const cameras = Array.isArray(dataSimpang.camera) ? dataSimpang.camera : [];
+                                return cameras;
+                              }) || [];
+                              
+                              if (allCameras.length === 0) {
+                                return (
+                                  <tr>
+                                    <td colSpan={isEditor ? 7 : 6} className="text-center py-8 text-gray-500">
+                                      Tidak ada data kamera
+                                    </td>
+                                  </tr>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-5 w-full">

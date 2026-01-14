@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { IoIosAdd } from "react-icons/io";
 
-const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inputSearch, searchValue, editorStatus }) => {
+const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inputSearch, searchValue, editorStatus, cameraCount = 0, maxCameras = 4, mapsCount = 0, maxMaps = 4 }) => {
   const [optionSelect, setOptionSelect] = useState('peta');
   const activeOption = ["peta", "pratinjau", "daftar"]
 
@@ -17,6 +17,13 @@ const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inpu
     setOptionSelect(option);
     onOptionChange?.(option);
   };
+  
+  // Check if camera limit is reached
+  const isCameraLimitReached = cameraCount >= maxCameras;
+  
+  // Check if maps/location limit is reached
+  const isMapsLimitReached = mapsCount >= maxMaps;
+  
   return (
     <div>
       {/* <div className="form-control w-full md:w-1/4">
@@ -39,8 +46,24 @@ const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inpu
             <h3 className="text-lg font-semibold">Kamera Aktif</h3>
             {editorStatus && (
               <div className="flex flex-wrap w-full gap-2">
-                <button className="btn btn-sm rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewMaps}><IoIosAdd className="text-xl" />Tambah Maps</button>
-                <button className="btn btn-sm rounded-md bg-[#314385]/80 text-white capitalize" onClick={addNewCamera}><IoIosAdd className="text-xl" />Tambah kamera</button>
+                <button 
+                  className={`btn btn-sm rounded-md text-white capitalize ${isMapsLimitReached ? 'btn-disabled bg-gray-400 cursor-not-allowed' : 'bg-[#314385]/80'}`}
+                  onClick={addNewMaps}
+                  disabled={isMapsLimitReached}
+                  title={isMapsLimitReached ? `Maksimal ${maxMaps} lokasi telah tercapai` : ''}
+                >
+                  <IoIosAdd className="text-xl" />
+                  Tambah Maps {isMapsLimitReached && `(${mapsCount}/${maxMaps})`}
+                </button>
+                <button 
+                  className={`btn btn-sm rounded-md text-white capitalize ${isCameraLimitReached ? 'btn-disabled bg-gray-400 cursor-not-allowed' : 'bg-[#314385]/80'}`}
+                  onClick={addNewCamera}
+                  disabled={isCameraLimitReached}
+                  title={isCameraLimitReached ? `Maksimal ${maxCameras} kamera telah tercapai` : ''}
+                >
+                  <IoIosAdd className="text-xl" />
+                  Tambah kamera {isCameraLimitReached && `(${cameraCount}/${maxCameras})`}
+                </button>
                 <label className="input input-sm rounded-md bg-[#314385]/10 w-38">
                   <svg className="h-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <g
