@@ -11,6 +11,8 @@ const SelectionButtons = lazy(() => import("@/app/components/selectionButton"));
 const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const MapComponent = lazy(() => import("@/app/components/map"));
+const HeaderSurvei = lazy(() => import("@/app/components/headerLhrt"));
+
 
 function SurveiLhrkPage () {
   const [loading, setLoading] = useState(false);
@@ -24,25 +26,26 @@ function SurveiLhrkPage () {
   const [activeSimpangId, setActiveSimpangId] = useState(0)
   const [activeCamera, setActiveCamera] = useState(1);
   const [activeSID, setActiveSID] = useState();
-  const [activeTitle, setActiveTitle] = useState("Survei LHRK")
+  const [activeTitle, setActiveTitle] = useState("Survei Variasi Lalu Lintas");
   const [Cuaca, setCuaca] = useState("")
   const [fetchStatus, setFetchStatus] = useState(false)
+  const [selectedDate, setSelectedDate] = useState(new Date());  
 
   useEffect(() => {
     // Fetch simpang data first to get the ID
     const fetchSimpangData = async () => {
       try {
         const simpangRes = await maps.getAllSimpang();
-        const simpangData = Array.isArray(simpangRes?.data?.simpang) ? simpangRes.data.simpang : [];
-        
+        const simpangList = Array.isArray(simpangRes?.data?.simpang) ? simpangRes.data.simpang : [];
+
         let cuaca;
-        if (simpangData.length > 0 && simpangData[0]?.id) {
-          cuaca = await getCuacaJogja(simpangData[0].latitude, simpangData[0].longitude)
-          setActiveSID(simpangData[0].id);
+        if (simpangList.length > 0 && simpangList[0]?.id) {
+          cuaca = await getCuacaJogja(simpangList[0].latitude, simpangList[0].longitude);
+          setActiveSID(simpangList[0].id);
         }
-        
-        setCuaca(cuaca)
-        setFetchStatus(true)
+
+        setCuaca(cuaca);
+        setFetchStatus(true);
       } catch (err) {
         console.error('Error fetching simpang data:', err);
       }
@@ -68,7 +71,7 @@ function SurveiLhrkPage () {
 
   function handleClickSimpang (loc) {
 
-    
+
     // Handle "Semua Simpang" case
     if (loc && loc.simpang === "semua") {
       setActiveTitle("Survei Semua Simpang");
@@ -96,8 +99,9 @@ function SurveiLhrkPage () {
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
         <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
         <div className="w-[95%] m-auto">
-          <div className="flex max-lg:flex-col items-center place-items-center max-lg:space-y-5 py-5">
-            <SurveyInfoTable fetchStatus={fetchStatus} id={activeSID} cuaca={Cuaca} />
+             {/* <SurveyInfoTable fetchStatus={fetchStatus} id={activeSID} cuaca={Cuaca} /> */}
+          <div className="flex flex-col max-lg:flex-col items-center place-items-center max-lg:space-y-5 py-5 gap-5">
+              <HeaderSurvei simpangId={activeSID} selectedDate={selectedDate} arahPergerakan={activePergerakan} />
             <div className="w-full justify-end flex flex-col">
               <SelectionButtons vehicleData={vehicleData}
                 activeSurveyor={activeSurveyor}

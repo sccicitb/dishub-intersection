@@ -39,7 +39,10 @@ const CameraStatusTimeline = ({ cameraId, selectedDate }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!cameraId || !selectedDate) return;
+    if (!cameraId || !selectedDate) {
+      console.log('CameraStatusTimeline: Missing cameraId or selectedDate', { cameraId, selectedDate });
+      return;
+    }
 
     const fetchCameraStatus = async () => {
       setLoading(true);
@@ -47,10 +50,7 @@ const CameraStatusTimeline = ({ cameraId, selectedDate }) => {
       try {
         const response = await cameras.getStatusLog(cameraId, selectedDate);
         
-
-        
         if (response?.data) {
-
           setStatusData(response.data);
         } else {
           setStatusData({});
