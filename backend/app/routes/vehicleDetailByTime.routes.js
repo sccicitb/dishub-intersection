@@ -6,7 +6,7 @@ module.exports = (app) => {
 
   // Shorthand endpoints
   app.get("/api/vehicles/detail-by-5min", controller.getMasukKeluarDetailBy5Min);
-  app.get("/api/vehicles/detail-by-10min", controller.getMasukKeluarDetailBy10Min);
+  app.get("/api/vehicles/detail-by-15min", controller.getMasukKeluarDetailBy15Min);
   app.get("/api/vehicles/detail-by-30min", controller.getMasukKeluarDetailBy30Min);
   app.get("/api/vehicles/detail-by-hour", controller.getMasukKeluarDetailByHour);
 };

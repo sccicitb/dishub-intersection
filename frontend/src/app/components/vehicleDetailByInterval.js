@@ -6,8 +6,7 @@ import { getRequest } from '@/lib/apiService';
 import { useAuth } from "@/app/context/authContext";
 
 const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName }, ref) => {
-  const { userRoles } = useAuth();
-  const isOperator = userRoles.includes('operator');
+  const { isAdmin } = useAuth();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -46,8 +45,8 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
       let url = '';
       if (selectedInterval === '5min') {
         url = `/vehicles/detail-by-5min?simpang_id=${simpangId}&date=${dateInput}`;
-      } else if (selectedInterval === '10min') {
-        url = `/vehicles/detail-by-10min?simpang_id=${simpangId}&date=${dateInput}`;
+      } else if (selectedInterval === '15min') {
+        url = `/vehicles/detail-by-15min?simpang_id=${simpangId}&date=${dateInput}`;
       } else if (selectedInterval === '30min') {
         url = `/vehicles/detail-by-30min?simpang_id=${simpangId}&date=${dateInput}`;
       } else {
@@ -178,10 +177,10 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
               value={interval}
               onChange={handleIntervalChange}
               className="select select-bordered select-sm w-full"
-              disabled={loading || isOperator}
+              disabled={loading || !isAdmin}
             >
               <option value="5min">5 Menit</option>
-              <option value="10min">10 Menit</option>
+              <option value="15min">15 Menit</option>
               <option value="30min">30 Menit</option>
               <option value="1hour">1 Jam (Default)</option>
             </select>

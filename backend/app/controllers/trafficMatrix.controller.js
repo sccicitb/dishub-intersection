@@ -78,8 +78,8 @@ exports.getTrafficMatrixByHours = getTrafficMatrixHandler('1hour');
 // GET /api/traffic-matrix/by-5min
 exports.getTrafficMatrixBy5Min = getTrafficMatrixHandler('5min');
 
-// GET /api/traffic-matrix/by-10min
-exports.getTrafficMatrixBy10Min = getTrafficMatrixHandler('10min');
+// GET /api/traffic-matrix/by-15min
+exports.getTrafficMatrixBy15Min = getTrafficMatrixHandler('15min');
 
 // GET /api/traffic-matrix/by-30min
 exports.getTrafficMatrixBy30Min = getTrafficMatrixHandler('30min');

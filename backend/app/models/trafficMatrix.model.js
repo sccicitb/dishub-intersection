@@ -277,10 +277,10 @@ const generateTimeSlots = (interval) => {
       }
       break;
       
-    case '10min':
+    case '15min':
       for (let hour = 0; hour < 24; hour++) {
-        for (let min = 0; min < 60; min += 10) {
-          const endMin = min + 10;
+        for (let min = 0; min < 60; min += 15) {
+          const endMin = min + 15;
           const startLabel = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
           const endLabel = `${String(hour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
           slots.push({
@@ -337,7 +337,7 @@ const generateTimeSlots = (interval) => {
 TrafficMatrix.getTrafficMatrixByFilter = async (simpangId, date, interval = '1hour') => {
   try {
     // Validate interval
-    const validIntervals = ['5min', '10min', '30min', '1hour'];
+    const validIntervals = ['5min', '15min', '30min', '1hour'];
     if (!validIntervals.includes(interval)) {
       throw new Error(`Invalid interval. Supported: ${validIntervals.join(', ')}`);
     }
@@ -406,8 +406,8 @@ TrafficMatrix.getTrafficMatrixByFilter = async (simpangId, date, interval = '1ho
           // For hourly: match exact hour
           matchesSlot = rowHour === slot.startHour;
         } else {
-          // For 5/10/30 min: check if minute falls within the slot range
-          const slotEndMin = slot.startMin + (interval === '5min' ? 5 : interval === '10min' ? 10 : 30);
+          // For 5/15/30 min: check if minute falls within the slot range
+          const slotEndMin = slot.startMin + (interval === '5min' ? 5 : interval === '15min' ? 15 : 30);
           matchesSlot = rowHour === slot.startHour && rowMin >= slot.startMin && rowMin < slotEndMin;
         }
         
