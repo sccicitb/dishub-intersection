@@ -45,7 +45,7 @@ const generateTimeSlots = (interval) => {
 
   const intervalMinutes = {
     "5min": 5,
-    "10min": 10,
+    "15min": 15,
     "30min": 30,
     "1hour": 60
   };
@@ -96,7 +96,7 @@ VehicleDetailByTime.getMasukKeluarDetailByTime = async (simpangId, date, interva
     }
 
     // Validate interval
-    const validIntervals = ['5min', '10min', '30min', '1hour'];
+    const validIntervals = ['5min', '15min', '30min', '1hour'];
     if (!validIntervals.includes(interval)) {
       throw new Error(`Invalid interval. Use one of: ${validIntervals.join(', ')}`);
     }

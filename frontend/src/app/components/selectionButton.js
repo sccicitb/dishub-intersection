@@ -63,12 +63,12 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
       display: '5 Menit'
     },
     {
-      item: '10min',
-      display: '10 Menit'
-    },
-    {
       item: '15min',
       display: '15 Menit'
+    },
+    {
+      item: '30min',
+      display: '30 Menit'
     },
     {
       item: '1h',

@@ -8,8 +8,7 @@ import { exportTrafficMatrixByFilter } from '@/utils/exportTrafficMatrixByFilter
 import { useAuth } from "@/app/context/authContext";
 
 const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName }, ref) => {
-  const { userRoles } = useAuth();
-  const isOperator = userRoles.includes('operator');
+  const { isAdmin } = useAuth();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -202,10 +201,10 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
               value={interval}
               onChange={handleIntervalChange}
               className="select select-bordered select-sm w-full"
-              disabled={loading || isOperator}
+              disabled={loading || !isAdmin}
             >
               <option value="5min">5 Menit</option>
-              <option value="10min">10 Menit</option>
+              <option value="15min">15 Menit</option>
               <option value="30min">30 Menit</option>
               <option value="1hour">1 Jam (Default)</option>
             </select>
