@@ -12,7 +12,7 @@ const socket = io('https://sxe-data.layanancerdas.id', {
 });
 
 socket.on('connect', () => {
-  console.log(`✅ Connected to WebSocket. Listening to room: ${SOCKET_ROOM}`);
+  console.log(`Connected to WebSocket. Listening to room: ${SOCKET_ROOM}`);
 });
 
 socket.on(SOCKET_ROOM, async (data) => {
@@ -24,7 +24,7 @@ socket.on(SOCKET_ROOM, async (data) => {
       status: 1
     });
 
-    console.log(`✅ Status 1 sent to backend for camera ${CAMERA_ID}`);
+    console.log(`Status 1 sent to backend for camera ${CAMERA_ID}`);
   } catch (err) {
     console.error(`❌ Error posting to backend:`, err.message);
   }

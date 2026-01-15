@@ -13,7 +13,6 @@ const SaVPerformanceSummary = function(performanceSummary) {
 SaVPerformanceSummary.create = (newPerformanceSummary, result) => {
   sql.query("INSERT INTO sa_v_performance_summary SET ?", newPerformanceSummary, (err, res) => {
     if (err) {
-      console.log("error: ", err);
       result(err, null);
       return;
     }

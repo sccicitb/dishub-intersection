@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from "@/app/context/authContext";
 import dataTable from '@/data/DataTableHour.json';
 import { ExportButton } from './exportExcel';
+import { formatNumber } from '@/utils/numberFormat';
 
 const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification, customSize, pdf, isEditor, exportExcel = false }) => {
   const { isAdmin } = useAuth();
@@ -131,67 +132,67 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.sm || 0}
+              {formatNumber(slot.data.sm || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.mp || 0}
+              {formatNumber(slot.data.mp || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.aup || 0}
+              {formatNumber(slot.data.aup || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.tr || 0}
+              {formatNumber(slot.data.tr || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.bs || 0}
+              {formatNumber(slot.data.bs || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.ts || 0}
+              {formatNumber(slot.data.ts || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.bb || 0}
+              {formatNumber(slot.data.bb || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.tb || 0}
+              {formatNumber(slot.data.tb || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.gandengSemitrailer || 0}
+              {formatNumber(slot.data.gandengSemitrailer || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.ktb || 0}
+              {formatNumber(slot.data.ktb || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.total || 0}
+              {formatNumber(slot.data.total || 0)}
             </td>
           </tr>
         );
@@ -200,19 +201,19 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
       });
 
       // Add dividing row after the third period (Siang)
-      if (periodIndex === 2) {
-        rows.push(
-          <tr key={`divider-${periodIndex}`}>
-            <td
-              colSpan={15}
-              className={pdf ? '' : `border border-base-300 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
-              style={pdf ? pdfDividerStyle : {}}
-            >
-              Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
-            </td>
-          </tr>
-        );
-      }
+      // if (periodIndex === 2) {
+      //   rows.push(
+      //     <tr key={`divider-${periodIndex}`}>
+      //       <td
+      //         colSpan={15}
+      //         className={pdf ? '' : `border border-base-300 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
+      //         style={pdf ? pdfDividerStyle : {}}
+      //       >
+      //         Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
+      //       </td>
+      //     </tr>
+      //   );
+      // }
     });
 
     return rows;
@@ -272,61 +273,61 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.sm || 0}
+              {formatNumber(slot.data.sm || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.mp || 0}
+              {formatNumber(slot.data.mp || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.aup || 0}
+              {formatNumber(slot.data.aup || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.tr || 0}
+              {formatNumber(slot.data.tr || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.bs || 0}
+              {formatNumber(slot.data.bs || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.ts || 0}
+              {formatNumber(slot.data.ts || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.bb || 0}
+              {formatNumber(slot.data.bb || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.tb || 0}
+              {formatNumber(slot.data.tb || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.gandengSemitrailer || 0}
+              {formatNumber(slot.data.gandengSemitrailer || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.ktb || 0}
+              {formatNumber(slot.data.ktb || 0)}
             </td>
           </tr>
         );
@@ -335,19 +336,19 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
       });
 
       // Add dividing row after the third period (Siang)
-      if (periodIndex === 2) {
-        rows.push(
-          <tr key={`divider-${periodIndex}`}>
-            <td
-              colSpan={14}
-              className={pdf ? '' : `border border-base-300 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
-              style={pdf ? pdfDividerStyle : {}}
-            >
-              Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
-            </td>
-          </tr>
-        );
-      }
+      // if (periodIndex === 2) {
+      //   rows.push(
+      //     <tr key={`divider-${periodIndex}`}>
+      //       <td
+      //         colSpan={14}
+      //         className={pdf ? '' : `border border-base-300 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
+      //         style={pdf ? pdfDividerStyle : {}}
+      //       >
+      //         Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
+      //       </td>
+      //     </tr>
+      //   );
+      // }
     });
 
     return rows;
@@ -407,61 +408,61 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.sm || 0}
+              {formatNumber(slot.data.sm || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.mp || 0}
+              {formatNumber(slot.data.mp || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.aup || 0}
+              {formatNumber(slot.data.aup || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.tr || 0}
+              {formatNumber(slot.data.tr || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.bs || 0}
+              {formatNumber(slot.data.bs || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.bb || 0}
+              {formatNumber(slot.data.bb || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.ts || 0}
+              {formatNumber(slot.data.ts || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.tb || 0}
+              {formatNumber(slot.data.tb || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.gandengSemitrailer || 0}
+              {formatNumber(slot.data.gandengSemitrailer || 0)}
             </td>
             <td
               className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
-              {slot.data.ktb || 0}
+              {formatNumber(slot.data.ktb || 0)}
             </td>
           </tr>
         );
@@ -491,7 +492,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
   return (
     <div className="mx-auto p-4 overflow-x-auto gap-5 flex flex-col">
-      {isEditor && exportExcel && isAdmin && (
+      {exportExcel && isAdmin && (
         <div className={`w-full gap-5 flex overflow-x-auto join ${pdf ? 'hidden' : ''}`}>
           <ExportButton vehicleData={vehicleData} fileName='Data_Kendaraan_perjam' classification={classification} />
         </div>
@@ -520,25 +521,25 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 </th>
               ) : null}
               <th
-                colSpan={2}
+                colSpan={1}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Waktu
               </th>
               <th
-                colSpan={7}
+                colSpan={9}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Kendaraan Bermotor (Lih. kend/jam)
               </th>
               <th
-                colSpan={2}
+                rowSpan={3}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
-                Kend. Tak Bermotor
+                KTB
               </th>
               <th
                 rowSpan={3}
@@ -571,18 +572,11 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 MP
               </th>
               <th
-                rowSpan={2}
+                colSpan={2}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
-                BS
-              </th>
-              <th
-                rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                TS
+                KS
               </th>
               <th
                 rowSpan={2}
@@ -592,25 +586,11 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 BB
               </th>
               <th
-                rowSpan={2}
+                colSpan={2}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TB
-              </th>
-              <th
-                rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                Gandeng /<br />Semitrailer
-              </th>
-              <th
-                rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                KTB
               </th>
             </tr>
             <tr className={pdf ? '' : "bg-base-300"}>
@@ -631,6 +611,30 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TR
+              </th>
+              <th
+                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                style={pdf ? pdfHeaderStyle : {}}
+              >
+                BS
+              </th>
+              <th
+                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                style={pdf ? pdfHeaderStyle : {}}
+              >
+                TS
+              </th>
+              <th
+                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                style={pdf ? pdfHeaderStyle : {}}
+              >
+                TB
+              </th>
+              <th
+                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                style={pdf ? pdfHeaderStyle : {}}
+              >
+                Gandeng /<br />Semitrailer
               </th>
             </tr>
           </thead>
@@ -668,11 +672,11 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 Kendaraan Bermotor (Lih. kend/jam)
               </th>
               <th
-                colSpan={1}
+                rowSpan={3}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
-                Kend. Tak Bermotor
+                KTB
               </th>
             </tr>
             <tr className={pdf ? '' : "bg-base-300"}>
@@ -703,13 +707,6 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 KS
-              </th>
-              <th
-                rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                KTB
               </th>
             </tr>
             <tr className={pdf ? '' : "bg-base-300"}>
@@ -790,18 +787,18 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 Waktu
               </th>
               <th
-                colSpan={8}
+                colSpan={9}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Kendaraan Bermotor (Lih. kend/jam)
               </th>
               <th
-                colSpan={2}
+                rowSpan={3}
                 className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
-                Kend. Tak Bermotor
+                KTB
               </th>
             </tr>
             <tr className={pdf ? '' : "bg-base-300"}>
@@ -839,13 +836,6 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Truk
-              </th>
-              <th
-                rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
-                style={pdf ? pdfHeaderStyle : {}}
-              >
-                KTB
               </th>
             </tr>
             <tr className={pdf ? '' : "bg-base-300"}>

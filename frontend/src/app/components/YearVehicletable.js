@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 // import yearlyData from '@/data/DataTableYear.json';
 
 import { ExportYearButton, ExportHourButton } from '@/app/components/exportExcel';
+import { formatNumber } from '@/utils/numberFormat';
 
 const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
   const [vehicleData, setVehicleData] = useState({ yearlyData: [], lhrtData: [] });
@@ -43,42 +44,20 @@ const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
   const generateYearlyRows = () => {
     return vehicleData?.yearlyData?.map((yearData, index) => (
       <tr key={`year-${yearData.year}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.year}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.sm || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.mp || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.aup || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.tr || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.bs || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.ts || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.bb || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.tb || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{formatNumber(yearData.year)}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{formatNumber(yearData.data.sm) || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{formatNumber(yearData.data.mp) || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{formatNumber(yearData.data.aup) || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{formatNumber(yearData.data.tr) || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{formatNumber(yearData.data.bs) || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{formatNumber(yearData.data.ts) || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{formatNumber(yearData.data.bb) || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{formatNumber(yearData.data.tb) || 0}</td>
         <td className="border border-base-300 px-2 py-1 text-sm text-center">
-          {yearData.data.gandengSemitrailer || 0}
+          {formatNumber(yearData.data.gandengSemitrailer) || 0}
         </td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.ktb || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{yearData.data.total || 0}</td>
-      </tr>
-    ));
-  };
-
-  // Generate LHRT data rows
-  const generateLHRTRows = () => {
-    return vehicleData?.lhrtData?.map((lhrtData, index) => (
-      <tr key={`lhrt-${lhrtData.period}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.period}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.sm || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.mp || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.aup || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.tr || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.bs || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.ts || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.bb || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.tb || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">
-          {lhrtData.data.gandengSemitrailer || 0}
-        </td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.ktb || 0}</td>
-        <td className="border border-base-300 px-2 py-1 text-sm text-center">{lhrtData.data.total || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{formatNumber(yearData.data.ktb) || 0}</td>
+        <td className="border border-base-300 px-2 py-1 text-sm text-center">{formatNumber(yearData.data.total) || 0}</td>
       </tr>
     ));
   };
@@ -151,9 +130,6 @@ const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
               Lalu Lintas Harian Rata-Rata Tahunan (kend/hari)
             </td>
           </tr>
-
-          {/* LHRT data rows */}
-          {generateLHRTRows()}
         </tbody>
       </table>
     </div>

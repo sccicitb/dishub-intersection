@@ -103,7 +103,6 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
 
   function convertPhaseDataToOriginal (phaseData) {
     const cleanNumber = (num) => {
-      // Kalau null, undefined, string kosong → kembalikan 0
       if (num === null || num === undefined || num === '') return 0;
 
       const parsed = parseFloat(num);
@@ -127,7 +126,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
     return {
       whh: whhGlobal,
       dataFase: phaseData.map((phase) => {
-        console.log('Processing phase:', phase, 'with whh:', whhGlobal);
+
         // dari array `jarak` ke object keyed by type
         const jarakObj = {};
         phase.jarak.forEach((item) => {
@@ -264,14 +263,14 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
 
   const aggregateSA4DataByKode = (sa4TableData) => {
     if (!sa4TableData) {
-      console.log('SA4 table data tidak valid atau kosong');
+
       return {};
     }
 
     const aggregated = {};
 
     sa4TableData.forEach(row => {
-      console.log('Memproses baris SA4:', row);
+
       const kode = row.kode_pendekat?.toUpperCase(); // pakai 'kodePendekat' dari struktur kamu
       if (!kode) return;
 
@@ -422,7 +421,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
 
   const handleInputChange2 = (field, value) => {
     if (field === 'pol') {
-      console.log('Updating pol value:', value);
+
 
       const sa4Result = dataFaseIV;
       const S = sa4Result?.foot?.[0].S || 1;
@@ -553,15 +552,15 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
         // const sa4Result = await fetchDataSAIV(selectedId);
         // const sa5Result = null;
 
-        console.log('SA1 Data:', sa1Result);
-        console.log('SA2 Data:', sa2Result);
-        console.log('SA3 Data:', sa3Result);
-        console.log('SA4 Data:', sa4Result);
-        console.log('SA5 Data:', sa5Result);
+
+
+
+
+
         // console.log('Existing SA5 Data:', sa5Result);
 
         if (!sa4Result) {
-          console.log('Data SA4 tidak ditemukan, mengosongkan tabel SA5');
+
           setTableData({
             data: [],
             row_1: 0,
@@ -594,16 +593,16 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
         }
 
         if (sa5Result) {
-          console.log('Menggunakan data SA5 yang sudah ada');
+
           setTableData({ ...tableData, pol: sa5Result.pol, row_1: sa5Result.row_1, row_2: sa5Result.row_2, ...sa5Result });
           // return;
         } else {
           if (!sa4Result) return;
 
           const S = sa4Result.capacityAnalysis ? sa4Result.capacityAnalysis.foot?.[0].S : 0;
-          console.log('Nilai S yang digunakan:', sa4Result.capacityAnalysis.table);
+
           const sa4Aggregated = aggregateSA4DataByKode(sa4Result.capacityAnalysis.table);
-          console.log('SA4 Data yang diagregasi:', sa4Aggregated);
+
 
           const newData = sa1Result.pendekat.map(pendekat => {
             const kodePendekat = pendekat.kodePendekat?.toUpperCase();
@@ -625,17 +624,17 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
 
             console.log(sa1Result?.fase?.[directionMap[kodePendekat]]?.arah, kodePendekat)
             if (arahPendekat?.bkijt === true) {
-              console.log(`>>>> bkijt TRUE untuk pendekat ${kodePendekat}`);
+
 
               const mappedDirection = directionMap[kodePendekat];
-              console.log(mappedDirection);
+
 
               const sa2Entry = sa2Result?.surveyData?.find(entry =>
                 entry.direction?.toUpperCase() === kodePendekat?.toUpperCase()
               );
 
-              console.log(">>>> SA2", sa2Result);
-              console.log(">>>> SA2 Entry ditemukan:", sa2Entry);
+
+
 
               // const bkijtRow = sa2Entry?.rows?.find(row => row?.type?.toLowerCase() === "bki / bkijt");
               const bkijtRow = sa2Entry?.rows?.find(row =>
@@ -653,15 +652,15 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
               }
             }
 
-            console.log(`Pendekat ${kodePendekat}: `);
-            console.log('  - Fase aktif:', faseAktif);
-            console.log('  - Data SA4:', sa4Data);
-            console.log('  - Data S:', S);
-            console.log('  - Data KTB:', totalKTBCount);
+
+
+
+
+
 
             return createRowFromPendekat(kodePendekat, faseAktif, sa4Data, S);
           }).filter(row => row.kode); // Filter yang memiliki kode
-          console.log('Data SA5 sebelum diset:', newData);
+
           const totalTundaan = newData.reduce((sum, row) => {
             return sum + (row.tundaanTotal ?? 0); // asumsi setiap row punya totalTundaan
           }, 0);
@@ -711,7 +710,7 @@ export default function FormSAVTable ({ selectedId, setDataSAV }) {
           }));
 
 
-          console.log('Data SA5 yang dibuat:', newData);
+
         }
 
       } catch (e) {

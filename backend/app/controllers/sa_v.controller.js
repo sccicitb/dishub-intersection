@@ -2,32 +2,18 @@ const SaSurveyHeader = require("../models/sa_survey_header.model.js");
 const SaVDelayAnalysis = require("../models/sa_v_delay_analysis.model.js");
 const SaVPerformanceSummary = require("../models/sa_v_performance_summary.model.js");
 
-// Helper function to safely parse JSON
 const safeJsonParse = (jsonString, defaultValue = ['Default Road']) => {
   try {
-    if (typeof jsonString === 'string') {
-      return JSON.parse(jsonString);
-    } else if (Array.isArray(jsonString)) {
-      return jsonString;
-    } else {
-      return defaultValue;
-    }
+    return typeof jsonString === 'string' ? JSON.parse(jsonString) : 
+           Array.isArray(jsonString) ? jsonString : defaultValue;
   } catch (error) {
-    console.warn('JSON parse error:', error.message, 'for value:', jsonString);
     return defaultValue;
   }
 };
 
-// =====================================================
-// SA-V COMPLETE SURVEY OPERATIONS (Phase 6 - 3 APIs)
-// =====================================================
-
-// Create a complete SA-V survey in a single transaction
 exports.createCompleteSurvey = async (req, res) => {
   if (!req.body.SAV) {
-    return res.status(400).send({
-      message: "Payload SAV tidak ditemukan!"
-    });
+    return res.status(400).send({ message: "Payload SAV tidak ditemukan!" });
   }
 
   const sql = require("../config/db.js");
@@ -38,16 +24,14 @@ exports.createCompleteSurvey = async (req, res) => {
     await connection.beginTransaction();
 
     const SAV = req.body.SAV;
-
     const [headerResult] = await connection.query(
       "INSERT INTO sa_survey_headers (tanggal, created_at) VALUES (NOW(), NOW())"
     );
     const headerId = headerResult.insertId;
 
-    // 2. Insert detail delay analysis (loop data array)
     if (SAV.data && Array.isArray(SAV.data)) {
       for (const delay of SAV.data) {
-        const delayRecord = {
+        await connection.query("INSERT INTO sa_v_delay_analysis SET ?", {
           survey_id: headerId,
           kode_pendekat: delay.kode,
           arus_lalu_lintas: delay.q,
@@ -65,13 +49,11 @@ exports.createCompleteSurvey = async (req, res) => {
           tundaan_geometri: delay.tg,
           tundaan_rata_rata: delay.t,
           tundaan_total: delay.tundaanTotal
-        };
-        await connection.query("INSERT INTO sa_v_delay_analysis SET ?", delayRecord);
+        });
       }
     }
 
-    // 3. Insert performance summary ke sa_v_performance_summary
-    const summaryRecord = {
+    await connection.query("INSERT INTO sa_v_performance_summary SET ?", {
       survey_id: headerId,
       tundaan_simpang_rata: SAV.trata,
       rasio_kendaraan_terhenti_rata: SAV.totalrata,
@@ -90,30 +72,21 @@ exports.createCompleteSurvey = async (req, res) => {
       level_of_service: SAV.los,
       polution: SAV.polution,
       loss: SAV.loss
-    };
-    await connection.query("INSERT INTO sa_v_performance_summary SET ?", summaryRecord);
+    });
 
     await connection.commit();
     connection.release();
-
-    res.send({
-      success: true,
-      headerId,
-      message: "SA-V Survey created successfully"
-    });
+    res.send({ success: true, headerId, message: "SA-V tersimpan" });
 
   } catch (error) {
     if (connection) {
       await connection.rollback();
       connection.release();
     }
-    res.status(500).send({
-      message: error.message || "Some error occurred while creating the SA-V survey."
-    });
+    res.status(500).send({ message: error.message || "Error SA-V" });
   }
 };
 
-// Update a complete SA-V survey
 exports.updateCompleteSurvey = async (req, res) => {
   if (!req.body.SAV) {
     return res.status(400).send({ message: "Payload SAV tidak ditemukan!" });
@@ -121,7 +94,6 @@ exports.updateCompleteSurvey = async (req, res) => {
 
   const headerId = req.params.surveyId;
   const SAV = req.body.SAV;
-
   const sql = require("../config/db.js");
   let connection;
 
@@ -129,19 +101,13 @@ exports.updateCompleteSurvey = async (req, res) => {
     connection = await sql.getConnection();
     await connection.beginTransaction();
 
-    await connection.query(
-      "UPDATE sa_survey_headers SET updated_at = NOW() WHERE id = ?",
-      [headerId]
-    );
-
-    // 2. Delete data lama
+    await connection.query("UPDATE sa_survey_headers SET updated_at = NOW() WHERE id = ?", [headerId]);
     await connection.query("DELETE FROM sa_v_delay_analysis WHERE survey_id = ?", [headerId]);
     await connection.query("DELETE FROM sa_v_performance_summary WHERE survey_id = ?", [headerId]);
 
-    // 3. Insert ulang delay analysis
     if (Array.isArray(SAV.data)) {
       for (const delay of SAV.data) {
-        const delayRecord = {
+        await connection.query("INSERT INTO sa_v_delay_analysis SET ?", {
           survey_id: headerId,
           kode_pendekat: delay.kode,
           arus_lalu_lintas: delay.q,
@@ -159,13 +125,11 @@ exports.updateCompleteSurvey = async (req, res) => {
           tundaan_geometri: delay.tg,
           tundaan_rata_rata: delay.t,
           tundaan_total: delay.tundaanTotal
-        };
-        await connection.query("INSERT INTO sa_v_delay_analysis SET ?", delayRecord);
+        });
       }
     }
 
-    // 4. Insert ulang performance summary
-    const summaryRecord = {
+    await connection.query("INSERT INTO sa_v_performance_summary SET ?", {
       survey_id: headerId,
       tundaan_simpang_rata: SAV.trata,
       rasio_kendaraan_terhenti_rata: SAV.totalrata,
@@ -184,26 +148,18 @@ exports.updateCompleteSurvey = async (req, res) => {
       level_of_service: SAV.los,
       polution: SAV.polution,
       loss: SAV.loss
-    };
-    await connection.query("INSERT INTO sa_v_performance_summary SET ?", summaryRecord);
+    });
 
-    // 5. Commit transaction
     await connection.commit();
     connection.release();
-
-    res.send({
-      success: true,
-      message: "SA-V Survey updated successfully"
-    });
+    res.send({ success: true, message: "SA-V updated" });
 
   } catch (error) {
     if (connection) {
       await connection.rollback();
       connection.release();
     }
-    res.status(500).send({
-      message: error.message || "Some error occurred while updating the SA-V survey."
-    });
+    res.status(500).send({ message: error.message || "Error update SA-V" });
   }
 };
 
@@ -212,25 +168,20 @@ exports.getCompleteSurvey = async (req, res) => {
   const sql = require("../config/db.js");
 
   try {
-    // 1. Ambil summary
     const [summaryRows] = await sql.query(
       "SELECT * FROM sa_v_performance_summary WHERE survey_id = ? LIMIT 1",
       [headerId]
     );
     if (summaryRows.length === 0) {
-      return res.status(404).send({
-        message: `Performance summary for survey ${headerId} not found.`
-      });
+      return res.status(404).send({ message: `Survey ${headerId} tidak ditemukan` });
     }
-    const summary = summaryRows[0];
 
-    // 2. Ambil delay analysis
+    const summary = summaryRows[0];
     const [delayRows] = await sql.query(
       "SELECT * FROM sa_v_delay_analysis WHERE survey_id = ?",
       [headerId]
     );
 
-    // 3. Bentuk ulang payload sesuai format frontend
     const SAV = {
       trata: summary.tundaan_simpang_rata,
       totalrata: summary.rasio_kendaraan_terhenti_rata,
@@ -269,14 +220,9 @@ exports.getCompleteSurvey = async (req, res) => {
       }))
     };
 
-    res.send({
-      success: true,
-      SAV
-    });
+    res.send({ success: true, SAV });
 
   } catch (error) {
-    res.status(500).send({
-      message: error.message || "Some error occurred while retrieving the SA-V survey."
-    });
+    res.status(500).send({ message: error.message || "Error ambil SA-V" });
   }
 };

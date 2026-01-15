@@ -23,7 +23,6 @@ exports.getMasukKeluarDetailByTime = (req, res) => {
 
   VehicleDetailByTime.getMasukKeluarDetailByTime(simpang_id, date, interval, (err, data) => {
     if (err) {
-      console.error('[ERROR] getMasukKeluarDetailByTime:', err);
       return res.status(500).json({
         status: "error",
         message: err.message || "Error retrieving vehicle detail summary"
@@ -58,13 +57,13 @@ exports.getMasukKeluarDetailBy5Min = (req, res) => {
   });
 };
 
-exports.getMasukKeluarDetailBy10Min = (req, res) => {
+exports.getMasukKeluarDetailBy15Min = (req, res) => {
   const simpang_id = req.query.simpang_id;
   const date = req.query.date;
 
-  VehicleDetailByTime.getMasukKeluarDetailByTime(simpang_id, date, '10min', (err, data) => {
+  VehicleDetailByTime.getMasukKeluarDetailByTime(simpang_id, date, '15min', (err, data) => {
     if (err) {
-      console.error('[ERROR] getMasukKeluarDetailBy10Min:', err);
+      console.error('[ERROR] getMasukKeluarDetailBy15Min:', err);
       return res.status(500).json({
         status: "error",
         message: err.message || "Error retrieving vehicle detail summary"

@@ -6,10 +6,28 @@ const pool = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306,  // Gunakan default 3306 jika tidak ada di .env
+  port: process.env.DB_PORT || 3306,
   waitForConnections: true,
-  connectionLimit: 10,  // Jumlah maksimal koneksi dalam pool
-  queueLimit: 0
+  connectionLimit: 10,
+  queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelayMs: 0,
+  restartConnections: true,
+  decimalNumbers: true,
+  supportBigNumbers: true,
+  // Connection timeout settings untuk prevent hanging
+  connectTimeout: 10000,
+  acquireTimeout: 10000,
 });
 
-module.exports = pool.promise(); // Use promise-style for compatibility with existing models
+// Handle connection errors
+pool.on('error', (err) => {
+  console.error('[DB Pool Error]', err.code, ':', err.message);
+});
+
+// Handle connection acquire timeout
+pool.on('enqueue', (callback) => {
+  console.warn('[DB Pool] Waiting for available connection...');
+});
+
+module.exports = pool.promise();

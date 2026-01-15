@@ -284,8 +284,8 @@ export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
         Object.entries(sa1?.fase).forEach(([arahKey, detail]) => {
           const arahKode = arahMap[arahKey] || arahKey?.charAt(0)?.toUpperCase() || '-';
           allArahData[arahKode] = [];
-          console.log('Processing arah:', arahKode);
-          console.log('Available data_fase:', data_fase);
+
+
 
           let currentMF = 0; // Mulai dari 0 untuk setiap arah
 
@@ -294,7 +294,7 @@ export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
               item => item.kode === arahKode && item.fase === parseInt(fKey)
             );
 
-            console.log(`Fase ${fKey} untuk arah ${arahKode}:`, faseData);
+
 
             // PERBAIKAN: Jangan skip, tapi buat entry dengan nilai 0
             const wk = Number(faseData?.jarak?.lintasanBerangkat?.wk || 0);
@@ -312,17 +312,10 @@ export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
 
             const whi = saivData?.waktuHijauPerFase ? Number(saivData.waktuHijauPerFase) : dataTabelsaIV ? Number(dataTabelsaIV.waktuHijauPerFase) : 0;
             const wkFinal = saivData ? 3 : wk;
-            console.log(`Fase ${fKey} calculations:`, {
-              wk: wk,
-              wms: wms,
-              whi: whi,
-              wkFinal: wkFinal,
-              saivData: !!saivData
-            });
 
             // Total waktu fase ini
             const total = whi + wkFinal + wms;
-            console.log(`Total fase ${fKey}:`, total);
+
 
             allArahData[arahKode].push({
               fase: fKey,
@@ -336,7 +329,7 @@ export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
             currentMF += total; // Update mf untuk fase berikutnya
           });
 
-          console.log(`Final data for arah ${arahKode}:`, allArahData[arahKode]);
+
         });
 
 
@@ -357,7 +350,7 @@ export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
           globalAccumulation[faseIndex] = totalForThisFase;
         }
 
-        console.log("Global accumulation:", globalAccumulation);
+
 
         // Sekarang proses untuk arah saat ini (dalam loop utama)
         const newTableData = Object.entries(sa1.fase).map(([arah, detail]) => {
@@ -880,7 +873,7 @@ export default function TrafficPhaseTable ({ selectedId, dataTableSAIV }) {
         <button
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
           onClick={() => {
-            console.log('Data saved:', tableData);
+
             alert('Data berhasil disimpan! (Lihat console untuk detail)');
           }}
         >

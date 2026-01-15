@@ -100,7 +100,7 @@ async function measureQuery(name, sql, params = [], iterations = TEST_CONFIG.ITE
       iterations
     };
     
-    console.log(`  ✅ Average: ${avgTime.toFixed(2)}ms, Rows examined: ${rowsExamined}, Rows returned: ${rowsReturned}`);
+    console.log(`  Average: ${avgTime.toFixed(2)}ms, Rows examined: ${rowsExamined}, Rows returned: ${rowsReturned}`);
     
     return testResult;
     
@@ -212,7 +212,7 @@ async function testVehicleModelQueries() {
      AND ID_Simpang IN (${TEST_CONFIG.SIMPANG_IDS.join(', ')})`
   ));
   
-  // Test 4: ✅ OPTIMIZED: Hourly aggregation with simple HOUR() and BETWEEN
+  // Test 4: OPTIMIZED: Hourly aggregation with simple HOUR() and BETWEEN
   tests.push(await measureQuery(
     'Optimized Hourly Traffic Aggregation',
     `SELECT
@@ -286,7 +286,7 @@ async function testSurveyModelQueries() {
     ]
   ));
   
-  // Test 2: ✅ OPTIMIZED: Date range filtering (using BETWEEN instead of DATE)
+  // Test 2: OPTIMIZED: Date range filtering (using BETWEEN instead of DATE)
   tests.push(await measureQuery(
     'Optimized Date Range Filter',
     'SELECT * FROM arus WHERE ID_Simpang = ? AND waktu BETWEEN ? AND ?',
@@ -297,7 +297,7 @@ async function testSurveyModelQueries() {
     ]
   ));
   
-  // Test 3: ✅ OPTIMIZED: Direction and vehicle type aggregation (using BETWEEN)
+  // Test 3: OPTIMIZED: Direction and vehicle type aggregation (using BETWEEN)
   tests.push(await measureQuery(
     'Optimized Direction Vehicle Aggregation',
     `SELECT dari_arah, ke_arah, ${TEST_CONFIG.VEHICLE_COLUMNS.map(col => `SUM(\`${col}\`) AS \`${col}\``).join(', ')}
@@ -311,7 +311,7 @@ async function testSurveyModelQueries() {
     ]
   ));
   
-  // Test 4: ✅ OPTIMIZED: Daily summary with CAST instead of DATE()
+  // Test 4: OPTIMIZED: Daily summary with CAST instead of DATE()
   tests.push(await measureQuery(
     'Optimized Daily Summary Range',
     `SELECT CAST(waktu AS DATE) AS date, ${TEST_CONFIG.VEHICLE_COLUMNS.map(col => `SUM(\`${col}\`) AS \`${col}\``).join(', ')}
@@ -327,7 +327,7 @@ async function testSurveyModelQueries() {
     ]
   ));
   
-  // Test 5: ✅ OPTIMIZED: KM Tabel query with BETWEEN instead of DATE()
+  // Test 5: OPTIMIZED: KM Tabel query with BETWEEN instead of DATE()
   tests.push(await measureQuery(
     'Optimized KM Tabel Query',
     `SELECT 
@@ -397,7 +397,7 @@ async function testEdgeCases() {
     2 // Fewer iterations for expensive query
   ));
   
-  // Test 3: ✅ OPTIMIZED: Complex aggregation with CAST instead of DATE()
+  // Test 3: OPTIMIZED: Complex aggregation with CAST instead of DATE()
   tests.push(await measureQuery(
     'Optimized Multi-Simpang Aggregation',
     `SELECT 
@@ -560,7 +560,7 @@ Based on the performance testing results:
 
 ## Next Steps
 
-1. ✅ Baseline performance documented
+1. Baseline performance documented
 2. ⏳ Implement Priority 1 indexes from DATABASE_INDEXING_PLAN.md
 3. ⏳ Re-run this test script to measure improvements
 4. ⏳ Update this report with post-index results

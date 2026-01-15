@@ -60,7 +60,7 @@ const TableMatrix = ({
   const renderErrorState = () => (
     <div className="bg-red-50 px-8 py-5 rounded-lg w-full border border-red-200">
       <div className="flex items-center gap-2">
-        <span className="text-red-500 font-semibold">⚠️ Error:</span>
+        <span className="text-red-500 font-semibold">Error:</span>
         <p className="text-sm text-red-700">{error}</p>
       </div>
     </div>
@@ -246,7 +246,7 @@ const TableMatrix = ({
             </button>
             {isLoading && (
               <div className="flex items-center gap-1 text-sm text-[#314385] whitespace-nowrap">
-                <span className="animate-spin">⟳</span>
+                <span className="animate-spin">⏳</span>
               </div>
             )}
           </div>
@@ -261,12 +261,13 @@ const TableMatrix = ({
         <div className="overflow-x-auto">
           <table className="table table-auto w-full text-center text-sm">
             <thead>
-              <tr className="bg-gradient-to-r from-blue-50 
+              <tr className="bg-gradient-to-r from-blue-50
               to-blue-100 border-b-2 border-blue-200">
                 <th className="p-3 font-semibold text-gray-700 text-left">dari → ke</th>
                 {categories.map((c) => (
                   <th key={c} className="p-3 font-semibold text-gray-700 capitalize">{c}</th>
                 ))}
+                <th className="p-3 font-semibold text-gray-700">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -280,6 +281,11 @@ const TableMatrix = ({
                       </span>
                     </td>
                   ))}
+                  <td className="border border-gray-200 p-3 text-gray-600">
+                    <span className="inline-block bg-blue-100 px-2 py-1 rounded text-blue-800 font-medium">
+                      {asalTujuan[from]['Total'] ?? '-'}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -290,7 +296,7 @@ const TableMatrix = ({
       {/* Tabel Arah Pergerakan */}
       <div className="bg-white px-8 py-5 rounded-lg w-full shadow-sm">
         <h3 className="font-semibold text-base mb-3 text-gray-700 flex items-center gap-2">
-          <span className="text-lg">↔</span> Matriks Arah Pergerakan (kendaraan)
+          <span className="text-lg">→</span> Matriks Arah Pergerakan (kendaraan)
         </h3>
         <div className="overflow-x-auto">
           <table className="table table-auto w-full text-center text-sm">

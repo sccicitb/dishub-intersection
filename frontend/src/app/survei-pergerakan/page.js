@@ -1,5 +1,6 @@
 "use client";
 
+import { IoMdArrowDropdown } from "react-icons/io";
 import { useState, useEffect, Suspense, lazy, useRef } from 'react';
 import { useAuth } from "@/app/context/authContext";
 import { survey, maps, cameras } from '@/lib/apiService';
@@ -67,9 +68,7 @@ function MovePage () {
   const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
 
   const fetchMatrix = async () => {
-    console.log('Fetching matrix with:', { activeSID, dateInput });
-    // This function will be passed to the component to trigger API fetch
-    // The component will handle the actual API call and data update
+    // Trigger API calls in child components via refs
   };
 
   useEffect(() => {
@@ -99,7 +98,6 @@ function MovePage () {
 
   const fetchSurvey = async () => {
     if (loading || !activeSID) return;
-    console.log('fetchSurvey called', { activeSID, simpangModel, dateInput, activeInterval, activePendekatan, activeDirection, reportType });
     // const classificationParam = classificationMap[activeClassification] || activeClassification?.toLowerCase().replace(/\s+/g, '_');
     const baseParams = {
       // camera_id: activeCamera,
@@ -144,7 +142,6 @@ function MovePage () {
           selatan: responses[2]?.data?.vehicleData || responses[2]?.data || [],
           utara: responses[3]?.data?.vehicleData || responses[3]?.data || []
         };
-        console.log(combinedData);
         setVehicleData(combinedData);
       } else {
         const res = await survey.getAll(
@@ -169,7 +166,7 @@ function MovePage () {
 
 
   const fetchSurveyKM = async () => {
-    console.log('fetchSurveyKM called', { activeSID, simpangModel, dateInput, activeInterval, activePendekatan });
+
     
     if (loading || !activeSID) return;
 
@@ -184,7 +181,7 @@ function MovePage () {
     try {
       setLoadingKM(true);
       setErrorKM(null);
-      console.log('Fetching KM with params:', base);
+
       
       const data = await survey.getAllKM(
         base.camera_id,
@@ -192,15 +189,8 @@ function MovePage () {
         base.interval,
         base.approach
       );
-      
-      console.log('KM API Response:', {
-        fullResponse: data,
-        dataProperty: data?.data,
-        vehicleData: data?.data?.data?.vehicleData
-      });
 
       const kmData = data?.data?.data?.vehicleData || [];
-      console.log('Setting dataKM with', kmData.length, 'periods');
       setDataKM(kmData);
     } catch (err) {
       console.error('Error fetching KM:', {
@@ -212,7 +202,7 @@ function MovePage () {
       setErrorKM(err?.response?.data?.message || err?.message || 'Gagal mengambil data Keluar-Masuk');
       
       import("@/data/DataKMTabel.json").then((data) => {
-        console.log('Fallback ke data lokal');
+
         setDataKM((data.default || []))
       });
     } finally {
@@ -231,7 +221,7 @@ function MovePage () {
       const fileName = `survei-pergerakan-${dateInput}.xlsx`;
       const simpangName = `${activeSimpang}`;
 
-      console.log('🔄 Starting Pergerakan export:', { dateInput, simpangName, vehicleDataKeys: vehicleData ? Object.keys(vehicleData) : [], kmDataLength: dataKM?.length });
+      console.log('ðŸ”„ Starting Pergerakan export:', { dateInput, simpangName, vehicleDataKeys: vehicleData ? Object.keys(vehicleData) : [], kmDataLength: dataKM?.length });
 
       const result = await exportPergerakanToExcel(
         vehicleData,
@@ -244,7 +234,7 @@ function MovePage () {
       if (!result.success) {
         alert('Gagal export Excel:\n' + (result.message || 'Unknown error'));
       } else {
-        alert('✅ Export berhasil! File sudah didownload.');
+        alert('âœ… Export berhasil! File sudah didownload.');
       }
     } catch (error) {
       console.error('Export error:', error);
@@ -351,11 +341,11 @@ function MovePage () {
               >
                 {exportLoading ? (
                   <>
-                    <span className="animate-spin">⟳</span>
+                    <span className="animate-spin">âŸ³</span>
                     Exporting...
                   </>
                 ) : (
-                  '📊 Export Excel'
+                  'Export Excel'
                 )}
               </button>
             )}
@@ -373,7 +363,7 @@ function MovePage () {
                 className="w-full px-6 py-4 bg-base-200 flex items-center justify-between font-semibold text-left cursor-pointer hover:bg-base-300 transition"
               >
                 <span>Data Pergerakan Berdasarkan Kategori Kendaraan</span>
-                <span className={`transition-transform ${showTrafficMatrixByCategory ? 'rotate-180' : ''}`}>▼</span>
+                <span className={`transition-transform ${showTrafficMatrixByCategory ? 'rotate-180' : ''}`}><IoMdArrowDropdown size={20} /></span>
               </button>
               <div style={{ display: showTrafficMatrixByCategory ? 'block' : 'none' }} className="p-6">
                 <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
@@ -396,7 +386,7 @@ function MovePage () {
                 className="w-full px-6 py-4 bg-base-200 flex items-center justify-between font-semibold text-left cursor-pointer hover:bg-base-300 transition"
               >
                 <span>Data Pergerakan Dengan Filter Interval</span>
-                <span className={`transition-transform ${showTrafficMatrixByFilter ? 'rotate-180' : ''}`}>▼</span>
+                <span className={`transition-transform ${showTrafficMatrixByFilter ? 'rotate-180' : ''}`}><IoMdArrowDropdown size={20} /></span>
               </button>
               <div style={{ display: showTrafficMatrixByFilter ? 'block' : 'none' }} className="p-6">
                 <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
@@ -417,7 +407,7 @@ function MovePage () {
                 className="w-full px-6 py-4 bg-base-200 flex items-center justify-between font-semibold text-left cursor-pointer hover:bg-base-300 transition"
               >
                 <span>Detail Kendaraan Per Interval</span>
-                <span className={`transition-transform ${showVehicleDetailByInterval ? 'rotate-180' : ''}`}>▼</span>
+                <span className={`transition-transform ${showVehicleDetailByInterval ? 'rotate-180' : ''}`}><IoMdArrowDropdown size={20} /></span>
               </button>
               <div style={{ display: showVehicleDetailByInterval ? 'block' : 'none' }} className="p-6">
                 <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>

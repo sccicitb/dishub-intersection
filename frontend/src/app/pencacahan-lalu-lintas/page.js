@@ -18,6 +18,7 @@ const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const MapComponent = lazy(() => import("@/app/components/map"));
 const AdaptiveVideoPlayer = lazy(() => import('@/app/components/adaptiveCameraStream'));
+const HeaderSurvei = lazy(() => import("@/app/components/headerLhrt"));
 
 function SurveiSimpangPage () {
   const { isEditor, isAdmin } = useAuth();
@@ -27,7 +28,7 @@ function SurveiSimpangPage () {
   const [activePendekatan, setActivePendekatan] = useState('Semua');
   const [activeInterval, setActiveInterval] = useState('5min');
   const [activePergerakan, setActivePergerakan] = useState('Semua');
-  const [activeTitle, setActiveTitle] = useState("Survei ");
+  const [activeTitle, setActiveTitle] = useState("Survei Pencacahan Lalu Lintas");
   const [vehicleData, setVehicleData] = useState([]);
   const [dataCamera, setDataCamera] = useState([]);
   const [streamData, setStreamData] = useState({});
@@ -39,6 +40,9 @@ function SurveiSimpangPage () {
   const [dataSimpangById, setDataSimpangById] = useState({});
   const [Cuaca, setCuaca] = useState("")
   const [fetchError, setFetchError] = useState(null);
+  
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -52,11 +56,8 @@ function SurveiSimpangPage () {
   const formatDateToYMDForAPI = (dateStr) => {
     return dateStr.replace(/-/g, '/');
   };
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  
   const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
-
   // Fetch initial camera & vehicle data
 
   useEffect(() => {
@@ -309,7 +310,7 @@ function SurveiSimpangPage () {
         return;
       }
 
-      console.log("Setting camera:", { cameraId, cameraTitle, socketEvent, building });
+
 
 
       // Cek apakah camera yang dipilih adalah "not_yet_assign"
@@ -405,23 +406,21 @@ function SurveiSimpangPage () {
   return (
     <div>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
-        {dataCamera.length > 0 && (
           <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
-        )}
         <div className="w-[95%] m-auto">
-          {/* <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
+          <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
             <RecentVehicle customCSS={'h-[320px]'} data={streamData[activeCamera]} />
             <div className="py-1 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
               <div className="w-full">
                 {renderCCTVStream()}
               </div>
             </div>
-          </div> */}
-
-          <div className="lg:flex lg:place-items-center gap-5 py-10 space-y-5 max-lg:flex-col">
-            <SurveyInfoTable fetchStatus={fetchStatus} id={activeSimpangId} cuaca={Cuaca} />
+          </div>
+            {/* <SurveyInfoTable fetchStatus={fetchStatus} id={activeSimpangId} cuaca={Cuaca} /> */}
+          <div className="flex flex-col max-lg:flex-col items-center place-items-center max-lg:space-y-5 py-5 gap-5">
+              <HeaderSurvei simpangId={activeSimpangId} selectedDate={dateInput} arahPergerakan={activePendekatan} />
             <div className="w-full justify-end flex flex-col">
-              <SelectionButtons
+            <SelectionButtons
                 vehicleData={vehicleData}
                 activeSurveyor={activeSurveyor}
                 setActiveSurveyor={setActiveSurveyor}

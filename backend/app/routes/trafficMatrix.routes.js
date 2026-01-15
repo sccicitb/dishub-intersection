@@ -18,8 +18,8 @@ module.exports = app => {
   // GET /api/traffic-matrix/by-5min?simpang_id=2&date=2025-03-28
   router.get("/by-5min", TrafficMatrix.getTrafficMatrixBy5Min);
 
-  // GET /api/traffic-matrix/by-10min?simpang_id=2&date=2025-03-28
-  router.get("/by-10min", TrafficMatrix.getTrafficMatrixBy10Min);
+  // GET /api/traffic-matrix/by-15min?simpang_id=2&date=2025-03-28
+  router.get("/by-15min", TrafficMatrix.getTrafficMatrixBy15Min);
 
   // GET /api/traffic-matrix/by-30min?simpang_id=2&date=2025-03-28
   router.get("/by-30min", TrafficMatrix.getTrafficMatrixBy30Min);

@@ -39,7 +39,7 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
       await exportTrafficMatrixByCategory(data, simpangId, {
         start_date: startDate,
         end_date: endDate
-      });
+      }, simpangName);
     } catch (err) {
       console.error('Error exporting data:', err);
       alert('Failed to export data');
@@ -111,7 +111,7 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
             >
             {exporting ? (
               <>
-                <span className="animate-spin">⟳</span>
+                <span className="animate-spin">⏳</span>
                 Exporting...
               </>
             ) : (

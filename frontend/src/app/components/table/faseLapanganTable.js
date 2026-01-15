@@ -171,7 +171,7 @@ export default function FaseLapanganTable ({ setDataLapangan, selectedId, setFas
 
         setFaseApil(apiData.fase)
         setDataLapangan(DataFormatted);
-        console.log(apiData);
+
       }
     };
 
@@ -282,7 +282,7 @@ export default function FaseLapanganTable ({ setDataLapangan, selectedId, setFas
     setDataLapangan(cleanData);
     setFaseApil(newFase);
 
-    console.log('Data Pendekat yang akan dikirim:', cleanData);
+
     alert('Data berhasil disimpan & fase default digenerate ulang!');
   };
 
@@ -301,7 +301,7 @@ export default function FaseLapanganTable ({ setDataLapangan, selectedId, setFas
       try {
         const response = await apiSAIIForm.checkDirection(dataHeader.simpangId);
         if (response.status === 200) {
-          console.log('Data arah yang tersedia:', response.data.directions);
+
           setKodePenOption(response?.data?.directions?.map(dir => ({ value: dir.toUpperCase(), label: pendekatMap[dir.toUpperCase()] })));
         } else {
           console.warn('Gagal mengambil data arah:', response.statusText);

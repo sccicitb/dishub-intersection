@@ -151,11 +151,11 @@ const SimpangTrafficKinerja = (trafficData) => {
   useEffect(() => {
     // Check if trafficData is provided as props
     if (trafficData && trafficData.trafficData) {
-      console.log("Converting traffic data:", trafficData);
+
 
       const convertedData = convertTrafficDataToCategory(trafficData);
       if (convertedData) {
-        console.log("Converted data:", convertedData);
+
         setDataSimpang(convertedData.category);
         setCategoryNames(Object.keys(convertedData.category));
         setSelectedCategory(Object.keys(convertedData.category)[0]);
@@ -172,14 +172,14 @@ const SimpangTrafficKinerja = (trafficData) => {
   }, [trafficData]);
 
   useEffect(() => {
-    console.log("Traffic Data received:", trafficData);
+
   }, [trafficData]);
 
   useEffect(() => {
-    console.log("Data Simpang:", dataSimpang);
-    console.log("Category Names:", categoryNames);
+
+
     if (typeof directionData !== 'undefined') {
-      console.log("Direction Data:", directionData);
+
     }
   }, [dataSimpang]);
 

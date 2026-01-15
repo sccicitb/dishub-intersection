@@ -1,36 +1,36 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { FaDownload } from "react-icons/fa6";
 
-export const exportVehicleDataToExcel = (vehicleData, fileName, classification) => {
+export const exportVehicleDataToExcel = async (vehicleData, fileName, classification) => {
   // Membuat workbook dan worksheet baru
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.aoa_to_sheet([]);
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Data Kendaraan');
   const classificationOptions = ['PKJI 2023 Luar Kota', 'PKJI 2023 Dalam Kota', 'Tipikal'];
 
   // Debug: log untuk memeriksa classification yang diterima
-  console.log('Classification received:', classification);
-  console.log('Available options:', classificationOptions);
+
+
 
   let headers = [];
   let merges = [];
 
   if (classification === classificationOptions[0]) {
-    console.log(classificationOptions[0]);
+
     headers = [
       ['Periode', 'Status Camera', 'Waktu', 'Kendaraan Bermotor (Lih. kend/jam)', '', '', '', '', '', '', '', 'Kend. Tak Bermotor', '', 'Total (Lih. kend/jam)'],
       ['', '', 'Interval 15 menit', 'SM', 'MP', '', '', 'TR', 'BS', 'TS', 'BB', 'TB', 'Gandeng / Semitrailer', 'KTB', ''],
       ['', '', '', '', 'MP', 'AUP', 'TR', '', '', '', '', '', '', '', '']
     ];
   } else if (classification === classificationOptions[1]) {
-    console.log(classificationOptions[1]);
+
     headers = [
       ['Periode', 'Status Camera', 'Waktu', 'Kendaraan Bermotor (Lih. kend/jam)', '', '', '', '', '', '', '', '', 'Kend. Tak Bermotor'],
       ['', '', 'Interval', 'SM', 'MP', '', '', 'KS', '', '', '', '', 'KTB'],
       ['', '', '', '', 'MP', 'AUP', 'TR', 'BS', 'TS', 'BB', 'TB', 'Gandeng / Semitrailer', '']
     ];
   } else if (classification === classificationOptions[2]) {
-    console.log(classificationOptions[2]);
+
     headers = [
       ['Periode', 'Status Camera', 'Waktu', 'Kendaraan Bermotor (Lih. kend/jam)', '', '', '', '', '', '', '', '', 'Kend. Tak Bermotor'],
       ['', '', 'Interval', 'SM', 'MP', '', '', 'Bus', '', 'Truk', '', '', 'KTB'],
@@ -87,11 +87,20 @@ export const exportVehicleDataToExcel = (vehicleData, fileName, classification) 
   } else {
     merges = []
   }
-  XLSX.utils.sheet_add_aoa(worksheet, headers, { origin: 'A1' });
+  
+  // Add headers to worksheet
+  headers.forEach((row, rowIdx) => {
+    const excelRow = worksheet.getRow(rowIdx + 1);
+    row.forEach((cell, colIdx) => {
+      excelRow.getCell(colIdx + 1).value = cell;
+    });
+  });
 
   // Set lebar kolom
   const colWidths = [15, 15, 15, 8, 8, 8, 8, 8, 8, 8, 8, 8, 15, 8, 15];
-  worksheet['!cols'] = colWidths.map(width => ({ width }));
+  colWidths.forEach((width, idx) => {
+    worksheet.getColumn(idx + 1).width = width;
+  });
 
 
   // Mulai dari baris ke-4 (setelah header)
@@ -165,18 +174,27 @@ export const exportVehicleDataToExcel = (vehicleData, fileName, classification) 
         rowData[0] = '';
       }
 
-      XLSX.utils.sheet_add_aoa(worksheet, [rowData], { origin: `A${rowIndex + 1}` });
+      const excelRow = worksheet.getRow(rowIndex + 1);
+      rowData.forEach((cell, colIdx) => {
+        excelRow.getCell(colIdx + 1).value = cell;
+      });
 
       // Menambahkan warna latar belakang untuk status kamera
-      const cell = XLSX.utils.encode_cell({ r: rowIndex, c: 1 });
-      if (!worksheet[cell]) worksheet[cell] = { t: 's', v: '' };
-
+      const statusCell = excelRow.getCell(2); // Column B (index 2)
       if (slot.status === 1) {
         // Status aktif (hijau)
-        worksheet[cell].s = { fill: { fgColor: { rgb: "90EE90" } } }; // Hijau muda
+        statusCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF90EE90' }
+        };
       } else {
         // Status nonaktif (merah)
-        worksheet[cell].s = { fill: { fgColor: { rgb: "FF7F7F" } } }; // Merah muda
+        statusCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFF7F7F' }
+        };
       }
 
       rowIndex++;
@@ -184,74 +202,81 @@ export const exportVehicleDataToExcel = (vehicleData, fileName, classification) 
 
     // Menambahkan merger untuk kolom periode
     if (periodData.timeSlots.length > 1) {
-      merges.push({
-        s: { r: periodRowStartIndex[periodData.period], c: 0 },
-        e: { r: rowIndex - 1, c: 0 }
-      });
+      worksheet.mergeCells(
+        periodRowStartIndex[periodData.period] + 1,
+        1,
+        rowIndex,
+        1
+      );
     }
 
     // Menambahkan baris pemisah setelah periode "Siang" (index 2)
-    if (periodIndex === 2) {
-      const dividerRow = Array(12).fill('');
-      dividerRow[0] = 'Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)';
+    // if (periodIndex === 2) {
+    //   const dividerRow = Array(12).fill('');
+    //   dividerRow[0] = 'Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)';
 
-      XLSX.utils.sheet_add_aoa(worksheet, [dividerRow], { origin: `A${rowIndex + 1}` });
+    //   const excelRow = worksheet.getRow(rowIndex + 1);
+    //   dividerRow.forEach((cell, colIdx) => {
+    //     const excelCell = excelRow.getCell(colIdx + 1);
+    //     excelCell.value = cell;
+    //     excelCell.font = { bold: true };
+    //     excelCell.alignment = { horizontal: 'center' };
+    //     excelCell.fill = {
+    //       type: 'pattern',
+    //       pattern: 'solid',
+    //       fgColor: { argb: 'FFD3D3D3' }
+    //     };
+    //   });
 
-      // Menambahkan merger dan styling untuk baris pemisah
-      merges.push({
-        s: { r: rowIndex, c: 0 },
-        e: { r: rowIndex, c: 12 }
-      });
+    //   // Menambahkan merger untuk baris pemisah
+    //   worksheet.mergeCells(rowIndex + 1, 1, rowIndex + 1, 13);
 
-      // Styling untuk baris pemisah
-      for (let i = 0; i <= 14; i++) {
-        const cell = XLSX.utils.encode_cell({ r: rowIndex, c: i });
-        if (!worksheet[cell]) worksheet[cell] = { t: 's', v: '' };
-        worksheet[cell].s = {
-          font: { bold: true },
-          alignment: { horizontal: 'center' },
-          fill: { fgColor: { rgb: "D3D3D3" } } // Light gray
-        };
-      }
-
-      rowIndex++;
-    }
+    //   rowIndex++;
+    // }
   });
 
-  // Tambahkan merges ke worksheet
-  worksheet['!merges'] = merges;
+  // Apply merges for headers
+  merges.forEach(merge => {
+    worksheet.mergeCells(
+      merge.s.r + 1,
+      merge.s.c + 1,
+      merge.e.r + 1,
+      merge.e.c + 1
+    );
+  });
 
-  // Styling global
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-  for (let R = range.s.r; R <= range.e.r; R++) {
-    for (let C = range.s.c; C <= range.e.c; C++) {
-      const cell = XLSX.utils.encode_cell({ r: R, c: C });
-      if (!worksheet[cell]) continue;
-
-      if (!worksheet[cell].s) worksheet[cell].s = {};
-
-      // Tambahkan border ke semua sel
-      worksheet[cell].s.border = {
+  // Styling global - Apply borders and styling to all cells
+  worksheet.eachRow((row, rowNumber) => {
+    row.eachCell((cell, colNumber) => {
+      // Add borders
+      cell.border = {
         top: { style: 'thin' },
-        bottom: { style: 'thin' },
         left: { style: 'thin' },
+        bottom: { style: 'thin' },
         right: { style: 'thin' }
       };
 
-      // Styling untuk header
-      if (R < 3) {
-        worksheet[cell].s.font = { bold: true };
-        worksheet[cell].s.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
-        worksheet[cell].s.fill = { fgColor: { rgb: "D3D3D3" } }; // Light gray
+      // Styling untuk header (rows 1-3)
+      if (rowNumber <= 3) {
+        cell.font = { bold: true };
+        cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        if (!cell.fill || !cell.fill.fgColor) {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD3D3D3' }
+          };
+        }
       } else {
-        worksheet[cell].s.alignment = { horizontal: 'center' };
+        if (!cell.alignment) {
+          cell.alignment = { horizontal: 'center' };
+        }
       }
-    }
-  }
+    });
+  });
 
   // Finalisasi dan ekspor
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Kendaraan');
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  const excelBuffer = await workbook.xlsx.writeBuffer();
   const file = new Blob([excelBuffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
   });
@@ -259,9 +284,9 @@ export const exportVehicleDataToExcel = (vehicleData, fileName, classification) 
 };
 
 
-export const exportYearVehicleDataToExcel = (yearlyData, fileName) => {
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.aoa_to_sheet([]);
+export const exportYearVehicleDataToExcel = async (yearlyData, fileName) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Data Tahunan');
 
   // Header untuk Yearly Data
   const headers = [
@@ -270,30 +295,31 @@ export const exportYearVehicleDataToExcel = (yearlyData, fileName) => {
     ['', '', 'MP', 'AUP', '', 'BS', 'TS', '', '', 'Gandeng / Semitrailer', '', '']
   ];
 
-  const merges = [
-    { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, // Tahun
-    { s: { r: 0, c: 1 }, e: { r: 0, c: 9 } }, // Kendaraan Bermotor header
-    { s: { r: 1, c: 1 }, e: { r: 2, c: 1 } }, // SM
-    { s: { r: 1, c: 2 }, e: { r: 1, c: 3 } }, // MP
-    { s: { r: 1, c: 4 }, e: { r: 2, c: 4 } }, // TR
-    { s: { r: 1, c: 5 }, e: { r: 1, c: 6 } }, // KS
-    { s: { r: 1, c: 7 }, e: { r: 2, c: 7 } }, // BB
-    { s: { r: 1, c: 8 }, e: { r: 1, c: 9 } }, // TB
-    { s: { r: 0, c: 10 }, e: { r: 2, c: 10 } }, // KTB
-    { s: { r: 0, c: 11 }, e: { r: 2, c: 11 } }, // Total
-  ];
+  // Add headers
+  headers.forEach(row => worksheet.addRow(row));
 
-  XLSX.utils.sheet_add_aoa(worksheet, headers, { origin: 'A1' });
-
-  // Set lebar kolom
+  // Set column widths
   const colWidths = [12, 10, 10, 10, 10, 10, 10, 10, 10, 15, 15, 15];
-  worksheet['!cols'] = colWidths.map(width => ({ width }));
+  colWidths.forEach((width, idx) => {
+    worksheet.getColumn(idx + 1).width = width;
+  });
+
+  // Merge cells for headers
+  worksheet.mergeCells('A1:A3'); // Tahun
+  worksheet.mergeCells('B1:J1'); // Kendaraan Bermotor
+  worksheet.mergeCells('B2:B3'); // SM
+  worksheet.mergeCells('C2:D2'); // MP
+  worksheet.mergeCells('E2:E3'); // TR
+  worksheet.mergeCells('F2:G2'); // KS
+  worksheet.mergeCells('H2:H3'); // BB
+  worksheet.mergeCells('I2:J2'); // TB
+  worksheet.mergeCells('K1:K3'); // KTB
+  worksheet.mergeCells('L1:L3'); // Total
 
   // Tambahkan data yearly
-  let rowIndex = 3;
   if (yearlyData?.yearlyData) {
-    yearlyData.yearlyData.forEach((yearData, index) => {
-      const rowData = [
+    yearlyData.yearlyData.forEach((yearData) => {
+      worksheet.addRow([
         yearData.year,
         yearData.data.sm || 0,
         yearData.data.mp || 0,
@@ -306,41 +332,25 @@ export const exportYearVehicleDataToExcel = (yearlyData, fileName) => {
         yearData.data.gandengSemitrailer || 0,
         yearData.data.ktb || 0,
         yearData.data.total || 0
-      ];
-
-      XLSX.utils.sheet_add_aoa(worksheet, [rowData], { origin: `A${rowIndex + 1}` });
-      rowIndex++;
+      ]);
     });
   }
 
   // Tambahkan baris pemisah
-  const dividerRow = Array(12).fill('');
-  dividerRow[0] = 'Lalu Lintas Harian Rata-Rata Tahunan (kend/hari)';
-
-  XLSX.utils.sheet_add_aoa(worksheet, [dividerRow], { origin: `A${rowIndex + 1}` });
-
-  merges.push({
-    s: { r: rowIndex, c: 0 },
-    e: { r: rowIndex, c: 11 }
-  });
-
-  // Styling untuk baris pemisah
-  for (let i = 0; i <= 11; i++) {
-    const cell = XLSX.utils.encode_cell({ r: rowIndex, c: i });
-    if (!worksheet[cell]) worksheet[cell] = { t: 's', v: '' };
-    worksheet[cell].s = {
-      font: { bold: true },
-      alignment: { horizontal: 'center' },
-      fill: { fgColor: { rgb: "D3D3D3" } }
-    };
-  }
-
-  rowIndex++;
+  const dividerRow = worksheet.addRow(['Lalu Lintas Harian Rata-Rata Tahunan (kend/hari)', '', '', '', '', '', '', '', '', '', '', '']);
+  worksheet.mergeCells(dividerRow.number, 1, dividerRow.number, 12);
+  dividerRow.font = { bold: true };
+  dividerRow.alignment = { horizontal: 'center' };
+  dividerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFD3D3D3' }
+  };
 
   // Tambahkan data LHRT
   if (yearlyData?.lhrtData) {
-    yearlyData.lhrtData.forEach((lhrtData, index) => {
-      const rowData = [
+    yearlyData.lhrtData.forEach((lhrtData) => {
+      worksheet.addRow([
         lhrtData.period,
         lhrtData.data.sm || 0,
         lhrtData.data.mp || 0,
@@ -353,80 +363,53 @@ export const exportYearVehicleDataToExcel = (yearlyData, fileName) => {
         lhrtData.data.gandengSemitrailer || 0,
         lhrtData.data.ktb || 0,
         lhrtData.data.total || 0
-      ];
-
-      XLSX.utils.sheet_add_aoa(worksheet, [rowData], { origin: `A${rowIndex + 1}` });
-      rowIndex++;
+      ]);
     });
   }
 
-  worksheet['!merges'] = merges;
-
-  // Styling global
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-  for (let R = range.s.r; R <= range.e.r; R++) {
-    for (let C = range.s.c; C <= range.e.c; C++) {
-      const cell = XLSX.utils.encode_cell({ r: R, c: C });
-      if (!worksheet[cell]) continue;
-
-      if (!worksheet[cell].s) worksheet[cell].s = {};
-
-      // Tambahkan border ke semua sel
-      worksheet[cell].s.border = {
+  // Apply basic styling to all cells
+  worksheet.eachRow((row, rowNumber) => {
+    row.eachCell((cell) => {
+      cell.border = {
         top: { style: 'thin' },
-        bottom: { style: 'thin' },
         left: { style: 'thin' },
+        bottom: { style: 'thin' },
         right: { style: 'thin' }
       };
-
-      // Styling untuk header
-      if (R < 3) {
-        worksheet[cell].s.font = { bold: true };
-        worksheet[cell].s.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
-        worksheet[cell].s.fill = { fgColor: { rgb: "D3D3D3" } };
-      } else {
-        worksheet[cell].s.alignment = { horizontal: 'center' };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      
+      // Header styling
+      if (rowNumber <= 3) {
+        cell.font = { bold: true };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFD3D3D3' }
+        };
       }
-    }
-  }
+    });
+  });
 
-  // Finalisasi dan ekspor
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Tahunan');
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  const file = new Blob([excelBuffer], {
+  // Export file
+  const buffer = await workbook.xlsx.writeBuffer();
+  const file = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
   });
   saveAs(file, `${fileName}.xlsx`);
 };
 
-export const exportHourVehicleDataToExcel = (hourlyData, fileName, classification) => {
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.aoa_to_sheet([]);
+export const exportHourVehicleDataToExcel = async (hourlyData, fileName, classification) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Data Per Jam');
   const classificationOptions = ['PKJI 2023 Luar Kota', 'PKJI 2023 Dalam Kota', 'Tipikal'];
 
+  // Prepare headers based on classification
   let headers = [];
-  let merges = [];
-
   if (classification === classificationOptions[0]) {
     headers = [
-      ['Jam', 'Status Camera', 'Kendaraan Bermotor (Lih. kend/jam)', '', '', '', '', '', '', '', '', 'Kend. Tak Bermotor', '', 'Total (Lih. kend/jam)'],
+      ['Jam', 'Status Camera', 'Kendaraan Bermotor (Lih. kend/jam)', '', '', '', '', '', '', '', '', '', 'Kend. Tak Bermotor', 'Total'],
       ['', '', 'SM', 'MP', '', '', 'TR', 'BS', 'TS', 'BB', 'TB', 'Gandeng / Semitrailer', 'KTB', ''],
       ['', '', '', 'MP', 'AUP', 'TR', '', '', '', '', '', '', '', '']
-    ];
-    merges = [
-      { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } },
-      { s: { r: 0, c: 1 }, e: { r: 2, c: 1 } },
-      { s: { r: 0, c: 2 }, e: { r: 0, c: 11 } },
-      { s: { r: 0, c: 12 }, e: { r: 0, c: 12 } },
-      { s: { r: 1, c: 3 }, e: { r: 1, c: 5 } },
-      { s: { r: 1, c: 2 }, e: { r: 2, c: 2 } },
-      { s: { r: 1, c: 6 }, e: { r: 2, c: 6 } },
-      { s: { r: 1, c: 7 }, e: { r: 2, c: 7 } },
-      { s: { r: 1, c: 8 }, e: { r: 2, c: 8 } },
-      { s: { r: 1, c: 9 }, e: { r: 2, c: 9 } },
-      { s: { r: 1, c: 10 }, e: { r: 2, c: 10 } },
-      { s: { r: 1, c: 11 }, e: { r: 2, c: 11 } },
-      { s: { r: 1, c: 12 }, e: { r: 2, c: 12 } },
     ];
   } else if (classification === classificationOptions[1]) {
     headers = [
@@ -434,42 +417,26 @@ export const exportHourVehicleDataToExcel = (hourlyData, fileName, classificatio
       ['', '', 'SM', 'MP', '', '', 'KS', '', '', '', '', '', 'KTB'],
       ['', '', '', 'MP', 'AUP', 'TR', 'BS', 'TS', 'BB', 'TB', 'Gandeng / Semitrailer', '']
     ];
-    merges = [
-      { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } },
-      { s: { r: 0, c: 1 }, e: { r: 2, c: 1 } },
-      { s: { r: 0, c: 2 }, e: { r: 0, c: 11 } },
-      { s: { r: 1, c: 12 }, e: { r: 2, c: 12 } },
-      { s: { r: 1, c: 2 }, e: { r: 2, c: 2 } },
-      { s: { r: 1, c: 3 }, e: { r: 1, c: 5 } },
-      { s: { r: 1, c: 6 }, e: { r: 1, c: 10 } },
-    ];
   } else if (classification === classificationOptions[2]) {
     headers = [
       ['Jam', 'Status Camera', 'Kendaraan Bermotor (Lih. kend/jam)', '', '', '', '', '', '', '', '', '', 'Kend. Tak Bermotor'],
       ['', '', 'SM', 'MP', '', '', 'Bus', '', 'Truk', '', '', 'KTB'],
       ['', '', '', 'MP', 'AUP', 'TR', 'BS', 'BB', 'TS', 'TB', 'Gandeng / Semitrailer', '']
     ];
-    merges = [
-      { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } },
-      { s: { r: 0, c: 1 }, e: { r: 2, c: 1 } },
-      { s: { r: 0, c: 2 }, e: { r: 0, c: 11 } },
-      { s: { r: 1, c: 12 }, e: { r: 2, c: 12 } },
-      { s: { r: 1, c: 2 }, e: { r: 2, c: 2 } },
-      { s: { r: 1, c: 3 }, e: { r: 1, c: 5 } },
-      { s: { r: 1, c: 6 }, e: { r: 1, c: 7 } },
-      { s: { r: 1, c: 8 }, e: { r: 1, c: 10 } },
-    ];
   }
 
-  XLSX.utils.sheet_add_aoa(worksheet, headers, { origin: 'A1' });
+  // Add headers
+  headers.forEach(row => worksheet.addRow(row));
 
+  // Set column widths
   const colWidths = [12, 15, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 15, 8];
-  worksheet['!cols'] = colWidths.map(width => ({ width }));
+  colWidths.forEach((width, idx) => {
+    worksheet.getColumn(idx + 1).width = width;
+  });
 
-  let rowIndex = 3;
-
+  // Add data
   if (hourlyData && Array.isArray(hourlyData)) {
-    hourlyData.forEach((hourData, index) => {
+    hourlyData.forEach((hourData) => {
       let rowData = [];
       if (classification === classificationOptions[0]) {
         rowData = [
@@ -519,52 +486,53 @@ export const exportHourVehicleDataToExcel = (hourlyData, fileName, classificatio
         ];
       }
 
-      XLSX.utils.sheet_add_aoa(worksheet, [rowData], { origin: `A${rowIndex + 1}` });
-
-      // Warna status camera
-      const cell = XLSX.utils.encode_cell({ r: rowIndex, c: 1 });
-      if (!worksheet[cell]) worksheet[cell] = { t: 's', v: '' };
-
+      const excelRow = worksheet.addRow(rowData);
+      
+      // Add status camera coloring
+      const statusCell = excelRow.getCell(2);
       if (hourData.status === 1) {
-        worksheet[cell].s = { fill: { fgColor: { rgb: "90EE90" } } };
+        statusCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF90EE90' }
+        };
       } else {
-        worksheet[cell].s = { fill: { fgColor: { rgb: "FF7F7F" } } };
+        statusCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFFF7F7F' }
+        };
       }
-
-      rowIndex++;
     });
   }
 
-  worksheet['!merges'] = merges;
-
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-  for (let R = range.s.r; R <= range.e.r; R++) {
-    for (let C = range.s.c; C <= range.e.c; C++) {
-      const cell = XLSX.utils.encode_cell({ r: R, c: C });
-      if (!worksheet[cell]) continue;
-
-      if (!worksheet[cell].s) worksheet[cell].s = {};
-
-      worksheet[cell].s.border = {
+  // Apply styling
+  worksheet.eachRow((row, rowNumber) => {
+    row.eachCell((cell) => {
+      cell.border = {
         top: { style: 'thin' },
-        bottom: { style: 'thin' },
         left: { style: 'thin' },
+        bottom: { style: 'thin' },
         right: { style: 'thin' }
       };
-
-      if (R < 3) {
-        worksheet[cell].s.font = { bold: true };
-        worksheet[cell].s.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
-        worksheet[cell].s.fill = { fgColor: { rgb: "D3D3D3" } };
-      } else {
-        worksheet[cell].s.alignment = { horizontal: 'center' };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      
+      if (rowNumber <= 3) {
+        cell.font = { bold: true };
+        if (!cell.fill || !cell.fill.fgColor) {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD3D3D3' }
+          };
+        }
       }
-    }
-  }
+    });
+  });
 
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Per Jam');
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  const file = new Blob([excelBuffer], {
+  // Export
+  const buffer = await workbook.xlsx.writeBuffer();
+  const file = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
   });
   saveAs(file, `${fileName}.xlsx`);
@@ -623,9 +591,9 @@ export const ExportHourButton = ({
   );
 };
 
-export const exportMonthVehicleDataToExcel = (monthlyData, fileName) => {
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.aoa_to_sheet([]);
+export const exportMonthVehicleDataToExcel = async (monthlyData, fileName) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Data Bulanan');
 
   // Header untuk Monthly Data
   const headers = [
@@ -634,32 +602,33 @@ export const exportMonthVehicleDataToExcel = (monthlyData, fileName) => {
     ['', '', '', 'MP', 'AUP', '', 'BS', 'TS', '', '', 'Gandeng / Semitrailer', '', '']
   ];
 
-  const merges = [
-    { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, // Waktu
-    { s: { r: 0, c: 1 }, e: { r: 2, c: 1 } }, // Jumlah hari kerja
-    { s: { r: 0, c: 2 }, e: { r: 0, c: 10 } }, // Kendaraan Bermotor header
-    { s: { r: 1, c: 2 }, e: { r: 2, c: 2 } }, // SM
-    { s: { r: 1, c: 3 }, e: { r: 1, c: 4 } }, // MP
-    { s: { r: 1, c: 5 }, e: { r: 2, c: 5 } }, // TR
-    { s: { r: 1, c: 6 }, e: { r: 1, c: 7 } }, // KS
-    { s: { r: 1, c: 8 }, e: { r: 2, c: 8 } }, // BB
-    { s: { r: 1, c: 9 }, e: { r: 1, c: 10 } }, // TB
-    { s: { r: 0, c: 11 }, e: { r: 2, c: 11 } }, // KTB
-    { s: { r: 0, c: 12 }, e: { r: 2, c: 12 } }, // Total
-  ];
+  // Add headers
+  headers.forEach(row => worksheet.addRow(row));
 
-  XLSX.utils.sheet_add_aoa(worksheet, headers, { origin: 'A1' });
-
-  // Set lebar kolom
+  // Set column widths
   const colWidths = [15, 20, 10, 10, 10, 10, 10, 10, 10, 10, 15, 15, 15];
-  worksheet['!cols'] = colWidths.map(width => ({ width }));
+  colWidths.forEach((width, idx) => {
+    worksheet.getColumn(idx + 1).width = width;
+  });
 
-  // Tambahkan data monthly
-  let rowIndex = 3;
+  // Merge cells
+  worksheet.mergeCells('A1:A3'); // Waktu
+  worksheet.mergeCells('B1:B3'); // Jumlah hari kerja
+  worksheet.mergeCells('C1:K1'); // Kendaraan Bermotor header
+  worksheet.mergeCells('C2:C3'); // SM
+  worksheet.mergeCells('D2:E2'); // MP
+  worksheet.mergeCells('F2:F3'); // TR
+  worksheet.mergeCells('G2:H2'); // KS
+  worksheet.mergeCells('I2:I3'); // BB
+  worksheet.mergeCells('J2:K2'); // TB
+  worksheet.mergeCells('L1:L3'); // KTB
+  worksheet.mergeCells('M1:M3'); // Total
+
+  // Add data
   if (monthlyData?.dailyData) {
-    monthlyData.dailyData.forEach((monthData, index) => {
+    monthlyData.dailyData.forEach((monthData) => {
       const monthlyTotal = monthData.monthlyTotal || {};
-      const rowData = [
+      worksheet.addRow([
         monthData.month,
         monthData.workDays || 0,
         monthlyTotal.sm || 0,
@@ -673,47 +642,35 @@ export const exportMonthVehicleDataToExcel = (monthlyData, fileName) => {
         monthlyTotal.gandengSemitrailer || 0,
         monthlyTotal.ktb || 0,
         monthlyTotal.total || 0
-      ];
-
-      XLSX.utils.sheet_add_aoa(worksheet, [rowData], { origin: `A${rowIndex + 1}` });
-      rowIndex++;
+      ]);
     });
   }
 
-  worksheet['!merges'] = merges;
-
-  // Styling global
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-  for (let R = range.s.r; R <= range.e.r; R++) {
-    for (let C = range.s.c; C <= range.e.c; C++) {
-      const cell = XLSX.utils.encode_cell({ r: R, c: C });
-      if (!worksheet[cell]) continue;
-
-      if (!worksheet[cell].s) worksheet[cell].s = {};
-
-      // Tambahkan border ke semua sel
-      worksheet[cell].s.border = {
+  // Apply styling
+  worksheet.eachRow((row, rowNumber) => {
+    row.eachCell((cell) => {
+      cell.border = {
         top: { style: 'thin' },
-        bottom: { style: 'thin' },
         left: { style: 'thin' },
+        bottom: { style: 'thin' },
         right: { style: 'thin' }
       };
-
-      // Styling untuk header
-      if (R < 3) {
-        worksheet[cell].s.font = { bold: true };
-        worksheet[cell].s.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
-        worksheet[cell].s.fill = { fgColor: { rgb: "D3D3D3" } };
-      } else {
-        worksheet[cell].s.alignment = { horizontal: 'center' };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      
+      if (rowNumber <= 3) {
+        cell.font = { bold: true };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFD3D3D3' }
+        };
       }
-    }
-  }
+    });
+  });
 
-  // Finalisasi dan ekspor
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Bulanan');
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  const file = new Blob([excelBuffer], {
+  // Export
+  const buffer = await workbook.xlsx.writeBuffer();
+  const file = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
   });
   saveAs(file, `${fileName}.xlsx`);
@@ -736,9 +693,9 @@ export const ExportMonthButton = ({
   );
 };
 
-export const exportDayVehicleDataToExcel = (dailyData, fileName, type = 'dailyMonth') => {
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.aoa_to_sheet([]);
+export const exportDayVehicleDataToExcel = async (dailyData, fileName, type = 'dailyMonth') => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Data Harian');
 
   // Header untuk Daily Data
   const headers = [
@@ -747,27 +704,29 @@ export const exportDayVehicleDataToExcel = (dailyData, fileName, type = 'dailyMo
     ['', '', '', 'MP', 'AUP', '', 'BS', 'TS', '', '', 'Gandeng / Semitrailer', '', '']
   ];
 
-  const merges = [
-    { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, // Pekan
-    { s: { r: 0, c: 1 }, e: { r: 2, c: 1 } }, // Tanggal
-    { s: { r: 0, c: 2 }, e: { r: 0, c: 10 } }, // Kendaraan Bermotor header
-    { s: { r: 1, c: 2 }, e: { r: 2, c: 2 } }, // SM
-    { s: { r: 1, c: 3 }, e: { r: 1, c: 4 } }, // MP
-    { s: { r: 1, c: 5 }, e: { r: 2, c: 5 } }, // TR
-    { s: { r: 1, c: 6 }, e: { r: 1, c: 7 } }, // KS
-    { s: { r: 1, c: 8 }, e: { r: 2, c: 8 } }, // BB
-    { s: { r: 1, c: 9 }, e: { r: 1, c: 10 } }, // TB
-    { s: { r: 0, c: 11 }, e: { r: 2, c: 11 } }, // KTB
-    { s: { r: 0, c: 12 }, e: { r: 2, c: 12 } }, // Total
-  ];
+  // Add headers
+  headers.forEach(row => worksheet.addRow(row));
 
-  XLSX.utils.sheet_add_aoa(worksheet, headers, { origin: 'A1' });
-
-  // Set lebar kolom
+  // Set column widths
   const colWidths = [15, 15, 10, 10, 10, 10, 10, 10, 10, 10, 15, 15, 15];
-  worksheet['!cols'] = colWidths.map(width => ({ width }));
+  colWidths.forEach((width, idx) => {
+    worksheet.getColumn(idx + 1).width = width;
+  });
 
-  // Helper function untuk format tanggal
+  // Merge cells
+  worksheet.mergeCells('A1:A3'); // Pekan
+  worksheet.mergeCells('B1:B3'); // Tanggal
+  worksheet.mergeCells('C1:K1'); // Kendaraan Bermotor
+  worksheet.mergeCells('C2:C3'); // SM
+  worksheet.mergeCells('D2:E2'); // MP
+  worksheet.mergeCells('F2:F3'); // TR
+  worksheet.mergeCells('G2:H2'); // KS
+  worksheet.mergeCells('I2:I3'); // BB
+  worksheet.mergeCells('J2:K2'); // TB
+  worksheet.mergeCells('L1:L3'); // KTB
+  worksheet.mergeCells('M1:M3'); // Total
+
+  // Helper functions
   const formatDateNoDays = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('id-ID', {
@@ -800,18 +759,13 @@ export const exportDayVehicleDataToExcel = (dailyData, fileName, type = 'dailyMo
     return `P(${weekNumber}) - ${workdayType}`;
   };
 
-  // Tambahkan data daily
-  let rowIndex = 3;
-  let allDays = [];
-
+  // Add data
   if (type === 'dailyMonth') {
-    // Untuk dailyMonth, structure adalah { dailyData: [{ month, year, workDays, days: [] }, ...] }
     if (dailyData?.dailyData && Array.isArray(dailyData.dailyData)) {
-      // Iterate through all months and extract days
       dailyData.dailyData.forEach((monthData) => {
         if (monthData.days && Array.isArray(monthData.days)) {
           monthData.days.forEach((dayData) => {
-            const rowData = [
+            worksheet.addRow([
               getWeekAndDayInfo(dayData.date),
               formatDateNoDays(dayData.date),
               dayData.data?.sm || 0,
@@ -825,17 +779,13 @@ export const exportDayVehicleDataToExcel = (dailyData, fileName, type = 'dailyMo
               dayData.data?.gandengSemitrailer || 0,
               dayData.data?.ktb || 0,
               dayData.data?.total || 0
-            ];
-
-            XLSX.utils.sheet_add_aoa(worksheet, [rowData], { origin: `A${rowIndex + 1}` });
-            rowIndex++;
+            ]);
           });
         }
       });
     } else if (Array.isArray(dailyData)) {
-      // Fallback: jika dailyData adalah array langsung
       dailyData.forEach((dayData) => {
-        const rowData = [
+        worksheet.addRow([
           getWeekAndDayInfo(dayData.date),
           formatDateNoDays(dayData.date),
           dayData.data?.sm || 0,
@@ -849,17 +799,13 @@ export const exportDayVehicleDataToExcel = (dailyData, fileName, type = 'dailyMo
           dayData.data?.gandengSemitrailer || 0,
           dayData.data?.ktb || 0,
           dayData.data?.total || 0
-        ];
-
-        XLSX.utils.sheet_add_aoa(worksheet, [rowData], { origin: `A${rowIndex + 1}` });
-        rowIndex++;
+        ]);
       });
     }
   } else if (type === 'dailyRange') {
-    // Untuk dailyRange, structure adalah { dailyData: [{ date, sm, mp, ... }, ...] }
     if (dailyData?.dailyData && Array.isArray(dailyData.dailyData)) {
       dailyData.dailyData.forEach((dayData) => {
-        const rowData = [
+        worksheet.addRow([
           getWeekAndDayInfo(dayData.date),
           formatDateNoDays(dayData.date),
           dayData.sm || 0,
@@ -873,48 +819,36 @@ export const exportDayVehicleDataToExcel = (dailyData, fileName, type = 'dailyMo
           dayData.gandengSemitrailer || 0,
           dayData.ktb || 0,
           dayData.total || 0
-        ];
-
-        XLSX.utils.sheet_add_aoa(worksheet, [rowData], { origin: `A${rowIndex + 1}` });
-        rowIndex++;
+        ]);
       });
     }
   }
 
-  worksheet['!merges'] = merges;
-
-  // Styling global
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-  for (let R = range.s.r; R <= range.e.r; R++) {
-    for (let C = range.s.c; C <= range.e.c; C++) {
-      const cell = XLSX.utils.encode_cell({ r: R, c: C });
-      if (!worksheet[cell]) continue;
-
-      if (!worksheet[cell].s) worksheet[cell].s = {};
-
-      // Tambahkan border ke semua sel
-      worksheet[cell].s.border = {
+  // Apply styling
+  worksheet.eachRow((row, rowNumber) => {
+    row.eachCell((cell) => {
+      cell.border = {
         top: { style: 'thin' },
-        bottom: { style: 'thin' },
         left: { style: 'thin' },
+        bottom: { style: 'thin' },
         right: { style: 'thin' }
       };
-
-      // Styling untuk header
-      if (R < 3) {
-        worksheet[cell].s.font = { bold: true };
-        worksheet[cell].s.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
-        worksheet[cell].s.fill = { fgColor: { rgb: "D3D3D3" } };
-      } else {
-        worksheet[cell].s.alignment = { horizontal: 'center' };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      
+      if (rowNumber <= 3) {
+        cell.font = { bold: true };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFD3D3D3' }
+        };
       }
-    }
-  }
+    });
+  });
 
-  // Finalisasi dan ekspor
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Harian');
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  const file = new Blob([excelBuffer], {
+  // Export
+  const buffer = await workbook.xlsx.writeBuffer();
+  const file = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
   });
   saveAs(file, `${fileName}.xlsx`);

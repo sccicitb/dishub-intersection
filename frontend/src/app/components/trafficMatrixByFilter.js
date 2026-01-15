@@ -5,8 +5,11 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { vehicles } from '@/lib/apiAccess';
 import { cameras } from '@/lib/apiService';
 import { exportTrafficMatrixByFilter } from '@/utils/exportTrafficMatrixByFilter';
+import { useAuth } from "@/app/context/authContext";
 
 const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName }, ref) => {
+  const { isAdmin } = useAuth();
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -22,7 +25,6 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
       setLoading(true);
       setError(null);
       const response = await vehicles.getTrafficMatrixByFilter(simpangId, dateInput, selectedInterval);
-      console.log('Traffic Matrix by Filter response:', response.data);
       setData(response.data.data);
       
       // Fetch camera for this simpang
@@ -34,7 +36,7 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
           setCameraId(camera.id);
           // Fetch status log for this camera
           const statusRes = await cameras.getStatusLog(camera.id, dateInput);
-          console.log('Camera Status Log response:', statusRes.data);
+
           setStatusLog(statusRes.data);
         }
       } catch (statusErr) {
@@ -61,7 +63,7 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
   const handleExport = async () => {
     try {
       setExporting(true);
-      await exportTrafficMatrixByFilter(data, data.simpang_id, dateInput, interval, statusLog);
+      await exportTrafficMatrixByFilter(data, data.simpang_id, dateInput, interval, statusLog, simpangName);
     } catch (err) {
       console.error('Error exporting data:', err);
       alert('Gagal export data');
@@ -85,10 +87,6 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
       </div>
     );
   }
-
-  console.log('API Data:', data);
-  console.log('Slots:', data.slots);
-  console.log('TimePeriods:', data.timePeriods);
 
   const timeSlots = Object.keys(data.slots || {}).sort();
   const movements = ['Belok Kiri', 'Lurus', 'Belok Kanan'];
@@ -129,17 +127,45 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
   };
 
   // Helper function to get status for a time slot
+  // Aggregates status from all 5-minute entries within the time slot
   const getStatusForTimeSlot = (timeSlot) => {
     if (!statusLog || !statusLog.timeline_5min) return null;
     
-    // timeSlot format: "00:00-00:59", extract start time "00:00"
-    const [slotStart] = timeSlot.split('-');
-    // Convert to HH:MM:SS format by adding ":00"
-    const timeWithSeconds = `${slotStart}:00`;
+    // timeSlot format: "00:00-00:59" or "07:00-07:04" or "07:00-07:29" depending on interval
+    const [slotStart, slotEnd] = timeSlot.split('-');
     
-    // Find matching entry in timeline_5min
-    const timelineEntry = statusLog.timeline_5min.find(entry => entry.time === timeWithSeconds);
-    return timelineEntry ? timelineEntry.status : null;
+    // Convert times to minutes since midnight for comparison
+    const parseTimeToMinutes = (timeStr) => {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+    
+    const startMinutes = parseTimeToMinutes(slotStart);
+    const endMinutes = parseTimeToMinutes(slotEnd);
+    
+    // Check if any status entry in this time slot is active (status = 1)
+    let hasActive = false;
+    let hasInactive = false;
+    
+    statusLog.timeline_5min.forEach(entry => {
+      // entry.time format: "HH:MM:SS"
+      const [hours, minutes] = entry.time.split(':').map(Number);
+      const entryMinutes = hours * 60 + minutes;
+      
+      // Check if this entry falls within the time slot
+      if (entryMinutes >= startMinutes && entryMinutes <= endMinutes) {
+        if (entry.status === 1) {
+          hasActive = true;
+        } else if (entry.status === 0) {
+          hasInactive = true;
+        }
+      }
+    });
+    
+    // Return 1 if any camera is active, 0 if all are inactive, null if no data
+    if (hasActive) return 1;
+    if (hasInactive) return 0;
+    return null;
   };
   
   // Vehicle categories to display
@@ -171,14 +197,14 @@ const TrafficMatrixByFilter = forwardRef(({ simpangId, dateInput, simpangName },
           </div>
           <div>
             <span className="text-gray-600">Interval:</span>
-            <select 
+            <select
               value={interval}
               onChange={handleIntervalChange}
               className="select select-bordered select-sm w-full"
-              disabled={loading}
+              disabled={loading || !isAdmin}
             >
               <option value="5min">5 Menit</option>
-              <option value="10min">10 Menit</option>
+              <option value="15min">15 Menit</option>
               <option value="30min">30 Menit</option>
               <option value="1hour">1 Jam (Default)</option>
             </select>

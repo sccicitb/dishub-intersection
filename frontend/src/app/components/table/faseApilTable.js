@@ -238,7 +238,7 @@ const DynamicTrafficTable = ({ setDataFaseApil, dataLapangan, dataFase }) => {
 
 
   // if (!data || !data.data || Object.keys(data.data).length === 0) {
-  //   return <div className="p-4 text-red-500 font-semibold">⚠️ Data tidak tersedia</div>;
+  //   return <div className="p-4 text-red-500 font-semibold">Data tidak tersedia</div>;
   // }
 
   return (

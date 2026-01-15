@@ -16,7 +16,7 @@ const TrafficMatrixByHours = forwardRef(({ simpangId, dateInput }, ref) => {
       setLoading(true);
       setError(null);
       const response = await vehicles.getTrafficMatrixByHours(simpangId, dateInput);
-      console.log('Traffic Matrix by Hours response:', response.data);
+
       setData(response.data.data);
     } catch (err) {
       setError(err.message || 'Error fetching data');

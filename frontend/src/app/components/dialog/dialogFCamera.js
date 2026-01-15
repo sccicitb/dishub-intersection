@@ -12,7 +12,8 @@ const DialogFCamera = ({
   onFormMapsChange,
   onFormCamerasChange,
   onSave,
-  onClose
+  onClose,
+  isLoading = false
 }) => {
   if (!showDialog) return null;
 
@@ -229,14 +230,16 @@ const DialogFCamera = ({
               <label className="label">Jumlah Lajur</label>
               <input
                 type="number"
+                min="1"
                 className="input input-bordered w-full"
-                value={formMaps?.jumlah_lajur || ""}
-                onChange={(e) =>
+                value={formMaps?.jumlah_lajur || 1}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value, 10);
                   onFormMapsChange({
                     ...formMaps,
-                    jumlah_lajur: e.target.value
-                  })
-                }
+                    jumlah_lajur: value > 0 ? value : 1
+                  });
+                }}
               />
             </div>
 
@@ -334,26 +337,6 @@ const DialogFCamera = ({
                 }
               />
             </div> */}
-
-            {/* Toggle Model Detection */}
-            <div className='h-full flex flex-col'>
-              <label className="label">
-                Status {formMaps.model_detection ? "Aktif" : "Non-Aktif"}
-              </label>
-              <div className="form-control flex flex-row my-auto items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="toggle"
-                  checked={formMaps.model_detection}
-                  onChange={(e) =>
-                    onFormMapsChange({
-                      ...formMaps,
-                      model_detection: e.target.checked
-                    })
-                  }
-                />
-              </div>
-            </div>
           </div>
         )}
 
@@ -386,7 +369,7 @@ const DialogFCamera = ({
                   onChange={(e) => {
                     const selectedId = parseInt(e.target.value, 10);
                     const selectedItem = mergedCameraData.find((item) => item.id === selectedId);
-                    console.log(selectedItem);
+
                     onFormCamerasChange({
                       ...formCameras,
                       ID_Simpang: selectedId,
@@ -471,14 +454,22 @@ const DialogFCamera = ({
 
         {/* Tombol Aksi */}
         <div className="flex justify-end gap-2 pt-2">
-          <button className="btn btn-sm" onClick={onClose}>
+          <button className="btn btn-sm" onClick={onClose} disabled={isLoading}>
             Batal
           </button>
           <button
             className="btn btn-sm btn-primary"
             onClick={handleSave}
+            disabled={isLoading}
           >
-            Simpan
+            {isLoading ? (
+              <>
+                <span className="loading loading-spinner loading-xs"></span>
+                Menyimpan...
+              </>
+            ) : (
+              'Simpan'
+            )}
           </button>
         </div>
       </div>

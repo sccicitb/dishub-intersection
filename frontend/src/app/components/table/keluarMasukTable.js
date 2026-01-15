@@ -32,7 +32,7 @@ const KeluarMasukTable = ({ selectedDate, setSelectedDate, loading, data }) => {
     // Data sudah berupa array langsung dari API (Array of periods)
     const periods = Array.isArray(vehicleData) ? vehicleData : [];
     
-    console.log("Generating rows from periods:", periods.length);
+
 
     periods.forEach((period, periodIndex) => {
       const timeSlots = period.timeSlots || [];

@@ -1,4 +1,4 @@
--- ✅ OPTIMIZATION: Add indexes to improve traffic matrix query performance
+-- OPTIMIZATION: Add indexes to improve traffic matrix query performance
 -- Run this once to create indexes that will help the batch query execute faster
 
 -- Index 1: Most important - for waktu range queries

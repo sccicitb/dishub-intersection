@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from "@/app/context/authContext";
 // import monthlyData from '@/data/DataTableDaysMonth.json';
 import { ExportMonthButton } from '@/app/components/exportExcel';
+import { formatNumber } from '@/utils/numberFormat';
 
 const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loading, exportExcel = false }) => {
   const [vehicleData, setVehicleData] = useState({
@@ -56,23 +57,22 @@ const MonthlyVehicleTable = ({ monthlyData, selectedYear, setSelectedYear, loadi
     // Accessing the correct structure for dailyData
     vehicleData?.dailyData?.map((monthItem, index) => {
       const monthlyTotal = monthItem.monthlyTotal || calculateMonthlyTotal(monthItem.days);
-      console.log('vehicleData.dailyData:', vehicleData.dailyData);
 
       rows.push(
         <tr key={`month-${index}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
           <td className="border border-base-300 text-sm text-center">{monthItem.month}</td>
           <td className="border border-base-300 text-sm text-center">{monthItem.workDays}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.sm}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.mp}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.tr}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.aup}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.bs}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.ts}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.bb}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.tb}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.gandengSemitrailer}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.ktb}</td>
-          <td className="border border-base-300 text-sm text-center">{monthlyTotal.total}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(monthlyTotal.sm)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(monthlyTotal.mp)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(monthlyTotal.tr)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(monthlyTotal.aup)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(monthlyTotal.bs)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(monthlyTotal.ts)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(monthlyTotal.bb)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(monthlyTotal.tb)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(monthlyTotal.gandengSemitrailer)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(monthlyTotal.ktb)}</td>
+          <td className="border border-base-300 text-sm text-center">{formatNumber(monthlyTotal.total)}</td>
         </tr>
       );
     });

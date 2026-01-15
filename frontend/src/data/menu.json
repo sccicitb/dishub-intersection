@@ -5,24 +5,50 @@
     "icon": "AiFillHome"
   },
   {
-    "name": "Survei Simpang",
-    "url": "/survei-simpang",
+    "name": "Pencacahan Lalu Lintas",
+    "url": "/pencacahan-lalu-lintas",
     "icon": "RiRoadMapLine"
   },
   {
-    "name": "Survei Pergerakan",
-    "url": "/survei-pergerakan",
-    "icon": "FaCar"
+    "name": "Komposisi Lalu Lintas",
+    "url": "/komposisi-lalu-lintas",
+    "icon": "FaChartPie"
   },
   {
-    "name": "Survei Proporsi",
-    "url": "/survei-proporsi",
-    "icon": "MdEditRoad"
-  },
-  {
-    "name": "Survei LHRK",
-    "url": "/survei-lhrk",
+    "name": "Variasi Lalu Lintas",
+    "url": "/variasi-lalu-lintas",
     "icon": "RiDatabaseLine"
+  },
+  {
+    "name": "Kinerja Simpang",
+    "icon": "RiProgress6Line",
+    "children": [
+      {
+        "name": "Form SA-I",
+        "url": "/form-sa-i",
+        "icon": "RiProgress6Line"
+      },
+      {
+        "name": "Form SA-II",
+        "url": "/form-sa-ii",
+        "icon": "RiProgress6Line"
+      },
+      {
+        "name": "Form SA-III",
+        "url": "/form-sa-iii",
+        "icon": "RiProgress6Line"
+      },
+      {
+        "name": "Form SA-IV",
+        "url": "/form-sa-iv",
+        "icon": "RiProgress6Line"
+      },
+      {
+        "name": "Form SA-V",
+        "url": "/form-sa-v",
+        "icon": "RiProgress6Line"
+      }
+    ]
   },
   {
     "name": "Manajemen Kamera",
@@ -30,33 +56,8 @@
     "icon": "RiCamera3Line"
   },
   {
-    "name": "Manajemen User",
+    "name": "Manajemen Pengguna",
     "url": "/manajemen-user",
     "icon": "FaShieldAlt"
-  },
-  {
-    "name": "Form SA-I",
-    "url": "/form-sa-i",
-    "icon": "RiProgress6Line"
-  },
-  {
-    "name": "Form SA-II",
-    "url": "/form-sa-ii",
-    "icon": "RiProgress6Line"
-  },
-  {
-    "name": "Form SA-III",
-    "url": "/form-sa-iii",
-    "icon": "RiProgress6Line"
-  },
-  {
-    "name": "Form SA-IV",
-    "url": "/form-sa-iv",
-    "icon": "RiProgress6Line"
-  },
-  {
-    "name": "Form SA-V",
-    "url": "/form-sa-v",
-    "icon": "RiProgress6Line"
   }
 ]

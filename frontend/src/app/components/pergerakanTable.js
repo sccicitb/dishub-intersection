@@ -46,13 +46,13 @@ const DirectionTable = ({ vehicleData, classification, activePergerakan, activeP
 
     referenceData.forEach((periodData, periodIndex) => {
       if (!periodData || !periodData.timeSlots || !Array.isArray(periodData.timeSlots)) {
-        console.log(`Data periode ${periodIndex} tidak valid:`, periodData);
+
         return;
       }
 
       periodData.timeSlots.forEach((slot, timeIndex) => {
         if (!slot || !slot.time) {
-          console.log(`Slot ${timeIndex} pada periode ${periodIndex} tidak valid:`, slot);
+
           return;
         }
 
@@ -81,18 +81,18 @@ const DirectionTable = ({ vehicleData, classification, activePergerakan, activeP
         rowCount++;
       });
 
-      if (periodIndex === 2) {
-        rows.push(
-          <tr key={`divider-${periodIndex}`}>
-            <td
-              colSpan={22}
-              className="border border-base-300 font-semibold px-2 py-1 text-xs text-center bg-base-200"
-            >
-              Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
-            </td>
-          </tr>
-        );
-      }
+      // if (periodIndex === 2) {
+      //   rows.push(
+      //     <tr key={`divider-${periodIndex}`}>
+      //       <td
+      //         colSpan={22}
+      //         className="border border-base-300 font-semibold px-2 py-1 text-xs text-center bg-base-200"
+      //       >
+      //         Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
+      //       </td>
+      //     </tr>
+      //   );
+      // }
     });
 
     return rows.length > 0 ? rows : (
@@ -152,10 +152,10 @@ const DirectionTable = ({ vehicleData, classification, activePergerakan, activeP
 
   const generateRowsForSingleDirection = () => {
     // Handle the actual API response structure
-    console.log('Processing single direction data:', vehicleData);
+
 
     if (!vehicleData || !Array.isArray(vehicleData) || vehicleData.length === 0) {
-      console.log('vehicleData single direction tidak valid:', vehicleData);
+
       return (
         <tr>
           <td colSpan="7" className="text-center py-4">
@@ -170,13 +170,13 @@ const DirectionTable = ({ vehicleData, classification, activePergerakan, activeP
 
     vehicleData.forEach((periodData, periodIndex) => {
       if (!periodData || !periodData.timeSlots || !Array.isArray(periodData.timeSlots)) {
-        console.log(`Data periode ${periodIndex} tidak valid:`, periodData);
+
         return;
       }
 
       periodData.timeSlots.forEach((slot, timeIndex) => {
         if (!slot || !slot.time || !slot.data) {
-          console.log(`Slot ${timeIndex} pada periode ${periodIndex} tidak valid:`, slot);
+
           return;
         }
 
@@ -344,17 +344,17 @@ const DirectionTable = ({ vehicleData, classification, activePergerakan, activeP
 
   // Debug logging
   useEffect(() => {
-    console.log('=== DirectionTable Debug ===');
-    console.log('vehicleData:', vehicleData);
-    console.log('activePergerakan:', activePergerakan);
-    console.log('activePendekatan:', activePendekatan);
-    console.log('vehicleData type:', typeof vehicleData);
+
+
+
+
+
     console.log('vehicleData isArray:', Array.isArray(vehicleData));
 
     if (Array.isArray(vehicleData) && vehicleData.length > 0) {
-      console.log('First period:', vehicleData[0]);
+
       if (vehicleData[0]?.timeSlots?.length > 0) {
-        console.log('First time slot:', vehicleData[0].timeSlots[0]);
+
       }
     }
   }, [vehicleData, activePergerakan, activePendekatan]);

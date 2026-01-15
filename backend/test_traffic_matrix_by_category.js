@@ -19,7 +19,7 @@ async function testTrafficMatrixByCategoryAPI() {
       }
     });
 
-    console.log('✅ Response Status:', response1.status);
+    console.log('Response Status:', response1.status);
     console.log('📄 Response Data:');
     console.log(JSON.stringify(response1.data, null, 2));
     console.log('\n---\n');
@@ -36,7 +36,7 @@ async function testTrafficMatrixByCategoryAPI() {
       }
     });
 
-    console.log('✅ Response Status:', response2.status);
+    console.log('Response Status:', response2.status);
     console.log('📄 Response Data:');
     console.log(JSON.stringify(response2.data, null, 2));
     console.log('\n---\n');
@@ -53,7 +53,7 @@ async function testTrafficMatrixByCategoryAPI() {
       }
     });
 
-    console.log('✅ Response Status:', response3.status);
+    console.log('Response Status:', response3.status);
     console.log('📄 Response Data:');
     console.log(JSON.stringify(response3.data, null, 2));
     console.log('\n---\n');
@@ -68,7 +68,7 @@ async function testTrafficMatrixByCategoryAPI() {
         }
       });
     } catch (error) {
-      console.log('✅ Expected Error:', error.response?.data?.message);
+      console.log('Expected Error:', error.response?.data?.message);
     }
     console.log('\n---\n');
 
@@ -83,7 +83,7 @@ async function testTrafficMatrixByCategoryAPI() {
         }
       });
     } catch (error) {
-      console.log('✅ Expected Error:', error.response?.data?.message);
+      console.log('Expected Error:', error.response?.data?.message);
     }
     console.log('\n---\n');
 
@@ -98,10 +98,10 @@ async function testTrafficMatrixByCategoryAPI() {
         }
       });
     } catch (error) {
-      console.log('✅ Expected Error:', error.response?.data?.message);
+      console.log('Expected Error:', error.response?.data?.message);
     }
 
-    console.log('\n✨ All tests completed!');
+    console.log('\nAll tests completed!');
 
   } catch (error) {
     console.error('❌ Error:', error.response?.data || error.message);

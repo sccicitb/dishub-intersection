@@ -11,7 +11,7 @@ const SaIIKTBData = function(ktbData) {
 SaIIKTBData.create = (newKTBData, result) => {
   sql.query("INSERT INTO sa_ii_ktb_data SET ?", newKTBData, (err, res) => {
     if (err) {
-      console.log("error: ", err);
+
       result(err, null);
       return;
     }

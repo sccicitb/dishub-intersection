@@ -19,7 +19,7 @@ const SaIFaseApil = function(faseApil) {
 SaIFaseApil.create = (newFaseApil, result) => {
   sql.query("INSERT INTO sa_i_fase_apil SET ?", newFaseApil, (err, res) => {
     if (err) {
-      console.log("error: ", err);
+
       result(err, null);
       return;
     }

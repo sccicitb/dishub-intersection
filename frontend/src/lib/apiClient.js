@@ -23,14 +23,6 @@ axiosInstance.interceptors.request.use(function (config) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  // Debug logging (remove in production)
-  // console.log('API Request:', {
-  //   url: config.url,
-  //   method: config.method,
-  //   data: config.data,
-  //   headers: config.headers
-  // });
-
   return config;
 }, function (error) {
   console.error('Request interceptor error:', error);

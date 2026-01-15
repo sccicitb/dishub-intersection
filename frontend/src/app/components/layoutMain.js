@@ -5,6 +5,7 @@ import * as Icons from "react-icons/ai";
 import * as FaIcons from "react-icons/fa";
 import * as RiIcons from "react-icons/ri";
 import * as MdIcons from "react-icons/md";
+import { FaCaretDown, FaCaretRight } from "react-icons/fa6";
 import listMenu from "@/data/menu.json";
 import listMenuMobility from "@/data/menuMobility.json";
 import ThemeToggle from "@/app/components/customTheme";
@@ -25,6 +26,7 @@ const Layout = ({ children }) => {
   const [mounted, setMounted] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [menu, setMenu] = useState([]);
+  const [expandedGroups, setExpandedGroups] = useState({});
 
   useEffect(() => {
     setMounted(true);
@@ -42,6 +44,9 @@ const Layout = ({ children }) => {
     const roleBasedMenus = {
       '/manajemen-user': ['admin'],
       '/manajemen-kamera': ['admin'],
+      "/variasi-lalu-lintas": ['admin', 'operator'],
+      "/pencacahan-lalu-lintas": ['admin', 'operator'],
+      "/komposisi-lalu-lintas": ['admin', 'operator'],
       "/form-sa-i": ['admin', 'operator'],
       "/form-sa-ii": ['admin', 'operator'],
       "/form-sa-iii": ['admin', 'operator'],
@@ -61,15 +66,22 @@ const Layout = ({ children }) => {
   const filterMenuByRole = (menuList) => {
     if (!user || !menuList) return [];
 
-    return menuList.filter(item => hasAccess(item));
+    return menuList.map(item => {
+      if (item.children) {
+        const filteredChildren = item.children.filter(child => hasAccess(child));
+        if (filteredChildren.length > 0) {
+          return { ...item, children: filteredChildren };
+        }
+        return null;
+      }
+      return hasAccess(item) ? item : null;
+    }).filter(Boolean);
   };
 
   useEffect(() => {
     const baseMenu = pathname === "/dashboard/mobility" ? listMenuMobility : listMenu;
     const filteredMenu = filterMenuByRole(baseMenu);
     setMenu(filteredMenu);
-    // setMenu(listMenu);
-    console.log("path", filteredMenu)
   }, [pathname, user])
 
   if (!mounted) return null;
@@ -160,14 +172,58 @@ const Layout = ({ children }) => {
                   IconComponent = RiIcons[item.icon]
                 }
 
-                return (
-                  <li key={index} >
-                    <a href={item.url} className={pathname === item.url ? `items-center bg-neutral-800/90 box-shadow rounded-xl text-white py-1.5` : `rounded-xl py-1.5 ` + `my-0.5 text-white`}>
-                      {IconComponent && <IconComponent className="inline-block mr-2 text-lg" />}
-                      {item.name}
-                    </a>
-                  </li>
-                );
+                if (item.children) {
+                  // Group with children
+                  const isExpanded = expandedGroups[item.name] || false;
+                  return (
+                    <li key={index}>
+                      <div
+                        className="flex items-center cursor-pointer rounded-xl py-1.5 my-0.5 text-white hover:bg-neutral-800/50"
+                        onClick={() => setExpandedGroups(prev => ({ ...prev, [item.name]: !prev[item.name] }))}
+                      >
+                        {IconComponent && <IconComponent className="inline-block mr-2 text-lg" />}
+                        <span className="flex-1">{item.name}</span>
+                        {isExpanded ? <FaCaretDown className="text-lg" /> : <FaCaretRight className="text-lg" />}
+                      </div>
+                      {isExpanded && (
+                        <ul className="ml-4 mt-1 space-y-1">
+                          {item.children.map((child, childIndex) => {
+                            let ChildIconComponent = child.icon && Icons[child.icon];
+                            if (!ChildIconComponent && child.icon && FaIcons[child.icon]) {
+                              ChildIconComponent = FaIcons[child.icon];
+                            } else if (!ChildIconComponent && child.icon && MdIcons[child.icon]) {
+                              ChildIconComponent = MdIcons[child.icon];
+                            } else if (!ChildIconComponent && child.icon && RiIcons[child.icon]) {
+                              ChildIconComponent = RiIcons[child.icon];
+                            }
+
+                            return (
+                              <li key={childIndex}>
+                                <a
+                                  href={child.url}
+                                  className={pathname === child.url ? `items-center bg-neutral-800/90 box-shadow rounded-xl text-white py-1.5 block` : `rounded-xl py-1.5 block text-white hover:bg-neutral-800/50`}
+                                >
+                                  {ChildIconComponent && <ChildIconComponent className="inline-block mr-2 text-sm" />}
+                                  {child.name}
+                                </a>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                } else {
+                  // Regular menu item
+                  return (
+                    <li key={index}>
+                      <a href={item.url} className={pathname === item.url ? `items-center bg-neutral-800/90 box-shadow rounded-xl text-white py-1.5` : `rounded-xl py-1.5 ` + `my-0.5 text-white hover:bg-neutral-800/50`}>
+                        {IconComponent && <IconComponent className="inline-block mr-2 text-lg" />}
+                        {item.name}
+                      </a>
+                    </li>
+                  );
+                }
               })}
               {/* <div className="lg:hidden absolute bottom-5">
               <div className="flex flex-col items-start gap-2">

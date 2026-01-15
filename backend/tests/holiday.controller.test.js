@@ -23,7 +23,7 @@ describe("HolidayController CRUD", () => {
     jest.clearAllMocks();
   });
 
-  // ✅ Create
+  // Create
   it("should create a new holiday", async () => {
     Holiday.create.mockImplementation((data, cb) => cb(null, savedData));
 
@@ -40,7 +40,7 @@ describe("HolidayController CRUD", () => {
     expect(res._getJSONData()).toMatchObject({ status: "ok", data: savedData });
   });
 
-  // ✅ Update
+  // Update
   it("should update a holiday", async () => {
     Holiday.update.mockImplementation((id, data, cb) => cb(null, { affectedRows: 1 }));
 
@@ -58,7 +58,7 @@ describe("HolidayController CRUD", () => {
     expect(res._getJSONData()).toMatchObject({ status: "ok" });
   });
 
-  // ✅ Delete
+  // Delete
   it("should delete a holiday", async () => {
     Holiday.delete.mockImplementation((id, cb) => cb(null, { affectedRows: 1 }));
 
@@ -75,7 +75,7 @@ describe("HolidayController CRUD", () => {
     expect(res._getJSONData()).toMatchObject({ status: "ok" });
   });
 
-  // ✅ Get Paginated - default
+  // Get Paginated - default
   it("should get paginated holidays (default limit) with total and id", async () => {
     const dbRow = {
       id: 1,
@@ -111,7 +111,7 @@ describe("HolidayController CRUD", () => {
     });
   });
 
-  // ✅ Get Paginated - custom limit
+  // Get Paginated - custom limit
   it("should get paginated holidays with custom page/limit", async () => {
     const dbRow = {
       id: 1,

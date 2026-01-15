@@ -206,7 +206,6 @@ exports.getTrafficMatrix = async (req, res) => {
     });
     
   } catch (error) {
-    console.error("Error getting traffic matrix:", error);
     res.status(500).json({
       success: false,
       message: `Error retrieving traffic matrix: ${error.message}`
@@ -214,7 +213,7 @@ exports.getTrafficMatrix = async (req, res) => {
   }
 };
 
-// ✅ NEW: Get traffic matrix with vehicle categories breakdown
+// NEW: Get traffic matrix with vehicle categories breakdown
 // Response includes asal-tujuan matrix and arah pergerakan based on vehicle categories
 exports.getTrafficMatrixByCategory = async (req, res) => {
   try {
@@ -280,7 +279,7 @@ exports.getTrafficMatrixByCategory = async (req, res) => {
     });
   }
 };
-// ✅ NEW: Get raw data from arus table with pagination and filtering
+// NEW: Get raw data from arus table with pagination and filtering
 exports.getRawArusData = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -364,7 +363,7 @@ exports.getRawArusData = async (req, res) => {
   }
 };
 
-// ✅ NEW: Get traffic matrix by time periods (Dini Hari, Pagi, Siang, Sore, Malam)
+// NEW: Get traffic matrix by time periods (Dini Hari, Pagi, Siang, Sore, Malam)
 exports.getTrafficMatrixByTimePeriods = async (req, res) => {
   try {
     const { simpang_id, date } = req.query;
@@ -418,7 +417,7 @@ exports.getTrafficMatrixByTimePeriods = async (req, res) => {
   }
 };
 
-// ✅ NEW: Get traffic matrix by hours (00:00-01:00, 01:00-02:00, ..., 23:00-23:59)
+// NEW: Get traffic matrix by hours (00:00-01:00, 01:00-02:00, ..., 23:00-23:59)
 exports.getTrafficMatrixByHours = async (req, res) => {
   try {
     const { simpang_id, date } = req.query;

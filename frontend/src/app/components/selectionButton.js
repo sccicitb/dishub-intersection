@@ -63,12 +63,12 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
       display: '5 Menit'
     },
     {
-      item: '10min',
-      display: '10 Menit'
-    },
-    {
       item: '15min',
       display: '15 Menit'
+    },
+    {
+      item: '30min',
+      display: '30 Menit'
     },
     {
       item: '1h',
@@ -81,7 +81,7 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
   const classificationOptions = ['PKJI 2023 Luar Kota', 'PKJI 2023 Dalam Kota', 'Tipikal'];
 
   return (
-    <div className="mx-auto space-y-1 w-full h-fit lg:w-[90%]">
+    <div className="mx-auto space-y-1 w-full h-fit lg:w-[100%]">
       {/* <div className="space-y-1">
         <h3 className="text-[14px] font-medium">Pilih Surveyor</h3>
         <div className="join w-full gap-5 flex overflow-x-auto p-2">
@@ -201,7 +201,7 @@ export default function SelectionButtons ({ pendekatan, interval, exportPdf, ara
         </div>
       </div>
       <Suspense fallback={<div className='w-full'>Loading...</div>}>
-        {exportPdf && isEditor && isAdmin && (
+        {exportPdf && isAdmin && (
 
           <div className='space-y-1'>
             <div className="w-full flex overflow-x-auto join pt-2 px-2">

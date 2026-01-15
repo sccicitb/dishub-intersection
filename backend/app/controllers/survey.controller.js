@@ -1,13 +1,27 @@
-// survey.controller.js
 const fs = require('fs');
 const path = require('path');
 const subCodeMap = require('../helpers/subCodeMap');
-const JENIS_KENDARAAN = Object.values(subCodeMap);
-const { getPeriodsAndSlots } = require('../helpers/arus');
-const { getSubCodes } = require('../helpers/classificationHelper');
-const { getIntervals } = require('../helpers/timeHelper');
 const surveyModel = require('../models/survey.model');
 const mapsModel = require('../models/maps.model');
+
+// Pemetaan arah
+const DIRECTION_MAP = {
+  'utara': 'north', 'north': 'north',
+  'selatan': 'south', 'south': 'south',
+  'timur': 'east', 'east': 'east',
+  'barat': 'west', 'west': 'west',
+  'semua': 'semua'
+};
+
+const normalizeDirection = (dir) => DIRECTION_MAP[dir?.toLowerCase()] || dir;
+
+// Putaran kendaraan (left, straight, right)
+const TURN_MAP = {
+  north: { left: 'west', straight: 'south', right: 'east' },
+  south: { left: 'east', straight: 'north', right: 'west' },
+  east: { left: 'north', straight: 'west', right: 'south' },
+  west: { left: 'south', straight: 'east', right: 'north' }
+};
 
 const ROWS = [
   { row: 'row1', turn: 'left' },
@@ -15,60 +29,23 @@ const ROWS = [
   { row: 'row3', turn: 'right' }
 ];
 
-const TURN_MAP = {
-  north: { left: 'west', straight: 'south', right: 'east' },
-  south: { left: 'east', straight: 'north', right: 'west' },
-  east:  { left: 'north', straight: 'west', right: 'south' },
-  west:  { left: 'south', straight: 'east', right: 'north' }
+// Validasi interval
+const validateInterval = (interval) => {
+  const valid = ['5min', '10min', '15min', '1h', '60min'];
+  return valid.includes(interval) ? interval : '15min';
 };
 
-// Mapping Indonesian direction names to English (database format)
-const DIRECTION_MAP = {
-  'utara': 'north',
-  'north': 'north',
-  'selatan': 'south',
-  'south': 'south',
-  'timur': 'east',
-  'east': 'east',
-  'barat': 'west',
-  'west': 'west',
-  'semua': 'semua'
-};
-
-// Helper function to convert Indonesian direction to English or keep as-is
-const normalizeDirection = (direction) => {
-  if (!direction) return direction;
-  const normalized = direction.toLowerCase();
-  return DIRECTION_MAP[normalized] || normalized;
-};
-
-/**
- * GET /api/surveys/data-summary
- * Query string:
- *   - reportType: 'hourly' (default existing), 
- *                 'dailyRange', 'dailyMonth', 'monthly', 'yearly'
- *   - simpang_id, approach, direction, classification (seperti semula)
- *   - interval: '5min' | '10min' | '15min' | '1h' (bila reportType=hourly)
- *   - startDate, endDate        (bila dailyRange)
- *   - month, year               (bila dailyMonth atau monthly)
- *   - months (format '1,2,3'), year  (bila monthly, artinya beberapa bulan di tahun yg sama)
- *   - date (YYYY-MM-DD), numYears (bila yearly)
- */
+// GET /api/surveys/data-summary - ambil data kendaraan
 const getVehicleSummaryData = async (req, res) => {
   try {
-    // --- 1. Baca filter dasar ---
     const filters = {
       simpangId: req.query.simpang_id,
-      approach: normalizeDirection(req.query.approach),  // Convert Indonesian to English (east, south, north, west)
-      direction: normalizeDirection(req.query.direction),  // Convert Indonesian to English
+      approach: normalizeDirection(req.query.approach),
+      direction: normalizeDirection(req.query.direction),
       classificationType: req.query.classification || 'luar_kota'
     };
 
-    console.log('DEBUG - Query approach:', req.query.approach, '-> normalized:', filters.approach);
-
-    console.log('Filters normalized:', filters);
-
-    // 1.1. Ambil subCode list (array) berdasarkan klasifikasi
+    // Baca klasifikasi dari file
     const classificationPath = path.join(__dirname, '../data/classification.json');
     const classificationJson = JSON.parse(fs.readFileSync(classificationPath, 'utf-8'));
     const rawSubCodes = classificationJson
@@ -76,95 +53,59 @@ const getVehicleSummaryData = async (req, res) => {
       .map(item => item.subCode);
     const includedSubCodes = rawSubCodes.map(code => subCodeMap[code] || code);
 
-    // --- 2. Tentukan tipe laporan (reportType) ---
     const reportType = req.query.reportType || 'hourly'; 
-    // default: 'hourly' (per‐periode 15min/1h seperti sebelumnya)
 
-    // --- 3. Switch case untuk tiap reportType ---
+    // Hourly: per interval
     if (reportType === 'hourly') {
-      // 3.a Eksisting logic: per‐periode (5min/10min/15min/1h) untuk satu hari
-      const requestedInterval = req.query.interval ? req.query.interval.toLowerCase() : '15min';
-      
-      // Validate interval parameter
-      const validIntervals = ['5min', '10min', '15min', '1h', '60min'];
-      if (!validIntervals.includes(requestedInterval)) {
-        return res.status(400).json({ 
-          error: `Invalid interval: ${requestedInterval}. Valid intervals: ${validIntervals.join(', ')}` 
-        });
-      }
-      
-      const interval = requestedInterval;
-      const date = req.query.date; // optional; kalau kosong, model akan treat sebagai “today until now”
-
-      // Panggil model lama
+      const interval = validateInterval(req.query.interval?.toLowerCase());
+      const date = req.query.date;
       const data = await surveyModel.getVehicleDataGrouped(
         { simpangId: filters.simpangId, approach: filters.approach, direction: filters.direction, date }, 
-        includedSubCodes, 
-        interval
+        includedSubCodes, interval
       );
       return res.json({ ...data, interval });
     }
 
-    // --------------------------------------------------------------
-    // 3.b DAILY RANGE: dari startDate sampai endDate (per‐hari)
-    // --------------------------------------------------------------
+    // Daily range
     if (reportType === 'dailyRange') {
       const { startDate, endDate } = req.query;
       if (!startDate || !endDate) {
-        return res.status(400).json({ error: 'startDate dan endDate wajib diisi (format YYYY-MM-DD).' });
+        return res.status(400).json({ error: 'startDate dan endDate wajib (YYYY-MM-DD)' });
       }
-      // Panggil helper baru:
       const dailyRows = await surveyModel.getDailySummaryByDateRange(
         { simpangId: filters.simpangId, approach: filters.approach, direction: filters.direction },
-        includedSubCodes,
-        startDate,
-        endDate
+        includedSubCodes, startDate, endDate
       );
-      // Bentuk output serupa DataTableDaysMonth.json → kita embed di field `dailyData`
-      // Kita tidak butuh monthlyTotal di sini, langsung kembalikan array tanggalnya:
       return res.json({ dailyData: dailyRows });
     }
 
-    // --------------------------------------------------------------
-    // 3.c DAILY BY SINGLE MONTH (dailyMonth)
-    // --------------------------------------------------------------
+    // Single month
     if (reportType === 'dailyMonth') {
-      let month = parseInt(req.query.month, 10);
-      let year = parseInt(req.query.year, 10);
+      const month = parseInt(req.query.month, 10);
+      const year = parseInt(req.query.year, 10);
       if (!month || !year) {
-        return res.status(400).json({ error: 'month (1–12) dan year (YYYY) wajib diisi.' });
+        return res.status(400).json({ error: 'month (1-12) dan year (YYYY) wajib' });
       }
-      // Panggil getMonthlySummary untuk satu bulan
       const oneMonthData = await surveyModel.getMonthlySummary(
         month, year,
         { simpangId: filters.simpangId, approach: filters.approach, direction: filters.direction },
         includedSubCodes
       );
-      // Sesuai DataTableDaysMonth.json: dailyData berbentuk array, disini hanya satu elemen bulannya
-      return res.json({ 
-        dailyData: [ /* array sebulan penuh */ oneMonthData ],
-        lhrkData: [ /* kalau ingin LHRK untuk bulan ini? biasanya LHRK Jan, LHRK Feb dsm */ ]
-      });
+      return res.json({ dailyData: [ oneMonthData ], lhrkData: [] });
     }
 
-    // --------------------------------------------------------------
-    // 3.d MONTHLY: beberapa bulan di satu tahun
-    // --------------------------------------------------------------
+    // Multiple months
     if (reportType === 'monthly') {
-      // Param: months= “1,2,3” (bisa string CSV), year=2025
       const monthsCSV = req.query.months;
       const year = parseInt(req.query.year, 10);
-
       if (!year) {
-        return res.status(400).json({ error: 'Parameter year (YYYY) wajib diisi.' });
+        return res.status(400).json({ error: 'year (YYYY) wajib' });
       }
 
-      // Jika months kosong, gunakan default: semua bulan
       const monthList = monthsCSV
         ? monthsCSV.split(',').map(m => parseInt(m.trim(), 10)).filter(m => m >= 1 && m <= 12)
         : [1,2,3,4,5,6,7,8,9,10,11,12];
 
-      // Panggil getMonthlySummary untuk tiap bulan di monthList
       const allMonthsData = [];
       for (const m of monthList) {
         const oneMonthData = await surveyModel.getMonthlySummary(
@@ -175,121 +116,87 @@ const getVehicleSummaryData = async (req, res) => {
         allMonthsData.push(oneMonthData);
       }
 
-      // Bentuk JSON final sama seperti DataTableDaysMonth.json:
-      // { dailyData: [ { month: 'Januari', … }, { month: 'Februari', … }, … ], lhrkData: […] }
-      // “lhrkData” untuk tiap bulan: misal periode LHRK Jan, LHRK Feb:
       const lhrkData = allMonthsData.map(mObj => {
         const daysInPeriod = mObj.days.length;
-        const data = { ...mObj.monthlyTotal }; // total per bulan
-        // dailyAverage = total / daysInPeriod
+        const data = { ...mObj.monthlyTotal };
         const dailyAverage = {};
         Object.keys(data).forEach(k => {
           dailyAverage[k] = daysInPeriod > 0 ? Math.round(data[k] / daysInPeriod) : 0;
         });
         return {
-          period: `LHRK ${mObj.month.substr(0,3)}`, // misal “LHRK Jan”
-          daysInPeriod,
-          data,
-          dailyAverage
+          period: `LHRK ${mObj.month.substr(0,3)}`,
+          daysInPeriod, data, dailyAverage
         };
       });
 
-      return res.json({
-        dailyData: allMonthsData,
-        lhrkData
-      });
+      return res.json({ dailyData: allMonthsData, lhrkData });
     }
 
-    // --------------------------------------------------------------
-    // 3.e YEARLY: dimulai dari param date, jumlah periode = numYears (default 4)
-    // --------------------------------------------------------------
+    // Yearly
     if (reportType === 'yearly') {
-      const date = req.query.date;           // 'YYYY-MM-DD'
+      const date = req.query.date;
       const numYears = parseInt(req.query.numYears, 10) || 4;
       if (!date) {
-        return res.status(400).json({ error: 'date (YYYY-MM-DD) wajib diisi untuk mode yearly.' });
+        return res.status(400).json({ error: 'date (YYYY-MM-DD) wajib untuk yearly' });
       }
       const startDateObj = new Date(date);
       if (isNaN(startDateObj.getTime())) {
-        return res.status(400).json({ error: 'Format date salah. Harus \'YYYY-MM-DD\'.' });
+        return res.status(400).json({ error: 'Format date salah, gunakan YYYY-MM-DD' });
       }
       const { yearlyData, lhrtData } = await surveyModel.getYearlySummary(
         startDateObj,
         { simpangId: filters.simpangId, approach: filters.approach, direction: filters.direction },
-        includedSubCodes,
-        numYears
+        includedSubCodes, numYears
       );
-      // Bentuk JSON final mirip DataTableYear.json:
       return res.json({ yearlyData, lhrtData });
     }
 
-    // --------------------------------------------------------------
-    // 4. Kalau reportType tidak dikenali
-    // --------------------------------------------------------------
     return res.status(400).json({ error: `reportType tidak dikenali: ${reportType}` });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Failed to fetch vehicle data' });
+    res.status(500).json({ message: 'Gagal ambil data' });
   }
 };
 
-/**
- * GET /api/surveys/export-vehicle
- * Param: interval = '5min' | '10min' | '15min' (default) | '1h' | '60min'
- */
+// GET /api/surveys/export-vehicle
 const exportVehicleData = async (req, res) => {
   try {
     const { simpang_id, date, interval } = req.query;
     
-    // Validate and set interval
-    const requestedInterval = interval ? interval.toLowerCase() : '15min';
-    const validIntervals = ['5min', '10min', '15min', '1h', '60min', '1hour'];
-    const summaryInterval = validIntervals.includes(requestedInterval) 
-      ? (requestedInterval === '1hour' ? '1h' : requestedInterval) 
-      : '15min';
-
+    const summaryInterval = validateInterval(interval?.toLowerCase());
     if (!simpang_id || !date)
-      return res.status(400).json({ error: 'simpang_id and date required' });
+      return res.status(400).json({ error: 'simpang_id dan date wajib' });
 
-    // Get simpang info
     const simpang = await mapsModel.getSimpangById(simpang_id);
     if (!simpang)
-      return res.status(404).json({ error: 'Simpang not found' });
+      return res.status(404).json({ error: 'Simpang tidak ditemukan' });
 
-    // Get arus data
     const arusRows = await surveyModel.getArusBySimpangDate(simpang_id, date);
-
-    // Generate periods & slots with selected interval
     const periods = getPeriodsAndSlots(arusRows, summaryInterval);
 
-    // Compose output (match sampleVehicleData.json)
-    const surveyInfo = {
-      simpangCode: simpang.id,
-      direction: simpang.kategori,
-      surveyor: 'VIANA',
-      date
-    };
-
-    return res.json({ surveyInfo, periods, interval: summaryInterval });
+    return res.json({
+      surveyInfo: { simpangCode: simpang.id, direction: simpang.kategori, surveyor: 'VIANA', date },
+      periods, interval: summaryInterval
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Error server" });
   }
 };
 
+// GET /api/surveys/proporsi
 const getSurveyProporsi = async (req, res) => {
   try {
     const { ID_Simpang, type, date } = req.query;
     if (!ID_Simpang || !type) {
-      return res.status(400).json({ message: "ID_Simpang dan type wajib diisi" });
+      return res.status(400).json({ message: "ID_Simpang dan type wajib" });
     }
     const queryDate = date || (new Date()).toISOString().slice(0, 10);
-    const jenisKendaraanDB = JENIS_KENDARAAN.map(code => subCodeMap[code] || code);
+    const jenisKendaraanDB = Object.values(subCodeMap);
     const arahList = ['north', 'south', 'east', 'west'];
     const grid = {};
     let vehicleCount = 0;
 
-    // Ambil semua data sekali query
     const rows = await surveyModel.getArusSummaryGrid(ID_Simpang, jenisKendaraanDB, queryDate);
 
     for (const arah of arahList) {
@@ -297,7 +204,6 @@ const getSurveyProporsi = async (req, res) => {
       for (let rowIdx = 0; rowIdx < ROWS.length; rowIdx++) {
         const { row, turn } = ROWS[rowIdx];
         const ke_arah = TURN_MAP[arah][turn];
-        // Cari baris yang sesuai dari hasil SQL
         const found = rows.find(r => r.dari_arah === arah && r.ke_arah === ke_arah);
         for (let colIdx = 0; colIdx < jenisKendaraanDB.length; colIdx++) {
           const jenis = jenisKendaraanDB[colIdx];
@@ -314,160 +220,72 @@ const getSurveyProporsi = async (req, res) => {
     res.json(grid);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Error server" });
   }
 };
 
-/**
- * GET /api/surveys/km-tabel
- * KM Tabel API endpoint with DataKMTabel.json format
- * Query parameters:
- *   - simpang_id: intersection ID (2, 3, 4, 5)
- *   - date: YYYY-MM-DD format
- *   - interval: '5min', '10min', '15min', '1h', or '60min' (optional, default: '15min')
- *   - approach: traffic direction ('north', 'south', 'east', 'west', 'utara', 'selatan', 'timur', 'barat', 'semua') (optional, default: 'semua')
- */
+// GET /api/surveys/km-tabel
 const getKMTabelData = async (req, res) => {
   const startTime = Date.now();
-  
   try {
-    // Extract and validate parameters
     const { simpang_id, date, interval, approach } = req.query;
     
-    // Input validation
     if (!simpang_id) {
-      return res.status(400).json({ 
-        error: 'Parameter simpang_id is required',
-        message: 'Please provide simpang_id (2, 3, 4, or 5)'
-      });
+      return res.status(400).json({ error: 'simpang_id wajib (2, 3, 4, 5)' });
     }
-    
     if (!date) {
-      return res.status(400).json({ 
-        error: 'Parameter date is required',
-        message: 'Please provide date in YYYY-MM-DD format'
-      });
+      return res.status(400).json({ error: 'date wajib (YYYY-MM-DD)' });
     }
 
-    // Convert string parameters to proper types
     const simpangId = parseInt(simpang_id, 10);
-    const requestInterval = interval ? interval.toLowerCase() : '15min';
+    const requestInterval = validateInterval(interval?.toLowerCase());
     const requestApproach = approach || 'semua';
 
-    // Call model function with proper error handling
     const kmTabelData = await surveyModel.getKMTabelData(
-      simpangId,
-      date,
-      requestInterval,
-      requestApproach
+      simpangId, date, requestInterval, requestApproach
     );
 
-    // Calculate execution time for performance monitoring
     const executionTime = Date.now() - startTime;
 
-    // Log successful request for monitoring
-    console.log(`[KM-Tabel] SUCCESS: simpang=${simpangId}, date=${date}, interval=${requestInterval}, approach=${requestApproach}, time=${executionTime}ms`);
-
-    // Return success response with performance metadata
     return res.json({
       success: true,
       data: kmTabelData,
       metadata: {
         simpang_id: simpangId,
-        date: date,
-        interval: requestInterval,
-        approach: requestApproach,
+        date, interval: requestInterval, approach: requestApproach,
         execution_time_ms: executionTime,
         timestamp: new Date().toISOString()
       }
     });
-
   } catch (error) {
     const executionTime = Date.now() - startTime;
-    
-    // Log error for monitoring
-    console.error(`[KM-Tabel] ERROR: ${error.message}`, {
-      query: req.query,
-      execution_time_ms: executionTime,
-      stack: error.stack
-    });
-
-    // Handle validation errors
-    if (error.message.includes('Validation failed')) {
-      return res.status(400).json({
-        success: false,
-        error: 'Parameter validation failed',
-        message: error.message,
-        query_received: req.query
-      });
-    }
-
-    // Handle database errors
-    if (error.message.includes('Database query failed')) {
-      return res.status(500).json({
-        success: false,
-        error: 'Database error',
-        message: 'Failed to retrieve traffic data from database',
-        execution_time_ms: executionTime
-      });
-    }
-
-    // Generic error handler
-    return res.status(500).json({
+    const status = error.message.includes('Validation') ? 400 : 500;
+    res.status(status).json({
       success: false,
-      error: 'Internal server error',
-      message: 'An unexpected error occurred while processing your request',
+      error: error.message,
       execution_time_ms: executionTime
     });
   }
 };
 
-/**
- * GET /api/surveys/traffic-matrix
- * Get traffic matrix (asal-tujuan) with approach filtering
- * Query parameters:
- *   - simpang_id (required): Intersection ID
- *   - date (required): Date in format YYYY-MM-DD or YYYY/MM/DD
- *   - approach (optional): dari_arah filter ('barat'|'selatan'|'timur'|'utara'|'semua')
- */
+// GET /api/surveys/traffic-matrix
 const getTrafficMatrix = async (req, res) => {
   const startTime = Date.now();
   try {
     const { simpang_id, date, approach } = req.query;
 
-    // Validate required parameters
-    if (!simpang_id) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing required parameter',
-        message: 'simpang_id is required'
-      });
+    if (!simpang_id || !date) {
+      return res.status(400).json({ success: false, error: 'simpang_id dan date wajib' });
     }
 
-    if (!date) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing required parameter',
-        message: 'date is required (format: YYYY-MM-DD or YYYY/MM/DD)'
-      });
-    }
-
-    // Normalize date format
     const normalizedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
+    const normalizedApproach = normalizeDirection(approach || 'semua');
 
-    // Normalize approach parameter
-    const normalizedApproach = approach ? normalizeDirection(approach) : 'semua';
-
-    console.log('Traffic Matrix Request:', { simpang_id, date: normalizedDate, approach: normalizedApproach });
-
-    // Call model to get matrix data
     const result = await surveyModel.getTrafficMatrix(simpang_id, normalizedDate, normalizedApproach);
-
     const executionTime = Date.now() - startTime;
 
     return res.json({
       success: true,
-      message: 'Traffic matrix retrieved successfully',
       data: {
         simpang_id: parseInt(simpang_id),
         date: normalizedDate,
@@ -477,58 +295,38 @@ const getTrafficMatrix = async (req, res) => {
       },
       execution_time_ms: executionTime
     });
-
   } catch (error) {
-    console.error('Error in getTrafficMatrix:', error);
     const executionTime = Date.now() - startTime;
-
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      error: 'Internal server error',
-      message: error.message,
+      error: error.message,
       execution_time_ms: executionTime
     });
   }
 };
 
+// GET /api/surveys/available-directions
 const getAvailableDirections = async (req, res) => {
   try {
     const { simpang_id } = req.query;
-
     if (!simpang_id) {
-      return res.status(400).json({
-        success: false,
-        error: 'Parameter simpang_id is required'
-      });
+      return res.status(400).json({ error: 'simpang_id wajib' });
     }
 
     const directions = await surveyModel.getAvailableDirections(simpang_id);
-
-    // Map English to Indonesian for user-friendly display
     const directionMap = {
-      'north': 'utara',
-      'south': 'selatan',
-      'east': 'timur',
-      'west': 'barat'
+      'north': 'utara', 'south': 'selatan',
+      'east': 'timur', 'west': 'barat'
     };
-
-    const directionsIndonesian = directions.map(d => directionMap[d] || d);
 
     return res.json({
       success: true,
       simpang_id: parseInt(simpang_id),
-      available_directions: directions,  // English
-      available_directions_id: directionsIndonesian,  // Indonesia
-      message: `${directions.length} directions available for this intersection`
+      available_directions: directions,
+      available_directions_id: directions.map(d => directionMap[d] || d)
     });
-
   } catch (error) {
-    console.error('Error in getAvailableDirections:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      message: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 

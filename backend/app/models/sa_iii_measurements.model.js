@@ -13,7 +13,6 @@ const SaIIIMeasurements = function(measurement) {
 SaIIIMeasurements.create = (newMeasurement, result) => {
   sql.query("INSERT INTO sa_iii_measurements SET ?", newMeasurement, (err, res) => {
     if (err) {
-      console.log("error: ", err);
       result(err, null);
       return;
     }

@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const simpangModel = require("./simpang.model");
 
 const VehicleDetailByTime = function (data) {
   this.data = data;
@@ -44,7 +45,7 @@ const generateTimeSlots = (interval) => {
 
   const intervalMinutes = {
     "5min": 5,
-    "10min": 10,
+    "15min": 15,
     "30min": 30,
     "1hour": 60
   };
@@ -76,8 +77,7 @@ const generateTimeSlots = (interval) => {
 
   return slots;
 };
-
-// ✅ Get detailed masuk/keluar by time intervals for specific simpang
+// Get detailed masuk/keluar by time intervals for specific simpang
 VehicleDetailByTime.getMasukKeluarDetailByTime = async (simpangId, date, interval = '1hour', callback) => {
   try {
     // Validate inputs
@@ -96,17 +96,20 @@ VehicleDetailByTime.getMasukKeluarDetailByTime = async (simpangId, date, interva
     }
 
     // Validate interval
-    const validIntervals = ['5min', '10min', '30min', '1hour'];
+    const validIntervals = ['5min', '15min', '30min', '1hour'];
     if (!validIntervals.includes(interval)) {
       throw new Error(`Invalid interval. Use one of: ${validIntervals.join(', ')}`);
     }
 
-    // Parse date and create timestamp range for full day
-    const start = new Date(`${date}T00:00:00+07:00`);
-    const end = new Date(`${date}T23:59:59+07:00`);
+    // Check if simpang exists
+    const simpang = await simpangModel.getSimpangById(simpangId);
+    if (!simpang) {
+      throw new Error(`Simpang with id ${simpangId} not found`);
+    }
 
-    const startDateTime = start.toISOString().slice(0, 19).replace('T', ' ');
-    const endDateTime = end.toISOString().slice(0, 19).replace('T', ' ');
+    // Use local time strings assuming DB stores in +07:00 timezone
+    const startDateTime = `${date} 00:00:00`;
+    const endDateTime = `${date} 23:59:59`;
 
     // Query all traffic data for the day
     const query = `
