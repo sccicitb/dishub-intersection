@@ -85,247 +85,189 @@ export const exportTrafficMatrixByFilter = async (data, simpangId, dateInput, in
   const wsInfo = wb.addWorksheet('Info');
   infoData.forEach(row => wsInfo.addRow(row));
 
-  // ===== SHEET 2: DETAILED TABLE (Per Time Slot) =====
+  // ===== SHEET 2: DETAILED TABLE (Per Time Slot) - MATCHING trafficMatrixByFilter2 FORMAT =====
   const detailedTableData = [];
 
-  // Headers
-  const headerRow1 = ['Periode', 'Jam', 'Status', 'Jenis Kendaraan'];
-  movements.forEach((movement) => {
-    headerRow1.push(movement);
-    for (let i = 1; i < directions.length; i++) {
+  // Headers - Row 1: Arah (Barat, Selatan, Timur, Utara)
+  const headerRow1 = ['Waktu', 'Status Kamera'];
+  directions.forEach((dir) => {
+    headerRow1.push(dir);
+    // Add empty cells for the 3 movements columns that will follow
+    for (let i = 1; i < movements.length * (vehicleCategories.length + 1); i++) {
       headerRow1.push('');
     }
-    headerRow1.push(`${movement} Total`);
   });
-  headerRow1.push('GRAND TOTAL');
   detailedTableData.push(headerRow1);
 
-  // Direction sub-headers
-  const headerRow2 = ['', '', '', ''];
-  movements.forEach(() => {
-    directions.forEach((dir) => {
-      const dirAbbrev = dir === 'barat' ? 'B' : dir === 'selatan' ? 'S' : dir === 'timur' ? 'T' : 'U';
-      headerRow2.push(dirAbbrev);
+  // Headers - Row 2: Pergerakan (Belok Kiri, Lurus, Belok Kanan) per Direction
+  const headerRow2 = ['', ''];
+  directions.forEach((dir) => {
+    movements.forEach((move) => {
+      headerRow2.push(move);
+      for (let i = 1; i < vehicleCategories.length + 1; i++) {
+        headerRow2.push('');
+      }
     });
-    headerRow2.push('Total');
   });
   detailedTableData.push(headerRow2);
 
-  // Data rows
-  timeSlots.forEach((timeSlot, timeIdx) => {
-    const periodName = getTimePeriodName(timeSlot);
-    const status = getStatusForTimeSlot(timeSlot);
-    vehicleCategories.forEach((category, catIdx) => {
-      const row = [];
-      
-      // Add period and time slot info only for first category
-      if (catIdx === 0) {
-        row.push(periodName);
-        row.push(timeSlot);
-        row.push(status);
-      } else {
-        row.push('');
-        row.push('');
-        row.push('');
-      }
-      
-      row.push(category);
+  // Headers - Row 3: Jenis Kendaraan
+  const headerRow3 = ['', ''];
+  directions.forEach((dir) => {
+    movements.forEach((move) => {
+      vehicleCategories.forEach((cat) => {
+        headerRow3.push(cat);
+      });
+      headerRow3.push('Total');
+    });
+  });
+  detailedTableData.push(headerRow3);
 
-      let rowTotal = 0;
-      movements.forEach((movement) => {
-        directions.forEach((direction) => {
-          const value = data.slots[timeSlot]?.[movement]?.[direction]?.[category] || 0;
+  // Data rows
+  timeSlots.forEach((timeSlot) => {
+    const status = getStatusForTimeSlot(timeSlot);
+    const row = [timeSlot, status];
+
+    // For each direction
+    directions.forEach((dir) => {
+      // For each movement
+      movements.forEach((move) => {
+        // For each vehicle category
+        vehicleCategories.forEach((cat) => {
+          const value = data.slots[timeSlot]?.[move]?.[dir]?.[cat] || 0;
           row.push(value);
-          rowTotal += value;
         });
-        
-        // Movement total
+
+        // Movement total for this direction
         let movementTotal = 0;
-        directions.forEach((dir) => {
-          movementTotal += data.slots[timeSlot]?.[movement]?.[dir]?.[category] || 0;
+        vehicleCategories.forEach((cat) => {
+          movementTotal += data.slots[timeSlot]?.[move]?.[dir]?.[cat] || 0;
         });
         row.push(movementTotal);
       });
-
-      row.push(rowTotal);
-      detailedTableData.push(row);
     });
 
-    // Subtotal row per time slot
-    const subtotalRow = ['', `Subtotal ${timeSlot}`, '', ''];
-    let slotGrandTotal = 0;
-    
-    movements.forEach((movement) => {
-      directions.forEach((direction) => {
-        let subtotal = 0;
-        vehicleCategories.forEach((category) => {
-          subtotal += data.slots[timeSlot]?.[movement]?.[direction]?.[category] || 0;
-          slotGrandTotal += data.slots[timeSlot]?.[movement]?.[direction]?.[category] || 0;
-        });
-        subtotalRow.push(subtotal);
-      });
-
-      let movementSubtotal = 0;
-      directions.forEach((dir) => {
-        vehicleCategories.forEach((category) => {
-          movementSubtotal += data.slots[timeSlot]?.[movement]?.[dir]?.[category] || 0;
-        });
-      });
-      subtotalRow.push(movementSubtotal);
-    });
-
-    subtotalRow.push(slotGrandTotal);
-    detailedTableData.push(subtotalRow);
+    detailedTableData.push(row);
   });
 
   // Grand total row
-  const grandTotalRow = ['', '', '', 'GRAND TOTAL'];
-  let globalGrandTotal = 0;
+  const allCategoriesWithTotal = [...vehicleCategories, 'Total'];
+  const grandTotalRow = ['GRAND TOTAL', ''];
 
-  movements.forEach((movement) => {
-    directions.forEach((direction) => {
-      let grandTotal = 0;
-      timeSlots.forEach((timeSlot) => {
-        vehicleCategories.forEach((category) => {
-          grandTotal += data.slots[timeSlot]?.[movement]?.[direction]?.[category] || 0;
-          globalGrandTotal += data.slots[timeSlot]?.[movement]?.[direction]?.[category] || 0;
+  directions.forEach((dir) => {
+    movements.forEach((move) => {
+      vehicleCategories.forEach((cat) => {
+        let grandTotal = 0;
+        timeSlots.forEach((timeSlot) => {
+          grandTotal += data.slots[timeSlot]?.[move]?.[dir]?.[cat] || 0;
+        });
+        grandTotalRow.push(grandTotal);
+      });
+
+      // Movement grand total for this direction
+      let movementGrandTotal = 0;
+      vehicleCategories.forEach((cat) => {
+        timeSlots.forEach((timeSlot) => {
+          movementGrandTotal += data.slots[timeSlot]?.[move]?.[dir]?.[cat] || 0;
         });
       });
-      grandTotalRow.push(grandTotal);
+      grandTotalRow.push(movementGrandTotal);
     });
-
-    let movementGrandTotal = 0;
-    directions.forEach((dir) => {
-      timeSlots.forEach((timeSlot) => {
-        vehicleCategories.forEach((category) => {
-          movementGrandTotal += data.slots[timeSlot]?.[movement]?.[dir]?.[category] || 0;
-        });
-      });
-    });
-    grandTotalRow.push(movementGrandTotal);
   });
 
-  grandTotalRow.push(globalGrandTotal);
   detailedTableData.push(grandTotalRow);
 
   const wsDetailed = wb.addWorksheet('Detailed');
   detailedTableData.forEach(row => wsDetailed.addRow(row));
 
-  // ===== SHEET 3: SUMMARY (Per Time Period) =====
+  // ===== SHEET 3: SUMMARY (Per Time Period) - MATCHING trafficMatrixByFilter2 FORMAT =====
   const summaryTableData = [];
 
-  // Headers
-  const summaryHeaderRow1 = ['Periode', 'Jenis Kendaraan'];
-  movements.forEach((movement) => {
-    summaryHeaderRow1.push(movement);
-    for (let i = 1; i < directions.length; i++) {
+  // Headers - Row 1: Arah (Barat, Selatan, Timur, Utara)
+  const summaryHeaderRow1 = ['Periode'];
+  directions.forEach((dir) => {
+    summaryHeaderRow1.push(dir);
+    // Add empty cells for the 3 movements columns that will follow
+    for (let i = 1; i < movements.length * (vehicleCategories.length + 1); i++) {
       summaryHeaderRow1.push('');
     }
-    summaryHeaderRow1.push(`${movement} Total`);
   });
-  summaryHeaderRow1.push('PERIOD TOTAL');
   summaryTableData.push(summaryHeaderRow1);
 
-  // Direction sub-headers
-  const summaryHeaderRow2 = ['', ''];
-  movements.forEach(() => {
-    directions.forEach((dir) => {
-      const dirAbbrev = dir === 'barat' ? 'B' : dir === 'selatan' ? 'S' : dir === 'timur' ? 'T' : 'U';
-      summaryHeaderRow2.push(dirAbbrev);
+  // Headers - Row 2: Pergerakan (Belok Kiri, Lurus, Belok Kanan) per Direction
+  const summaryHeaderRow2 = [''];
+  directions.forEach((dir) => {
+    movements.forEach((move) => {
+      summaryHeaderRow2.push(move);
+      for (let i = 1; i < vehicleCategories.length + 1; i++) {
+        summaryHeaderRow2.push('');
+      }
     });
-    summaryHeaderRow2.push('Total');
   });
   summaryTableData.push(summaryHeaderRow2);
 
+  // Headers - Row 3: Jenis Kendaraan
+  const summaryHeaderRow3 = [''];
+  directions.forEach((dir) => {
+    movements.forEach((move) => {
+      vehicleCategories.forEach((cat) => {
+        summaryHeaderRow3.push(cat);
+      });
+      summaryHeaderRow3.push('Total');
+    });
+  });
+  summaryTableData.push(summaryHeaderRow3);
+
   // Data rows
-  timePeriods.forEach((period, periodIdx) => {
-    vehicleCategories.forEach((category, catIdx) => {
-      const row = [];
+  timePeriods.forEach((period) => {
+    const row = [period];
 
-      if (catIdx === 0) {
-        row.push(period);
-        row.push(`${period} ${data.timePeriods[period]}`);
-      } else {
-        row.push('');
-        row.push('');
-      }
-
-      row.push(category);
-
-      let periodRowTotal = 0;
-      movements.forEach((movement) => {
-        directions.forEach((direction) => {
-          const value = getAggregatedValue(period, movement, direction, category);
+    // For each direction
+    directions.forEach((dir) => {
+      // For each movement
+      movements.forEach((move) => {
+        // For each vehicle category
+        vehicleCategories.forEach((cat) => {
+          const value = getAggregatedValue(period, move, dir, cat);
           row.push(value);
-          periodRowTotal += value;
         });
 
-        let movementPeriodTotal = 0;
-        directions.forEach((dir) => {
-          movementPeriodTotal += getAggregatedValue(period, movement, dir, category);
+        // Movement total for this direction
+        let movementTotal = 0;
+        vehicleCategories.forEach((cat) => {
+          movementTotal += getAggregatedValue(period, move, dir, cat);
         });
-        row.push(movementPeriodTotal);
+        row.push(movementTotal);
       });
-
-      row.push(periodRowTotal);
-      summaryTableData.push(row);
     });
 
-    // Subtotal row per period
-    const periodSubtotalRow = ['', `Subtotal ${period}`, ''];
-    let periodGrandTotal = 0;
-
-    movements.forEach((movement) => {
-      directions.forEach((direction) => {
-        let subtotal = 0;
-        vehicleCategories.forEach((category) => {
-          subtotal += getAggregatedValue(period, movement, direction, category);
-          periodGrandTotal += getAggregatedValue(period, movement, direction, category);
-        });
-        periodSubtotalRow.push(subtotal);
-      });
-
-      let movementSubtotal = 0;
-      directions.forEach((dir) => {
-        vehicleCategories.forEach((category) => {
-          movementSubtotal += getAggregatedValue(period, movement, dir, category);
-        });
-      });
-      periodSubtotalRow.push(movementSubtotal);
-    });
-
-    periodSubtotalRow.push(periodGrandTotal);
-    summaryTableData.push(periodSubtotalRow);
+    summaryTableData.push(row);
   });
 
   // Grand total row
-  const summaryGrandTotalRow = ['', 'GRAND TOTAL', ''];
-  let summaryGlobalGrandTotal = 0;
+  const summaryGrandTotalRow = ['GRAND TOTAL'];
 
-  movements.forEach((movement) => {
-    directions.forEach((direction) => {
-      let grandTotal = 0;
-      timePeriods.forEach((period) => {
-        vehicleCategories.forEach((category) => {
-          grandTotal += getAggregatedValue(period, movement, direction, category);
-          summaryGlobalGrandTotal += getAggregatedValue(period, movement, direction, category);
+  directions.forEach((dir) => {
+    movements.forEach((move) => {
+      vehicleCategories.forEach((cat) => {
+        let grandTotal = 0;
+        timePeriods.forEach((period) => {
+          grandTotal += getAggregatedValue(period, move, dir, cat);
+        });
+        summaryGrandTotalRow.push(grandTotal);
+      });
+
+      // Movement grand total for this direction
+      let movementGrandTotal = 0;
+      vehicleCategories.forEach((cat) => {
+        timePeriods.forEach((period) => {
+          movementGrandTotal += getAggregatedValue(period, move, dir, cat);
         });
       });
-      summaryGrandTotalRow.push(grandTotal);
+      summaryGrandTotalRow.push(movementGrandTotal);
     });
-
-    let movementGrandTotal = 0;
-    directions.forEach((dir) => {
-      timePeriods.forEach((period) => {
-        vehicleCategories.forEach((category) => {
-          movementGrandTotal += getAggregatedValue(period, movement, dir, category);
-        });
-      });
-    });
-    summaryGrandTotalRow.push(movementGrandTotal);
   });
 
-  summaryGrandTotalRow.push(summaryGlobalGrandTotal);
   summaryTableData.push(summaryGrandTotalRow);
 
   const wsSummary = wb.addWorksheet('Summary');
