@@ -18,6 +18,7 @@ const SelectionButtons = lazy(() => import("@/app/components/selectionButton"));
 const MapComponent = lazy(() => import("@/app/components/map"));
 const TrafficMatrixByCategory = lazy(() => import("@/app/components/trafficMatrixByCategory"));
 const TrafficMatrixByFilter = lazy(() => import("@/app/components/trafficMatrixByFilter"));
+const TrafficMatrixByFilter2 = lazy(() => import("@/app/components/trafficMatrixByFilter2"));
 const VehicleDetailByInterval = lazy(() => import("@/app/components/vehicleDetailByInterval"));
 // const CameraStatusTimeline = lazy(() => import('@/app/components/cameraStatusTime'));
 const GridVertical = lazy(() => import('@/app/components/gridVertical'));
@@ -512,7 +513,13 @@ function KomposisiLaluLintasPage () {
               </button>
               <div style={{ display: showTrafficMatrixByFilter ? 'block' : 'none' }} className="p-6">
                 <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
-                  <TrafficMatrixByFilter
+                  {/* <TrafficMatrixByFilter
+                    ref={trafficMatrixByFilterRef}
+                    simpangId={activeSimpangId}
+                    dateInput={dateInput}
+                    simpangName={activeSimpang}
+                  /> */}
+                  <TrafficMatrixByFilter2
                     ref={trafficMatrixByFilterRef}
                     simpangId={activeSimpangId}
                     dateInput={dateInput}
