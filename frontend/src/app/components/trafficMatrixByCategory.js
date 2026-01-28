@@ -130,20 +130,20 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
-        <table className="table-auto border-collapse border border-base-300 w-full text-xs table-xs">
+      <div className="overflow-x-auto">
+        <table className="table-auto border-2 w-full text-xs table-xs">
           <thead className="bg-base-300">
             <tr>
-              <th rowSpan={3} className="border border-base-100 text-sm font-medium p-2 min-w-[100px] text-center align-middle">
+              <th rowSpan={3} className="border-2 text-sm font-medium p-2 min-w-[100px] text-center align-middle">
                 Jenis Kendaraan
               </th>
               {movements.map((movement) => (
-                <th key={movement} colSpan={4} className="border border-base-100 text-sm font-medium p-2 text-center">
+                <th key={movement} colSpan={4} className="border-2 text-sm font-medium p-2 text-center">
                   {movement}
                 </th>
               ))}
                {movements.map((movement) => (
-                <th key={`${movement}-total`} rowSpan={directionNames.length + 1} className="border border-base-100 font-medium p-2 text-center bg-gray-100">
+                <th key={`${movement}-total`} rowSpan={directionNames.length + 1} className="border-2 font-medium p-2 text-center bg-gray-100">
                   Total
                 </th>
               ))}
@@ -151,7 +151,7 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
             <tr>
               {movements.map((movement) =>
                 directionNames.map((direction) => (
-                  <th key={`${movement}-${direction}`} className="border border-base-100 font-medium p-2 text-center">
+                  <th key={`${movement}-${direction}`} className="border-2 font-medium p-2 text-center">
                     {direction === 'barat' && 'B'}
                     {direction === 'selatan' && 'S'}
                     {direction === 'timur' && 'T'}
@@ -165,12 +165,12 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
           <tbody>
             {vehicleCategories.map((category, idx) => (
               <tr key={category} className={idx % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
-                <td className="border border-base-300 text-xs text-center font-medium p-2">{category}</td>
+                <td className="border-2 text-xs text-center font-medium p-2">{category}</td>
                 {movements.map((movement) =>
                   directionNames.map((direction) => {
                     const value = data.arahPergerakan[movement]?.[direction]?.[category] || 0;
                     return (
-                      <td key={`${movement}-${direction}-${category}`} className="border border-base-300 text-xs text-center p-2">
+                      <td key={`${movement}-${direction}-${category}`} className="border-2 text-xs text-center p-2">
                         {value.toLocaleString('id-ID')}
                       </td>
                     );
@@ -179,7 +179,7 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
                 {movements.map((movement) => {
                   const total = data.arahPergerakan[movement]?.Total?.[category] || 0;
                   return (
-                    <td key={`${movement}-total-${category}`} className="border border-base-300 text-xs text-center font-semibold p-2 bg-gray-50">
+                    <td key={`${movement}-total-${category}`} className="border-2 text-xs text-center font-semibold p-2 bg-gray-50">
                       {total.toLocaleString('id-ID')}
                     </td>
                   );
@@ -188,12 +188,12 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
             ))}
             {/* Total row */}
             <tr className="bg-base-300 font-bold">
-              <td className="border border-base-300 text-xs text-center font-bold p-2">Total</td>
+              <td className="border-2 text-xs text-center font-bold p-2">Total</td>
               {movements.map((movement) =>
                 directionNames.map((direction) => {
                   const value = data.arahPergerakan[movement]?.[direction]?.Total || 0;
                   return (
-                    <td key={`total-${movement}-${direction}`} className="border border-base-300 text-xs text-center p-2">
+                    <td key={`total-${movement}-${direction}`} className="border-2 text-xs text-center p-2">
                       {value.toLocaleString('id-ID')}
                     </td>
                   );
@@ -202,7 +202,7 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
               {movements.map((movement) => {
                 const total = data.arahPergerakan[movement]?.Total?.Total || 0;
                 return (
-                  <td key={`total-${movement}-total`} className="border border-base-300 text-xs text-center p-2 bg-blue-100">
+                  <td key={`total-${movement}-total`} className="border-2 text-xs text-center p-2 bg-blue-100">
                     {total.toLocaleString('id-ID')}
                   </td>
                 );

@@ -95,7 +95,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
             {timeIndex === 0 && !pdf ? (
               <td
                 rowSpan={periodData.timeSlots.length}
-                className={pdf ? '' : `border-r border-t border-b border-base-300 px-2 py-1 ${textSize} font-medium text-center align-middle`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium text-center align-middle`}
                 style={pdf ? { ...pdfCellStyle, fontWeight: 'bold' } : {}}
               >
                 {periodData.period}
@@ -104,7 +104,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
             {pdf && (
               <td
-                className={pdf ? '' : `border-r border-t border-b border-base-300 px-2 py-1 ${textSize} font-medium text-center align-middle`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium text-center align-middle`}
                 style={pdf ? { ...pdfCellStyle, fontWeight: 'bold' } : {}}
               >
                 {pdf ? timeIndex === 0 ? periodData.period : '' : timeIndex === 0 ? periodData.period : null}
@@ -113,7 +113,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
             {statusHour === true ? (
               <td
-                className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center ${slot.status === 1 ? 'bg-green-500' : 'bg-red-500'}`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center ${slot.status === 1 ? 'bg-green-500' : 'bg-red-500'}`}
                 style={pdf ? { ...pdfCellStyle, backgroundColor: slot.status === 1 ? '#10b981' : '#ef4444' } : {}}
               >
                 {''}
@@ -121,7 +121,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
             ) : null}
             {/* Time slot */}
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center whitespace-nowrap`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center whitespace-nowrap`}
               style={pdf ? pdfCellStyle : {}}
             >
               {slot.time}
@@ -129,67 +129,67 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
             {/* Vehicle data columns */}
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.sm || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.mp || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.aup || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.tr || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.bs || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.ts || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.bb || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.tb || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.gandengSemitrailer || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.ktb || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.total || 0)}
@@ -206,7 +206,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
       //     <tr key={`divider-${periodIndex}`}>
       //       <td
       //         colSpan={15}
-      //         className={pdf ? '' : `border border-base-300 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
+      //         className={pdf ? '' : `border-2 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
       //         style={pdf ? pdfDividerStyle : {}}
       //       >
       //         Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
@@ -236,7 +236,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
             {timeIndex === 0 && !pdf ? (
               <td
                 rowSpan={periodData.timeSlots.length}
-                className={pdf ? '' : `border-r border-t border-b border-base-300 px-2 py-1 ${textSize} font-medium text-center align-middle`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium text-center align-middle`}
                 style={pdf ? { ...pdfCellStyle, fontWeight: 'bold' } : {}}
               >
                 {periodData.period}
@@ -245,7 +245,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
             {pdf && (
               <td
-                className={pdf ? '' : `border-r border-t border-b border-base-300 px-2 py-1 ${textSize} font-medium text-center align-middle`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium text-center align-middle`}
                 style={pdf ? { ...pdfCellStyle, fontWeight: 'bold' } : {}}
               >
                 {pdf ? timeIndex === 0 ? periodData.period : '' : timeIndex === 0 ? periodData.period : null}
@@ -254,7 +254,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
             {statusHour === true ? (
               <td
-                className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center ${slot.status === 1 ? 'bg-green-500' : 'bg-red-500'}`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center ${slot.status === 1 ? 'bg-green-500' : 'bg-red-500'}`}
                 style={pdf ? { ...pdfCellStyle, backgroundColor: slot.status === 1 ? '#10b981' : '#ef4444' } : {}}
               >
                 {''}
@@ -262,7 +262,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
             ) : null}
             {/* Time slot */}
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center whitespace-nowrap`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center whitespace-nowrap`}
               style={pdf ? pdfCellStyle : {}}
             >
               {slot.time}
@@ -270,61 +270,61 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
             {/* Vehicle data columns */}
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.sm || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.mp || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.aup || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.tr || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.bs || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.ts || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.bb || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.tb || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.gandengSemitrailer || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.ktb || 0)}
@@ -341,7 +341,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
       //     <tr key={`divider-${periodIndex}`}>
       //       <td
       //         colSpan={14}
-      //         className={pdf ? '' : `border border-base-300 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
+      //         className={pdf ? '' : `border-2 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
       //         style={pdf ? pdfDividerStyle : {}}
       //       >
       //         Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
@@ -372,7 +372,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
             {timeIndex === 0 && !pdf ? (
               <td
                 rowSpan={periodData.timeSlots.length}
-                className={pdf ? '' : `border-r border-t border-b border-base-300 px-2 py-1 ${textSize} font-medium text-center align-middle`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium text-center align-middle`}
                 style={pdf ? { ...pdfCellStyle, fontWeight: 'bold' } : {}}
               >
                 {periodData.period}
@@ -381,7 +381,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
             {pdf && (
               <td
-                className={pdf ? '' : `border-r border-t border-b border-base-300 px-2 py-1 ${textSize} font-medium text-center align-middle`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium text-center align-middle`}
                 style={pdf ? { ...pdfCellStyle, fontWeight: 'bold' } : {}}
               >
                 {pdf ? timeIndex === 0 ? periodData.period : '' : timeIndex === 0 ? periodData.period : null}
@@ -389,7 +389,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
             )}
             {statusHour === true ? (
               <td
-                className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center ${slot.status === 1 ? 'bg-green-500' : 'bg-red-500'}`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center ${slot.status === 1 ? 'bg-green-500' : 'bg-red-500'}`}
                 style={pdf ? { ...pdfCellStyle, backgroundColor: slot.status === 1 ? '#10b981' : '#ef4444' } : {}}
               >
                 {''}
@@ -397,7 +397,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
             ) : null}
             {/* Time slot */}
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center whitespace-nowrap`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center whitespace-nowrap`}
               style={pdf ? pdfCellStyle : {}}
             >
               {slot.time}
@@ -405,61 +405,61 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
             {/* Vehicle data columns */}
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.sm || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.mp || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.aup || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.tr || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.bs || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.bb || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.ts || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.tb || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.gandengSemitrailer || 0)}
             </td>
             <td
-              className={pdf ? '' : `border border-base-300 px-2 py-1 ${textSize} text-center`}
+              className={pdf ? '' : `border-2 px-2 py-1 ${textSize} text-center`}
               style={pdf ? pdfCellStyle : {}}
             >
               {formatNumber(slot.data.ktb || 0)}
@@ -476,7 +476,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
           <tr key={`divider-${periodIndex}`}>
             <td
               colSpan={13}
-              className={pdf ? '' : `border border-base-300 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
+              className={pdf ? '' : `border-2 font-semibold px-2 py-1 ${textSize} text-center bg-base-200`}
               style={pdf ? pdfDividerStyle : {}}
             >
               Lalu Lintas Jam-Jaman Rata-Rata 4 x VR (omit teringgi) (kend/jam)
@@ -491,22 +491,22 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
 
 
   return (
-    <div className="mx-auto p-4 overflow-x-auto gap-5 flex flex-col">
+    <div className="mx-auto overflow-x-auto gap-5 flex flex-col">
       {exportExcel && isAdmin && (
         <div className={`w-full gap-5 flex overflow-x-auto join ${pdf ? 'hidden' : ''}`}>
           <ExportButton vehicleData={vehicleData} fileName='Data_Kendaraan_perjam' classification={classification} />
         </div>
       )}
       <table
-        className={pdf ? '' : "table-auto border-collapse border border-base-300 w-full text-black"}
+        className={pdf ? '' : "table-auto border-collapse border-2 w-full text-black"}
         style={pdf ? pdfTableStyle : {}}
       >
         {formatClassification === "PKJI_2023_Luar_Kota" ? (
           <thead>
-            <tr className={pdf ? '' : "bg-base-300"}>
+            <tr className={pdf ? '' : "bg-base-200"}>
               <th
                 rowSpan={3}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Periode
@@ -514,7 +514,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
               {statusHour === true ? (
                 <th
                   rowSpan={3}
-                  className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                  className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                   style={pdf ? pdfHeaderStyle : {}}
                 >
                   Status Camera
@@ -522,116 +522,116 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
               ) : null}
               <th
                 colSpan={1}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Waktu
               </th>
               <th
                 colSpan={9}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Kendaraan Bermotor (Lih. kend/jam)
               </th>
               <th
                 rowSpan={3}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 KTB
               </th>
               <th
                 rowSpan={3}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Total<br />(Lih. kend/jam)
               </th>
             </tr>
-            <tr className={pdf ? '' : "bg-base-300"}>
+            <tr className={pdf ? '' : "bg-base-200"}>
               <th
                 rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Interval<br />
               </th>
               <th
                 rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 SM
               </th>
               <th
                 colSpan={3}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 MP
               </th>
               <th
                 colSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 KS
               </th>
               <th
                 rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 BB
               </th>
               <th
                 colSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TB
               </th>
             </tr>
-            <tr className={pdf ? '' : "bg-base-300"}>
+            <tr className={pdf ? '' : "bg-base-200"}>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 MP
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 AUP
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TR
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 BS
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TS
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TB
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Gandeng /<br />Semitrailer
@@ -640,10 +640,10 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
           </thead>
         ) : formatClassification === "PKJI_2023_Dalam_Kota" ? (
           <thead>
-            <tr className={pdf ? '' : "bg-base-300"}>
+            <tr className={pdf ? '' : "bg-base-200"}>
               <th
                 rowSpan={3}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Periode
@@ -651,7 +651,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
               {statusHour === true ? (
                 <th
                   rowSpan={3}
-                  className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                  className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                   style={pdf ? pdfHeaderStyle : {}}
                 >
                   Status Camera
@@ -659,101 +659,101 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
               ) : null}
               <th
                 colSpan={1}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Waktu
               </th>
               <th
                 colSpan={9}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Kendaraan Bermotor (Lih. kend/jam)
               </th>
               <th
                 rowSpan={3}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 KTB
               </th>
             </tr>
-            <tr className={pdf ? '' : "bg-base-300"}>
+            <tr className={pdf ? '' : "bg-base-200"}>
               <th
                 rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Interval<br />
               </th>
               <th
                 rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 SM
               </th>
               <th
                 colSpan={3}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 MP
               </th>
               <th
                 colSpan={5}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 KS
               </th>
             </tr>
-            <tr className={pdf ? '' : "bg-base-300"}>
+            <tr className={pdf ? '' : "bg-base-200"}>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 MP
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 AUP
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TR
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 BS
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TS
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 BB
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TB
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Gandeng /<br />Semitrailer
@@ -762,10 +762,10 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
           </thead>
         ) : (
           <thead>
-            <tr className={pdf ? '' : "bg-base-300"}>
+            <tr className={pdf ? '' : "bg-base-200"}>
               <th
                 rowSpan={3}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Periode
@@ -773,7 +773,7 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
               {statusHour === true ? (
                 <th
                   rowSpan={3}
-                  className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                  className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                   style={pdf ? pdfHeaderStyle : {}}
                 >
                   Status Camera
@@ -781,108 +781,108 @@ const HourVehicleTable = ({ statusHour, vehicleData: dataVehicle, classification
               ) : null}
               <th
                 colSpan={1}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Waktu
               </th>
               <th
                 colSpan={9}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Kendaraan Bermotor (Lih. kend/jam)
               </th>
               <th
                 rowSpan={3}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 KTB
               </th>
             </tr>
-            <tr className={pdf ? '' : "bg-base-300"}>
+            <tr className={pdf ? '' : "bg-base-200"}>
               <th
                 rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Interval<br />
               </th>
               <th
                 rowSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 SM
               </th>
               <th
                 colSpan={3}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 MP
               </th>
               <th
                 colSpan={2}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Bus
               </th>
               <th
                 colSpan={3}
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Truk
               </th>
             </tr>
-            <tr className={pdf ? '' : "bg-base-300"}>
+            <tr className={pdf ? '' : "bg-base-200"}>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 MP
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 AUP
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TR
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 BS
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 BB
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TS
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 TB
               </th>
               <th
-                className={pdf ? '' : `border border-base-100 px-2 py-1 ${textSize} font-medium`}
+                className={pdf ? '' : `border-2 px-2 py-1 ${textSize} font-medium`}
                 style={pdf ? pdfHeaderStyle : {}}
               >
                 Gandeng / <br />Semitrailer

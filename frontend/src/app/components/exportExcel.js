@@ -541,7 +541,6 @@ export const exportHourVehicleDataToExcel = async (hourlyData, fileName, classif
 export const ExportButton = ({
   vehicleData,
   fileName = 'VehicleData',
-  className = "btn btn-md bg-green-500 text-white rounded-lg flex items-center gap-2",
   classification
 }) => {
   const handleExport = () => {
@@ -549,7 +548,7 @@ export const ExportButton = ({
   };
 
   return (
-    <button onClick={handleExport} className={className} classification={classification} >
+    <button onClick={handleExport} className='rounded-sm text-sm font-semibold py-1.5 px-3 cursor-pointer hover:bg-green-600 bg-green-500 text-white flex items-center gap-2' classification={classification} >
       <FaDownload />
       Export Excel
     </button>
@@ -558,15 +557,14 @@ export const ExportButton = ({
 
 export const ExportYearButton = ({
   yearlyData,
-  fileName = 'YearlyData',
-  className = "btn btn-md bg-green-500 text-white rounded-lg flex items-center gap-2"
+  fileName = 'YearlyData'
 }) => {
   const handleExport = () => {
     exportYearVehicleDataToExcel(yearlyData, fileName);
   };
 
   return (
-    <button onClick={handleExport} className={className}>
+    <button onClick={handleExport} className='rounded-sm text-sm font-semibold py-1.5 px-3 cursor-pointer hover:bg-green-600 bg-green-500 text-white flex items-center gap-2'>
       <FaDownload />
       Export Excel
     </button>
@@ -576,7 +574,6 @@ export const ExportYearButton = ({
 export const ExportHourButton = ({
   hourlyData,
   fileName = 'HourlyData',
-  className = "btn btn-md bg-green-500 text-white rounded-lg flex items-center gap-2",
   classification
 }) => {
   const handleExport = () => {
@@ -584,7 +581,7 @@ export const ExportHourButton = ({
   };
 
   return (
-    <button onClick={handleExport} className={className}>
+    <button onClick={handleExport} className='rounded-sm text-sm font-semibold py-1.5 px-3 cursor-pointer hover:bg-green-600 bg-green-500 text-white flex items-center gap-2'>
       <FaDownload />
       Export Excel
     </button>
@@ -678,15 +675,14 @@ export const exportMonthVehicleDataToExcel = async (monthlyData, fileName) => {
 
 export const ExportMonthButton = ({
   monthlyData,
-  fileName = 'MonthlyData',
-  className = "btn btn-md bg-green-500 text-white rounded-lg flex items-center gap-2"
+  fileName = 'MonthlyData'
 }) => {
   const handleExport = () => {
     exportMonthVehicleDataToExcel(monthlyData, fileName);
   };
 
   return (
-    <button onClick={handleExport} className={className}>
+    <button onClick={handleExport} className='rounded-sm text-sm font-semibold py-1.5 px-3 cursor-pointer hover:bg-green-600 bg-green-500 text-white flex items-center gap-2'>
       <FaDownload />
       Export Excel
     </button>
@@ -857,7 +853,6 @@ export const exportDayVehicleDataToExcel = async (dailyData, fileName, type = 'd
 export const ExportDayButton = ({
   dailyData,
   fileName = 'DailyData',
-  className = "btn btn-md bg-green-500 text-white rounded-lg flex items-center gap-2",
   type = 'dailyMonth'
 }) => {
   const handleExport = () => {
@@ -865,7 +860,7 @@ export const ExportDayButton = ({
   };
 
   return (
-    <button onClick={handleExport} className={className}>
+    <button onClick={handleExport} className='rounded-sm text-sm font-semibold py-1.5 px-3 cursor-pointer hover:bg-green-600 bg-green-500 text-white flex items-center gap-2'>
       <FaDownload />
       Export Excel
     </button>
