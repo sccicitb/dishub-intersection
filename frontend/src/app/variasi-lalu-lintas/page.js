@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense, lazy } from 'react';
 import { getCuacaJogja } from '@/lib/weatherAccess';
 import { maps } from '@/lib/apiService';
+import SeasonalFactorTable from '@/app/components/SeasonalFactorTable';
 
 // const VehicleMonitoringTable = lazy(() => import('@/app/components/vehicleMonitoringTable'));
 const VehicleTable = lazy(() => import("@/app/components/vehicleTable"));
@@ -12,7 +13,8 @@ const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const MapComponent = lazy(() => import("@/app/components/map"));
 const HeaderSurvei = lazy(() => import("@/app/components/headerLhrt"));
-
+const WeeklyFactorTable = lazy(() => import('@/app/components/WeeklyFactorTable'));
+const DailyVolumeTable = lazy(() => import('@/app/components/DailyVolumeTable'));
 
 function SurveiLhrkPage () {
   const [loading, setLoading] = useState(false);
@@ -132,6 +134,9 @@ function SurveiLhrkPage () {
           )}
           <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval} />
         </div>
+        <SeasonalFactorTable year={2025} simpangId={0} />
+        <WeeklyFactorTable year={2025} simpangId={0} />
+        <DailyVolumeTable year={2025} simpangId={0} />
       </Suspense>
     </div>
   );

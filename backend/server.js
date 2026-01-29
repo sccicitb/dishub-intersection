@@ -60,6 +60,7 @@ app.get("/", (req, res) => {
 
 require("./app/routes/vehicle.routes.js")(app);
 require("./app/routes/trafficMatrix.routes.js")(app);
+require("./app/routes/trafficAudit.routes.js")(app);
 require("./app/routes/vehicleDetailSummary.routes.js")(app);
 require("./app/routes/vehicleDetailByTime.routes.js")(app);
 require("./app/routes/holiday.routes.js")(app);
