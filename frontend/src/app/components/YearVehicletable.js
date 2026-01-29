@@ -78,44 +78,44 @@ const YearlyVehicleTable = ({ yearlyData, startDate, setStartDate }) => {
         />
         <ExportYearButton yearlyData={yearlyData} fileName="Data-Tahunan" />
       </div> */}
-      <table className="table-auto border-collapse border border-base-300 w-full">
+      <table className="table-auto border-collapse border-2 w-full">
         <thead>
           <tr className="bg-base-300">
-            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border-2 px-2 py-1 text-sm font-medium">
               Tahun
             </th>
-            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border-2 px-2 py-1 text-sm font-medium">
               SM
             </th>
-            <th colSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
+            <th colSpan={2} className="border-2 px-2 py-1 text-sm font-medium">
               MP
             </th>
-            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border-2 px-2 py-1 text-sm font-medium">
               TR
             </th>
-            <th colSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
+            <th colSpan={2} className="border-2 px-2 py-1 text-sm font-medium">
               KS
             </th>
-            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border-2 px-2 py-1 text-sm font-medium">
               BB
             </th>
-            <th colSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
+            <th colSpan={2} className="border-2 px-2 py-1 text-sm font-medium">
               TB
             </th>
-            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border-2 px-2 py-1 text-sm font-medium">
               Kend. Tak<br />Bermotor
             </th>
-            <th rowSpan={2} className="border border-base-100 px-2 py-1 text-sm font-medium">
+            <th rowSpan={2} className="border-2 px-2 py-1 text-sm font-medium">
               Total<br />Kendaraan
             </th>
           </tr>
           <tr className="bg-base-300">
-            <th className="border border-base-100 px-2 py-1 text-sm font-medium">MP</th>
-            <th className="border border-base-100 px-2 py-1 text-sm font-medium">AUP</th>
-            <th className="border border-base-100 px-2 py-1 text-sm font-medium">BS</th>
-            <th className="border border-base-100 px-2 py-1 text-sm font-medium">TS</th>
-            <th className="border border-base-100 px-2 py-1 text-sm font-medium">TB</th>
-            <th className="border border-base-100 px-2 py-1 text-sm font-medium">
+            <th className="border-2 px-2 py-1 text-sm font-medium">MP</th>
+            <th className="border-2 px-2 py-1 text-sm font-medium">AUP</th>
+            <th className="border-2 px-2 py-1 text-sm font-medium">BS</th>
+            <th className="border-2 px-2 py-1 text-sm font-medium">TS</th>
+            <th className="border-2 px-2 py-1 text-sm font-medium">TB</th>
+            <th className="border-2 px-2 py-1 text-sm font-medium">
               Gandeng /<br />Semitrailer
             </th>
           </tr>

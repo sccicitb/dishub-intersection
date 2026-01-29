@@ -203,7 +203,7 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
     if (!daysData || daysData.length === 0) {
       return (
         <tr>
-          <td colSpan="13" className="text-center py-4 border border-base-300">
+          <td colSpan="13" className="text-center py-4 border-2">
             Tidak ada data harian tersedia untuk periode yang dipilih
           </td>
         </tr>
@@ -213,26 +213,26 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
     daysData.map((day, index) => {
       rows.push(
         <tr key={`day-${index}`} className={index % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
-          <td className="border border-base-300 text-sm text-center">{getWeekAndDayInfo(day.date)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatDateNoDays(day.date)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.sm || 0 : day?.sm || 0)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.mp || 0 : day?.mp || 0)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.aup || 0 : day?.aup || 0)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.tr || 0 : day?.tr || 0)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.bs || 0 : day?.bs || 0)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.ts || 0 : day?.ts || 0)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.bb || 0 : day?.bb || 0)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.tb || 0 : day?.tb || 0)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.gandengSemitrailer || 0 : day?.gandengSemitrailer || 0)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.ktb || 0 : day?.ktb || 0)}</td>
-          <td className="border border-base-300 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.total || 0 : day?.total || 0)}</td>
+          <td className="border-2 text-sm text-center">{getWeekAndDayInfo(day.date)}</td>
+          <td className="border-2 text-sm text-center">{formatDateNoDays(day.date)}</td>
+          <td className="border-2 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.sm || 0 : day?.sm || 0)}</td>
+          <td className="border-2 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.mp || 0 : day?.mp || 0)}</td>
+          <td className="border-2 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.aup || 0 : day?.aup || 0)}</td>
+          <td className="border-2 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.tr || 0 : day?.tr || 0)}</td>
+          <td className="border-2 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.bs || 0 : day?.bs || 0)}</td>
+          <td className="border-2 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.ts || 0 : day?.ts || 0)}</td>
+          <td className="border-2 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.bb || 0 : day?.bb || 0)}</td>
+          <td className="border-2 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.tb || 0 : day?.tb || 0)}</td>
+          <td className="border-2 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.gandengSemitrailer || 0 : day?.gandengSemitrailer || 0)}</td>
+          <td className="border-2 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.ktb || 0 : day?.ktb || 0)}</td>
+          <td className="border-2 text-sm text-center">{formatNumber(type === "dailyMonth" ? day?.data?.total || 0 : day?.total || 0)}</td>
         </tr>
       )
     });
 
     // rows.push(
     //   <tr key="divider-row">
-    //     <td colSpan={13} className="border border-base-300 font-semibold text-sm text-center bg-base-200">
+    //     <td colSpan={13} className="border-2 font-semibold text-sm text-center bg-base-200">
     //       Lalu Lintas Harian Rata-Rata (kend/hari)
     //     </td>
     //   </tr>
@@ -301,41 +301,41 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
       </div>
 
       <div className="overflow-x-auto">
-        <table className="table-auto border-collapse border border-base-300 w-full">
+        <table className="table-auto border-collapse border-2 w-full">
           <thead>
             <tr className="bg-base-300">
-              <th rowSpan={3} className="border border-base-100 text-sm font-medium">
+              <th rowSpan={3} className="border-2 text-sm font-medium">
                 Pekan
               </th>
-              <th rowSpan={3} className="border border-base-100 text-sm font-medium">
+              <th rowSpan={3} className="border-2 text-sm font-medium">
                 Tanggal
               </th>
-              <th colSpan={9} className="border border-base-100 text-sm font-medium text-center">
+              <th colSpan={9} className="border-2 text-sm font-medium text-center">
                 Kendaraan Bermotor
               </th>
-              <th rowSpan={1} className="border border-base-100 text-sm font-medium text-center">
+              <th rowSpan={1} className="border-2 text-sm font-medium text-center">
                 Kend. Tak<br />Bermotor
               </th>
-              <th rowSpan={3} className="border border-base-100 text-sm font-medium text-center">
+              <th rowSpan={3} className="border-2 text-sm font-medium text-center">
                 Total<br />Kendaraan
               </th>
             </tr>
             <tr className="bg-base-300">
-              <th rowSpan={2} className="border border-base-100 text-sm font-medium text-center">SM</th>
-              <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">MP</th>
-              <th rowSpan={2} className="border border-base-100 text-sm font-medium">TR</th>
-              <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">KS</th>
-              <th rowSpan={2} className="border border-base-100 text-sm font-medium text-center">BB</th>
-              <th colSpan={2} className="border border-base-100 text-sm font-medium text-center">TB</th>
-              <th rowSpan={2} className="border border-base-100 text-sm font-medium">KTB</th>
+              <th rowSpan={2} className="border-2 text-sm font-medium text-center">SM</th>
+              <th colSpan={2} className="border-2 text-sm font-medium text-center">MP</th>
+              <th rowSpan={2} className="border-2 text-sm font-medium">TR</th>
+              <th colSpan={2} className="border-2 text-sm font-medium text-center">KS</th>
+              <th rowSpan={2} className="border-2 text-sm font-medium text-center">BB</th>
+              <th colSpan={2} className="border-2 text-sm font-medium text-center">TB</th>
+              <th rowSpan={2} className="border-2 text-sm font-medium">KTB</th>
             </tr>
             <tr className="bg-base-300">
-              <th className="border border-base-100 text-sm font-medium">MP</th>
-              <th className="border border-base-100 text-sm font-medium">AUP</th>
-              <th className="border border-base-100 text-sm font-medium">BS</th>
-              <th className="border border-base-100 text-sm font-medium">TS</th>
-              <th className="border border-base-100 text-sm font-medium">TB</th>
-              <th className="border border-base-100 text-sm font-medium">Gandeng /<br />Semitrailer</th>
+              <th className="border-2 text-sm font-medium">MP</th>
+              <th className="border-2 text-sm font-medium">AUP</th>
+              <th className="border-2 text-sm font-medium">BS</th>
+              <th className="border-2 text-sm font-medium">TS</th>
+              <th className="border-2 text-sm font-medium">TB</th>
+              <th className="border-2 text-sm font-medium">Gandeng /<br />Semitrailer</th>
             </tr>
           </thead>
           <tbody>
@@ -344,9 +344,9 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
             {/* Daily average row */}
             {(selectedMonth || (isDateRangeMode && startDate && endDate)) && (
               <tr className="bg-base-200 font-medium">
-                <td className="border border-base-300 text-sm text-center" colSpan={2}>LHR</td>
+                <td className="border-2 text-sm text-center" colSpan={2}>LHR</td>
                 {Object.entries(calculateDailyAverage()).map(([key, value], idx) => (
-                  <td key={idx} className="border border-base-300 text-sm text-center">
+                  <td key={idx} className="border-2 text-sm text-center">
                     {formatNumber(value)}
                   </td>
                 ))}

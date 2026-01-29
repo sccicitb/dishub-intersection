@@ -384,12 +384,6 @@ function SurveiSimpangPage () {
             large
             onClick={() => console.log(`Clicked on`)}
           />
-          {/* <AdaptiveVideoPlayer
-            videoUrl={"https://cctvjss.jogjakota.go.id/atcs/ATCS_Kleringan_Abu_Bakar_Ali.stream/chunklist_w616721554.m3u8"}
-            title={`Video ${title}`}
-            large
-            onClick={() => console.log(`Clicked on ${title}`)}
-          /> */}
         </div>
       );
     }
@@ -409,7 +403,7 @@ function SurveiSimpangPage () {
           <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
         <div className="w-[95%] m-auto">
           <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
-            <RecentVehicle customCSS={'h-[320px]'} data={streamData[activeCamera]} />
+            <RecentVehicle customCSS={'h-[450px]'} data={streamData[activeCamera]} />
             <div className="py-1 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
               <div className="w-full">
                 {renderCCTVStream()}

@@ -182,6 +182,19 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
     'Kendaraan Tidak Bermotor',
   ];
 
+  const vehicleCategoriesLabel = [
+    'SM',
+    'MP',
+    'AUP',
+    'TR',
+    'BS',
+    'TS',
+    'TB',
+    'BB',
+    'GS',
+    'KTB',
+  ];
+
   const directionStyles = {
     barat: {
       header: "bg-slate-200 text-slate-800",
@@ -189,23 +202,24 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
       body: "bg-slate-50/30"
     },
     selatan: {
-      header: "bg-blue-200 text-blue-800",
-      subHeader: "bg-blue-100",
-      body: "bg-blue-50/30"
+      header: "bg-slate-200 text-slate-800",
+      subHeader: "bg-slate-200",
+      body: "bg-slate-50/30"
     },
     timur: {
-      header: "bg-emerald-200 text-emerald-800",
-      subHeader: "bg-emerald-100",
-      body: "bg-emerald-50/30"
+      header: "bg-slate-200 text-slate-800",
+      subHeader: "bg-slate-100",
+      body: "bg-slate-50/30"
     },
     utara: {
-      header: "bg-amber-200 text-amber-800",
-      subHeader: "bg-amber-100",
-      body: "bg-amber-50/30"
+      header: "bg-slate-200 text-slate-800",
+      subHeader: "bg-slate-200",
+      body: "bg-slate-50/30"
     },
   };
 
   const allCategories = [...vehicleCategories, 'Total'];
+  const allCategoriesHeading = [...vehicleCategoriesLabel, 'Total'];
 
   return (
     <div className="w-full space-y-4">
@@ -215,7 +229,7 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
           <select
             value={interval}
             onChange={handleIntervalChange}
-            className="select select-sm border-gray-300 text-xs focus:ring-0"
+            className="select select-sm text-xs focus:ring-0"
           >
             <option value="15min">15 Menit</option>
             <option value="1hour">1 Jam</option>
@@ -233,20 +247,20 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
       </div>
 
       {/* TABEL UTAMA */}
-      <div className="overflow-x-auto border border-gray-300 rounded-sm shadow-sm">
-        <table className="text-[11px] text-center border-collapse w-full">
+      <div className="overflow-x-auto shadow-sm">
+        <table className="text-[11px] text-center w-full">
           <thead>
             {/* BARIS 1: ARAH (UTARA, TIMUR, DST), Status */}
             <tr className="bg-white">
-              <th rowSpan={3} className="font-medium leading-tight sticky -left-1 z-10 bg-gray-100 border border-gray-300 px-2 py-2 min-w-[100px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+              <th rowSpan={3} className="font-medium leading-tight sticky -left-1 z-10 bg-gray-100 border-2 px-2 py-2 min-w-[100px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                 Waktu
               </th>
-              <th rowSpan={3} className="font-medium leading-tight sticky left-[95px] z-10 bg-gray-100 border border-gray-300 px-2 py-2 min-w-[80px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+              <th rowSpan={3} className="font-medium leading-tight sticky left-[95px] z-10 bg-gray-100 border-2 px-2 py-2 min-w-[80px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                 Status Kamera
               </th>
               {directions.map((dir) => (
                 <th key={dir} colSpan={33}
-                  className={`border border-gray-300 px-2 py-3 text-sm capitalize ${directionStyles[dir].header}`}>
+                  className={`border-2 px-2 py-3 text-sm capitalize ${directionStyles[dir].header}`}>
                   {dir}
                 </th>
               ))}
@@ -257,7 +271,7 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
               {directions.map((dir) => (
                 <React.Fragment key={`${dir}-move`}>
                   {movements.map((move) => (
-                    <th key={`${dir}-${move}`} colSpan={11} className="border capitalize border-gray-300 py-1 font-bold">
+                    <th key={`${dir}-${move}`} colSpan={11} className="border-2 capitalize-2 py-1 font-bold">
                       {move}
                     </th>
                   ))}
@@ -271,8 +285,8 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
                 <React.Fragment key={`${dir}-type-head`}>
                   {movements.map((move) => (
                     <React.Fragment key={`${dir}-${move}-types`}>
-                      {allCategories.map((cat) => (
-                        <th key={cat} className="border border-gray-300 px-0.5 py-3 font-medium leading-tight min-w-[100px] break-words text-gray-600">
+                      {allCategoriesHeading.map((cat) => (
+                        <th key={cat} className="border-2 px-0.5 py-3 font-medium leading-tight min-w-[60px] break-words text-gray-600">
                           {cat}
                         </th>
                       ))}
@@ -290,12 +304,12 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
               return (
                 <tr key={timeKey} className="hover:bg-gray-50 transition-colors">
                   {/* KOLOM WAKTU STICKY */}
-                  <td className="sticky -left-1 z-10 bg-gray-50 border border-gray-300 px-2 py-2 font-bold shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                  <td className="sticky -left-1 z-10 bg-gray-50 border-2 px-2 py-2 font-bold shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                     {timeKey}
                   </td>
 
                   {/* KOLOM STATUS STICKY */}
-                  <td className={`sticky left-[95px] min-w-[100px] z-10 border border-gray-300 px-2 py-3 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] ${cameraStatus === 1 ? 'bg-emerald-50' : cameraStatus === 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
+                  <td className={`sticky left-[95px] min-w-[100px] z-10 border-2 px-2 py-3 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] ${cameraStatus === 1 ? 'bg-emerald-50' : cameraStatus === 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
                     <div className="flex items-center justify-center gap-2">
                       {cameraStatus === 1 ? (
                         <>
@@ -325,7 +339,7 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
                             return (
                               <td
                                 key={cat}
-                                className={`border border-gray-300 px-1 py-2 ${isTotal ? 'bg-gray-100 font-bold' : ''}`}
+                                className={`border-2 px-1 py-2 ${isTotal ? 'bg-gray-100 font-bold' : ''}`}
                               >
                                 {val}
                               </td>

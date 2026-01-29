@@ -848,23 +848,15 @@ export default function Home () {
         </div>
       )}
 
-      <h2 className="card-title text-gray-700">Analisis Lalu Lintas Terkini</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-[90%] p-3 bg-stone-100 rounded-lg">
-
-        {/* <GraficCategoryTraffic category="masuk"/> */}
-        {/* <GraficCategoryTraffic category="keluar"/> */}
+      <h2 className="card-title text-stone-800 text-xl font-bold">Analisis Lalu Lintas Terkini</h2>
+      <div className="flex flex-col gap-10 w-[90%]">
         <GraficByHourInOut category="in" dateRange={dateRange} id_simpang={simpangFilter} nama_simpang={namaLokasi} />
         <GraficByHourInOut category="out" dateRange={dateRange} id_simpang={simpangFilter} nama_simpang={namaLokasi} />
       </div>
       <div className="w-[90%]">
-        <div className="w-full bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">CCTV Live Stream & Model Deteksi Kendaraan</div>
-        <CameraStream />
-        {/* <SocketConnection/> */}
-        <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100 mb-10">
-        </div>
+        {isAdmin && <CameraStream />}
         <MapComponent />
       </div>
-
     </div>
   );
 }

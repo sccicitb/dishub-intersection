@@ -16,16 +16,16 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
 
   // Vehicle category mapping - sesuai dengan API response
   const vehicleCategoryMap = {
-    'SM': 'Sepeda Motor',
-    'MP': 'Mobil Penumpang',
-    'AUP': 'Angkutan Umum',
-    'TR': 'Truk Ringan',
-    'BS': 'Bus Sedang',
-    'TS': 'Truk Sedang',
-    'TB': 'Truk Berat',
-    'BB': 'Bus Besar',
-    'GANDENG': 'Gandeng/Semitrailer',
-    'KTB': 'Kendaraan Tidak Bermotor',
+    'SM': 'SM',
+    'MP': 'MP',
+    'AUP': 'AUP',
+    'TR': 'TR',
+    'BS': 'BS',
+    'TS': 'TS',
+    'TB': 'TB',
+    'BB': 'BB',
+    'GANDENG': 'GS',
+    'KTB': 'KTB',
   };
 
   const directionMap = {
@@ -195,8 +195,8 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
       )}
 
       {!loading && (
-        <div className="overflow-x-auto bg-white rounded-lg shadow">
-          <div className="p-4 border-b border-base-300 flex justify-end">
+        <div className="overflow-x-auto">
+          <div className="p-4 flex justify-end">
             <button
               onClick={handleExport}
               disabled={exporting || !data}
@@ -212,20 +212,20 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
               )}
             </button>
           </div>
-          <table className="table-auto border-collapse border border-base-300 w-full text-xs table-xs">
+          <table className="table-auto w-full text-xs table-xs">
             <thead className="bg-base-300">
               <tr>
-                <th rowSpan={2} className="border border-base-100 text-sm font-medium p-2 text-center">
+                <th rowSpan={2} className="border-2 text-sm font-medium p-2 text-center">
                   Periode
                 </th>
-                <th rowSpan={2} className="border border-base-100 text-sm font-medium p-2 text-center">
+                <th rowSpan={2} className="border-2 text-sm font-medium p-2 text-center">
                   Jam
                 </th>
-                <th rowSpan={2} className="border border-base-100 text-sm font-medium p-2 text-center">
+                <th rowSpan={2} className="border-2 text-sm font-medium p-2 text-center">
                   Jenis
                 </th>
                 {directions.map((direction) => (
-                  <th key={direction} colSpan={movements.length + 1} className="border border-base-100 text-sm font-medium p-2 text-center">
+                  <th key={direction} colSpan={movements.length + 1} className="border-2 text-sm font-medium p-2 text-center">
                     {directionMap[direction].toUpperCase()}
                   </th>
                 ))}
@@ -234,11 +234,11 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
                 {directions.map((direction) => (
                   <React.Fragment key={direction}>
                     {movements.map((movement) => (
-                      <th key={`${direction}-${movement}`} className="border border-base-100 font-medium p-2 text-center">
+                      <th key={`${direction}-${movement}`} className="border-2 font-medium p-2 text-center">
                         {movement}
                       </th>
                     ))}
-                    <th key={`${direction}-total`} className="border border-base-100 font-medium p-2 text-center bg-gray-100">
+                    <th key={`${direction}-total`} className="border-2 font-medium p-2 text-center bg-gray-100">
                       Total
                     </th>
                   </React.Fragment>
@@ -253,27 +253,27 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
                     return (
                       <tr key={`${timeSlot}-${category}`} className={(timeIdx + catIdx) % 2 === 0 ? 'bg-base-200' : 'bg-base-100'}>
                         {isFirstCategory && (
-                          <td rowSpan={vehicleCategories.length} className="border border-base-300 text-xs text-center font-bold p-2 align-middle">
+                          <td rowSpan={vehicleCategories.length} className="border-2 text-xs text-center font-bold p-2 align-middle">
                             <div className="text-xs font-bold text-blue-600">{getTimePeriodName(timeSlot)}</div>
                           </td>
                         )}
                         {isFirstCategory && (
-                          <td rowSpan={vehicleCategories.length} className="border border-base-300 text-xs text-center font-bold p-2 align-middle">
+                          <td rowSpan={vehicleCategories.length} className="border-2 text-xs text-center font-bold p-2 align-middle">
                             {timeSlot}
                           </td>
                         )}
-                        <td className="border border-base-300 text-xs text-left p-2 font-medium">{vehicleCategoryMap[category]}</td>
+                        <td className="border-2 text-xs p-1 font-medium text-center">{vehicleCategoryMap[category]}</td>
                         {directions.map((direction) => (
                           <React.Fragment key={direction}>
                             {movements.map((movement) => {
                               const value = getSlotValue(timeSlot, direction, movement, category);
                               return (
-                                <td key={`${timeSlot}-${direction}-${movement}-${category}`} className="border border-base-300 text-xs text-center p-2">
+                                <td key={`${timeSlot}-${direction}-${movement}-${category}`} className="border-2 text-xs text-center p-2">
                                   {value.toLocaleString('id-ID')}
                                 </td>
                               );
                             })}
-                            <td key={`${timeSlot}-${direction}-total-${category}`} className="border border-base-300 text-xs text-center font-semibold p-2 bg-gray-50">
+                            <td key={`${timeSlot}-${direction}-total-${category}`} className="border-2 text-xs text-center font-semibold p-2 bg-gray-50">
                               {(() => {
                                 let total = 0;
                                 movements.forEach((mov) => {
@@ -289,8 +289,8 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
                   })}
                   {/* Subtotal row */}
                   <tr className="bg-base-300 font-semibold">
-                    <td className="border border-base-300 text-xs text-center font-bold p-2"></td>
-                    <td className="border border-base-300 text-xs text-center font-bold p-2">
+                    <td className="border-2 text-xs text-center font-bold p-2"></td>
+                    <td className="border-2 text-xs text-center font-bold p-2">
                       Subtotal {timeSlot}
                     </td>
                     <td></td>
@@ -302,12 +302,12 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
                             subtotal += getSlotValue(timeSlot, direction, movement, category);
                           });
                           return (
-                            <td key={`subtotal-${timeSlot}-${direction}-${movement}`} className="border border-base-300 text-xs text-center p-2">
+                            <td key={`subtotal-${timeSlot}-${direction}-${movement}`} className="border-2 text-xs text-center p-2">
                               {subtotal.toLocaleString('id-ID')}
                             </td>
                           );
                         })}
-                        <td key={`subtotal-${timeSlot}-${direction}-total`} className="border border-base-300 text-xs text-center p-2 bg-yellow-100">
+                        <td key={`subtotal-${timeSlot}-${direction}-total`} className="border-2 text-xs text-center p-2 bg-yellow-100">
                           {(() => {
                             let subtotal = 0;
                             movements.forEach((mov) => {
@@ -325,7 +325,7 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
               ))}
               {/* Grand Total row */}
               <tr className="bg-blue-300 font-bold">
-                <td colSpan={3} className="border border-base-300 text-xs text-center font-bold p-2">
+                <td colSpan={3} className="border-2 text-xs text-center font-bold p-2">
                   GRAND TOTAL
                 </td>
                 {directions.map((direction) => (
@@ -338,12 +338,12 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
                         });
                       });
                       return (
-                        <td key={`grand-${direction}-${movement}`} className="border border-base-300 text-xs text-center p-2">
+                        <td key={`grand-${direction}-${movement}`} className="border-2 text-xs text-center p-2">
                           {grandTotal.toLocaleString('id-ID')}
                         </td>
                       );
                     })}
-                    <td key={`grand-${direction}-total`} className="border border-base-300 text-xs text-center p-2 bg-blue-100">
+                    <td key={`grand-${direction}-total`} className="border-2 text-xs text-center p-2 bg-blue-100">
                       {(() => {
                         let grandTotal = 0;
                         timeSlots.forEach((timeSlot) => {

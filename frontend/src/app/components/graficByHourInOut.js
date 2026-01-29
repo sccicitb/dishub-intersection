@@ -139,7 +139,7 @@ const TrafficTrendComponent = ({ category = "in", dateRange = {}, id_simpang = 2
   };
 
   return (
-    <div className="card bg-white shadow-xl border border-base-200">
+    <div className="card bg-base-200 border border-base-200">
       <div className="card-body">
         <div className="flex justify-between items-center mb-4">
           <div>{apiData.date}</div>
@@ -148,18 +148,6 @@ const TrafficTrendComponent = ({ category = "in", dateRange = {}, id_simpang = 2
         <div className="h-[400px] w-full">
           <Line options={optionsLine} data={chartData} />
         </div>
-
-        {/* Summary Mini Cards */}
-        {/* <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-            <p className="text-xs text-slate-500 uppercase">Status</p>
-            <p className="text-sm font-bold text-green-600">{apiData.status?.toUpperCase()}</p>
-          </div>
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-            <p className="text-xs text-slate-500 uppercase">ID Simpang</p>
-            <p className="text-sm font-bold">{apiData.simpang_id}</p>
-          </div>
-        </div> */}
       </div>
     </div>
   );

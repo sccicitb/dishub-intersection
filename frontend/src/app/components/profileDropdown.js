@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Logout } from '../auth/logout';
-import ThemeToggle from './customTheme';
+// import ThemeToggle from './customTheme';
 import { FaAngleDown } from "react-icons/fa6";
 import { useAuth } from '../context/authContext';
 
@@ -53,7 +53,7 @@ export default function NavbarUserDropdown () {
             </div>
 
             <div className="flex flex-col p-1">
-              <ThemeToggle classCustom=" rounded-none " />
+              {/* <ThemeToggle classCustom=" rounded-none " /> */}
 
               {/*             
             <Link href="/profile" className="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100">
