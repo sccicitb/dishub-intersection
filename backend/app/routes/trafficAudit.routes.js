@@ -1,6 +1,6 @@
 module.exports = app => {
   const trafficAudit = require("../controllers/trafficAudit.controller.js");
-  const WeeklyAuditController = require("../controllers/WeeklyAudit.controller.js");
+  const WeeklyAuditController = require("../controllers/weeklyAudit.controller.js");
   const DailyAuditController = require('../controllers/dailyAuditController');
 
   var router = require("express").Router();
