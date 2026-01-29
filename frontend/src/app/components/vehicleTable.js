@@ -95,11 +95,10 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
   return (
     <div className="mx-auto">
       <h2 className="text-xl font-bold mb-4">Data Pemantauan Kendaraan</h2>
-      <div className='flex-col flex w-full pl-4'>
+      <div className='flex-col flex w-full'>
         <div className="tabs tabs-boxed mb-4 space-x-2 flex space-y-2">
           {activeTab === 'hourly' && (
             <div className="flex gap-2 items-center w-fit">
-              <label className="mr-2 font-medium">Pilih Tanggal:</label>
               <input
                 type="date"
                 className="border rounded px-2 py-1"
@@ -108,7 +107,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
               />
               <button
                 onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
-                className="btn btn-md bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+                className="btn btn-sm bg-[#314385]/80 text-white font-semibold hover:bg-green-700 transition"
               >
                 Submit
               </button>
@@ -129,7 +128,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
               </select>
               <button
                 onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
-                className="btn btn-md bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+                className="btn btn-sm bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
               >
                 Submit
               </button>
@@ -171,7 +170,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
 
               <button
                 onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
-                className="btn btn-md bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+                className="btn btn-sm bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
               >
                 Submit
               </button>
@@ -198,7 +197,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
               />
               <button
                 onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
-                className="btn btn-md bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+                className="btn btn-sm bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
               >
                 Submit
               </button>
@@ -209,7 +208,7 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
             <div className="flex gap-2 items-center w-fit">
               <button
                 onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
-                className="btn btn-md bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+                className="btn btn-sm bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
               >
                 Submit
               </button>
@@ -217,11 +216,11 @@ const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePe
             </div>
           )}
         </div>
-        <div className='w-full flex flex-wrap space-x-2'>
+        <div className='w-full flex flex-wrap space-x-2 pb-3'>
           {['hourly', 'monthly', 'dailyMonth', 'dailyRange', 'yearly'].map((tab) => (
             <button
               key={tab}
-              className={`btn tab ${activeTab === tab ? 'tab-active bg-[#314385]/80 border-none text-white' : ''}`}
+              className={`btn btn-sm tab ${activeTab === tab ? 'tab-active bg-[#314385]/80 border-none text-white' : ''}`}
               onClick={() => setActiveTab(tab)}
             >
               {{

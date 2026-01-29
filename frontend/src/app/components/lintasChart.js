@@ -39,7 +39,7 @@ export default function HorizontalBarChart({ positionText, chartData }) {
             callbacks: {
               label: function(context) {
                 const label = chartData?.tooltipLabels?.[context.dataIndex] || '';
-                return `${label}: ${context.raw} ${chartData?.format || ''}`;
+                return `${label}: ${Number(context.raw).toLocaleString('id-ID')} ${chartData?.format || ''}`;
               }
             }
           },
@@ -75,7 +75,7 @@ export default function HorizontalBarChart({ positionText, chartData }) {
                 const vehicleType = chartData?.vehicleTypes ? chartData.vehicleTypes[index] : '';
                 
                 // Hanya teks untuk label di Chart.js - icon akan ditampilkan via React
-                return `${vehicleType} (${percent}) ${dataValue}`;
+                return `${vehicleType} (${percent}) ${Number(dataValue).toLocaleString('id-ID')}`;
               },
               align: 'end',
               mirror: false,

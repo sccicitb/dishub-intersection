@@ -9,26 +9,9 @@ import { maps, cameras, logCamera } from '@/lib/apiService';
 import AdaptiveVideoPlayer from './adaptiveCameraStream';
 
 const CameraStream = () => {
-  const [socketConnected, setSocketConnected] = useState(false);
   const [streamData, setStreamData] = useState({});
   const [activeCamera, setActiveCamera] = useState('');
   const [dataCameras, setDataCameras] = useState([]);
-  const [cameraLogs, setCameraLogs] = useState({});
-
-  // Sample images mapping untuk simpang
-  const sampleImages = {
-    'camera 1': '/image/sample/glagah.png',
-    'camera 2': '/image/sample/piyungan.png',
-    'camera 3': '/image/sample/prambanan.png',
-    'camera 4': '/image/sample/tempel.png'
-  };
-
-  const descriptionCamera = {
-    'camera 1': 'Glagah',
-    'camera 2': 'Piyungan',
-    'camera 3': 'Prambanan',
-    'camera 4': 'Tempel'
-  };
 
   const formatDateToInput = (date) => {
     if (!date) return "";
@@ -49,16 +32,6 @@ const CameraStream = () => {
       const filteredLogs = logs;
 
       const offlineLogs = filteredLogs.filter(log => log.status === 0);
-
-      setCameraLogs(prev => ({
-        ...prev,
-        [cameraId]: {
-          all: filteredLogs,           // Semua log untuk tanggal tersebut
-          offline: offlineLogs,        // Hanya log dengan status mati
-          raw: logs                    // Data mentah tanpa filter
-        }
-      }));
-
       return {
         all: filteredLogs,
         offline: offlineLogs,
@@ -105,13 +78,11 @@ const CameraStream = () => {
     const socket = io('https://sxe-data.layanancerdas.id');
 
     socket.on('connect', () => {
-
-      setSocketConnected(true);
+      console.log('Socket connected:', socket.id);
     });
 
     socket.on('disconnect', () => {
-
-      setSocketConnected(false);
+      console.log('Socket disconnected:', socket.id);
     });
 
     dataCameras.forEach(cam => {
@@ -165,7 +136,6 @@ const CameraStream = () => {
         })}
 
       </div>
-      <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100 my-2" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-5">
         {cctvStreamCameras.map((cam) => {

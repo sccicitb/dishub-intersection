@@ -462,6 +462,7 @@ Vehicle.getAsalTujuanMatrix = async (simpangId, filter = 'day', startDate = null
       FROM arus 
       WHERE ID_Simpang = ? 
         AND ${dateFilterClause}
+        AND dari_arah != ke_arah
       GROUP BY dari_arah, ke_arah
       ORDER BY dari_arah, ke_arah
     `;
@@ -623,6 +624,7 @@ Vehicle.getAsalTujuanMatrixAll = async (filter = 'day', startDate = null, endDat
         COUNT(*) as total_vehicles
       FROM arus 
       WHERE ${dateFilterClause}
+        AND dari_arah != ke_arah
       GROUP BY dari_arah, ke_arah
       ORDER BY dari_arah, ke_arah
     `;
@@ -680,6 +682,7 @@ Vehicle.getTrafficMatrixByCategory = async (simpangId, startDate, endDate) => {
       FROM arus 
       WHERE ID_Simpang = ? 
         AND waktu BETWEEN ? AND ?
+        AND dari_arah != ke_arah
       ORDER BY dari_arah, ke_arah
     `;
     

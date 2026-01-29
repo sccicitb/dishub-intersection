@@ -1,11 +1,13 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL
-  ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
-  : 'https://staging-smartx-mobility.jogjaprov.go.id/api';
-  // : 'http://localhost:9090/api';
-  
+const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL ||
+  (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_BASE_URL : null);
+
+const baseURL = envUrl
+  ? `${envUrl}/api`
+  : 'http://localhost:9090/api';
+
 const axiosInstance = axios.create({
   baseURL,
   timeout: 70000,

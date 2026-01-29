@@ -133,7 +133,7 @@ const TotalChart = ({ data }) => {
           <div className="text-green-600 font-semibold text-xl">MASUK</div>
           <div>
             <div className="text-4xl font-medium text-green-600">
-              {chartData[0].masuk}
+              {Number(chartData[0].masuk).toLocaleString('id-ID')}
             </div>
             <div className="text-gray-600 mb-2">Kendaraan</div>
           </div>
@@ -147,7 +147,7 @@ const TotalChart = ({ data }) => {
           <div className="text-red-500 font-semibold text-xl">KELUAR</div>
           <div>
             <div className="text-4xl font-medium text-red-500">
-              {chartData[0].keluar}
+              {Number(chartData[0].keluar).toLocaleString('id-ID')}
             </div>
             <div className="text-gray-600 mb-2">Kendaraan</div>
           </div>

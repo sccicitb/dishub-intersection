@@ -58,7 +58,7 @@ const VehicleClassificationTable = ({ typeClass, customSize }) => {
   }, {});
 
   return (
-    <div className="w-full p-4 my-2">
+    <div className="w-full py-5 my-2">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
         <h2 className={`${headerTextSize} font-semibold`}>Klasifikasi Kendaraan</h2>
 
@@ -77,10 +77,10 @@ const VehicleClassificationTable = ({ typeClass, customSize }) => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full border border-base-300">
+        <table className="w-full border-2 table-sm text-center">
           <thead>
             <tr className={theme === 'light' ? 'bg-green-50 text-black' : 'bg-base-200 text-white'}>
-              <th className={`border border-base-300 px-4 py-2 font-medium capitalize text-center align-middle ${textSize}`} colSpan={20}>{selectedType.replace(/_/g, ' ')}</th>
+              <th className={`border-2 px-4 py-2 font-medium capitalize text-center align-middle ${textSize}`} colSpan={20}>{selectedType.replace(/_/g, ' ')}</th>
             </tr>
           </thead>
           <tbody>
@@ -92,13 +92,13 @@ const VehicleClassificationTable = ({ typeClass, customSize }) => {
                       <>
 
                         <td
-                          className={`border border-base-300 px-4 py-2 text-center align-middle font-medium ${textSize}`}
+                          className={`border-2 px-4 py-2 text-center align-middle font-medium ${textSize}`}
                           rowSpan={items.length}
                         >
                           {vehicle.mainCode}
                         </td>
                         <td
-                          className={`border border-base-300 px-4 py-2 align-middle ${textSize} text-center`}
+                          className={`border-2 px-4 py-2 align-middle ${textSize} text-center`}
                           rowSpan={items.length}
                         >
                           {vehicle.mainCategory}
@@ -107,21 +107,21 @@ const VehicleClassificationTable = ({ typeClass, customSize }) => {
                     ) : customSize ? (
                       <>
                         <td
-                          className={`border border-base-300 px-4 py-2 text-center align-middle font-medium ${textSize}`}
+                          className={`border-2 px-4 py-2 text-center align-middle font-medium ${textSize}`}
                         >
                           {index === 0 ? vehicle.mainCode : null}
                         </td>
                         <td
-                          className={`border border-base-300 px-4 py-2 align-middle ${textSize} text-center`}
+                          className={`border-2 px-4 py-2 align-middle ${textSize} text-center`}
                         >
                           {index === 0 ? vehicle.mainCategory : null}
                         </td>
                       </>
                     ) : <></>}
-                    <td className={`border border-base-300 px-4 py-2 text-center ${textSize}`}>
+                    <td className={`border-2 px-4 py-2 text-center ${textSize}`}>
                       {vehicle.subCode} <br /> {vehicle.subCategory}
                     </td>
-                    <td className={`border border-base-300 px-4 py-2 ${textSize}`}>
+                    <td className={`border-2 px-4 py-2 ${textSize}`}>
                       {vehicle.description}
                     </td>
                   </tr>
@@ -129,7 +129,7 @@ const VehicleClassificationTable = ({ typeClass, customSize }) => {
               )
             ) : (
               <tr>
-                <td colSpan="4" className={`border border-base-300 px-4 py-2 text-center ${textSize}`}>
+                <td colSpan="4" className={`border-2 px-4 py-2 text-center ${textSize}`}>
                   {classificationData?.length > 0 ? 'Tidak ada data untuk tipe yang dipilih' : 'Memuat data...'}
                 </td>
               </tr>

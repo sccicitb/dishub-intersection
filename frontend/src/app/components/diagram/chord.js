@@ -86,7 +86,7 @@ const ChordDiagram = ({ matrix, categories }) => {
         const from = categories[d.source.index];
         const to = categories[d.target.index];
         const value = d.source.value;
-        return `${from} -> ${to}: ${value}`;
+        return `${from} -> ${to}: ${Number(value).toLocaleString('id-ID')}`;
       });
 
     //Ribbons value arrow
@@ -107,7 +107,7 @@ const ChordDiagram = ({ matrix, categories }) => {
         const y = -Math.cos(angle) * innerRadius;
         return `translate(${x},${y})`;
       })
-      .text((d) => d.source.value > 0 ? d.source.value : "");
+      .text((d) => d.source.value > 0 ? Number(d.source.value).toLocaleString('id-ID') : "");
 
 
   }, [matrix, categories]);
