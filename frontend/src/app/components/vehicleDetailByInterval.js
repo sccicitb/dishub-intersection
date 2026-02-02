@@ -4,8 +4,9 @@ import React from 'react';
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { getRequest } from '@/lib/apiService';
 import { useAuth } from "@/app/context/authContext";
+import { exportVehicleDetailByInterval } from '@/utils/exportVehicleDetailByInterval';
 
-const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName }, ref) => {
+const VehicleDetailByInterval = forwardRef(({ simpangId, simpangName }, ref) => {
   const { isAdmin } = useAuth();
 
   const [data, setData] = useState(null);
@@ -13,6 +14,10 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
   const [error, setError] = useState(null);
   const [interval, setInterval] = useState('1hour');
   const [exporting, setExporting] = useState(false);
+  const [dateInput, setDateInput] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
 
   // Vehicle category mapping - sesuai dengan API response
   const vehicleCategoryMap = {
@@ -67,10 +72,17 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
     refetchData: () => fetchData(interval)
   }));
 
+  useEffect(() => {
+    fetchData();
+  }, [simpangId]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    fetchData(interval);
+  };
+
   const handleIntervalChange = (e) => {
-    const newInterval = e.target.value;
-    setInterval(newInterval);
-    fetchData(newInterval);
+    setInterval(e.target.value);
   };
 
   const handleExport = async () => {
@@ -85,29 +97,13 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
     }
   };
 
-  if (error) {
-    return (
-      <div className="alert alert-error">
-        <span>{error}</span>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="">
-        <span>Data tidak Tersedia</span>
-      </div>
-    );
-  }
-
-  const timeSlots = Object.keys(data.slots || {}).sort();
+  const timeSlots = data ? Object.keys(data.slots || {}).sort() : [];
   const directions = ['north', 'south', 'east', 'west'];
   const movements = ['IN', 'OUT'];
   
   // Extract vehicle categories dari first slot untuk dynamic categories
   let vehicleCategories = Object.keys(vehicleCategoryMap);
-  if (timeSlots.length > 0 && data.slots[timeSlots[0]]?.data?.north?.IN) {
+  if (data && timeSlots.length > 0 && data.slots[timeSlots[0]]?.data?.north?.IN) {
     vehicleCategories = Object.keys(data.slots[timeSlots[0]].data.north.IN).filter(key => key !== 'total');
   }
 
@@ -154,64 +150,95 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
 
   // Function to get value for a time slot
   const getSlotValue = (timeSlot, direction, movement, category) => {
+    if (!data) return 0;
     const value = data.slots[timeSlot]?.data?.[direction]?.[movement]?.[category];
     return value || 0;
   };
 
   return (
     <div className="w-full">
-      {/* Header Info */}
-      <div className="bg-white p-4 rounded-lg shadow mb-4">
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="text-gray-600">Simpang:</span>
-            <p className="font-semibold">{simpangName} ({data.simpang_id})</p>
+      {/* Filter Form */}
+      <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+            <input
+              type="date"
+              value={dateInput}
+              onChange={(e) => setDateInput(e.target.value)}
+              className="input input-sm input-bordered focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
           </div>
-          <div>
-            <span className="text-gray-600">Tanggal:</span>
-            <p className="font-semibold">{data.date}</p>
-          </div>
-          <div>
-            <span className="text-gray-600">Interval:</span>
+
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700 mb-1">Interval Waktu</label>
             <select
               value={interval}
               onChange={handleIntervalChange}
-              className="select select-bordered select-sm w-full"
-              disabled={loading || !isAdmin}
+              className="select select-sm select-bordered focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="5min">5 Menit</option>
               <option value="15min">15 Menit</option>
               <option value="30min">30 Menit</option>
-              <option value="1hour">1 Jam (Default)</option>
+              <option value="1hour">1 Jam</option>
             </select>
           </div>
+
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-sm bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300"
+            >
+              {loading ? 'Memuat...' : 'Tampilkan Data'}
+            </button>
+            {data && (
+              <button
+                type="button"
+                onClick={handleExport}
+                disabled={exporting}
+                className="btn btn-sm bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300"
+              >
+                {exporting ? 'Exporting...' : 'Export Excel'}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+
+        {data && (
+          <div className="mt-3 text-sm text-gray-600">
+            <span className="font-medium">Info:</span> Data untuk tanggal {data.date} | Lokasi: {simpangName || simpangId}
+          </div>
+        )}
+      </form>
 
       {loading && (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex justify-center items-center py-12">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
       )}
 
-      {!loading && (
-        <div className="overflow-x-auto">
-          <div className="p-4 flex justify-end">
-            <button
-              onClick={handleExport}
-              disabled={exporting || !data}
-              className="btn btn-sm bg-green-600/90 text-white hover:bg-green-600"
-            >
-              {exporting ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  Exporting...
-                </>
-              ) : (
-                'Export Excel'
-              )}
-            </button>
+      {error && (
+        <div className="alert alert-error shadow-lg mb-4">
+          <div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{error}</span>
           </div>
+        </div>
+      )}
+
+      {!loading && !error && !data && (
+        <div className="text-center py-12 text-gray-500">
+          Pilih tanggal dan klik &quot;Tampilkan Data&quot; untuk melihat data
+        </div>
+      )}
+
+      {!loading && !error && data && (
+        <>
+          <div className="overflow-x-auto">
           <table className="table-auto w-full text-xs table-xs">
             <thead className="bg-base-300">
               <tr>
@@ -362,6 +389,7 @@ const VehicleDetailByInterval = forwardRef(({ simpangId, dateInput, simpangName 
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

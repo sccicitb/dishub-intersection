@@ -180,22 +180,26 @@ VehicleDetailByTime.getMasukKeluarDetailByTime = async (simpangId, date, interva
           const dari = row.dari_arah;
           const ke = row.ke_arah;
 
-          // Determine target arah and direction
-          let targetArah = dari;
-          let direction = 'IN';
-
-          if (['north', 'south', 'east', 'west'].includes(ke)) {
-            targetArah = ke;
-            direction = 'OUT';
+          // Count for IN - vehicles TO this direction (ke_arah)
+          if (ke && ['north', 'south', 'east', 'west'].includes(ke)) {
+            if (result[slot.label].data[ke] && result[slot.label].data[ke]['IN']) {
+              Object.keys(VEHICLE_TYPES).forEach(type => {
+                const count = parseInt(row[type]) || 0;
+                result[slot.label].data[ke]['IN'][type] += count;
+                result[slot.label].data[ke]['IN'].total += count;
+              });
+            }
           }
 
-          // Add vehicle counts
-          if (result[slot.label].data[targetArah] && result[slot.label].data[targetArah][direction]) {
-            Object.keys(VEHICLE_TYPES).forEach(type => {
-              const count = parseInt(row[type]) || 0;
-              result[slot.label].data[targetArah][direction][type] += count;
-              result[slot.label].data[targetArah][direction].total += count;
-            });
+          // Count for OUT - vehicles FROM this direction (dari_arah)
+          if (dari && ['north', 'south', 'east', 'west'].includes(dari)) {
+            if (result[slot.label].data[dari] && result[slot.label].data[dari]['OUT']) {
+              Object.keys(VEHICLE_TYPES).forEach(type => {
+                const count = parseInt(row[type]) || 0;
+                result[slot.label].data[dari]['OUT'][type] += count;
+                result[slot.label].data[dari]['OUT'].total += count;
+              });
+            }
           }
 
           break;

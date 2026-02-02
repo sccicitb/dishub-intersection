@@ -15,6 +15,7 @@ const MapComponent = lazy(() => import("@/app/components/map"));
 const HeaderSurvei = lazy(() => import("@/app/components/headerLhrt"));
 const WeeklyFactorTable = lazy(() => import('@/app/components/WeeklyFactorTable'));
 const DailyVolumeTable = lazy(() => import('@/app/components/DailyVolumeTable'));
+const VolumeStatsChart = lazy(() => import('@/app/components/VolumeStatsChart'));
 
 function SurveiLhrkPage () {
   const [loading, setLoading] = useState(false);
@@ -137,6 +138,7 @@ function SurveiLhrkPage () {
         <SeasonalFactorTable year={2025} simpangId={0} />
         <WeeklyFactorTable year={2025} simpangId={0} />
         <DailyVolumeTable year={2025} simpangId={0} />
+        <VolumeStatsChart />
       </Suspense>
     </div>
   );

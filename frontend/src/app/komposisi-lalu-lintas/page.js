@@ -16,11 +16,12 @@ const MapComponent = lazy(() => import("@/app/components/map"));
 const TrafficMatrixByCategory = lazy(() => import("@/app/components/trafficMatrixByCategory"));
 const TrafficMatrixByFilter2 = lazy(() => import("@/app/components/trafficMatrixByFilter2"));
 const VehicleDetailByInterval = lazy(() => import("@/app/components/vehicleDetailByInterval"));
+const SimplifiedVehicleSummary = lazy(() => import("@/app/components/SimplifiedVehicleSummary"));
 const GridVertical = lazy(() => import('@/app/components/gridVertical'));
 const GridHorizontal = lazy(() => import('@/app/components/gridHorizontal'));
 const HeaderSurvei = lazy(() => import("@/app/components/headerLhrt"));
 
-function KomposisiLaluLintasPage() {
+function KomposisiLaluLintasPage () {
   const { isAdmin } = useAuth();
 
   // Grouped states
@@ -58,6 +59,7 @@ function KomposisiLaluLintasPage() {
   const trafficMatrixRef = useRef(null);
   const trafficMatrixByFilterRef = useRef(null);
   const vehicleDetailByIntervalRef = useRef(null);
+  const simplifiedSummaryRef = useRef(null);
 
   const handleExportExcel = async () => {
     if (!dateInput || !activeSimpang) {
@@ -86,7 +88,7 @@ function KomposisiLaluLintasPage() {
   };
 
   const handleClick = (building) => {
-      if (!building || !building.camera) return;
+    if (!building || !building.camera) return;
     const title = building.camera.name || "Tanpa Nama";
     activeStates.title[1]("Survei " + title);
     setActiveSimpang(title);
@@ -122,7 +124,7 @@ function KomposisiLaluLintasPage() {
   );
 
   const triggerRefetch = () => {
-    [trafficMatrixRef, trafficMatrixByFilterRef, vehicleDetailByIntervalRef].forEach(ref => {
+    [trafficMatrixRef, trafficMatrixByFilterRef, vehicleDetailByIntervalRef, simplifiedSummaryRef].forEach(ref => {
       ref.current?.refetchData?.();
     });
   };
@@ -152,85 +154,91 @@ function KomposisiLaluLintasPage() {
               />
             </div>
           </div>
-          <div className="flex gap-5 items-center">
-            <input
-              type="date"
-              className="border rounded px-2 py-2"
-              value={dateInput}
-              onChange={(e) => setDateInput(e.target.value)}
-            />
-            <button
-              onClick={() => {
-                setSubmitCounter(submitCounter + 1);
-                triggerRefetch();
-              }}
-              className="btn btn-md bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
-            >
-              Submit
-            </button>
-            {isAdmin && (
-              <button
-                onClick={handleExportExcel}
-                disabled={exportLoading || !dateInput || !activeSimpang}
-                className="btn btn-md bg-indigo-950/90 text-white rounded-lg font-semibold hover:bg-indigo-950 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {exportLoading ? (
-                  <>
-                    <span className="animate-spin">↻</span>
-                    Exporting...
-                  </>
-                ) : (
-                  'Export Excel'
-                )}
-              </button>
-            )}
-          </div>
-
-          <div className="flex flex-col">
-            {loading ? (
-              <LoadingFallback message="Loading survey data..." />
-            ) : (
-              <div className="w-full my-10 overflow-x-auto">
-                <div className="min-w-[450px] flex flex-col w-fit bg-[#BCC3E1] mx-auto font-semibold">
-                  <Suspense fallback={<LoadingFallback />}>
-                    <div className="flex justify-center">
-                      <div></div>
-                      <GridVertical position={true} data={intersectionData?.north || {}} category />
-                      <div></div>
-                    </div>
-                    <div className="flex justify-center">
-                      <GridHorizontal position={true} data={intersectionData?.west || {}} category />
-                      <div className="w-40 text-center items-center flex font-medium text-sm bg-stone-400">
-                        <div className="m-auto">
-                          Jumlah<br />Kendaraan <br />
-                          {intersectionData?.vehicleCount || "0"}
-                        </div>
-                      </div>
-                      <GridHorizontal position={false} data={intersectionData?.east || {}} category />
-                    </div>
-                    <div className="flex justify-center">
-                      <div></div>
-                      <GridVertical position={false} data={intersectionData?.south || {}} category />
-                      <div></div>
-                    </div>
-                  </Suspense>
-                </div>
-              </div>
-            )}
-            <div className="w-[85%] mx-auto mb-8">
-              <CameraStatusTimeline cameraId={activeSID} selectedDate={dateInput} />
-            </div>
-          </div>
 
           <div className="mt-8 space-y-4">
             <h2 className="text-2xl font-bold mb-4 text-[#232f61]">Analisis Data Pergerakan</h2>
+            <CollapsibleSection title="Filter Data Visualisasi & Timeline Kamera" defaultOpen={false}>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                    <input
+                      type="date"
+                      className="input input-sm input-bordered focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={dateInput}
+                      onChange={(e) => setDateInput(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setSubmitCounter(submitCounter + 1);
+                        triggerRefetch();
+                      }}
+                      className="btn btn-sm bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Tampilkan Data
+                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={handleExportExcel}
+                        disabled={exportLoading || !dateInput || !activeSimpang}
+                        className="btn btn-sm bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300"
+                      >
+                        {exportLoading ? 'Exporting...' : 'Export Excel'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {dateInput && activeSimpang && (
+                  <div className="mt-3 text-sm text-gray-600">
+                    <span className="font-medium">Info:</span> Tanggal {dateInput} | Lokasi: {activeSimpang}
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col mt-4">
+                {loading ? (
+                  <LoadingFallback message="Loading survey data..." />
+                ) : (
+                  <div className="w-full my-10 overflow-x-auto">
+                    <div className="min-w-[450px] flex flex-col w-fit bg-[#BCC3E1] mx-auto font-semibold">
+                      <Suspense fallback={<LoadingFallback />}>
+                        <div className="flex justify-center">
+                          <div></div>
+                          <GridVertical position={true} data={intersectionData?.north || {}} category />
+                          <div></div>
+                        </div>
+                        <div className="flex justify-center">
+                          <GridHorizontal position={true} data={intersectionData?.west || {}} category />
+                          <div className="w-40 text-center items-center flex font-medium text-sm bg-stone-400">
+                            <div className="m-auto">
+                              Jumlah<br />Kendaraan <br />
+                              {intersectionData?.vehicleCount || "0"}
+                            </div>
+                          </div>
+                          <GridHorizontal position={false} data={intersectionData?.east || {}} category />
+                        </div>
+                        <div className="flex justify-center">
+                          <div></div>
+                          <GridVertical position={false} data={intersectionData?.south || {}} category />
+                          <div></div>
+                        </div>
+                      </Suspense>
+                    </div>
+                  </div>
+                )}
+                <div className="w-[85%] mx-auto mb-8">
+                  <CameraStatusTimeline cameraId={activeSID} selectedDate={dateInput} />
+                </div>
+              </div>
+            </CollapsibleSection>
             <CollapsibleSection title="Data Pergerakan Berdasarkan Kategori Kendaraan">
               <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
                 <TrafficMatrixByCategory
                   ref={trafficMatrixRef}
                   simpangId={activeSimpangId}
-                  startDate={dateInput}
-                  endDate={dateInput}
                   simpangName={activeSimpang}
                 />
               </Suspense>
@@ -240,7 +248,6 @@ function KomposisiLaluLintasPage() {
                 <TrafficMatrixByFilter2
                   ref={trafficMatrixByFilterRef}
                   simpangId={activeSimpangId}
-                  dateInput={dateInput}
                   simpangName={activeSimpang}
                 />
               </Suspense>
@@ -250,7 +257,15 @@ function KomposisiLaluLintasPage() {
                 <VehicleDetailByInterval
                   ref={vehicleDetailByIntervalRef}
                   simpangId={activeSimpangId}
-                  dateInput={dateInput}
+                  simpangName={activeSimpang}
+                />
+              </Suspense>
+            </CollapsibleSection>
+            <CollapsibleSection title="Ringkasan Kendaraan Per Interval">
+              <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
+                <SimplifiedVehicleSummary
+                  ref={simplifiedSummaryRef}
+                  simpangId={activeSimpangId}
                   simpangName={activeSimpang}
                 />
               </Suspense>
