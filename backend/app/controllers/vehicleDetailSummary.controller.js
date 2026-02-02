@@ -239,3 +239,44 @@ exports.getMasukKeluarDetailByHour = async (req, res) => {
     });
   }
 };
+
+// Get simplified vehicle summary by interval - total per vehicle type across all directions
+exports.getSimplifiedSummaryByInterval = async (req, res) => {
+  try {
+    const simpang_id = req.query.simpang_id;
+    const date = req.query.date;
+    const interval = req.query.interval || '1hour';
+
+    // Validate required parameters
+    if (!simpang_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "simpang_id query parameter is required"
+      });
+    }
+
+    if (!date) {
+      return res.status(400).json({
+        status: "error",
+        message: "date query parameter is required in YYYY-MM-DD format"
+      });
+    }
+
+    const result = await VehicleDetailSummary.getSimplifiedSummaryByInterval(
+      simpang_id,
+      date,
+      interval
+    );
+
+    res.json({
+      status: "ok",
+      data: result
+    });
+  } catch (error) {
+    console.error("Error getting simplified summary by interval:", error);
+    res.status(500).json({
+      status: "error",
+      message: error.message || "Error retrieving simplified vehicle summary"
+    });
+  }
+};

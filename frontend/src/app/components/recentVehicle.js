@@ -26,7 +26,7 @@ export default function RecentVehicle({ customCSS, data }) {
   }, [data]);
 
   return (
-    <div className={`flex w-2/3 not-lg:w-full flex-col bg-white overflow-hidden ${customCSS || 'h-96'}`}>
+    <div className={`flex w-2/3 min-h-full not-lg:w-full flex-col bg-white overflow-hidden ${customCSS || 'h-96'}`}>
       <div className="py-3 font-semibold text-lg">
         Riwayat Deteksi Terkini
       </div>

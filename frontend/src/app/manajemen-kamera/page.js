@@ -1124,41 +1124,9 @@ const ManajemenKamera = () => {
 
 
         {/* Main Content Grid */}
-        <div className={`grid ${fullSize ? 'grid-cols-1' : 'xl:grid-cols-3 grid-cols-1'} h-fit gap-4`}>
+        <div className={`flex w-full gap-5 not-md:flex-col lg:h-[700px]`}>
           {/* Camera Management Section */}
           <div className={`w-full ${fullSize ? 'col-span-1' : 'xl:col-span-2'} bg-[#314385]/10 rounded-xl p-4 h-full flex flex-col gap-5`}>
-            {/* <h3 className='text-lg font-medium mb-2'>Select Layout</h3>
-            <div className='w-full overflow-x-auto'>
-              <div className="flex gap-2 min-w-max">
-                <div className={isMobile ? 'opacity-50 pointer-events-none' : ''}>
-                  <LayoutKamera
-                    cols={2}
-                    J={4}
-                    Clicked={() => [handleClick({ cols: 2, J: 4, bc: 0, rows: 0 }), setFullSize(false)]}
-                  />
-                </div>
-                <div className={isMobile ? 'opacity-50 pointer-events-none' : ''}>
-                  <LayoutKamera
-                    cols={3}
-                    J={2}
-                    bc={1}
-                    rows={2}
-                    Clicked={() => [handleClick({ cols: 3, J: 3, bc: 1, rows: 2 }), setFullSize(true)]}
-                  />
-                </div>
-                <LayoutKamera
-                  cols={1}
-                  J={2}
-                  Clicked={() => [handleClick({ cols: 1, J: 4, bc: 0, rows: 0 }), setFullSize(false)]}
-                />
-              </div>
-            </div>
-
-            <div className='overflow-y-auto lg:max-h-[490px]'>
-              {mergedCameraData.length > 0 && (
-                <CameraPosition layout={layout} streamData={streamData} urlData={videoStream} />
-              )}
-            </div> */}
 
             <CameraActive
               onOptionChange={handleCameraSelect}
@@ -1408,7 +1376,7 @@ const ManajemenKamera = () => {
           </div>
 
           {/* Recent Vehicle Section */}
-          <RecentVehicle hg={600} allData={filteredBuildings} streamData={streamData} />
+          <RecentVehicle allData={filteredBuildings} streamData={streamData} />
         </div>
 
         {/* Calendar Management Section */}
@@ -1452,7 +1420,7 @@ const ManajemenKamera = () => {
 
           {/* Calendar Table */}
           <div className="overflow-x-auto w-full bg-base-200 mt-5">
-            <table className="table table-sm">
+            <table className="table border-2 table-sm">
               <thead className="bg-stone-900/90 text-white">
                 <tr className="text-center font-normal">
                   <th>No</th>
@@ -1467,7 +1435,7 @@ const ManajemenKamera = () => {
               <tbody>
                 {isLoadingCalendar ? (
                   <tr>
-                    <td colSpan="5" className="text-center py-8">
+                    <td colSpan="5" className="text-center py-8 border-2">
                       <span className="loading loading-spinner loading-md"></span>
                       <div>Memuat data kalender...</div>
                     </td>
@@ -1475,10 +1443,10 @@ const ManajemenKamera = () => {
                 ) : dataKalender?.length > 0 ? (
                   dataKalender.map((dataK, i) => (
                     <tr key={i} className="text-medium font-normal text-center">
-                      <td>{(currentPage - 1) * itemsPerPage + i + 1}</td>
-                      <td>{dataK.tanggal}</td>
-                      <td>{dataK.events}</td>
-                      <td>{dataK.keterangan}</td>
+                      <td className="border-2">{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                      <td className="border-2">{dataK.tanggal}</td>
+                      <td className="border-2">{dataK.events}</td>
+                      <td className="border-2">{dataK.keterangan}</td>
                       {isAdmin && (
                         <td>
                           <div className="flex gap-2 justify-center">

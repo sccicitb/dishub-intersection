@@ -7,7 +7,7 @@ import { cameras } from '@/lib/apiService';
 import { exportTrafficMatrixByFilter } from '@/utils/exportTrafficMatrixByFilter';
 import { useAuth } from "@/app/context/authContext";
 
-const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref) => {
+const FullTrafficTable = forwardRef(({ simpangId, simpangName }, ref) => {
   const { isAdmin } = useAuth();
 
   const [data, setData] = useState(null);
@@ -17,6 +17,10 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
   const [exporting, setExporting] = useState(false);
   const [statusLog, setStatusLog] = useState(null);
   const [cameraId, setCameraId] = useState(null);
+  const [dateInput, setDateInput] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
 
   const fetchData = async (selectedInterval = interval) => {
     if (!simpangId || !dateInput) return;
@@ -54,10 +58,17 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
     refetchData: () => fetchData(interval)
   }));
 
+  useEffect(() => {
+    fetchData();
+  }, [simpangId]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    fetchData(interval);
+  };
+
   const handleIntervalChange = (e) => {
-    const newInterval = e.target.value;
-    setInterval(newInterval);
-    fetchData(newInterval);
+    setInterval(e.target.value);
   };
 
   const handleExport = async () => {
@@ -72,23 +83,7 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
     }
   };
 
-  if (error) {
-    return (
-      <div className="alert alert-error">
-        <span>{error}</span>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="">
-        <span>Data tidak tersedia</span>
-      </div>
-    );
-  }
-
-  const timeSlots = Object.keys(data.slots || {}).sort();
+  const timeSlots = data ? Object.keys(data.slots || {}).sort() : [];
   const movements = ['Belok Kiri', 'Lurus', 'Belok Kanan'];
   const directions = ['barat', 'selatan', 'timur', 'utara'];
 
@@ -223,29 +218,85 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
 
   return (
     <div className="w-full space-y-4">
-      {/* Bagian Filter/Header Tabel */}
-      <div className="flex justify-between items-center bg-white p-3 border border-gray-200 rounded-sm">
-        <div className="flex items-center gap-4">
-          <select
-            value={interval}
-            onChange={handleIntervalChange}
-            className="select select-sm text-xs focus:ring-0"
-          >
-            <option value="15min">15 Menit</option>
-            <option value="1hour">1 Jam</option>
-          </select>
-          {loading && <span className="loading loading-spinner loading-xs text-gray-400"></span>}
+      {/* Filter Form */}
+      <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+            <input
+              type="date"
+              value={dateInput}
+              onChange={(e) => setDateInput(e.target.value)}
+              className="input input-sm input-bordered focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700 mb-1">Interval Waktu</label>
+            <select
+              value={interval}
+              onChange={handleIntervalChange}
+              className="select select-sm select-bordered focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="15min">15 Menit</option>
+              <option value="1hour">1 Jam</option>
+            </select>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-sm bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300"
+            >
+              {loading ? 'Memuat...' : 'Tampilkan Data'}
+            </button>
+            {data && (
+              <button
+                type="button"
+                onClick={handleExport}
+                disabled={exporting}
+                className="btn btn-sm bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300"
+              >
+                {exporting ? 'Exporting...' : 'Export Excel'}
+              </button>
+            )}
+          </div>
         </div>
 
-        <button
-          onClick={handleExport}
-          disabled={exporting || !data}
-          className="btn btn-sm bg-green-600 text-white text-xs rounded-sm hover:bg-green-600/80 disabled:bg-gray-400"
-        >
-          {exporting ? 'Exporting...' : 'Export Excel'}
-        </button>
-      </div>
+        {data && (
+          <div className="mt-3 text-sm text-gray-600">
+            <span className="font-medium">Info:</span> Data untuk tanggal {data.date} | Lokasi: {simpangName || simpangId}
+          </div>
+        )}
+      </form>
 
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      )}
+
+      {error && (
+        <div className="alert alert-error shadow-lg mb-4">
+          <div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {!loading && !error && !data && (
+        <div className="text-center py-12 text-gray-500">
+          Pilih tanggal dan klik &quot;Tampilkan Data&quot; untuk melihat data
+        </div>
+      )}
+
+      {!loading && !error && data && (
+        <>
       {/* TABEL UTAMA */}
       <div className="overflow-x-auto shadow-sm">
         <table className="text-[11px] text-center w-full">
@@ -359,6 +410,8 @@ const FullTrafficTable = forwardRef(({ simpangId, dateInput, simpangName }, ref)
       <div className="text-[10px] text-gray-500 italic mt-2">
         * Menampilkan data berdasarkan interval {interval}. Gunakan scroll horizontal untuk melihat semua arah.
       </div>
+        </>
+      )}
     </div>
   );
 });

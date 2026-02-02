@@ -5,11 +5,19 @@ import { vehicles } from '@/lib/apiAccess';
 import SimpangVisualization from './simpangVisualization';
 import { exportTrafficMatrixByCategory } from '@/utils/exportTrafficMatrix';
 
-const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onFetch, simpangName }, ref) => {
+const TrafficMatrixByCategory = forwardRef(({ simpangId, simpangName }, ref) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [startDate, setStartDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
 
   const fetchData = async () => {
     if (!simpangId || !startDate || !endDate) return;
@@ -17,6 +25,12 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
     try {
       setLoading(true);
       setError(null);
+
+      // Validate date range
+      if (new Date(startDate) > new Date(endDate)) {
+        throw new Error('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
+      }
+
       const response = await vehicles.getTrafficMatrixByCategory(simpangId, startDate, endDate);
       // console.log('Traffic Matrix by Category response:', response.data);
       setData(response.data.data);
@@ -32,6 +46,15 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
   useImperativeHandle(ref, () => ({
     refetchData: fetchData
   }));
+
+  useEffect(() => {
+    fetchData();
+  }, [simpangId]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    fetchData();
+  };
 
   const handleExport = async () => {
     try {
@@ -91,36 +114,84 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
 
   return (
     <div className="w-full">
-      {/* Header Info */}
-      <div className="bg-white p-4 rounded-lg shadow mb-4">
-        <div className="flex justify-between w-full items-start">
-          <div className="grid grid-cols-2 gap-4 text-sm flex-1">
-            <div>
-              <span className="text-gray-600">Simpang:</span>
-              <p className="font-semibold">{simpangName} ({data.simpang_id})</p>
-            </div>
-            <div>
-              <span className="text-gray-600">Tanggal:</span>
-              <p className="font-semibold">{data.date_range.start_date}</p>
-            </div>
+      {/* Filter Form */}
+      <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="input input-sm input-bordered focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
           </div>
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            className="btn btn-sm bg-green-600/90 text-white hover:bg-green-600"
-            >
-            {exporting ? (
-              <>
-                <span className="animate-spin">⏳</span>
-                Exporting...
-              </>
-            ) : (
-              'Export Excel'
-            )}
-          </button>
-        </div>
-      </div>
 
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="input input-sm input-bordered focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-sm bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300"
+            >
+              {loading ? 'Memuat...' : 'Tampilkan Data'}
+            </button>
+            {data && (
+              <button
+                type="button"
+                onClick={handleExport}
+                disabled={exporting}
+                className="btn btn-sm bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300"
+              >
+                {exporting ? 'Exporting...' : 'Export Excel'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {data && (
+          <div className="mt-3 text-sm text-gray-600">
+            <span className="font-medium">Info:</span> Data dari {data.start_date} sampai {data.end_date} | Lokasi: {simpangName || simpangId}
+          </div>
+        )}
+      </form>
+
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      )}
+
+      {error && (
+        <div className="alert alert-error shadow-lg mb-4">
+          <div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {!loading && !error && !data && (
+        <div className="text-center py-12 text-gray-500">
+          Pilih tanggal dan klik &quot;Tampilkan Data&quot; untuk melihat data
+        </div>
+      )}
+
+      {!loading && !error && data && data.arahPergerakan && (
+        <>
       {/* Simpang Visualization */}
       <div className="mb-8">
         <h3 className="text-xl font-bold text-[#232f61] mb-4">Visualisasi Pergerakan Simpang</h3>
@@ -211,6 +282,8 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, startDate, endDate, onF
           </tbody>
         </table>
       </div>
+        </>
+      )}
     </div>
   );
 });

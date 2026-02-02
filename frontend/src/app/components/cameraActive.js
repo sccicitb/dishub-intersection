@@ -26,20 +26,6 @@ const CameraActive = ({ children, onOptionChange, addNewCamera, addNewMaps, inpu
   
   return (
     <div>
-      {/* <div className="form-control w-full md:w-1/4">
-        <label className="label">
-          <span className="label-text font-medium">Arah Simpang</span>
-        </label>
-        <select
-          className="select select-bordered"
-          value={optionSelect}
-          onChange={handleSelectChange}
-        >
-          <option value="peta">Peta</option>
-          <option value="pratinjau">Pratinjau</option>
-          <option value="daftar">Daftar</option>
-        </select>
-      </div> */}
       <div>
         <div className="flex flex-col gap-3">
           <div className="w-full flex flex-wrap gap-4 items-center justify-between">

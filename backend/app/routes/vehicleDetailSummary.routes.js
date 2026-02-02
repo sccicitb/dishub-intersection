@@ -12,4 +12,7 @@ module.exports = (app) => {
 
   // Route to get detailed masuk/keluar by arah with hourly intervals
   app.get("/api/vehicles/detail-summary-by-hour", controller.getMasukKeluarDetailByHour);
+
+  // Route to get simplified vehicle summary by interval (total per vehicle type, all directions combined)
+  app.get("/api/vehicles/simplified-summary", controller.getSimplifiedSummaryByInterval);
 };
