@@ -6,7 +6,7 @@ const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL ||
 
 const baseURL = envUrl
   ? `${envUrl}/api`
-  : 'http://localhost:9090/api';
+  : 'https://staging-smartx-mobility.jogjaprov.go.id/api';
 
 const axiosInstance = axios.create({
   baseURL,
