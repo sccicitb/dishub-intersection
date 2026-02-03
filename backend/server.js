@@ -63,6 +63,7 @@ require("./app/routes/trafficMatrix.routes.js")(app);
 require("./app/routes/trafficAudit.routes.js")(app);
 require("./app/routes/vehicleDetailSummary.routes.js")(app);
 require("./app/routes/vehicleDetailByTime.routes.js")(app);
+require("./app/routes/cityTraffic.routes.js")(app);
 require("./app/routes/holiday.routes.js")(app);
 require("./app/routes/maps.routes.js")(app);
 require('./app/routes/camera.routes.js')(app);

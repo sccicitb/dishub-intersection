@@ -4,7 +4,7 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'rea
 import { getRequest } from '@/lib/apiService';
 import ExcelJS from 'exceljs';
 
-const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) => {
+const CityTrafficSummary = forwardRef(({ simpangId, simpangName }, ref) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,13 +12,9 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
     const today = new Date();
     return today.toISOString().split('T')[0];
   });
-  const [endDate, setEndDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
   const [interval, setInterval] = useState('1hour');
 
-  // Mapping kategori kendaraan baru
+  // Mapping kategori kendaraan
   const vehicleCategories = [
     { key: 'SM', label: 'Sepeda Motor', sourceKeys: ['SM'] },
     { key: 'MP', label: 'Mobil Penumpang', sourceKeys: ['MP'] },
@@ -51,18 +47,13 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
   };
 
   const fetchData = async () => {
-    if (!simpangId || !startDate || !endDate) return;
+    if (!simpangId || !startDate) return;
 
     try {
       setLoading(true);
       setError(null);
 
-      // Validate date range
-      if (new Date(startDate) > new Date(endDate)) {
-        throw new Error('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
-      }
-
-      const url = `/vehicles/simplified-summary?simpang_id=${simpangId}&date=${startDate}&interval=${interval}`;
+      const url = `/vehicles/city-traffic?simpang_id=${simpangId}&date=${startDate}&interval=${interval}`;
       const response = await getRequest(url);
       
       if (response.data?.status === 'ok') {
@@ -72,7 +63,7 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
       }
     } catch (err) {
       setError(err.message || 'Error fetching data');
-      console.error('Error fetching simplified vehicle summary:', err);
+      console.error('Error fetching city traffic summary:', err);
     } finally {
       setLoading(false);
     }
@@ -124,15 +115,23 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
       
       // Title
       detailSheet.mergeCells(`A1:${detailEndColLetter}1`);
-      detailSheet.getCell('A1').value = 'DETAIL KLASIFIKASI KENDARAAN';
+      detailSheet.getCell('A1').value = 'DETAIL MASUK/KELUAR KOTA JOGJA';
       detailSheet.getCell('A1').font = { size: 14, bold: true };
       detailSheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
 
       // Info
       detailSheet.mergeCells(`A2:${detailEndColLetter}2`);
-      detailSheet.getCell('A2').value = `Lokasi: ${simpangName || simpangId} | Tanggal: ${data.date} | Interval: ${interval === '5min' ? '5 Menit' : interval === '15min' ? '15 Menit' : interval === '30min' ? '30 Menit' : '1 Jam'}`;
+      detailSheet.getCell('A2').value = `${data.simpang_name || simpangName || 'Unknown'} (${data.simpang_position || ''}) | Tanggal: ${data.date} | Interval: ${interval === '5min' ? '5 Menit' : interval === '15min' ? '15 Menit' : interval === '30min' ? '30 Menit' : '1 Jam'}`;
       detailSheet.getCell('A2').font = { size: 10 };
       detailSheet.getCell('A2').alignment = { vertical: 'middle', horizontal: 'center' };
+
+      // Description
+      if (data.description) {
+        detailSheet.mergeCells(`A3:${detailEndColLetter}3`);
+        detailSheet.getCell('A3').value = data.description;
+        detailSheet.getCell('A3').font = { size: 9, italic: true };
+        detailSheet.getCell('A3').alignment = { vertical: 'middle', horizontal: 'center' };
+      }
 
       const detailMasukEndCol = String.fromCharCode(65 + detailTotalCols);
       const detailKeluarStartCol = String.fromCharCode(66 + detailTotalCols);
@@ -140,8 +139,8 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
 
       // Header Row 1
       const detailHeaderRow1Data = ['Waktu'];
-      for (let i = 0; i < detailTotalCols; i++) detailHeaderRow1Data.push(i === 0 ? 'ARUS MASUK' : '');
-      for (let i = 0; i < detailTotalCols; i++) detailHeaderRow1Data.push(i === 0 ? 'ARUS KELUAR' : '');
+      for (let i = 0; i < detailTotalCols; i++) detailHeaderRow1Data.push(i === 0 ? 'MASUK KOTA' : '');
+      for (let i = 0; i < detailTotalCols; i++) detailHeaderRow1Data.push(i === 0 ? 'KELUAR KOTA' : '');
       const detailHeaderRow1 = detailSheet.addRow(detailHeaderRow1Data);
 
       // Header Row 2
@@ -153,10 +152,11 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
         'TKB'
       ]);
       
-      // Merge cells (row 3 and 4 because: 1=title, 2=info, 3=header1, 4=header2)
-      detailSheet.mergeCells('A3:A4');
-      detailSheet.mergeCells(`B3:${detailMasukEndCol}3`);
-      detailSheet.mergeCells(`${detailKeluarStartCol}3:${detailKeluarEndCol}3`);
+      // Merge cells
+      const headerStartRow = data.description ? 4 : 3;
+      detailSheet.mergeCells(`A${headerStartRow}:A${headerStartRow + 1}`);
+      detailSheet.mergeCells(`B${headerStartRow}:${detailMasukEndCol}${headerStartRow}`);
+      detailSheet.mergeCells(`${detailKeluarStartCol}${headerStartRow}:${detailKeluarEndCol}${headerStartRow}`);
 
       const detailMasukEndColNum = 1 + detailTotalCols;
       
@@ -244,15 +244,23 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
       
       // Title
       summarySheet.mergeCells(`A1:${endColLetter}1`);
-      summarySheet.getCell('A1').value = 'RINGKASAN VOLUME KENDARAAN';
+      summarySheet.getCell('A1').value = 'RINGKASAN MASUK/KELUAR KOTA JOGJA';
       summarySheet.getCell('A1').font = { size: 14, bold: true };
       summarySheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
 
       // Info
       summarySheet.mergeCells(`A2:${endColLetter}2`);
-      summarySheet.getCell('A2').value = `Lokasi: ${simpangName || simpangId} | Tanggal: ${data.date} | Interval: ${interval === '5min' ? '5 Menit' : interval === '15min' ? '15 Menit' : interval === '30min' ? '30 Menit' : '1 Jam'}`;
+      summarySheet.getCell('A2').value = `${data.simpang_name || simpangName || 'Unknown'} (${data.simpang_position || ''}) | Tanggal: ${data.date} | Interval: ${interval === '5min' ? '5 Menit' : interval === '15min' ? '15 Menit' : interval === '30min' ? '30 Menit' : '1 Jam'}`;
       summarySheet.getCell('A2').font = { size: 10 };
       summarySheet.getCell('A2').alignment = { vertical: 'middle', horizontal: 'center' };
+
+      // Description
+      if (data.description) {
+        summarySheet.mergeCells(`A3:${endColLetter}3`);
+        summarySheet.getCell('A3').value = data.description;
+        summarySheet.getCell('A3').font = { size: 9, italic: true };
+        summarySheet.getCell('A3').alignment = { vertical: 'middle', horizontal: 'center' };
+      }
 
       const masukEndCol = String.fromCharCode(65 + totalCols);
       const keluarStartCol = String.fromCharCode(66 + totalCols);
@@ -260,8 +268,8 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
 
       // Header Row 1
       const headerRow1Data = ['Waktu'];
-      for (let i = 0; i < totalCols; i++) headerRow1Data.push(i === 0 ? 'ARUS MASUK' : '');
-      for (let i = 0; i < totalCols; i++) headerRow1Data.push(i === 0 ? 'ARUS KELUAR' : '');
+      for (let i = 0; i < totalCols; i++) headerRow1Data.push(i === 0 ? 'MASUK KOTA' : '');
+      for (let i = 0; i < totalCols; i++) headerRow1Data.push(i === 0 ? 'KELUAR KOTA' : '');
       const headerRow1 = summarySheet.addRow(headerRow1Data);
 
       // Header Row 2
@@ -273,10 +281,11 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
         'TKB'
       ]);
       
-      // Merge cells (row 3 and 4 because: 1=title, 2=info, 3=header1, 4=header2)
-      summarySheet.mergeCells('A3:A4');
-      summarySheet.mergeCells(`B3:${masukEndCol}3`);
-      summarySheet.mergeCells(`${keluarStartCol}3:${keluarEndCol}3`);
+      // Merge cells
+      const summaryHeaderStartRow = data.description ? 4 : 3;
+      summarySheet.mergeCells(`A${summaryHeaderStartRow}:A${summaryHeaderStartRow + 1}`);
+      summarySheet.mergeCells(`B${summaryHeaderStartRow}:${masukEndCol}${summaryHeaderStartRow}`);
+      summarySheet.mergeCells(`${keluarStartCol}${summaryHeaderStartRow}:${keluarEndCol}${summaryHeaderStartRow}`);
 
       const masukEndColNum = 1 + totalCols;
       
@@ -357,7 +366,7 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Ringkasan_Kendaraan_${simpangName || simpangId}_${data.date}_${interval}.xlsx`;
+      link.download = `Masuk_Keluar_Kota_${data.simpang_name || simpangName || 'Unknown'}_${data.date}_${interval}.xlsx`;
       link.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -375,25 +384,25 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
       <div className="overflow-x-auto">
         <table className="table table-sm w-full border-collapse">
           <thead>
-            {/* First header row - Arus MASUK and Arus KELUAR */}
-            <tr className="bg-gray-100 text-gray-800">
+            {/* First header row - Masuk/Keluar Kota */}
+            <tr className="bg-gray-50 text-gray-800">
               <th rowSpan="2" className="text-center align-middle border-2 w-fit">Waktu</th>
-              <th colSpan={vehicleCategories.length + 1} className="text-center border-2 bg-gray-100">
-                ARUS MASUK
+              <th colSpan={vehicleCategories.length + 1} className="text-center border-2">
+                MASUK KOTA
               </th>
-              <th colSpan={vehicleCategories.length + 1} className="text-center border-2 bg-gray-100">
-                ARUS KELUAR
+              <th colSpan={vehicleCategories.length + 1} className="text-center border-2">
+                KELUAR KOTA
               </th>
             </tr>
             {/* Second header row - Vehicle types */}
-            <tr className="bg-gray-100 text-gray-800 text-xs">
+            <tr className="bg-gray-50 text-gray-800 text-xs">
               {/* Masuk columns */}
               {vehicleCategories.map(cat => (
                 <th key={`in-${cat.key}`} className="text-center border-2 px-2">
                   {cat.label}
                 </th>
               ))}
-              <th className="text-center border-2 px-2 font-bold bg-gray-100">
+              <th className="text-center border-2 px-2 font-bold">
                 TKB
               </th>
               {/* Keluar columns */}
@@ -402,7 +411,7 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
                   {cat.label}
                 </th>
               ))}
-              <th className="text-center border-2 px-2 font-bold bg-gray-100">
+              <th className="text-center border-2 px-2 font-bold">
                 TKB
               </th>
             </tr>
@@ -463,7 +472,6 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
   return (
     <div className="w-full">
       <div className="mb-6">
-
         <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div className="flex flex-col">
@@ -512,7 +520,7 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
 
           {data && (
             <div className="mt-3 text-sm text-gray-600">
-              <span className="font-medium">Info:</span> Menampilkan {data.slot_count} slot waktu untuk tanggal {data.date} Lokasi: {simpangName || simpangId}
+              <span className="font-medium">Info:</span> {data.description || `Menampilkan ${data.slot_count} slot waktu untuk tanggal ${data.date} | ${simpangName || 'Unknown'} (${data.simpang_position || ''})`}
             </div>
           )}
         </form>
@@ -539,13 +547,13 @@ const SimplifiedVehicleSummary = forwardRef(({ simpangId, simpangName }, ref) =>
 
       {!loading && !error && !data && (
         <div className="text-center py-12 text-gray-500">
-          Pilih tanggal dan klik &quot;Tampilkan Data&quot; untuk melihat ringkasan
+          Pilih tanggal dan klik &quot;Tampilkan Data&quot; untuk melihat data masuk/keluar kota
         </div>
       )}
     </div>
   );
 });
 
-SimplifiedVehicleSummary.displayName = 'SimplifiedVehicleSummary';
+CityTrafficSummary.displayName = 'CityTrafficSummary';
 
-export default SimplifiedVehicleSummary;
+export default CityTrafficSummary;

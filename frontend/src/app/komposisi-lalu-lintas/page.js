@@ -17,6 +17,7 @@ const TrafficMatrixByCategory = lazy(() => import("@/app/components/trafficMatri
 const TrafficMatrixByFilter2 = lazy(() => import("@/app/components/trafficMatrixByFilter2"));
 const VehicleDetailByInterval = lazy(() => import("@/app/components/vehicleDetailByInterval"));
 const SimplifiedVehicleSummary = lazy(() => import("@/app/components/SimplifiedVehicleSummary"));
+const CityTrafficSummary = lazy(() => import("@/app/components/CityTrafficSummary"));
 const GridVertical = lazy(() => import('@/app/components/gridVertical'));
 const GridHorizontal = lazy(() => import('@/app/components/gridHorizontal'));
 const HeaderSurvei = lazy(() => import("@/app/components/headerLhrt"));
@@ -60,6 +61,7 @@ function KomposisiLaluLintasPage () {
   const trafficMatrixByFilterRef = useRef(null);
   const vehicleDetailByIntervalRef = useRef(null);
   const simplifiedSummaryRef = useRef(null);
+  const cityTrafficRef = useRef(null);
 
   const handleExportExcel = async () => {
     if (!dateInput || !activeSimpang) {
@@ -124,7 +126,7 @@ function KomposisiLaluLintasPage () {
   );
 
   const triggerRefetch = () => {
-    [trafficMatrixRef, trafficMatrixByFilterRef, vehicleDetailByIntervalRef, simplifiedSummaryRef].forEach(ref => {
+    [trafficMatrixRef, trafficMatrixByFilterRef, vehicleDetailByIntervalRef, simplifiedSummaryRef, cityTrafficRef].forEach(ref => {
       ref.current?.refetchData?.();
     });
   };
@@ -266,6 +268,15 @@ function KomposisiLaluLintasPage () {
                 <SimplifiedVehicleSummary
                   ref={simplifiedSummaryRef}
                   simpangId={activeSimpangId}
+                  simpangName={activeSimpang}
+                />
+              </Suspense>
+            </CollapsibleSection>
+            <CollapsibleSection title="Masuk/Keluar Kota Jogja Per Interval">
+              <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
+                <CityTrafficSummary
+                  ref={cityTrafficRef}
+                  simpangId={activeSimpangId === 0 ? 'semua' : activeSimpangId}
                   simpangName={activeSimpang}
                 />
               </Suspense>
