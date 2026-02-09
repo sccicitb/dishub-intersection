@@ -26,11 +26,14 @@
     "exceljs": "^4.4.0",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
+    "mqtt": "^5.15.0",
     "multer": "^2.0.0",
     "mysql": "^2.18.1",
     "mysql2": "^3.14.1",
     "node-cron": "^4.0.5",
-    "node-ssh": "^13.2.1"
+    "node-ssh": "^13.2.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "jest": "^29.7.0",

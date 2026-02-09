@@ -1,8 +1,11 @@
 const express = require("express");
 // const bodyParser = require("body-parser"); /* deprecated */
 const cors = require("cors");
+const http = require("http");
+const socketio = require("socket.io");
 const checkCameraStatus = require('./jobs/checkCameraStatus');
 const updateCameraStatusFromSurvey = require('./jobs/updateCameraStatusFromSurvey');
+const mqttListener = require("./mqtt-listener");
 
 checkCameraStatus(); // jalanin cron saat server start
 updateCameraStatusFromSurvey(); // jalanin cron untuk update status dari survey API
@@ -15,12 +18,12 @@ var corsOptions = {
     "http://localhost:3001",
     "http://159.195.84.107:9091",
     "https://dishub-dashboard-v2.layanancerdas.id",
-     process.env.CORS_ORIGIN
+    process.env.CORS_ORIGIN
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: [
-    "Content-Type", 
-    "Authorization", 
+    "Content-Type",
+    "Authorization",
     "x-requested-with",
     "Access-Control-Allow-Origin",
     "Access-Control-Allow-Headers",
@@ -38,7 +41,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
   res.header('Access-Control-Allow-Credentials', 'true');
-  
+
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
@@ -101,15 +104,53 @@ const userRoutes = require('./app/routes/user.routes');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 
+// Create HTTP server and Socket.IO instance
+const server = http.createServer(app);
+const io = socketio(server, {
+  cors: corsOptions
+});
+
+mqttListener.setSocketServer(io);; // Set Socket.IO instance
+
 // Simpan instance listen di variabel
 const PORT = process.env.PORT || 8080;
 
 // Cek apakah file ini dijalankan langsung
+let listener;
 if (require.main === module) {
-  app.listen(PORT, () => {
+  listener = server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
   });
 }
+
+// Initialize MQTT listener (dual broker support)
+const primaryEnabled = process.env.MQTT_PRIMARY_ENABLED === 'true';
+const secondaryEnabled = process.env.MQTT_SECONDARY_ENABLED === 'true';
+
+if (primaryEnabled || secondaryEnabled) {
+  console.log(`🔗 MQTT Listener:`);
+  if (primaryEnabled) {
+    console.log(`   PRIMARY: ${process.env.MQTT_BROKER_PRIMARY || 'mqtt://sxe-data.layanancerdas.id'} / ${process.env.MQTT_TOPIC_PRIMARY || 'bapenda_people'}`);
+  }
+  if (secondaryEnabled) {
+    console.log(`   SECONDARY: ${process.env.MQTT_BROKER_SECONDARY || 'HiveMQ Cloud'} / ${process.env.MQTT_TOPIC_SECONDARY || 'bapenda-people'}`);
+  }
+  console.log('');
+  mqttListener.connect();
+} else {
+  console.log(`⚠️  MQTT Listener: DISABLED (set MQTT_PRIMARY_ENABLED=true or MQTT_SECONDARY_ENABLED=true to enable)\n`);
+}
+
+// Graceful shutdown
+process.on("SIGINT", () => {
+  console.log("\n\n🛑 Shutting down gracefully...");
+  mqttListener.disconnect();
+  server.close(() => {
+    console.log("✓ Server closed");
+    process.exit(0);
+  });
+});
+
 
 module.exports = app; // 💡 penting: ekspor app untuk supertest
 module.exports.close = () => {

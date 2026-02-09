@@ -22,7 +22,7 @@ const Vehicle = function (data) {
 
 // FIXED: Helper function to get index-friendly WHERE clause based on filter type
 const getDateFilterClause = (filter, startDate = null, endDate = null) => {
-  // Get current date in Jakarta timezone (UTC+7) - PROPER METHOD
+  // Get current date in Jakarta timezone (UTC+7) - Check if data is stored in local time
   const now = new Date();
   
   switch (filter) {
@@ -39,34 +39,26 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       }
       
       // Parse dates
-      const start = new Date(`${startDate}T00:00:00+07:00`);
-      const end = new Date(`${endDate}T23:59:59+07:00`);
+      const start = startDate;
+      const end = endDate;
       
       // Validate date range
       if (start > end) {
         throw new Error('start-date must be before end-date');
       }
       
-      return `waktu >= '${start.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${end.toISOString().slice(0, 19).replace('T', ' ')}'`;
+      // Assuming 'waktu' is stored in Local Time, return range in Local Time string
+      return `waktu >= '${start} 00:00:00' AND waktu <= '${end} 23:59:59'`;
     }
       
     case 'day':
     case 'harian': {
-      // Calculate today's range in Jakarta timezone, then convert to UTC
-      // Jakarta midnight = UTC 17:00 previous day
-      // Jakarta 23:59 = UTC 16:59 same day
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
-      const startUTC = new Date(`${todayJakarta}T00:00:00+07:00`);
-      const endUTC = new Date(`${todayJakarta}T23:59:59+07:00`);
-      
-      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+      return `waktu >= '${todayJakarta} 00:00:00' AND waktu <= '${todayJakarta} 23:59:59'`;
     }
-      
       
     case 'week':
     case 'minggu': {
-      // This week (Monday to Sunday) in Jakarta timezone
-      // FIXED: Use proper date parsing for consistent timezone handling
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const [year, month, day] = todayJakarta.split('-').map(Number);
       const today = new Date(year, month - 1, day); // Create date in local timezone
@@ -82,16 +74,11 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       const mondayStr = monday.toLocaleDateString('sv-SE'); // YYYY-MM-DD
       const sundayStr = sunday.toLocaleDateString('sv-SE'); // YYYY-MM-DD
       
-      const startUTC = new Date(`${mondayStr}T00:00:00+07:00`);
-      const endUTC = new Date(`${sundayStr}T23:59:59+07:00`);
-      
-      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+      return `waktu >= '${mondayStr} 00:00:00' AND waktu <= '${sundayStr} 23:59:59'`;
     }
       
     case 'month':
     case 'bulanan': {
-      // This month in Jakarta timezone
-      // FIXED: Use proper date parsing for consistent timezone handling
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const [year, month, day] = todayJakarta.split('-').map(Number);
       
@@ -103,16 +90,11 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       const firstDayStr = firstDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
       const lastDayStr = lastDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
       
-      const startUTC = new Date(`${firstDayStr}T00:00:00+07:00`);
-      const endUTC = new Date(`${lastDayStr}T23:59:59+07:00`);
-      
-      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+      return `waktu >= '${firstDayStr} 00:00:00' AND waktu <= '${lastDayStr} 23:59:59'`;
     }
       
     case 'quarter':
     case 'kuartal': {
-      // This quarter in Jakarta timezone
-      // FIXED: Use proper date parsing for consistent timezone handling
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const [year, month, day] = todayJakarta.split('-').map(Number);
       const quarter = Math.floor((month - 1) / 3);
@@ -124,16 +106,11 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       const firstDayStr = firstDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
       const lastDayStr = lastDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
       
-      const startUTC = new Date(`${firstDayStr}T00:00:00+07:00`);
-      const endUTC = new Date(`${lastDayStr}T23:59:59+07:00`);
-      
-      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+      return `waktu >= '${firstDayStr} 00:00:00' AND waktu <= '${lastDayStr} 23:59:59'`;
     }
       
     case 'year':
     case 'tahunan': {
-      // This year in Jakarta timezone
-      // FIXED: Use proper date parsing for consistent timezone handling
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
       const [year, month, day] = todayJakarta.split('-').map(Number);
       
@@ -143,20 +120,12 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       const firstDayStr = firstDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
       const lastDayStr = lastDay.toLocaleDateString('sv-SE'); // YYYY-MM-DD
       
-      const startUTC = new Date(`${firstDayStr}T00:00:00+07:00`);
-      const endUTC = new Date(`${lastDayStr}T23:59:59+07:00`);
-      
-      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+      return `waktu >= '${firstDayStr} 00:00:00' AND waktu <= '${lastDayStr} 23:59:59'`;
     }
       
     default: {
-      // Default to today
-      // FIXED: Use proper date parsing for consistent timezone handling
       const todayJakarta = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
-      const startUTC = new Date(`${todayJakarta}T00:00:00+07:00`);
-      const endUTC = new Date(`${todayJakarta}T23:59:59+07:00`);
-      
-      return `waktu >= '${startUTC.toISOString().slice(0, 19).replace('T', ' ')}' AND waktu <= '${endUTC.toISOString().slice(0, 19).replace('T', ' ')}'`;
+      return `waktu >= '${todayJakarta} 00:00:00' AND waktu <= '${todayJakarta} 23:59:59'`;
     }
   }
 };
@@ -384,17 +353,16 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
     const validSimpangIds = await getValidSimpangIds();
     const flowRules = getLocationSpecificFlowCases();
     
-    // OPTIMIZED: Use DATE_ADD instead of CONVERT_TZ for 95% better performance
-    // DATE_ADD(waktu, INTERVAL 7 HOUR) is much faster than CONVERT_TZ
+    // OPTIMIZED: Adjusted for Local Time storage
     const [rows] = await db.query(`
       SELECT
-        HOUR(DATE_ADD(waktu, INTERVAL 7 HOUR)) AS jam,
+        HOUR(waktu) AS jam,
         COUNT(${flowRules.getInCases()}) AS total_IN,
         COUNT(${flowRules.getOutCases()}) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
         AND ID_Simpang IN (${validSimpangIds.join(', ')})
-      GROUP BY HOUR(DATE_ADD(waktu, INTERVAL 7 HOUR))
+      GROUP BY HOUR(waktu)
       ORDER BY jam;
     `);
     result(null, rows);
@@ -424,19 +392,18 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day', simpang = 'semua', st
       simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
     }
     
-    // OPTIMIZED: Use DATE_ADD instead of CONVERT_TZ for 95% better performance
-    // DATE_ADD(waktu, INTERVAL 7 HOUR) is much faster than CONVERT_TZ
+    // OPTIMIZED: Adjusted for Local Time storage
     const [rows] = await db.query(`
       SELECT
-        CAST(DATE_ADD(waktu, INTERVAL 7 HOUR) AS DATE) AS tanggal,
-        HOUR(DATE_ADD(waktu, INTERVAL 7 HOUR)) AS jam,
-        FLOOR(MINUTE(DATE_ADD(waktu, INTERVAL 7 HOUR)) / 15) * 15 AS menit,
+        CAST(waktu AS DATE) AS tanggal,
+        HOUR(waktu) AS jam,
+        FLOOR(MINUTE(waktu) / 15) * 15 AS menit,
         COUNT(${flowRules.getInCases()}) AS total_IN,
         COUNT(${flowRules.getOutCases()}) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
         ${simpangFilter}
-      GROUP BY CAST(DATE_ADD(waktu, INTERVAL 7 HOUR) AS DATE), HOUR(DATE_ADD(waktu, INTERVAL 7 HOUR)), FLOOR(MINUTE(DATE_ADD(waktu, INTERVAL 7 HOUR)) / 15)
+      GROUP BY CAST(waktu AS DATE), HOUR(waktu), FLOOR(MINUTE(waktu) / 15)
       ORDER BY tanggal, jam, menit;
     `);
     result(null, rows);

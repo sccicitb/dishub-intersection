@@ -9,12 +9,12 @@ import TableMatrix from "@/app/components/table/tableMatrix";
 import { useTrafficMatrix } from "@/hooks/useTrafficMatrix";
 
 const GraficByHourInOut = lazy(() => import("@/app/components/graficByHourInOut"));
-const GraficCategoryTraffic = lazy(() => import("@/app/components/graficCategoryTraffic"));
+// const GraficCategoryTraffic = lazy(() => import("@/app/components/graficCategoryTraffic"));
 const LintasChart = lazy(() => import("@/app/components/lintasChart"));
 const TotalChart = lazy(() => import("@/app/components/totalChart"));
 const GrafikRoad = lazy(() => import("@/app/components/roadChart"));
 const ChordDiagram = lazy(() => import("@/app/components/diagram/chord"))
-const OptionSelectMaps = lazy(() => import("@/app/components/simpang/optionSelectMaps"))
+// const OptionSelectMaps = lazy(() => import("@/app/components/simpang/optionSelectMaps"))
 const CameraStream = lazy(() => import("@/app/components/cameraStream"));
 const MapComponent = lazy(() => import("@/app/components/map"));
 // import CameraStatusTimeline from "@/app/components/cameraStatusTime";
@@ -850,8 +850,8 @@ export default function Home () {
 
       <h2 className="card-title text-stone-800 text-xl font-bold">Analisis Lalu Lintas Terkini</h2>
       <div className="flex flex-col gap-10 w-[90%]">
-        <GraficByHourInOut category="in" dateRange={dateRange} id_simpang={simpangFilter} nama_simpang={namaLokasi} />
-        <GraficByHourInOut category="out" dateRange={dateRange} id_simpang={simpangFilter} nama_simpang={namaLokasi} />
+        {/* <GraficByHourInOut category="in" dateRange={dateRange} id_simpang={simpangFilter} nama_simpang={namaLokasi} /> */}
+        {/* <GraficByHourInOut category="out" dateRange={dateRange} id_simpang={simpangFilter} nama_simpang={namaLokasi} /> */}
       </div>
       <div className="w-[90%]">
         {isAdmin && <CameraStream />}
