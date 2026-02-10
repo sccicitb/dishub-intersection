@@ -144,17 +144,32 @@ const Layout = ({ children }) => {
         {/* Sidebar */}
         <div className="drawer-side z-[40]">
           <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay"></label>
-          <div className="menu bg-[#232f61]/90 not-2xl:rounded-tr-4xl text-base-content font-semibold min-h-full p-0 w-56 gap-1">
+          <div className="menu bg-[#232f61]/90 not-2xl:rounded-tr-4xl text-base-content font-semibold min-h-full p-0 w-68 gap-1">
             <div className="flex justify-center">
-              <div className="rounded-tr-3xl bg-neutral-800/90 w-full h-16 p-4">
-                <Image
-                  src="/image/IC_SMART MOBILITY.png"
-                  alt="Logo"
-                  width={120}
-                  height={120}
-                  className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-                  onLoadingComplete={() => setLoaded(true)}
-                />
+              <div className="rounded-tr-3xl bg-neutral-800/90 w-full h-26 p-4 items-center flex flex-col justify-center gap-2">
+                <div className="flex w-full items-center align-baseline h-fit">
+                  <Image
+                    src="/image/dishub-jogja-logo.png"
+                    alt="Logo"
+                    width={30}
+                    height={30}
+                    className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+                    onLoadingComplete={() => setLoaded(true)}
+                  />
+                  <div>
+                    <Image
+                      src="/image/dishub-jogja.png"
+                      alt="Logo"
+                      width={230}
+                      height={30}
+                      className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+                      onLoadingComplete={() => setLoaded(true)}
+                    />
+                  </div>
+                </div>
+                <span className={`text-gray-100 font-semibold text-[12px] h-full flex items-center transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}>
+                  Viana Smart Mobility Dashboard
+                </span>
               </div>
             </div>
             <ul className="flex flex-col gap-2 p-2 text-[13px]">
