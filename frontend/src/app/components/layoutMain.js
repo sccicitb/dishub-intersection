@@ -8,8 +8,8 @@ import * as MdIcons from "react-icons/md";
 import { FaCaretDown, FaCaretRight } from "react-icons/fa6";
 import listMenu from "@/data/menu.json";
 import listMenuMobility from "@/data/menuMobility.json";
-import ThemeToggle from "@/app/components/customTheme";
-import { Logout } from "@/app/auth/logout";
+// import ThemeToggle from "@/app/components/customTheme";
+// import { Logout } from "@/app/auth/logout";
 // import ClockBar from "@/app/components/clockBar";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/app/context/authContext";
@@ -111,7 +111,6 @@ const Layout = ({ children }) => {
 
   return (
     <div className="h-screen flex flex-col">
-
       {/* <ClockBar /> */}
       <div className="drawer 2xl:drawer-open">
         <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
@@ -225,15 +224,6 @@ const Layout = ({ children }) => {
                   );
                 }
               })}
-              {/* <div className="lg:hidden absolute bottom-5">
-              <div className="flex flex-col items-start gap-2">
-              <div className="flex">
-                <ProfileDropdown />
-                <ThemeToggle />
-                <Logout />
-              </div>
-              </div>
-            </div> */}
             </ul>
           </div>
         </div>

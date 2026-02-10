@@ -217,7 +217,11 @@ exports.getTrafficMatrix = async (req, res) => {
 // Response includes asal-tujuan matrix and arah pergerakan based on vehicle categories
 exports.getTrafficMatrixByCategory = async (req, res) => {
   try {
-    const { simpang_id, start_date, end_date } = req.query;
+    const simpang_id = req.query.simpang_id;
+    const filter = req.query.filter || 'day';
+    // Support both parameter naming conventions (snake_case and kebab-case)
+    const start_date = req.query.start_date || req.query['start-date'];
+    const end_date = req.query.end_date || req.query['end-date'];
     
     // Validate required parameters
     if (!simpang_id) {
@@ -227,34 +231,36 @@ exports.getTrafficMatrixByCategory = async (req, res) => {
       });
     }
     
-    if (!start_date || !end_date) {
-      return res.status(400).json({
-        success: false,
-        message: "start_date and end_date are required (format: YYYY-MM-DD)"
-      });
-    }
-    
-    // Validate date format
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(start_date) || !dateRegex.test(end_date)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid date format. Use YYYY-MM-DD"
-      });
-    }
-    
-    // Validate date range
-    const startDate = new Date(start_date);
-    const endDate = new Date(end_date);
-    if (startDate > endDate) {
-      return res.status(400).json({
-        success: false,
-        message: "start_date cannot be after end_date"
-      });
+    if (filter === 'customrange') {
+      if (!start_date || !end_date) {
+        return res.status(400).json({
+          success: false,
+          message: "start_date and end_date are required for customrange filter (format: YYYY-MM-DD)"
+        });
+      }
+      
+      // Validate date format
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(start_date) || !dateRegex.test(end_date)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid date format. Use YYYY-MM-DD"
+        });
+      }
+      
+      // Validate date range
+      const startDate = new Date(start_date);
+      const endDate = new Date(end_date);
+      if (startDate > endDate) {
+        return res.status(400).json({
+          success: false,
+          message: "start_date cannot be after end_date"
+        });
+      }
     }
     
     // Get traffic matrix with vehicle category breakdown
-    const result = await Vehicle.getCompleteTrafficMatrixByCategory(simpang_id, start_date, end_date);
+    const result = await Vehicle.getCompleteTrafficMatrixByCategory(simpang_id, filter, start_date, end_date);
     
     // Return success response with vehicle categories in arahPergerakan
     res.json({
@@ -262,6 +268,7 @@ exports.getTrafficMatrixByCategory = async (req, res) => {
       message: "Traffic matrix by vehicle category retrieved successfully",
       data: {
         simpang_id: parseInt(simpang_id),
+        filter: filter,
         date_range: {
           start_date: start_date,
           end_date: end_date

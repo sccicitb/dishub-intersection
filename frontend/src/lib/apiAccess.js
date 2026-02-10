@@ -68,8 +68,11 @@ export const vehicles = {
     }
     return getRequest(url);
   },
-  getTrafficMatrixByCategory: (simpang_id, startDate, endDate) => {
-    let url = `/vehicles/traffic-matrix-by-category?simpang_id=${simpang_id}&start_date=${startDate}&end_date=${endDate}`;
+  getTrafficMatrixByCategory: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
+    let url = `/vehicles/traffic-matrix-by-category?simpang_id=${simpang_id}&filter=${filter}`;
+    if (filter === 'customrange' && startDate && endDate) {
+      url += `&start_date=${startDate}&end_date=${endDate}`;
+    }
     return getRequest(url);
   },
   getTrafficMatrixByHours: (simpang_id, date_time) => {
