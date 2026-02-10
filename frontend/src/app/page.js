@@ -8,11 +8,9 @@ import { exportSurveyDataToExcel } from '@/utils/exportExcel';
 import TableMatrix from "@/app/components/table/tableMatrix";
 import { useTrafficMatrix } from "@/hooks/useTrafficMatrix";
 
-const GraficByHourInOut = lazy(() => import("@/app/components/graficByHourInOut"));
-// const GraficCategoryTraffic = lazy(() => import("@/app/components/graficCategoryTraffic"));
-const LintasChart = lazy(() => import("@/app/components/lintasChart"));
 const TotalChart = lazy(() => import("@/app/components/totalChart"));
-const GrafikRoad = lazy(() => import("@/app/components/roadChart"));
+const VehicleChart = lazy(() => import("@/app/components/grafikKeluarMasuk"));
+const TrafficIntervalChart = lazy(() => import("@/app/components/grafik15menit"));
 const ChordDiagram = lazy(() => import("@/app/components/diagram/chord"))
 // const OptionSelectMaps = lazy(() => import("@/app/components/simpang/optionSelectMaps"))
 const CameraStream = lazy(() => import("@/app/components/cameraStream"));
@@ -45,6 +43,7 @@ export default function Home () {
 
   }]);
 
+  const [trafficMinuteData, setTrafficMinuteData] = useState([]);
   const [filterChangeMatrix, setFilterChangeMatrix] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -89,16 +88,6 @@ export default function Home () {
   });
 
   const [selectedLocation, setSelectedLocation] = useState(0);
-  const [startDate, setStartDate] = useState(() => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return yesterday.toISOString().split('T')[0];
-  });
-  const [endDate, setEndDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
-  const [matrixSubmitCounter, setMatrixSubmitCounter] = useState(0);
   const [simpangList, setSimpangList] = useState([]);
   const [exportLoading, setExportLoading] = useState(false);
 
@@ -200,14 +189,23 @@ export default function Home () {
     const fetchAllData = async () => {
       setIsLoading(true);
       try {
-        const [vehicleResponse, arahResponse, typeResponse] = await Promise.all([
+        const [vehicleResponse, arahResponse, typeResponse, trafficMinute] = await Promise.all([
           vehicles.getAll(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
           vehicles.getByArah(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
-          vehicles.getByTipe(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null)
+          vehicles.getByTipe(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
+          vehicles.getByMinute(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
         ]);
+        fetchTrafficMatrix(
+          simpangFilter,
+          activeFilter === 'customrange' ? customRangeStart : null,
+          activeFilter === 'customrange' ? customRangeEnd : null,
+          activeFilter
+        ).catch(err => console.warn('Matrix fetch warning:', err));
+
         processVehicleData(vehicleResponse);
         processArahData(arahResponse);
         processTypeData(typeResponse);
+        setTrafficMinuteData(trafficMinute.data || []);
       } catch (error) {
         console.error("Error fetching data:", error);
         setDefaultValues();
@@ -480,10 +478,10 @@ export default function Home () {
         if (response.status === 200 && Array.isArray(response.data.simpang)) {
           setSimpangList(response.data.simpang);
           // Set default lokasi ke simpang pertama
-          if (response.data.simpang.length > 0) {
-            setSelectedLocation(response.data.simpang[0].id);
-            setMatrixSubmitCounter(prev => prev + 1);
-          }
+          // if (response.data.simpang.length > 0) {
+          //   setSelectedLocation(response.data.simpang[0].id);
+          //   setMatrixSubmitCounter(prev => prev + 1);
+          // }
         }
       } catch (error) {
         console.error("Error fetching simpang list:", error);
@@ -603,14 +601,14 @@ export default function Home () {
     }
   };
 
-  // Fetch traffic matrix when location or dates change
-  useEffect(() => {
-    if (matrixSubmitCounter > 0 && selectedLocation !== 0) {
-      fetchTrafficMatrix(selectedLocation, startDate, endDate, filterChangeMatrix).catch(() => {
+  // Fetch traffic matrix when location or dates change - REMOVED (Handled in fetchAllData)
+  // useEffect(() => {
+  //   if (matrixSubmitCounter > 0 && selectedLocation !== 0) {
+  //     fetchTrafficMatrix(selectedLocation, startDate, endDate, filterChangeMatrix).catch(() => {
 
-      });
-    }
-  }, [matrixSubmitCounter]);
+  //     });
+  //   }
+  // }, [matrixSubmitCounter]);
 
   if (!isClient) return null;
 
@@ -634,7 +632,7 @@ export default function Home () {
     <div className="p-4 text-base-700 flex flex-col items-center gap-8 overflow-y-hidden text-[13px]">
       {/* Indikator refresh non-blocking */}
       {isRefreshing && (
-        <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg">
+        <div className="fixed bottom-5 right-5 bg-transparent z-50 text-gray-800 font-semibold flex items-center gap-2">
           <span className="text-sm">Memperbarui data...</span>
         </div>
       )}
@@ -782,81 +780,68 @@ export default function Home () {
           </div>
         ) : (
           <div className="justify-between w-[90%] flex flex-col gap-5">
-            <div className="flex flex-col md:flex-row items-center bg-base-200/90 p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
-              <div className="w-full md:w-1/2">
-                <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Masuk</h2>
-                <LintasChart positionText={true} chartData={vehicleData?.incomingVehicles} />
-              </div>
-              <div className="w-full md:w-1/2">
-                <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Keluar</h2>
-                <LintasChart positionText={false} chartData={vehicleData?.outgoingVehicles} />
+            <div className="bg-base-200/90 p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
+              <div className="items-center flex flex-col md:flex-row w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                <div className="w-full md:w-1/2">
+                  <VehicleChart rawData={vehicleData?.incomingVehicles} category="in" />
+                </div>
+                <div className="w-full md:w-1/2">
+                  <VehicleChart rawData={vehicleData?.outgoingVehicles} category="out" />
+                </div>
               </div>
             </div>
-            <div className="flex flex-col md:flex-row items-center justify-center not-xl:gap-2 gap-15 bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
-              <div className="w-full md:w-1/2">
-                <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Masuk</h2>
-                <LintasChart positionText={true} chartData={incomingVehiclesBar2} />
-              </div>
-              <div className="w-full md:w-1/2">
-                <h2 className="text-lg font-medium mb-2 text-center">Kendaraan Keluar</h2>
-                <LintasChart positionText={false} chartData={outgoingVehiclesBar2} />
+            <div className="bg-base-200/90 p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
+              <div className="items-center flex flex-col md:flex-row w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                <div className="w-full md:w-1/2">
+                  <VehicleChart rawData={incomingVehiclesBar2} category="in" />
+                </div>
+                <div className="w-full md:w-1/2">
+                  <VehicleChart rawData={outgoingVehiclesBar2} category="out" />
+                </div>
               </div>
             </div>
             <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100">
-              <GrafikRoad
-                filter={activeFilter}
-                simpang_id={simpangFilter}
-                startDate={activeFilter === 'customrange' ? customRangeStart : null}
-                endDate={activeFilter === 'customrange' ? customRangeEnd : null}
-              />
+              <TrafficIntervalChart rawResponse={trafficMinuteData} />
             </div>
           </div>
-        )}
-      </Suspense>
+        )
+        }
+      </Suspense >
 
-      {!matrixError && dataChord?.arahPergerakan && Object.keys(dataChord.arahPergerakan).length > 0 && (
-        <div className="w-[90%] py-5 block bg-base-200 rounded-xl">
-          <div className="w-full lg:flex overflow-x-auto place-items-center gap-4">
-            {hasValidMatrixData() && (
-              <div className="w-fit block m-auto">
-                <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
+      {!matrixError && dataChord?.arahPergerakan && Object.keys(dataChord.arahPergerakan).length > 0 && !isLoading ?
+        ( 
+          <div className="justify-between w-[90%] flex flex-col gap-5">
+            <div className="bg-base-200/90  w-full p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
+              <div className="items-center flex flex-col w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                {hasValidMatrixData() && (
+                  <div className="w-fit m-auto hidden lg:block">
+                    <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
+                  </div>
+                )}
+                <div className=" w-full">
+                  <TableMatrix
+                    categories={categories}
+                    asalTujuan={dataChord?.asalTujuan || {}}
+                    arahPergerakan={dataChord?.arahPergerakan || {}}
+                    loading={matrixLoading}
+                    error={matrixError}
+                  />
+                </div>
               </div>
-            )}
-            <div className=" w-full">
-              <TableMatrix
-                categories={categories}
-                asalTujuan={dataChord?.asalTujuan || {}}
-                arahPergerakan={dataChord?.arahPergerakan || {}}
-                loading={matrixLoading}
-                error={matrixError}
-                simpangList={simpangList}
-                selectedLocation={selectedLocation}
-                onLocationChange={(locationId) => setSelectedLocation(locationId)}
-                onDateChange={(type, date) => {
-                  if (type === 'start') setStartDate(date);
-                  if (type === 'end') setEndDate(date);
-                }}
-                startDate={startDate}
-                endDate={endDate}
-                onFilterChange={(filter) => setFilterChangeMatrix(filter)}
-                onSubmit={() => setMatrixSubmitCounter(matrixSubmitCounter + 1)}
-                selectedFilter={filterChangeMatrix}
-                isLoading={matrixLoading}
-              />
             </div>
           </div>
-        </div>
-      )}
+        ) : (<div className="flex justify-center items-center h-64">
+          <div className="font-medium">Loading chart data...</div>
+        </div>)}
 
-      <h2 className="card-title text-stone-800 text-xl font-bold">Analisis Lalu Lintas Terkini</h2>
-      <div className="flex flex-col gap-10 w-[90%]">
-        {/* <GraficByHourInOut category="in" dateRange={dateRange} id_simpang={simpangFilter} nama_simpang={namaLokasi} /> */}
-        {/* <GraficByHourInOut category="out" dateRange={dateRange} id_simpang={simpangFilter} nama_simpang={namaLokasi} /> */}
-      </div>
       <div className="w-[90%]">
-        {isAdmin && <CameraStream />}
-        <MapComponent />
+        <div className="bg-base-200/90 w-full flex flex-col p-4 gap-8 rounded-3xl backdrop-blur-sm shadow-gray-200">
+          <div className="w-full px-8 pt-4 rounded-2xl bg-white shadow-sm border border-gray-100">
+            {isAdmin && <CameraStream />}
+          </div>
+          <MapComponent />
+        </div>
       </div>
-    </div>
+    </div >
   );
 }

@@ -31,7 +31,7 @@ const TrafficMatrixByCategory = forwardRef(({ simpangId, simpangName }, ref) => 
         throw new Error('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
       }
 
-      const response = await vehicles.getTrafficMatrixByCategory(simpangId, startDate, endDate);
+      const response = await vehicles.getTrafficMatrixByCategory('customrange', simpangId, startDate, endDate);
       // console.log('Traffic Matrix by Category response:', response.data);
       setData(response.data.data);
     } catch (err) {

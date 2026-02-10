@@ -5,7 +5,7 @@ const ChordDiagram = ({ matrix, categories }) => {
   const ref = useRef(null);
 
   useEffect(() => {
-    const size = 480; // ukuran lebih kecil
+    const size = 500; // ukuran lebih kecil
     const innerRadius = size / 2 - 40;
     const outerRadius = innerRadius + 10;
 
@@ -64,8 +64,8 @@ const ChordDiagram = ({ matrix, categories }) => {
       .attr("font-size", "18px")
       .attr("transform", (d) => {
         const angle = d.angle;
-        const x = Math.sin(angle) * (outerRadius + 1);
-        const y = -Math.cos(angle) * (outerRadius + 1);
+        const x = Math.sin(angle) * (outerRadius - 20);
+        const y = -Math.cos(angle) * (outerRadius - 1);
         return `translate(${x}, ${y})`; // tanpa rotate
       })
       .attr("text-anchor", (d) => (d.angle > Math.PI ? "end" : "start"))

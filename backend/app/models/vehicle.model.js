@@ -392,21 +392,79 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day', simpang = 'semua', st
       simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
     }
     
-    // OPTIMIZED: Adjusted for Local Time storage
-    const [rows] = await db.query(`
-      SELECT
-        CAST(waktu AS DATE) AS tanggal,
-        HOUR(waktu) AS jam,
-        FLOOR(MINUTE(waktu) / 15) * 15 AS menit,
-        COUNT(${flowRules.getInCases()}) AS total_IN,
-        COUNT(${flowRules.getOutCases()}) AS total_OUT
-      FROM arus
-      WHERE ${dateFilter}
-        ${simpangFilter}
-      GROUP BY CAST(waktu AS DATE), HOUR(waktu), FLOOR(MINUTE(waktu) / 15)
-      ORDER BY tanggal, jam, menit;
-    `);
-    result(null, rows);
+    let query;
+    const isAggregated = filter !== 'day' && filter !== 'customrange' || (filter === 'customrange' && startDate !== endDate);
+
+    if (isAggregated) {
+       // Aggregated query (Average across days)
+       query = `
+        SELECT 
+          HOUR(waktu) AS jam,
+          FLOOR(MINUTE(waktu) / 15) * 15 AS menit,
+          AVG(sub.total_IN) AS total_IN,
+          AVG(sub.total_OUT) AS total_OUT
+        FROM (
+          SELECT 
+            CAST(waktu AS DATE) as tgl,
+            HOUR(waktu) as waktu_jam,
+            FLOOR(MINUTE(waktu) / 15) * 15 as waktu_menit,
+            COUNT(${flowRules.getInCases()}) AS total_IN,
+            COUNT(${flowRules.getOutCases()}) AS total_OUT,
+            waktu
+          FROM arus
+          WHERE ${dateFilter} ${simpangFilter}
+          GROUP BY CAST(waktu AS DATE), HOUR(waktu), FLOOR(MINUTE(waktu) / 15)
+        ) sub
+        GROUP BY jam, menit
+        ORDER BY jam, menit
+      `;
+    } else {
+      // Single day raw counts
+      query = `
+        SELECT
+          CAST(waktu AS DATE) AS tanggal,
+          HOUR(waktu) AS jam,
+          FLOOR(MINUTE(waktu) / 15) * 15 AS menit,
+          COUNT(${flowRules.getInCases()}) AS total_IN,
+          COUNT(${flowRules.getOutCases()}) AS total_OUT
+        FROM arus
+        WHERE ${dateFilter}
+          ${simpangFilter}
+        GROUP BY CAST(waktu AS DATE), HOUR(waktu), FLOOR(MINUTE(waktu) / 15)
+        ORDER BY tanggal, jam, menit
+      `;
+    }
+
+    const [rows] = await db.query(query);
+
+    // Format output: Replace 'jam' with 15-minute time range string (e.g. "15:00-15:15")
+    const formattedRows = rows.map(row => {
+      const h = row.jam;
+      const m = row.menit;
+      
+      const pad = (n) => n.toString().padStart(2, '0');
+      
+      // Calculate start and end times
+      const startStr = `${pad(h)}:${pad(m)}`;
+      
+      let endH = h;
+      let endM = m + 15;
+      if (endM >= 60) {
+        endM = 0;
+        endH = (endH + 1) % 24;
+      }
+      const endStr = `${pad(endH)}:${pad(endM)}`;
+      
+      return {
+        ...row,
+        // Ensure values are integers for frontend consistency if averaged
+        total_IN: Math.round(row.total_IN),
+        total_OUT: Math.round(row.total_OUT),
+        jam: `${startStr}-${endStr}`, // Replaces integer hour with range string
+      };
+    });
+
+    result(null, formattedRows);
   } catch (err) {
     console.error("error: ", err);
     result(err, null);
@@ -635,10 +693,9 @@ Vehicle.getCompleteTrafficMatrix = async (simpangId, filter = 'day', startDate =
 
 // NEW: Get traffic matrix with vehicle categories breakdown
 // Query the database to get vehicle counts by category, origin, and destination
-Vehicle.getTrafficMatrixByCategory = async (simpangId, startDate, endDate) => {
+Vehicle.getTrafficMatrixByCategory = async (simpangId, filter = 'day', startDate = null, endDate = null) => {
   try {
-    const formattedStartDate = `${startDate} 00:00:00`;
-    const formattedEndDate = `${endDate} 23:59:59`;
+    const dateFilterClause = getDateFilterClause(filter, startDate, endDate);
     
     // Query to get all vehicle categories (columns) grouped by origin-destination
     const sql = `
@@ -648,12 +705,12 @@ Vehicle.getTrafficMatrixByCategory = async (simpangId, startDate, endDate) => {
         SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB
       FROM arus 
       WHERE ID_Simpang = ? 
-        AND waktu BETWEEN ? AND ?
+        AND ${dateFilterClause}
         AND dari_arah != ke_arah
       ORDER BY dari_arah, ke_arah
     `;
     
-    const [rows] = await db.query(sql, [simpangId, formattedStartDate, formattedEndDate]);
+    const [rows] = await db.query(sql, [simpangId]);
     return rows;
   } catch (error) {
     throw new Error(`Error getting traffic matrix by category: ${error.message}`);
@@ -833,10 +890,10 @@ Vehicle.buildAsalTujuanMatrixFromCategory = (asalTujuanCategoryData) => {
 };
 
 // NEW: Get complete traffic matrix with vehicle category breakdown
-Vehicle.getCompleteTrafficMatrixByCategory = async (simpangId, startDate, endDate) => {
+Vehicle.getCompleteTrafficMatrixByCategory = async (simpangId, filter = 'day', startDate = null, endDate = null) => {
   try {
     // Get raw data with vehicle categories
-    const categoryData = await Vehicle.getTrafficMatrixByCategory(simpangId, startDate, endDate);
+    const categoryData = await Vehicle.getTrafficMatrixByCategory(simpangId, filter, startDate, endDate);
     
     // Build asal-tujuan matrix from category data
     const asalTujuanMatrix = Vehicle.buildAsalTujuanMatrixFromCategory(categoryData);
