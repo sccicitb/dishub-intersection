@@ -156,18 +156,24 @@ const Layout = ({ children }) => {
                     className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
                     onLoadingComplete={() => setLoaded(true)}
                   />
-                  <div>
-                    <Image
+                  <div className="w-full text-center px-3 pt-0.5 mx-auto">
+                    {/* <Image
                       src="/image/dishub-jogja.png"
                       alt="Logo"
                       width={230}
                       height={30}
                       className={`transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
                       onLoadingComplete={() => setLoaded(true)}
-                    />
+                    /> */}
+                    <span className={`text-gray-100 font-semibold text-[13px]/3.5 tracking-wide uppercase h-full flex items-center transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}>
+                      Dinas Perhubungan
+                    </span>
+                    <span className={`text-gray-100 text-[9px] h-full uppercase tracking-wide font-light flex items-center transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}>
+                      Daerah Istimewa Yogyakarta
+                    </span>
                   </div>
                 </div>
-                <span className={`text-gray-100 font-semibold text-[12px] h-full flex items-center transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}>
+                <span className={`text-gray-100 font-semibold text-[12px] tracking-wide h-full flex items-center transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}>
                   Viana Smart Mobility Dashboard
                 </span>
               </div>
