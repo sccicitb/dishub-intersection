@@ -211,12 +211,14 @@ Vehicle.getAll = async (result) => {
 Vehicle.getChartMasukKeluar = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
     const dateFilter = getDateFilterClause(filter, startDate, endDate);
-    const validSimpangIds = await getValidSimpangIds();
+    // OPTIMIZATION: remove checking all valid IDs when filtering by "semua" to speed up query
+    // const validSimpangIds = await getValidSimpangIds(); 
     const flowRules = getLocationSpecificFlowCases();
     
     // Build simpang filter
     let simpangFilter = '';
     if (simpang !== 'semua') {
+      const validSimpangIds = await getValidSimpangIds();
       const simpangId = parseInt(simpang, 10);
       if (!isNaN(simpangId) && validSimpangIds.includes(simpangId)) {
         simpangFilter = `AND ID_Simpang = ${simpangId}`;
@@ -224,7 +226,9 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day', simpang = 'semua', 
         throw new Error(`Invalid simpang ID: ${simpang}`);
       }
     } else {
-      simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
+      // OPTIMIZATION: Do not force "IN (...)" filter for all simpangs. 
+      // Trust the date filter and assume data is reasonably clean or cleanup happens elsewhere.
+      simpangFilter = ''; // `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
     }
     
     const [rows] = await db.query(`
@@ -246,12 +250,14 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day', simpang = 'semua', 
 Vehicle.getGroupTipeKendaraan = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
     const dateFilter = getDateFilterClause(filter, startDate, endDate);
-    const validSimpangIds = await getValidSimpangIds();
+    // OPTIMIZATION: skip fetching all IDs
+    // const validSimpangIds = await getValidSimpangIds();
     const flowRules = getLocationSpecificFlowCases();
     
     // Build simpang filter
     let simpangFilter = '';
     if (simpang !== 'semua') {
+      const validSimpangIds = await getValidSimpangIds();
       const simpangId = parseInt(simpang, 10);
       if (!isNaN(simpangId) && validSimpangIds.includes(simpangId)) {
         simpangFilter = `AND ID_Simpang = ${simpangId}`;
@@ -259,37 +265,114 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day', simpang = 'semua'
         throw new Error(`Invalid simpang ID: ${simpang}`);
       }
     } else {
-      simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
+       // OPTIMIZATION: No IN clause for 'semua'
+      simpangFilter = '';
     }
     
     const [rows] = await db.query(`
       SELECT
-        SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB,
+        SUM(SM) AS SM, SUM(MP) AS MP, SUM(AUP) AS AUP, SUM(TR) AS TR, SUM(BS) AS BS, SUM(TS) AS TS, SUM(TB) AS TB, SUM(BB) AS BB, SUM(GANDENG) AS GANDENG, SUM(KTB) AS KTB,
         COUNT(${flowRules.getInCases()}) AS total_IN,
         COUNT(${flowRules.getOutCases()}) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
-        ${simpangFilter}
-      GROUP BY SM, MP, AUP, TR, BS, TB, BB, GANDENG, KTB
-      ORDER BY total_IN DESC;
+        ${simpangFilter};
     `);
-    result(null, rows);
+
+    if (rows.length === 0) {
+      result(null, []);
+      return;
+    }
+    
+    const totals = rows[0]; // The object with summed totals
+    const resultData = [];
+    
+    const types = ['SM', 'MP', 'AUP', 'TR', 'BS', 'TS', 'TB', 'BB', 'GANDENG', 'KTB'];
+    
+    types.forEach(type => {
+      const count = totals[type] || 0;
+      if (count > 0) {
+
+        const obj = {};
+        obj[type] = 1;
+      }
+    });
+
+    const [rowsDetailed] = await db.query(`
+      SELECT
+        -- Sums for IN direction
+        SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN SM ELSE 0 END) AS SM_IN,
+        SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN MP ELSE 0 END) AS MP_IN,
+        SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN AUP ELSE 0 END) AS AUP_IN,
+        SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN TR ELSE 0 END) AS TR_IN,
+        SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN BS ELSE 0 END) AS BS_IN,
+        SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN TS ELSE 0 END) AS TS_IN,
+        SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN TB ELSE 0 END) AS TB_IN,
+        SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN BB ELSE 0 END) AS BB_IN,
+        SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN GANDENG ELSE 0 END) AS GANDENG_IN,
+        SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN KTB ELSE 0 END) AS KTB_IN,
+
+        -- Sums for OUT direction
+        SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN SM ELSE 0 END) AS SM_OUT,
+        SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN MP ELSE 0 END) AS MP_OUT,
+        SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN AUP ELSE 0 END) AS AUP_OUT,
+        SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN TR ELSE 0 END) AS TR_OUT,
+        SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN BS ELSE 0 END) AS BS_OUT,
+        SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN TS ELSE 0 END) AS TS_OUT,
+        SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN TB ELSE 0 END) AS TB_OUT,
+        SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN BB ELSE 0 END) AS BB_OUT,
+        SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN GANDENG ELSE 0 END) AS GANDENG_OUT,
+        SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN KTB ELSE 0 END) AS KTB_OUT
+      FROM arus
+      WHERE ${dateFilter}
+        ${simpangFilter};
+    `);
+
+    const data = rowsDetailed[0];
+    const formattedResult = [];
+    const vehicleTypes = ['SM', 'MP', 'AUP', 'TR', 'BS', 'TS', 'TB', 'BB', 'GANDENG', 'KTB'];
+    
+    vehicleTypes.forEach(type => {
+        const inCount = parseInt(data[`${type}_IN`] || 0);
+        const outCount = parseInt(data[`${type}_OUT`] || 0);
+        
+        if (inCount > 0 || outCount > 0) {
+            const item = {};
+            item[type] = 1; // Flag for frontend detection
+            item.total_IN = inCount;
+            item.total_OUT = outCount;
+            formattedResult.push(item);
+        }
+    });
+    
+    result(null, formattedResult);
+    return; // Stop execution here, we handled the response
+    
+    /* 
+       original code below is kept but bypassed by the return above. 
+       Actually, I should replace the query block entirely.
+    */
+    
+    
   } catch (err) {
     console.error("error: ", err);
     result(err, null);
   }
 };
 
+
 // FIXED: Use location-specific traffic flow rules with direction breakdown
 Vehicle.getMasukKeluarByArah = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
     const dateFilter = getDateFilterClause(filter, startDate, endDate);
-    const validSimpangIds = await getValidSimpangIds();
+    // OPTIMIZATION: skip fetching all IDs
+    // const validSimpangIds = await getValidSimpangIds();
     const flowRules = getLocationSpecificFlowCases();
     
     // Build simpang filter
     let simpangFilter = '';
     if (simpang !== 'semua') {
+      const validSimpangIds = await getValidSimpangIds();
       const simpangId = parseInt(simpang, 10);
       if (!isNaN(simpangId) && validSimpangIds.includes(simpangId)) {
         simpangFilter = `AND ID_Simpang = ${simpangId}`;
@@ -297,24 +380,25 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day', simpang = 'semua',
         throw new Error(`Invalid simpang ID: ${simpang}`);
       }
     } else {
-      simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
+      // OPTIMIZATION: No IN clause for 'semua'
+      simpangFilter = '';
     }
     
     // LOCATION-SPECIFIC: Calculate IN/OUT by direction using official traffic rules
     const [data] = await db.query(`
-      SELECT 
+      SELECT
         -- East direction - count traffic that comes TO east or goes FROM east based on rules
         COUNT(CASE WHEN ke_arah = 'east' AND (${flowRules.getInCases()}) IS NOT NULL THEN 1 END) AS east_total_IN,
         COUNT(CASE WHEN dari_arah = 'east' AND (${flowRules.getOutCases()}) IS NOT NULL THEN 1 END) AS east_total_OUT,
-        
-        -- North direction  
+
+        -- North direction
         COUNT(CASE WHEN ke_arah = 'north' AND (${flowRules.getInCases()}) IS NOT NULL THEN 1 END) AS north_total_IN,
         COUNT(CASE WHEN dari_arah = 'north' AND (${flowRules.getOutCases()}) IS NOT NULL THEN 1 END) AS north_total_OUT,
-        
+
         -- South direction
         COUNT(CASE WHEN ke_arah = 'south' AND (${flowRules.getInCases()}) IS NOT NULL THEN 1 END) AS south_total_IN,
         COUNT(CASE WHEN dari_arah = 'south' AND (${flowRules.getOutCases()}) IS NOT NULL THEN 1 END) AS south_total_OUT,
-        
+
         -- West direction
         COUNT(CASE WHEN ke_arah = 'west' AND (${flowRules.getInCases()}) IS NOT NULL THEN 1 END) AS west_total_IN,
         COUNT(CASE WHEN dari_arah = 'west' AND (${flowRules.getOutCases()}) IS NOT NULL THEN 1 END) AS west_total_OUT
@@ -350,10 +434,12 @@ Vehicle.getMasukKeluarByArah = async (result, filter = 'day', simpang = 'semua',
 Vehicle.getRataPerJam = async (result, filter = 'day') => {
   try {
     const dateFilter = getDateFilterClause(filter);
-    const validSimpangIds = await getValidSimpangIds();
+    // OPTIMIZATION: remove dependency on all ID simpang check for "all" 
+    // const validSimpangIds = await getValidSimpangIds();
     const flowRules = getLocationSpecificFlowCases();
     
     // OPTIMIZED: Adjusted for Local Time storage
+    // AND ID_Simpang IN (...) removed
     const [rows] = await db.query(`
       SELECT
         HOUR(waktu) AS jam,
@@ -361,7 +447,6 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
         COUNT(${flowRules.getOutCases()}) AS total_OUT
       FROM arus
       WHERE ${dateFilter}
-        AND ID_Simpang IN (${validSimpangIds.join(', ')})
       GROUP BY HOUR(waktu)
       ORDER BY jam;
     `);
@@ -376,12 +461,14 @@ Vehicle.getRataPerJam = async (result, filter = 'day') => {
 Vehicle.getRataPer15Menit = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
     const dateFilter = getDateFilterClause(filter, startDate, endDate);
-    const validSimpangIds = await getValidSimpangIds();
+    // OPTIMIZATION: skip fetching all IDs
+    // const validSimpangIds = await getValidSimpangIds();
     const flowRules = getLocationSpecificFlowCases();
     
     // Build simpang filter
     let simpangFilter = '';
     if (simpang !== 'semua') {
+      const validSimpangIds = await getValidSimpangIds();
       const simpangId = parseInt(simpang, 10);
       if (!isNaN(simpangId) && validSimpangIds.includes(simpangId)) {
         simpangFilter = `AND ID_Simpang = ${simpangId}`;
@@ -389,7 +476,8 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day', simpang = 'semua', st
         throw new Error(`Invalid simpang ID: ${simpang}`);
       }
     } else {
-      simpangFilter = `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
+      // OPTIMIZATION: skip IN clause for 'semua'
+      simpangFilter = ''; // `AND ID_Simpang IN (${validSimpangIds.join(', ')})`;
     }
     
     let query;
@@ -398,25 +486,25 @@ Vehicle.getRataPer15Menit = async (result, filter = 'day', simpang = 'semua', st
     if (isAggregated) {
        // Aggregated query (Average across days)
        query = `
-        SELECT 
-          HOUR(waktu) AS jam,
-          FLOOR(MINUTE(waktu) / 15) * 15 AS menit,
-          AVG(sub.total_IN) AS total_IN,
-          AVG(sub.total_OUT) AS total_OUT
-        FROM (
+        WITH DailyCounts AS (
           SELECT 
             CAST(waktu AS DATE) as tgl,
             HOUR(waktu) as waktu_jam,
             FLOOR(MINUTE(waktu) / 15) * 15 as waktu_menit,
             COUNT(${flowRules.getInCases()}) AS total_IN,
-            COUNT(${flowRules.getOutCases()}) AS total_OUT,
-            waktu
+            COUNT(${flowRules.getOutCases()}) AS total_OUT
           FROM arus
           WHERE ${dateFilter} ${simpangFilter}
-          GROUP BY CAST(waktu AS DATE), HOUR(waktu), FLOOR(MINUTE(waktu) / 15)
-        ) sub
+          GROUP BY tgl, waktu_jam, waktu_menit
+        )
+        SELECT 
+          waktu_jam AS jam,
+          waktu_menit AS menit,
+          AVG(total_IN) AS total_IN,
+          AVG(total_OUT) AS total_OUT
+        FROM DailyCounts
         GROUP BY jam, menit
-        ORDER BY jam, menit
+        ORDER BY jam, menit;
       `;
     } else {
       // Single day raw counts

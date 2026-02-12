@@ -30,7 +30,7 @@ exports.getChartMasukKeluar = (req, res) => {
   const simpang = req.query.simpang || 'semua'; // Get simpang from query params (default: semua)
   const startDate = req.query['start-date']; // Get start-date for customrange
   const endDate = req.query['end-date']; // Get end-date for customrange
-  
+
   Vehicle.getChartMasukKeluar((err, data) => {
     if (err) {
       return res.status(500).send({
@@ -61,7 +61,7 @@ exports.getGroupTipeKendaraan = (req, res) => {
   const simpang = req.query.simpang || 'semua'; // Get simpang from query params (default: semua)
   const startDate = req.query['start-date']; // Get start-date for customrange
   const endDate = req.query['end-date']; // Get end-date for customrange
-  
+
   Vehicle.getGroupTipeKendaraan((err, data) => {
     if (err) {
       res.status(500).send({
@@ -77,14 +77,21 @@ exports.getGroupTipeKendaraan = (req, res) => {
   }, filter, simpang, startDate, endDate);
 };
 
+
 exports.getMasukKeluarByArah = (req, res) => {
-  const filter = req.query.filter || 'day'; // Get filter from query params
-  const simpang = req.query.simpang || 'semua'; // Get simpang from query params (default: semua)
-  const startDate = req.query['start-date']; // Get start-date for customrange
-  const endDate = req.query['end-date']; // Get end-date for customrange
-  
+  const filter = req.query.filter || 'day';
+  const simpang = req.query.simpang || 'semua';
+  const startDate = req.query['start-date'];
+  const endDate = req.query['end-date'];
+
   Vehicle.getMasukKeluarByArah((err, data) => {
     if (err) {
+      if (err.message === 'Query timeout') {
+        return res.status(408).send({
+          status: "error",
+          message: "Request timeout - query took too long"
+        });
+      }
       res.status(500).send({
         status: "error",
         message: err.message || "Some error occurred while retrieving data.",
@@ -99,8 +106,8 @@ exports.getMasukKeluarByArah = (req, res) => {
 };
 
 exports.getRataPerJam = (req, res) => {
-  const filter = req.query.filter || 'day'; // Get filter from query params
-  
+  const filter = req.query.filter || 'day';
+
   Vehicle.getRataPerJam((err, data) => {
     if (err) {
       res.status(500).send({
@@ -117,13 +124,19 @@ exports.getRataPerJam = (req, res) => {
 };
 
 exports.getRataPer15Menit = (req, res) => {
-  const filter = req.query.filter || 'day'; // Get filter from query params
-  const simpang = req.query.simpang || 'semua'; // Get simpang from query params (default: semua)
-  const startDate = req.query['start-date']; // Get start-date for customrange
-  const endDate = req.query['end-date']; // Get end-date for customrange
-  
+  const filter = req.query.filter || 'day';
+  const simpang = req.query.simpang || 'semua';
+  const startDate = req.query['start-date'];
+  const endDate = req.query['end-date'];
+
   Vehicle.getRataPer15Menit((err, data) => {
     if (err) {
+      if (err.message === 'Query timeout') {
+        return res.status(408).send({
+          status: "error",
+          message: "Request timeout - query took too long"
+        });
+      }
       res.status(500).send({
         status: "error",
         message: err.message || "Some error occurred while retrieving data.",
@@ -150,7 +163,7 @@ exports.getTrafficMatrix = async (req, res) => {
     const filter = req.query.filter || 'day';
     const startDate = req.query['start-date'];
     const endDate = req.query['end-date'];
-    
+
     // Validate required parameters
     if (!simpang_id) {
       return res.status(400).json({
@@ -158,7 +171,7 @@ exports.getTrafficMatrix = async (req, res) => {
         message: "simpang_id is required (use 'semua' for all simpangs)"
       });
     }
-    
+
     // For customrange filter, validate dates are provided
     if (filter === 'customrange') {
       if (!startDate || !endDate) {
@@ -167,7 +180,7 @@ exports.getTrafficMatrix = async (req, res) => {
           message: "customrange filter requires both start-date and end-date (format: YYYY-MM-DD)"
         });
       }
-      
+
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
         return res.status(400).json({
@@ -175,7 +188,7 @@ exports.getTrafficMatrix = async (req, res) => {
           message: "Invalid date format. Use YYYY-MM-DD"
         });
       }
-      
+
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (start > end) {
@@ -185,13 +198,13 @@ exports.getTrafficMatrix = async (req, res) => {
         });
       }
     }
-    
+
     // Get complete traffic matrix using Vehicle model
     const result = await Vehicle.getCompleteTrafficMatrix(simpang_id, filter, startDate, endDate);
-    
+
     // Return success response with both matrices
     const displaySimpangId = simpang_id === 'semua' ? 'semua' : parseInt(simpang_id);
-    
+
     res.json({
       success: true,
       message: "Traffic matrix retrieved successfully",
@@ -204,7 +217,7 @@ exports.getTrafficMatrix = async (req, res) => {
         arahPergerakan: result.arahPergerakan
       }
     });
-    
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -222,7 +235,7 @@ exports.getTrafficMatrixByCategory = async (req, res) => {
     // Support both parameter naming conventions (snake_case and kebab-case)
     const start_date = req.query.start_date || req.query['start-date'];
     const end_date = req.query.end_date || req.query['end-date'];
-    
+
     // Validate required parameters
     if (!simpang_id) {
       return res.status(400).json({
@@ -230,7 +243,7 @@ exports.getTrafficMatrixByCategory = async (req, res) => {
         message: "simpang_id is required"
       });
     }
-    
+
     if (filter === 'customrange') {
       if (!start_date || !end_date) {
         return res.status(400).json({
@@ -238,7 +251,7 @@ exports.getTrafficMatrixByCategory = async (req, res) => {
           message: "start_date and end_date are required for customrange filter (format: YYYY-MM-DD)"
         });
       }
-      
+
       // Validate date format
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(start_date) || !dateRegex.test(end_date)) {
@@ -247,7 +260,7 @@ exports.getTrafficMatrixByCategory = async (req, res) => {
           message: "Invalid date format. Use YYYY-MM-DD"
         });
       }
-      
+
       // Validate date range
       const startDate = new Date(start_date);
       const endDate = new Date(end_date);
@@ -258,10 +271,10 @@ exports.getTrafficMatrixByCategory = async (req, res) => {
         });
       }
     }
-    
+
     // Get traffic matrix with vehicle category breakdown
     const result = await Vehicle.getCompleteTrafficMatrixByCategory(simpang_id, filter, start_date, end_date);
-    
+
     // Return success response with vehicle categories in arahPergerakan
     res.json({
       success: true,
@@ -277,7 +290,7 @@ exports.getTrafficMatrixByCategory = async (req, res) => {
         arahPergerakan: result.arahPergerakan
       }
     });
-    
+
   } catch (error) {
     console.error("Error getting traffic matrix by category:", error);
     res.status(500).json({
@@ -295,7 +308,7 @@ exports.getRawArusData = async (req, res) => {
     const filter = req.query.filter || 'day';
     const startDate = req.query['start-date'];
     const endDate = req.query['end-date'];
-    
+
     // Validate page and limit
     if (page < 1 || limit < 1 || limit > 1000) {
       return res.status(400).json({
@@ -303,7 +316,7 @@ exports.getRawArusData = async (req, res) => {
         message: "Invalid page or limit. Page must be >= 1, limit must be 1-1000"
       });
     }
-    
+
     // For customrange filter, validate dates
     if (filter === 'customrange') {
       if (!startDate || !endDate) {
@@ -312,7 +325,7 @@ exports.getRawArusData = async (req, res) => {
           message: "customrange filter requires both start-date and end-date (format: YYYY-MM-DD)"
         });
       }
-      
+
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
         return res.status(400).json({
@@ -320,7 +333,7 @@ exports.getRawArusData = async (req, res) => {
           message: "Invalid date format. Use YYYY-MM-DD"
         });
       }
-      
+
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (start > end) {
@@ -330,7 +343,7 @@ exports.getRawArusData = async (req, res) => {
         });
       }
     }
-    
+
     // Build filters object
     const filters = {};
     if (simpang_id && simpang_id !== 'semua') {
@@ -339,10 +352,10 @@ exports.getRawArusData = async (req, res) => {
     filters.filter = filter;
     if (startDate) filters.start_date = startDate;
     if (endDate) filters.end_date = endDate;
-    
+
     // Get raw data with pagination
     const result = await Vehicle.getRawArusData(page, limit, filters);
-    
+
     res.json({
       success: true,
       message: "Raw arus data retrieved successfully",
@@ -360,7 +373,7 @@ exports.getRawArusData = async (req, res) => {
       },
       data: result.data
     });
-    
+
   } catch (error) {
     console.error("Error getting raw arus data:", error);
     res.status(500).json({
@@ -374,7 +387,7 @@ exports.getRawArusData = async (req, res) => {
 exports.getTrafficMatrixByTimePeriods = async (req, res) => {
   try {
     const { simpang_id, date } = req.query;
-    
+
     // Validate required parameters
     if (!simpang_id) {
       return res.status(400).json({
@@ -382,14 +395,14 @@ exports.getTrafficMatrixByTimePeriods = async (req, res) => {
         message: "simpang_id is required (use 'semua' for all simpangs)"
       });
     }
-    
+
     if (!date) {
       return res.status(400).json({
         success: false,
         message: "date is required (format: YYYY-MM-DD)"
       });
     }
-    
+
     // Validate date format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(date)) {
@@ -398,13 +411,13 @@ exports.getTrafficMatrixByTimePeriods = async (req, res) => {
         message: "Invalid date format. Use YYYY-MM-DD"
       });
     }
-    
+
     // Get traffic matrix by time periods
     const result = await Vehicle.getTrafficMatrixByTimePeriods(simpang_id, date);
-    
+
     // Return success response with time periods breakdown
     const displaySimpangId = simpang_id === 'semua' ? 'semua' : parseInt(simpang_id);
-    
+
     res.json({
       success: true,
       message: "Traffic matrix by time periods retrieved successfully",
@@ -414,7 +427,7 @@ exports.getTrafficMatrixByTimePeriods = async (req, res) => {
         arahPergerakanByPeriod: result
       }
     });
-    
+
   } catch (error) {
     console.error("Error getting traffic matrix by time periods:", error);
     res.status(500).json({
@@ -428,7 +441,7 @@ exports.getTrafficMatrixByTimePeriods = async (req, res) => {
 exports.getTrafficMatrixByHours = async (req, res) => {
   try {
     const { simpang_id, date } = req.query;
-    
+
     // Validate required parameters
     if (!simpang_id) {
       return res.status(400).json({
@@ -436,14 +449,14 @@ exports.getTrafficMatrixByHours = async (req, res) => {
         message: "simpang_id is required (use 'semua' for all simpangs)"
       });
     }
-    
+
     if (!date) {
       return res.status(400).json({
         success: false,
         message: "date is required (format: YYYY-MM-DD)"
       });
     }
-    
+
     // Validate date format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(date)) {
@@ -452,13 +465,13 @@ exports.getTrafficMatrixByHours = async (req, res) => {
         message: "Invalid date format. Use YYYY-MM-DD"
       });
     }
-    
+
     // Get traffic matrix by hours
     const result = await Vehicle.getTrafficMatrixByHours(simpang_id, date);
-    
+
     // Return success response with hourly breakdown
     const displaySimpangId = simpang_id === 'semua' ? 'semua' : parseInt(simpang_id);
-    
+
     res.json({
       success: true,
       message: "Traffic matrix by hours retrieved successfully",
@@ -468,7 +481,7 @@ exports.getTrafficMatrixByHours = async (req, res) => {
         arahPergerakanByHour: result
       }
     });
-    
+
   } catch (error) {
     console.error("Error getting traffic matrix by hours:", error);
     res.status(500).json({

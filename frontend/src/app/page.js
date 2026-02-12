@@ -434,37 +434,19 @@ export default function Home () {
 
     fetchAllData();
 
-    // Auto-refresh 30 menit hanya saat tab aktif
-    let intervalId;
-    const handleVisibility = () => {
-      if (document.hidden) {
-        setIsTabActive(false);
-        if (intervalId) clearInterval(intervalId);
-      } else {
-        setIsTabActive(true);
-        setIsRefreshing(true);
-        fetchAllData().then(() => setIsRefreshing(false));
-        intervalId = setInterval(() => {
-          setIsRefreshing(true);
-          fetchAllData().then(() => setIsRefreshing(false));
-        }, 1800000); // 30 menit
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibility);
-    intervalId = setInterval(() => {
+    // Auto-refresh 30 menit
+    const intervalId = setInterval(() => {
       if (!document.hidden) {
         setIsRefreshing(true);
         fetchAllData().then(() => setIsRefreshing(false));
       }
-    }, 1800000);
+    }, 1800000); // 30 menit
 
     const range = calculateDateRange(activeFilter);
     setDateRange(range);
 
     return () => {
       clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', handleVisibility);
     };
 
   }, [activeFilter, simpangFilter, customRangeStart, customRangeEnd]);
