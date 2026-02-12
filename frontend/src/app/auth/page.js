@@ -70,9 +70,11 @@ export default function Auth () {
         >
           <div className="text-left gap-2 flex flex-col">
             <div className="flex items-center w-full justify-between">
-              <h3 className="text-sm font-semibold">WELCOME BACK</h3>
+              <div className='w-full'>
+                <h3 className="text-[14px] tracking-wide font-semibold text-wrap">Viana Smart Mobility Dashboard <br />Dinas Perhubungan Provinsi Daerah Istimewa Yogyakarta</h3>
+              </div>
               <Image
-                src="/image/IC_SMART MOBILITY.png"
+                src="/image/dishub-jogja-logo.png"
                 alt="Logo Viana"
                 width={80}
                 height={80}
@@ -81,7 +83,7 @@ export default function Auth () {
                 onLoadingComplete={() => setLoaded(true)}
               />
             </div>
-            <h2 className="text-2xl font-semibold">Log In to your Account</h2>
+            <h4 className="text-[20px] tracking-wide font-semibold">Selamat Datang</h4>
           </div>
 
           <fieldset className="fieldset">
@@ -118,7 +120,7 @@ export default function Auth () {
 
           {errorMessage && <p className="text-red-500">{errorMessage}</p>}
         </form>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }

@@ -7,71 +7,81 @@ const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL ||
 const baseURL = envUrl
   ? `${envUrl}/api`
   : 'https://staging-smartx-mobility.jogjaprov.go.id/api';
-
-const axiosInstance = axios.create({
-  baseURL,
-  timeout: 70000,
-  withCredentials: false,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  }
-});
-
-// Request interceptor
-axiosInstance.interceptors.request.use(function (config) {
-  const token = Cookies.get('token');
-  if (token && token !== 'mocked.jwt.token') {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-}, function (error) {
-  console.error('Request interceptor error:', error);
-  return Promise.reject(error);
-});
-
-// Response interceptor
-axiosInstance.interceptors.response.use(
-  (response) => {
-    // console.log('API Response:', response.data);
-    return response;
-  },
-  (error) => {
-    const status = error?.response?.status;
-
-    // Hanya tampilkan log selain 401
-    if (status !== 401) {
-      console.error('Response interceptor error:', error);
-
-      // Detailed error logging
-      if (error.response) {
-        console.error('Error Details:', {
-          status: error.response.status,
-          data: error.response.data,
-          headers: error.response.headers,
-          config: error.config
-        });
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-      } else {
-        console.error('Error setting up request:', error.message);
+  
+  const axiosInstance = axios.create({
+    baseURL,
+    timeout: 120000, 
+    withCredentials: false,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    }
+  });
+  
+  // Request interceptor
+  axiosInstance.interceptors.request.use(function (config) {
+    const token = Cookies.get('token');
+    if (token && token !== 'mocked.jwt.token') {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  
+    return config;
+  }, function (error) {
+    console.error('Request interceptor error:', error);
+    return Promise.reject(error);
+  });
+  
+  // Response interceptor
+  axiosInstance.interceptors.response.use(
+    (response) => {
+      return response;
+    },
+    (error) => {
+      const status = error?.response?.status;
+  
+      // 401
+      if (status !== 401) {
+        console.error('Response interceptor error:', error);
+  
+        // Detailed error logging
+        if (error.response) {
+          console.error('Error Details:', {
+            status: error.response.status,
+            data: error.response.data,
+            headers: error.response.headers,
+          });
+        } else if (error.request) {
+          console.error('No response received:', error.request);
+        } else {
+          console.error('Error setting up request:', error.message);
+        }
       }
-
+  
       // Handle 401 Unauthorized
       if (status === 401) {
         Cookies.remove('token');
         Cookies.remove('id_user');
-
+        // Optionally redirect to login
         // if (typeof window !== 'undefined') {
         //   window.location.href = '/auth';
         // }
       }
-
-      // return Promise.reject(error);
+  
+      // Handle timeout errors
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        console.error('Request timeout - server may be slow or unavailable');
+        error.userMessage = 'Server response timeout. Please try again later.';
+      }
+  
+      // Handle network errors
+      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+        console.error('Network error - check connection or server status');
+        error.userMessage = 'Network error. Please check your connection.';
+      }
+  
       return Promise.reject(error);
     }
-  }
-);
-
-export default axiosInstance;
+  );
+  
+  export default axiosInstance;
+  
