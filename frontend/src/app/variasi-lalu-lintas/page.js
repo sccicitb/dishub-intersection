@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense, lazy } from 'react';
 import { getCuacaJogja } from '@/lib/weatherAccess';
 import { maps } from '@/lib/apiService';
 import SeasonalFactorTable from '@/app/components/SeasonalFactorTable';
+import CollapsibleSection from '@/components/CollapsibleSection';
 
 // const VehicleMonitoringTable = lazy(() => import('@/app/components/vehicleMonitoringTable'));
 const VehicleTable = lazy(() => import("@/app/components/vehicleTable"));
@@ -133,12 +134,29 @@ function SurveiLhrkPage () {
           {loading ? (<div className='my-5'>Loading...</div>) : (
             <VehicleTable activeCamera={activeSID} activeInterval={activeInterval} activePendekatan={activePendekatan} activePergerakan={activePergerakan} activeClassification={activeClassification} />
           )}
-          <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval} />
+          
+          <CollapsibleSection title="Tabel Klasifikasi Kendaraan" defaultOpen={false}>
+            <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval} />
+          </CollapsibleSection>
         </div>
-        <SeasonalFactorTable year={2025} simpangId={0} />
-        <WeeklyFactorTable year={2025} simpangId={0} />
-        <DailyVolumeTable year={2025} simpangId={0} />
-        <VolumeStatsChart />
+        
+        <div className="space-y-4 mt-8 w-[95%] m-auto">
+          <CollapsibleSection title="Faktor Variasi Musiman" defaultOpen={false}>
+            <SeasonalFactorTable year={2025} simpangId={activeSID || 0} />
+          </CollapsibleSection>
+          
+          <CollapsibleSection title="Faktor Variasi Mingguan" defaultOpen={false}>
+            <WeeklyFactorTable year={2025} simpangId={activeSID || 0} />
+          </CollapsibleSection>
+          
+          <CollapsibleSection title="Volume Harian" defaultOpen={false}>
+            <DailyVolumeTable year={2025} simpangId={activeSID || 0} />
+          </CollapsibleSection>
+          
+          <CollapsibleSection title="Grafik Statistik Volume" defaultOpen={false}>
+            <VolumeStatsChart />
+          </CollapsibleSection>
+        </div>
       </Suspense>
     </div>
   );

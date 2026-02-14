@@ -55,7 +55,7 @@ class UniversalListener {
     socket.on('connect', () => {
       console.log(`[Socket.io] [${conf.id}] ✓ Connected`);
       conf.topics.forEach(topic => {
-        socket.on(topic.trim(), (data) => this._processDatabase(data, conf.id, topic));
+        socket.on(topic.trim(), (data) => this._processDatabaseBulk(data, conf.id, topic));
       });
     });
 
@@ -93,7 +93,7 @@ class UniversalListener {
 
     client.on('message', (topic, msg) => {
       try {
-        this._processDatabase(JSON.parse(msg.toString()), conf.id, topic);
+        this._processDatabaseBulk(JSON.parse(msg.toString()), conf.id, topic);
       } catch (e) {
         console.error(`[MQTT] [${conf.id}] ✗ JSON Error:`, e.message);
       }
@@ -171,6 +171,87 @@ class UniversalListener {
       console.error(`[MQTT] [${source}] ✗ Error:`, error.message);
     }
     // Tidak perlu block finally/release jika menggunakan dbMain.query() secara langsung
+  }
+  async _processDatabaseBulk (data, source, topicName) {
+    try {
+      const payload = data.message ? data.message : data;
+      const { ID_Simpang, tipe_pendekat, arah_per_kelas, waktu } = payload;
+
+      if (!arah_per_kelas || typeof arah_per_kelas !== 'object') {
+        console.warn(`[${source}] [${topicName}] Skip: arah_per_kelas tidak ditemukan.`);
+        return;
+      }
+
+      const uniqueDirs = new Set();
+      Object.values(arah_per_kelas).forEach(vTypeObj => {
+        if (vTypeObj && typeof vTypeObj === 'object') {
+          Object.keys(vTypeObj).forEach(dir => uniqueDirs.add(dir));
+        }
+      });
+
+      if (uniqueDirs.size === 0) return;
+
+      // array penampungan semua baris (Bulk)
+      const allRows = [];
+
+      for (const fullDir of uniqueDirs) {
+        const [dari_arah, ke_arah] = fullDir.split('_to_');
+        const flow = { SM: 0, MP: 0, AUP: 0, TR: 0, BS: 0, TS: 0, TB: 0, BB: 0, GANDENG: 0, KTB: 0 };
+
+        Object.keys(flow).forEach(vType => {
+          if (arah_per_kelas[vType] && arah_per_kelas[vType][fullDir]) {
+            flow[vType] = arah_per_kelas[vType][fullDir];
+          }
+        });
+
+        // Data untuk satu baris (Urutan harus sesuai kolom di query INSERT)
+        const row = [
+          ID_Simpang, tipe_pendekat, dari_arah, ke_arah,
+          flow.SM, flow.MP, flow.AUP, flow.TR, flow.BS, flow.TS, flow.TB, flow.BB, flow.GANDENG, flow.KTB,
+          waktu, new Date(), new Date()
+        ];
+
+        allRows.push(row);
+
+        console.log(`[${source}] [${topicName}] ✓ Prepared: Simpang ${ID_Simpang} (${dari_arah} → ${ke_arah})`);
+        const vehicleData = Object.keys(flow).map(vType => `${vType}:${flow[vType]}`).join(', ');
+        console.log(`[${source}] [${topicName}] ⮕ Data: ${vehicleData}`);
+      }
+
+      // Eksekusi Bulk Insert
+      if (allRows.length > 0) {
+        const query = `
+          INSERT INTO arus_copy (
+            ID_Simpang, tipe_pendekat, dari_arah, ke_arah, 
+            SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB, 
+            waktu, created_at, updated_at
+          ) VALUES ?`;
+
+        // Pada library mysql/mysql2, bulk insert menggunakan [ [ [row1], [row2] ] ]
+        await dbMain.query(query, [allRows]);
+        console.log(`[${source}] [${topicName}] 🚀 Bulk Insert Success Arus Copy: ${allRows.length} rows saved to MariaDB.`);
+      }
+
+      // if (allRows.length > 0) {
+      //   const query = `
+      //     INSERT INTO arus (
+      //       ID_Simpang, tipe_pendekat, dari_arah, ke_arah, 
+      //       SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB, 
+      //       waktu, created_at, updated_at
+      //     ) VALUES ?`;
+
+      //   // Pada library mysql/mysql2, bulk insert menggunakan [ [ [row1], [row2] ] ]
+      //   await dbMain.query(query, [allRows]);
+      //   console.log(`[${source}] [${topicName}] 🚀 Bulk Insert Success Arus: ${allRows.length} rows saved to MariaDB.`);
+      // }
+
+      if (this.ioServer) {
+        this.ioServer.emit('flow_update', { ...payload, source, topic: topicName });
+      }
+
+    } catch (error) {
+      console.error(`[DATABASE ERROR] [${source}] [${topicName}] ✗:`, error.message);
+    }
   }
 }
 

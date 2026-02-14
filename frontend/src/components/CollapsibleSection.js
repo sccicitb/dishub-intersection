@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { IoMdArrowDropdown } from "react-icons/io";
 
 const CollapsibleSection = ({ title, children, defaultOpen = true }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [hasBeenOpened, setHasBeenOpened] = useState(defaultOpen);
+
+  useEffect(() => {
+    if (isOpen && !hasBeenOpened) {
+      setHasBeenOpened(true);
+    }
+  }, [isOpen, hasBeenOpened]);
 
   return (
     <div className="border border-base-300 rounded-lg overflow-hidden">
@@ -16,7 +23,7 @@ const CollapsibleSection = ({ title, children, defaultOpen = true }) => {
         </span>
       </button>
       <div style={{ display: isOpen ? 'block' : 'none' }} className="p-6">
-        {children}
+        {hasBeenOpened ? children : null}
       </div>
     </div>
   );

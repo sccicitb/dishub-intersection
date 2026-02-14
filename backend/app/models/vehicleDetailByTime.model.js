@@ -112,18 +112,29 @@ VehicleDetailByTime.getMasukKeluarDetailByTime = async (simpangId, date, interva
     const endDateTime = `${date} 23:59:59`;
 
     // Query all traffic data for the day
+    // OPTIMIZED: Aggregated by minute to reduce row count
     const query = `
       SELECT 
         dari_arah,
         ke_arah,
         HOUR(waktu) as hour,
         MINUTE(waktu) as minute,
-        SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB
+        SUM(CAST(SM AS UNSIGNED)) as SM,
+        SUM(CAST(MP AS UNSIGNED)) as MP,
+        SUM(CAST(AUP AS UNSIGNED)) as AUP,
+        SUM(CAST(TR AS UNSIGNED)) as TR,
+        SUM(CAST(BS AS UNSIGNED)) as BS,
+        SUM(CAST(TS AS UNSIGNED)) as TS,
+        SUM(CAST(TB AS UNSIGNED)) as TB,
+        SUM(CAST(BB AS UNSIGNED)) as BB,
+        SUM(CAST(GANDENG AS UNSIGNED)) as GANDENG,
+        SUM(CAST(KTB AS UNSIGNED)) as KTB
       FROM arus
       WHERE ID_Simpang = ?
         AND waktu >= ?
         AND waktu <= ?
-      ORDER BY waktu ASC
+      GROUP BY dari_arah, ke_arah, HOUR(waktu), MINUTE(waktu)
+      ORDER BY hour, minute
     `;
 
     const [rows] = await db.execute(query, [

@@ -38,16 +38,41 @@ function mapRowToAlias(row, includedSubCodes) {
   return data;
 }
 
+// OPTIMIZED: Aggregation directly in SQL to prevent fetching millions of rows
 const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, includedSubCodes, interval = '15min') => {
-  // Fallback ke VEHICLE_CODES jika includedSubCodes kosong
+  // Mapping DB columns to response keys
+  const columnMap = {
+    'SM': 'sm',
+    'MP': 'mp',
+    'AUP': 'aup',
+    'TR': 'tr',
+    'BS': 'bs',
+    'TS': 'ts',
+    'BB': 'bb',
+    'TB': 'tb',
+    'GANDENG': 'gandengSemitrailer',
+    'KTB': 'ktb'
+  };
+
   const codes = includedSubCodes && includedSubCodes.length > 0 
     ? includedSubCodes 
-    : ['SM', 'MP', 'AUP', 'TR', 'BS', 'TS', 'BB', 'TB', 'GANDENG', 'KTB'];
+    : Object.keys(columnMap);
   
-  // Buat SELECT clause
-  const selectFields = codes.join(', ');
-  let query = `SELECT waktu, ID_Simpang, dari_arah, ke_arah, ${selectFields} FROM arus WHERE waktu IS NOT NULL`;
-  const params = [];
+  const intervalMap = { '5min': 5, '10min': 10, '15min': 15, '1h': 60, '60min': 60 };
+  const intervalMinutes = intervalMap[interval.toLowerCase()] || 15;
+
+  // Build Aggregation Query
+  const sumFields = Object.keys(columnMap).map(col => `SUM(CAST(\`${col}\` AS UNSIGNED)) as \`${col}\``).join(', ');
+
+  let query = `
+    SELECT 
+      HOUR(waktu) as h, 
+      FLOOR(MINUTE(waktu) / ?) as min_block,
+      ${sumFields}
+    FROM arus 
+    WHERE 1=1
+  `;
+  const params = [intervalMinutes];
 
   if (simpangId) {
     query += ` AND ID_Simpang = ?`;
@@ -68,33 +93,83 @@ const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, i
     query += ` AND waktu BETWEEN ? AND ?`;
     params.push(`${formattedDate} 00:00:00`, `${formattedDate} 23:59:59`);
   } else {
+    // Default to today
     const now = new Date();
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    const start = `${year}-${month}-${day} 00:00:00`;
-
-    let end = new Date(now);
-    const minutes = now.getMinutes();
-    const roundedMinutes = Math.ceil((minutes + 1) / 15) * 15;
-    if (roundedMinutes === 60) {
-      end.setHours(end.getHours() + 1);
-      end.setMinutes(0, 0, 0);
-    } else {
-      end.setMinutes(roundedMinutes, 0, 0);
-    }
-    const fmt = d => d.toISOString().replace('T', ' ').substring(0, 19);
+    const formattedDate = now.toISOString().slice(0, 10);
     query += ` AND waktu BETWEEN ? AND ?`;
-    params.push(start, fmt(end));
+    params.push(`${formattedDate} 00:00:00`, `${formattedDate} 23:59:59`);
   }
+
+  query += ` GROUP BY h, min_block`;
 
   const [rows] = await db.query(query, params);
 
-  // Pass codes yang digunakan ke getPeriodsAndSlots untuk aggregation yang tepat
-  const vehicleData = getPeriodsAndSlots(rows, interval, codes).map(period => ({
-    period: period.name,
-    timeSlots: period.timeSlots
-  }));
+  // Map result for fast lookup
+  const dataMap = {};
+  rows.forEach(row => {
+    const minuteStart = row.min_block * intervalMinutes;
+    const key = `${row.h}:${minuteStart}`;
+    dataMap[key] = row;
+  });
+
+  // Reconstruct Periods Structure (duplicated from helper/arus.js to remain independent)
+  const PERIODS = [
+    { name: 'Dini Hari', start: '00:00', end: '05:59' },
+    { name: 'Pagi', start: '06:00', end: '11:59' },
+    { name: 'Siang', start: '12:00', end: '15:59' },
+    { name: 'Sore', start: '16:00', end: '18:59' },
+    { name: 'Malam', start: '19:00', end: '23:59' }
+  ];
+
+  const toMinutes = (hhmm) => {
+    const [h, m] = hhmm.split(':').map(Number);
+    return h * 60 + m;
+  };
+  const fromMinutes = (min) => {
+    return `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
+  };
+
+  const vehicleData = PERIODS.map(period => {
+    const slots = [];
+    let t = toMinutes(period.start);
+    const e = toMinutes(period.end);
+
+    while (t < e) {
+      const currentH = Math.floor(t / 60);
+      const currentM = t % 60;
+      const key = `${currentH}:${currentM}`;
+      const row = dataMap[key];
+
+      const slotStart = fromMinutes(t);
+      const slotEnd = fromMinutes(t + intervalMinutes);
+      
+      const slotData = {};
+      let total = 0;
+      
+      Object.keys(columnMap).forEach(dbCol => {
+        const val = row ? Number(row[dbCol]) : 0;
+        slotData[columnMap[dbCol]] = val;
+        
+        if (codes.includes(dbCol)) {
+          total += val;
+        }
+      });
+      slotData.total = total;
+
+      slots.push({
+        time: `${slotStart} - ${slotEnd}`,
+        status: row ? 1 : 0,
+        data: slotData
+      });
+
+      t += intervalMinutes;
+    }
+
+    return {
+      period: period.name,
+      timeSlots: slots
+    };
+  });
 
   return { vehicleData };
 };
@@ -656,22 +731,36 @@ const buildMovementDirectionMatrix = (asalTujuanMatrix, directions) => {
  */
 const getAvailableDirections = async (simpangId) => {
   try {
+    // OPTIMIZATION: Scan only recent records to find active directions
+    // Scanning the entire 'arus' table (millions of rows) causes timeouts
     const query = `
       SELECT DISTINCT LOWER(dari_arah) as direction
-      FROM arus
-      WHERE ID_Simpang = ?
-        AND dari_arah IS NOT NULL
+      FROM (
+        SELECT dari_arah 
+        FROM arus 
+        WHERE ID_Simpang = ? 
+        ORDER BY waktu DESC 
+        LIMIT 2000
+      ) as recent
+      WHERE dari_arah IS NOT NULL
         AND dari_arah != ''
       ORDER BY direction
     `;
 
     const [rows] = await db.query(query, [simpangId]);
-    const directions = rows.map(row => row.direction);
+    let directions = rows.map(row => row.direction);
+
+    // Fallback: If query return empty (rarely used simpang) or error, return standard directions
+    if (directions.length === 0) {
+      // Return standard directions as fallback
+      directions = ['east', 'north', 'south', 'west'];
+    }
 
     return directions;
   } catch (error) {
     console.error('Error in getAvailableDirections:', error);
-    throw new Error(`Database query failed: ${error.message}`);
+    // Return standard directions instead of throwing to prevent UI crash
+    return ['east', 'north', 'south', 'west'];
   }
 };
 
