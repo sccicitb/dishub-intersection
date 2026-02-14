@@ -69,21 +69,21 @@ export default function Auth () {
           className="p-6 bg-white/90 shadow-md backdrop-blur-2xl rounded-2xl w-96 gap-2 flex flex-col pt-5 pb-5 z-10"
         >
           <div className="text-left gap-2 flex flex-col">
-            <div className="flex items-center w-full justify-between">
-              <div className='w-full'>
-                <h3 className="text-[14px] tracking-wide font-semibold text-wrap">Viana Smart Mobility Dashboard <br />Dinas Perhubungan Provinsi Daerah Istimewa Yogyakarta</h3>
-              </div>
+              {/* <h4 className="text-[20px] tracking-wide font-semibold text-left">Selamat Datang</h4> */}
+            <div className="flex gap-5 items-center w-full justify-center">
               <Image
                 src="/image/dishub-jogja-logo.png"
                 alt="Logo Viana"
-                width={80}
-                height={80}
+                width={50}
+                height={50}
                 className={`transition-opacity py-5 drop-shadow-2xl duration-500 ${loaded ? 'opacity-100' : 'opacity-0'
                   }`}
                 onLoadingComplete={() => setLoaded(true)}
               />
+              <div className='w-full'>
+                <h3 className="text-[16px] tracking-wide text-wrap font-bold">Viana Smart Mobility<br /><span className='font-normal'>Dinas Perhubungan Provinsi Daerah Istimewa Yogyakarta</span></h3>
+              </div>
             </div>
-            <h4 className="text-[20px] tracking-wide font-semibold">Selamat Datang</h4>
           </div>
 
           <fieldset className="fieldset">
