@@ -281,11 +281,14 @@ function SurveiProporsi () {
       return;
     }
 
-    console.log(building)
-
     try {
-      setActiveSimpang(building.camera.name);
-      setActiveCamera(building.camera.id);
+      if (building.camera && building.camera.id) {
+        setActiveSimpang(building.camera.name || "Tanpa Nama");
+        setActiveCamera(building.camera.id);
+      } else if (building.id) {
+        setActiveSimpang(building.name || building.title || "Tanpa Nama");
+        setActiveCamera(building.id);
+      }
     } catch (error) {
       console.error("Error in handleMapClick:", error);
     }

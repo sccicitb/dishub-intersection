@@ -785,16 +785,27 @@ Vehicle.getTrafficMatrixByCategory = async (simpangId, filter = 'day', startDate
   try {
     const dateFilterClause = getDateFilterClause(filter, startDate, endDate);
     
-    // Query to get all vehicle categories (columns) grouped by origin-destination
+    // Query to get aggregated vehicle categories grouped by origin-destination
+    // OPTIMIZED: Uses aggregation (SUM) in database instead of fetching all rows
     const sql = `
       SELECT 
         dari_arah,
         ke_arah,
-        SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB
+        SUM(CAST(SM AS UNSIGNED)) as SM,
+        SUM(CAST(MP AS UNSIGNED)) as MP,
+        SUM(CAST(AUP AS UNSIGNED)) as AUP,
+        SUM(CAST(TR AS UNSIGNED)) as TR,
+        SUM(CAST(BS AS UNSIGNED)) as BS,
+        SUM(CAST(TS AS UNSIGNED)) as TS,
+        SUM(CAST(TB AS UNSIGNED)) as TB,
+        SUM(CAST(BB AS UNSIGNED)) as BB,
+        SUM(CAST(GANDENG AS UNSIGNED)) as GANDENG,
+        SUM(CAST(KTB AS UNSIGNED)) as KTB
       FROM arus 
       WHERE ID_Simpang = ? 
         AND ${dateFilterClause}
         AND dari_arah != ke_arah
+      GROUP BY dari_arah, ke_arah
       ORDER BY dari_arah, ke_arah
     `;
     

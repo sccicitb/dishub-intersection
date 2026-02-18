@@ -115,17 +115,17 @@ const Layout = ({ children }) => {
       <div className="drawer 2xl:drawer-open">
         <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content flex flex-col">
-          <div className="navbar bg-[#232f61]/90 w-full sticky top-0 z-[20] 2xl:z-[40] h-16">
+          <div className="navbar flex justify-between 2xl:justify-end bg-[#232f61]/90 w-full sticky top-0 z-[20] 2xl:z-[40] h-16">
             <div className="flex-none 2xl:hidden">
               <label htmlFor="my-drawer-2" aria-label="open sidebar" className="btn btn-square btn-ghost">
                 <Icons.AiOutlineMenu className="inline-block text-xl" />
               </label>
             </div>
-            {pathname !== "/dashboard/mobility" && (
+            {/* {pathname !== "/dashboard/mobility" && (
               <div className="lg:mx-2 flex-1 lg:px-2 font-semibold w-fit xl:w-full xl:justify-center flex not-xl:overflow-hidden not-xl:text-ellipsis">
                 <Breadcrumbs />
               </div>
-            )}
+            )} */}
             {pathname !== "/dashboard/mobility" && (
               <div className="flex-none">
                 <div className="flex menu-horizontal items-center gap-2">

@@ -51,9 +51,16 @@ const getBuildingsWithCameras = async () => {
   return { buildings, cameras };
 };
 
+// Ambil simpang berdasarkan ID
+const getSimpangById = async (id) => {
+  const [rows] = await db.query(`SELECT * FROM simpang WHERE id = ?`, [id]);
+  return rows[0];
+};
+
 module.exports = {
   getBuildings,
   getBuildingsRaw,
   getAllCamerasRaw,
-  getBuildingsWithCameras
+  getBuildingsWithCameras,
+  getSimpangById
 };

@@ -49,9 +49,13 @@ const getVehicleSummaryData = async (req, res) => {
     const classificationPath = path.join(__dirname, '../data/classification.json');
     const classificationJson = JSON.parse(fs.readFileSync(classificationPath, 'utf-8'));
     const rawSubCodes = classificationJson
-      .filter(item => item.type === filters.classificationType)
+      .filter(item => item.type === filters.classificationType || item.title === filters.classificationType)
       .map(item => item.subCode);
     const includedSubCodes = rawSubCodes.map(code => subCodeMap[code] || code);
+
+    if (includedSubCodes.length === 0) {
+      return res.status(400).json({ error: 'Klasifikasi tidak ditemukan atau code kosong. Pastikan parameter classification sesuai.' });
+    }
 
     const reportType = req.query.reportType || 'hourly'; 
 
@@ -106,15 +110,12 @@ const getVehicleSummaryData = async (req, res) => {
         ? monthsCSV.split(',').map(m => parseInt(m.trim(), 10)).filter(m => m >= 1 && m <= 12)
         : [1,2,3,4,5,6,7,8,9,10,11,12];
 
-      const allMonthsData = [];
-      for (const m of monthList) {
-        const oneMonthData = await surveyModel.getMonthlySummary(
-          m, year,
-          { simpangId: filters.simpangId, approach: filters.approach, direction: filters.direction },
-          includedSubCodes
-        );
-        allMonthsData.push(oneMonthData);
-      }
+      // OPTIMIZED: Fetch all months in one go
+      const allMonthsData = await surveyModel.getMonthsSummary(
+        monthList, year,
+        { simpangId: filters.simpangId, approach: filters.approach, direction: filters.direction },
+        includedSubCodes
+      );
 
       const lhrkData = allMonthsData.map(mObj => {
         const daysInPeriod = mObj.days.length;

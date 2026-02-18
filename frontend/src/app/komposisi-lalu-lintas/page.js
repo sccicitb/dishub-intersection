@@ -135,7 +135,7 @@ function KomposisiLaluLintasPage () {
     <div>
       <ToastContainer />
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
-        <MapComponent title={activeStates.title[0]} onClick={handleClick} onClickSimpang={handleClickSimpang} />
+        <MapComponent title={activeStates.title[0]} onClick={handleClick} onClickSimpang={handleClickSimpang} showAllOption={false} />
         <div className="w-[95%] m-auto">
           <div className="flex flex-col max-lg:flex-col items-center place-items-center max-lg:space-y-5 py-5 gap-5">
             <HeaderSurvei simpangId={activeSimpangId} selectedDate={dateInput} arahPergerakan={activeStates.pendekatan[0]} />
@@ -245,7 +245,7 @@ function KomposisiLaluLintasPage () {
                 />
               </Suspense>
             </CollapsibleSection>
-            <CollapsibleSection title="Data Pergerakan Dengan Filter Interval">
+            <CollapsibleSection title="Data Pergerakan Dengan Filter Interval" defaultOpen={false}>
               <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
                 <TrafficMatrixByFilter2
                   ref={trafficMatrixByFilterRef}
@@ -254,7 +254,7 @@ function KomposisiLaluLintasPage () {
                 />
               </Suspense>
             </CollapsibleSection>
-            <CollapsibleSection title="Detail Kendaraan Per Interval">
+            <CollapsibleSection title="Detail Kendaraan Per Interval" defaultOpen={false}>
               <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
                 <VehicleDetailByInterval
                   ref={vehicleDetailByIntervalRef}
@@ -263,7 +263,7 @@ function KomposisiLaluLintasPage () {
                 />
               </Suspense>
             </CollapsibleSection>
-            <CollapsibleSection title="Ringkasan Kendaraan Per Interval">
+            <CollapsibleSection title="Ringkasan Kendaraan Per Interval" defaultOpen={false}>
               <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
                 <SimplifiedVehicleSummary
                   ref={simplifiedSummaryRef}
@@ -272,7 +272,7 @@ function KomposisiLaluLintasPage () {
                 />
               </Suspense>
             </CollapsibleSection>
-            <CollapsibleSection title="Masuk/Keluar Kota Jogja Per Interval">
+            <CollapsibleSection title="Masuk/Keluar Kota Jogja Per Interval" defaultOpen={false}>
               <Suspense fallback={<div className="flex justify-center"><span className="loading loading-spinner loading-lg"></span></div>}>
                 <CityTrafficSummary
                   ref={cityTrafficRef}

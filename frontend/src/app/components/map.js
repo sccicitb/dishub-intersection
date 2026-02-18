@@ -89,7 +89,7 @@ const MapController = ({
 }
 
 
-const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false }) => {
+const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false, showAllOption = true }) => {
   // === State ===
   const [shouldRenderMap, setShouldRenderMap] = useState(false);
   const [theme, setTheme] = useState("light");
@@ -248,6 +248,18 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
       const featureCollection = turf.featureCollection(coordinates.map(coord => turf.point(coord)));
       setBounds(turf.bbox(featureCollection));
       setFocusBuilding(null); // Clear specific focus to allow fitting
+      
+      // Update parent component state for "semua"
+      const allSimpangData = {
+         id: "semua",
+         Nama_Simpang: "Semua Simpang",
+         simpang: "semua"
+      };
+      
+      // If onClickSimpang prop is provided, call it
+      if (onClickSimpang) {
+          onClickSimpang(allSimpangData);
+      }
     }
   };
 
@@ -362,22 +374,27 @@ const MapComponent = ({ title, onClick, sizeHeight, onClickSimpang, form = false
               onToggle={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
               label="Pilih Lokasi"
             >
-              <DropdownItem
-                label="Semua Simpang"
-                icon={<FaMapMarkerAlt />}
-                onClick={() => {
-                  handleFitAll();
-                  handleCameraSelect({ id: "semua", name: "Semua Kamera", socket_event: "all" });
-                  setIsLocationDropdownOpen(false);
-                }}
-              />
+              {showAllOption && (
+                <DropdownItem
+                  label="Semua Simpang"
+                  icon={<FaMapMarkerAlt />}
+                  onClick={() => {
+                    handleFitAll();
+                    handleCameraSelect({ id: "semua", name: "Semua Kamera", socket_event: "all", simpang: "semua" });
+                    if (onClick) {
+                      onClick({ id: "semua", name: "Semua Kamera", socket_event: "all", simpang: "semua" }); 
+                    }
+                    setIsLocationDropdownOpen(false);
+                  }}
+                />
+              )}
               {buildings.map((building) => (
                 <DropdownItem
                   key={building.id}
                   label={building.Nama_Simpang}
                   icon={<FaMapMarkerAlt />}
                   onClick={() => {
-                    setFocusBuilding(building);
+                    handleMarkerClick(building);
                     setIsLocationDropdownOpen(false);
                   }}
                 />
