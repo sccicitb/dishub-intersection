@@ -58,7 +58,8 @@ const DaysVehicleTable = ({ monthlyData, startDate, endDate, setStartDate, setEn
     }
 
     setLoading(false);
-  }, [monthlyData, type, setStartDate, setEndDate, setParentSelectedMonth, setParentSelectedYear]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monthlyData, type]);
 
   const getAllDaysFromData = (dailyData) => {
     return dailyData.flatMap(month => month.days || []);

@@ -61,22 +61,10 @@ function SurveiSimpangPage () {
   // Fetch initial camera & vehicle data
 
   useEffect(() => {
-    // Fetch simpang data first to get the ID
-    const fetchSimpangData = async () => {
-      try {
-        const simpangRes = await maps.getAllSimpang();
-        const simpangData = Array.isArray(simpangRes?.data?.simpang) ? simpangRes.data.simpang : [];
-
-        if (simpangData.length > 0 && simpangData[0]?.id) {
-          setActiveSimpangId(simpangData[0].id);
-        }
-        setFetchStatus(true)
-      } catch (err) {
-        console.error('Error fetching simpang data:', err);
-      }
-    };
-
-    fetchSimpangData();
+    // Set default to 'semua' instead of fetching first simpang
+    setActiveSimpangId('semua');
+    setActiveSimpang('Semua Simpang');
+    setFetchStatus(true);
   }, []);
 
   useEffect(() => {
@@ -99,9 +87,12 @@ function SurveiSimpangPage () {
 
         setDataCamera(cameraData);
         let cuaca;
-        if (cameraData.length > 0 && cameraData[0]?.id) {
+        if (activeSimpangId !== 'semua' && cameraData.length > 0 && cameraData[0]?.id) {
           setActiveCamera(cameraData[0].id);
           setActiveSimpang(cameraData[0].name || '');
+        } else if (activeSimpangId === 'semua') {
+            setActiveCamera(0)
+            setActiveSimpang('Semua Simpang')
         }
 
         // Don't override user's selected simpang ID - only use for weather if available
@@ -163,6 +154,12 @@ function SurveiSimpangPage () {
 
   useEffect(() => {
     if (!activeSimpangId) return;
+
+    // Skip API call if "semua" is selected
+    if (activeSimpangId === 'semua') {
+      setDataSimpangById({});
+      return;
+    }
 
     const timer2 = setTimeout(async () => {
       setLoading(true);
@@ -301,10 +298,17 @@ function SurveiSimpangPage () {
     try {
       let cameraId, cameraTitle, socketEvent;
       // Handle different data structures
-      if (building.camera.id) {
+      if (building.camera && building.camera.id) {
         cameraId = building.camera.id;
         cameraTitle = building.camera.name || building.camera.title;
         socketEvent = building.camera.socket_event;
+      } else if (building.id) {
+        // Fallback: assume building itself is the camera object if it has id but no camera property
+        // OR it's a building object without cameras being treated as a camera selection?
+        // Let's assume it might be a direct camera object passed
+        cameraId = building.id;
+        cameraTitle = building.name || building.title || "Tanpa Nama";
+        socketEvent = building.socket_event || "not_yet_assign";
       } else {
         console.error("Cannot find camera ID in building data:", building);
         return;
@@ -333,8 +337,24 @@ function SurveiSimpangPage () {
   };
 
   async function handleClickSimpang (loc) {
+    if (loc && (loc.simpang === "semua" || loc.id === "semua")) {
+      setActiveTitle("Survei Semua Simpang");
+      setActiveSimpangId("semua");
+      setCuaca("Cerah");
+      await fetchVehicleData("semua");
+      return;
+    }
+
     let name = loc.Nama_Simpang
-    const cuaca = await getCuacaJogja(loc.latitude, loc.longitude);
+    // Only fetch weather if not "semua"
+    let cuaca = "Cerah";
+    try {
+      if (loc.latitude && loc.longitude) {
+        cuaca = await getCuacaJogja(loc.latitude, loc.longitude);
+      }
+    } catch (e) {
+      console.warn("Weather fetch failed", e);
+    }
 
     if (!name.toLowerCase().includes("simpang")) {
       name = "Simpang " + name

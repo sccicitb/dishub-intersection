@@ -8,7 +8,8 @@ import { exportSeasonalFactor } from '@/utils/excelExportFactor';
 
 const SeasonalFactorTable = ({
   year: initialYear = new Date().getFullYear(),
-  simpangId: rawSimpangId = 'semua'
+  simpangId: rawSimpangId = 'semua',
+  namaSimpang = ''
 }) => {
   const simpangId = (rawSimpangId === 0 || rawSimpangId === '0') ? 'semua' : rawSimpangId;
   const [selectedYear, setSelectedYear] = useState(initialYear);
@@ -75,7 +76,7 @@ const SeasonalFactorTable = ({
         <div>
           <h3 className="text-lg font-bold text-gray-800">Tabel Faktor Musiman (Seasonal Factor)</h3>
           <div className="text-sm text-gray-500 mt-1">
-            Lokasi: <span className="font-medium">{simpangId === 'semua' ? 'Semua Simpang' : `Simpang ${simpangId}`}</span>
+            Lokasi: <span className="font-medium">{simpangId === 'semua' ? 'Semua Simpang' : `Simpang ${namaSimpang}`}</span>
           </div>
         </div>
 

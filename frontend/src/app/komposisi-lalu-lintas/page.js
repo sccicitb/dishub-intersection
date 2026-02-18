@@ -135,7 +135,7 @@ function KomposisiLaluLintasPage () {
     <div>
       <ToastContainer />
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
-        <MapComponent title={activeStates.title[0]} onClick={handleClick} onClickSimpang={handleClickSimpang} />
+        <MapComponent title={activeStates.title[0]} onClick={handleClick} onClickSimpang={handleClickSimpang} showAllOption={false} />
         <div className="w-[95%] m-auto">
           <div className="flex flex-col max-lg:flex-col items-center place-items-center max-lg:space-y-5 py-5 gap-5">
             <HeaderSurvei simpangId={activeSimpangId} selectedDate={dateInput} arahPergerakan={activeStates.pendekatan[0]} />

@@ -1,17 +1,12 @@
 "use client";
-import { useState, useEffect, Suspense, lazy } from 'react';
-import { getCuacaJogja } from '@/lib/weatherAccess';
-import { maps } from '@/lib/apiService';
+import { useState, Suspense, lazy } from 'react';
 import SeasonalFactorTable from '@/app/components/SeasonalFactorTable';
 import CollapsibleSection from '@/components/CollapsibleSection';
 
-// const VehicleMonitoringTable = lazy(() => import('@/app/components/vehicleMonitoringTable'));
-const VehicleTable = lazy(() => import("@/app/components/vehicleTable"));
+// Lazy imports
+const VehicleTable = lazy(() => import("@/app/components/vehicleTable").then(module => ({ default: module.VehicleTable })));
 const ClasificationTable = lazy(() => import("@/app/components/clasificationTable"));
-const SurveyInfoTable = lazy(() => import("@/app/components/surveyorTable"));
 const SelectionButtons = lazy(() => import("@/app/components/selectionButton"));
-const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
-const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const MapComponent = lazy(() => import("@/app/components/map"));
 const HeaderSurvei = lazy(() => import("@/app/components/headerLhrt"));
 const WeeklyFactorTable = lazy(() => import('@/app/components/WeeklyFactorTable'));
@@ -19,140 +14,136 @@ const DailyVolumeTable = lazy(() => import('@/app/components/DailyVolumeTable'))
 const VolumeStatsChart = lazy(() => import('@/app/components/VolumeStatsChart'));
 
 function SurveiLhrkPage () {
-  const [loading, setLoading] = useState(false);
-  const [activeSurveyor, setActiveSurveyor] = useState('Semua');
+  const [loading] = useState(false);
+  const [namaSimpang, setNamaSimpang] = useState("Semua Simpang");
   const [activeClassification, setActiveClassification] = useState('PKJI 2023 Luar Kota');
-  const [activePendekatan, setActivePendekatan] = useState('Semua');
+  const [activePendekatan, setActivePendekatan] = useState('');
   const [activeInterval, setActiveInterval] = useState('');
-  const [activePergerakan, setActivePergerakan] = useState('Semua');
-  const [activeSimpang, setActiveSimpang] = useState("");
-  const [vehicleData, setVehicleData] = useState([]);
-  const [activeSimpangId, setActiveSimpangId] = useState(0)
-  const [activeCamera, setActiveCamera] = useState(1);
-  const [activeSID, setActiveSID] = useState();
+  const [activePergerakan, setActivePergerakan] = useState('');
   const [activeTitle, setActiveTitle] = useState("Survei Variasi Lalu Lintas");
-  const [Cuaca, setCuaca] = useState("")
-  const [fetchStatus, setFetchStatus] = useState(false)
-  const [selectedDate, setSelectedDate] = useState(new Date());  
+  const [activeSID, setActiveSID] = useState("semua");
+  const [selectedDate] = useState(new Date());
 
-  useEffect(() => {
-    // Fetch simpang data first to get the ID
-    const fetchSimpangData = async () => {
-      try {
-        const simpangRes = await maps.getAllSimpang();
-        const simpangList = Array.isArray(simpangRes?.data?.simpang) ? simpangRes.data.simpang : [];
-
-        let cuaca;
-        if (simpangList.length > 0 && simpangList[0]?.id) {
-          cuaca = await getCuacaJogja(simpangList[0].latitude, simpangList[0].longitude);
-          setActiveSID(simpangList[0].id);
-        }
-
-        setCuaca(cuaca);
-        setFetchStatus(true);
-      } catch (err) {
-        console.error('Error fetching simpang data:', err);
-      }
-    };
-
-    fetchSimpangData();
-  }, []);
-
+  // Handler saat titik di peta (kamera/bangunan) diklik
   const handleClick = (building) => {
-    // Pastikan objek valid dan memiliki properti kamera
-    if (!building) {
-      console.warn("Invalid building or camera data", building);
+    if (!building) return;
+
+    // Jika "semua" dipilih dari map
+    if (building.id === "semua" || building.simpang === "semua") {
+      setNamaSimpang("Semua Simpang");
+      setActiveTitle("Survei Semua Simpang");
+      setActiveSID("semua");
       return;
     }
+
     try {
-      const title = building.camera.name || "Tanpa Nama";
-      setActiveSimpang(title);
-      setActiveCamera(building.camera.id);
+      if (building.camera) {
+        console.log("Marker clicked:", building.camera.ID_Simpang);
+        // Prioritaskan ID Simpang. Jika ada ID Simpang, gunakan itu.
+        const simpangId = building.camera.ID_Simpang || building.camera.id;
+        const title = building.camera.Nama_Simpang || building.camera.name || "Tanpa Nama";
+        
+        setNamaSimpang(building.Nama_Simpang || title);
+        setActiveTitle("Survei " + (building.Nama_Simpang || title));
+        setActiveSID(simpangId);
+      } else if (building.id) {
+        // Fallback jika tidak ada properti camera
+        const title = building.name || building.title || "Tanpa Nama";
+        setNamaSimpang(title);
+        setActiveTitle("Survei " + title);
+        setActiveSID(building.id);
+      }
     } catch (error) {
-      console.error("Error in handleClick:", error);
+      console.error("Error setting simpang:", error);
     }
   };
 
+  // Handler saat area simpang diklik
   function handleClickSimpang (loc) {
-
-
-    // Handle "Semua Simpang" case
-    if (loc && loc.simpang === "semua") {
+    if (loc && (loc.simpang === "semua" || loc.id === "semua")) {
+      setNamaSimpang("Semua Simpang");
       setActiveTitle("Survei Semua Simpang");
       setActiveSID("semua");
-      setActiveSimpangId("semua");
       return;
     }
 
-    // Handle individual simpang case
-    if (!loc || !loc.Nama_Simpang) {
-      console.error("Invalid loc data:", loc);
-      return;
-    }
-
+    if (!loc || !loc.Nama_Simpang) return;
+    
+    setNamaSimpang(loc.Nama_Simpang);
     let name = loc.Nama_Simpang;
     if (!name.toLowerCase().includes("simpang")) {
       name = "Simpang " + name;
     }
     setActiveTitle("Survei " + name);
     setActiveSID(loc.id);
-    setActiveSimpangId(loc.id);
   }
+
   return (
-    <div>
-      <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
+    <div className="pb-10">
+      <Suspense fallback={<div className="text-center font-medium m-auto py-10 w-full">Loading Survei...</div>}>
+
+        {/* Peta Utama */}
         <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
+
         <div className="w-[95%] m-auto">
-             {/* <SurveyInfoTable fetchStatus={fetchStatus} id={activeSID} cuaca={Cuaca} /> */}
-          <div className="flex flex-col max-lg:flex-col items-center place-items-center max-lg:space-y-5 py-5 gap-5">
-              <HeaderSurvei simpangId={activeSID} selectedDate={selectedDate} arahPergerakan={activePergerakan} />
-            <div className="w-full justify-end flex flex-col">
-              <SelectionButtons vehicleData={vehicleData}
-                activeSurveyor={activeSurveyor}
-                setActiveSurveyor={setActiveSurveyor}
+          <div className="flex flex-col items-center py-5 gap-5">
+            {/* Header Laporan */}
+            <HeaderSurvei simpangId={activeSID} selectedDate={selectedDate} arahPergerakan={activePergerakan} />
+
+            {/* Control Panel (Filter) */}
+            <div className="w-full">
+              <SelectionButtons
+                activeSID={activeSID}
+                setActiveSID={setActiveSID} 
+                activeInterval={activeInterval}
+                setActiveInterval={setActiveInterval}
                 activeClassification={activeClassification}
                 setActiveClassification={setActiveClassification}
-                setActiveInterval={setActiveInterval}
-                activeInterval={activeInterval}
                 activePendekatan={activePendekatan}
                 setActivePendekatan={setActivePendekatan}
                 activePergerakan={activePergerakan}
                 setActivePergerakan={setActivePergerakan}
-                interval
+                // Toggle tampilan filter sesuai kebutuhan halaman ini
+                showInterval={true}
+                showPendekatan={true}
+                showArah={true}
+                showExport={false}
               />
             </div>
           </div>
-          {/* <div className="w-full flex justify-end mb-4">
-            <label className="mr-2 font-medium">Pilih Tanggal:</label>
-            <input
-              type="date"
-              className="border rounded px-2 py-1"
-              value={dateInput}
-              onChange={(e) => setDateInput(e.target.value)}
-            />
-          </div> */}
-          {loading ? (<div className='my-5'>Loading...</div>) : (
-            <VehicleTable activeCamera={activeSID} activeInterval={activeInterval} activePendekatan={activePendekatan} activePergerakan={activePergerakan} activeClassification={activeClassification} />
-          )}
-          
-          <CollapsibleSection title="Tabel Klasifikasi Kendaraan" defaultOpen={false}>
-            <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval} />
-          </CollapsibleSection>
+
+          {/* Tabel Utama Kendaraan */}
+          <div className="mt-4">
+            {loading ? (
+              <div className='my-10 text-center animate-pulse'>Memuat Data Tabel...</div>
+            ) : (
+              <VehicleTable
+                activeCamera={activeSID}
+                activeInterval={activeInterval}
+                activePendekatan={activePendekatan}
+                activePergerakan={activePergerakan}
+                activeClassification={activeClassification}
+              />
+            )}
+          </div>
+
+          <ClasificationTable typeClass={activeClassification} activeInterval={activeInterval} />
         </div>
-        
-        <div className="space-y-4 mt-8 w-[95%] m-auto">
+
+        {/* Bagian Statistik Tambahan (Collapsible) */}
+        <div className="space-y-4 mt-12 w-[95%] m-auto">
           <CollapsibleSection title="Faktor Variasi Musiman" defaultOpen={false}>
-            <SeasonalFactorTable year={2025} simpangId={activeSID || 0} />
+            <SeasonalFactorTable year={2025} simpangId={activeSID || 0} namaSimpang={namaSimpang} />
           </CollapsibleSection>
-          
+
           <CollapsibleSection title="Faktor Variasi Mingguan" defaultOpen={false}>
             <WeeklyFactorTable year={2025} simpangId={activeSID || 0} />
           </CollapsibleSection>
-          
+
           <CollapsibleSection title="Volume Harian" defaultOpen={false}>
             <DailyVolumeTable year={2025} simpangId={activeSID || 0} />
           </CollapsibleSection>
-          
+
           <CollapsibleSection title="Grafik Statistik Volume" defaultOpen={false}>
             <VolumeStatsChart />
           </CollapsibleSection>
@@ -161,4 +152,5 @@ function SurveiLhrkPage () {
     </div>
   );
 }
-export default SurveiLhrkPage 
+
+export default SurveiLhrkPage;

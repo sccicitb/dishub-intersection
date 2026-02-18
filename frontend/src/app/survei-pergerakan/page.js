@@ -261,11 +261,27 @@ function MovePage () {
       console.warn("Invalid building or camera data", building);
       return;
     }
+    
+    // Check if handling for "semua" is needed here too? Assuming standard behavior for now.
+    if (building.id === "semua" || building.simpang === "semua") {
+      // Assuming behavior similar to other pages, but context is different (survei-pergerakan)
+      // If not needed, just the safety check is fine.
+      // But let's stay safer with property access
+    }
+
     try {
-      const title = building.camera.name || "Tanpa Nama";
-      setActiveTitle("Survei " + title);
-      setActiveSimpang(title);
-      setActiveCamera(building.camera.camera_id);
+      if (building.camera) {
+        const title = building.camera.name || "Tanpa Nama";
+        setActiveTitle("Survei " + title);
+        setActiveSimpang(title);
+        if (building.camera.camera_id) setActiveCamera(building.camera.camera_id);
+      } else if (building.id) {
+         // Fallback if no camera property
+         const title = building.name || "Tanpa Nama";
+         setActiveTitle("Survei " + title);
+         setActiveSimpang(title);
+         // camera_id might not be available, handle gracefully
+      }
     } catch (error) {
       console.error("Error in handleClick:", error);
     }

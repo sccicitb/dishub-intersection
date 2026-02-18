@@ -13,6 +13,23 @@ const HeaderSurvei = ({ simpangId, selectedDate, arahPergerakan }) => {
         return;
       }
 
+      if (simpangId === "semua") {
+        setSimpangData({
+          cuaca: 'Cerah', 
+          metodeSurvei: 'Semua Data',
+          lokasi: 'Semua Simpang',
+          kabupaten: 'Yogyakarta',
+          kecamatan: '-',
+          lebarJalur: '-',
+          jumlahLajur: '-',
+          median: '-',
+          belokKiriJalanTerus: '-',
+          hambatanSamping: '-'
+        });
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         const detailRes = await maps.getById(simpangId);
@@ -76,16 +93,16 @@ const HeaderSurvei = ({ simpangId, selectedDate, arahPergerakan }) => {
 
   // Default values if data not loaded yet
   const data = simpangData || {
-    cuaca: 'Cerah berawan',
+    cuaca: '',
     metodeSurvei: 'Pencacahan Lalu Lintas ( Volume Kendaraan)',
-    lokasi: 'Simpang Condongcatur',
-    kabupaten: 'Sleman',
-    kecamatan: 'Depok',
-    lebarJalur: '7 meter',
-    jumlahLajur: '2 lajur',
-    median: 'Ada',
-    belokKiriJalanTerus: 'Ya',
-    hambatanSamping: 'Tinggi'
+    lokasi: '',
+    kabupaten: '',
+    kecamatan: '',
+    lebarJalur: '',
+    jumlahLajur: '',
+    median: '',
+    belokKiriJalanTerus: '',
+    hambatanSamping: ''
   };
 
   return (
@@ -120,7 +137,7 @@ const HeaderSurvei = ({ simpangId, selectedDate, arahPergerakan }) => {
           <RowInfo label="Surveyor" value="VIANA" isUpper />
           <RowInfo label="Hari, Tanggal" value={formatTanggal(selectedDate)} />
           <RowInfo label="Cuaca" value={data.cuaca} />
-          <RowInfo label="Arah Pergerakan" value={arahPergerakan || 'Belok Kiri'} isRed />
+          <RowInfo label="Arah Pergerakan" value={arahPergerakan || ''} isRed />
         </div>
       </div>
 

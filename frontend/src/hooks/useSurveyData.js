@@ -107,7 +107,7 @@ export const useSurveyData = (activeSimpangId, dateInput, activeInterval, active
   };
 };
 
-export const useInitialData = () => {
+export const useInitialData = (defaultToAll = false) => {
   const [activeSimpangId, setActiveSimpangId] = useState(0);
   const [activeSimpang, setActiveSimpang] = useState("");
   const [activeCamera, setActiveCamera] = useState(1);
@@ -125,23 +125,31 @@ export const useInitialData = () => {
 
         setSimpangModel(cameraData.filter(item => item.socket_event !== "not_yet_assign").map(d => d.ID_Simpang));
 
-        if (simpangData.length > 0 && simpangData[0]?.id) {
-          const cuaca = await getCuacaJogja(simpangData[0].latitude, simpangData[0].longitude);
-          setCuaca(cuaca);
+        if (defaultToAll) {
+          if (simpangData.length > 0) {
+            setActiveSimpangId('semua');
+            setActiveSimpang('Semua Simpang');
+            setActiveSID('semua');
+          }
+        } else {
+          if (simpangData.length > 0 && simpangData[0]?.id) {
+            const cuaca = await getCuacaJogja(simpangData[0].latitude, simpangData[0].longitude);
+            setCuaca(cuaca);
 
-          const firstSimpangId = simpangData[0].id;
-          const matchedCamera = cameraData.find(cam => cam.ID_Simpang === firstSimpangId);
+            const firstSimpangId = simpangData[0].id;
+            const matchedCamera = cameraData.find(cam => cam.ID_Simpang === firstSimpangId);
 
-          if (matchedCamera && matchedCamera.id) {
-            setActiveSimpangId(firstSimpangId);
-            setActiveSID(matchedCamera.id);
-            setActiveCamera(matchedCamera.id);
-            setActiveSimpang(matchedCamera.name || '');
-          } else if (cameraData.length > 0 && cameraData[0]?.id) {
-            setActiveSimpangId(cameraData[0].ID_Simpang);
-            setActiveSID(cameraData[0].id);
-            setActiveCamera(cameraData[0].id);
-            setActiveSimpang(cameraData[0].name || '');
+            if (matchedCamera && matchedCamera.id) {
+              setActiveSimpangId(firstSimpangId);
+              setActiveSID(matchedCamera.id);
+              setActiveCamera(matchedCamera.id);
+              setActiveSimpang(matchedCamera.name || '');
+            } else if (cameraData.length > 0 && cameraData[0]?.id) {
+              setActiveSimpangId(cameraData[0].ID_Simpang);
+              setActiveSID(cameraData[0].id);
+              setActiveCamera(cameraData[0].id);
+              setActiveSimpang(cameraData[0].name || '');
+            }
           }
         }
         setFetchStatus(true);

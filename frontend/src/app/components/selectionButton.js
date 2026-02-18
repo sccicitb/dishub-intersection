@@ -1,216 +1,137 @@
 "use client";
-import { lazy, Suspense, useState, useEffect } from 'react';
-import { useAuth } from "@/app/context/authContext";
-import axiosInstance from '@/lib/apiClient';
+import { toast } from 'sonner';
+import { lazy, Suspense } from 'react';
+
 const SurveyLalulintasExport = lazy(() => import('./exportPdf'));
 
-export default function SelectionButtons ({ pendekatan, interval, exportPdf, arahPergerakan, vehicleData, activeSurveyor, activeClassification, activePendekatan, activePergerakan, setActiveSurveyor, setActivePendekatan, setActiveClassification, setActivePergerakan, activeInterval, setActiveInterval, activeDirection, setActiveDirection, direction, simpang_id = 2 }) {
-  const { pathname, isEditor, isAdmin } = useAuth();
-  const [availableDirections, setAvailableDirections] = useState([]);
-  const [loadingDirections, setLoadingDirections] = useState(false);
+const intervalOptions = [
+  { item: '5min', display: '5 Menit' },
+  { item: '15min', display: '15 Menit' },
+  { item: '30min', display: '30 Menit' },
+  { item: '1h', display: '1 Jam' }
+];
 
-  // Fetch available directions dari API berdasarkan simpang_id
-  useEffect(() => {
-    const fetchAvailableDirections = async () => {
-      try {
-        // console.log("test fetch available directions", { simpang_id });
-        setLoadingDirections(true);
-        const response = await axiosInstance.get(`/surveys/available-directions`, {
-          params: { simpang_id: simpang_id }
-        });
-        
-        if (response.data.success && response.data.available_directions_id) {
-          setAvailableDirections(response.data.available_directions_id);
-        }
-      } catch (error) {
-        console.error('Error fetching available directions:', error);
-      } finally {
-        setLoadingDirections(false);
-      }
-    };
+const classificationOptions = ['PKJI 2023 Luar Kota', 'PKJI 2023 Dalam Kota', 'Tipikal'];
+const pendekatanOptions = ['Utara', 'Selatan', 'Timur', 'Barat', 'Semua'];
+const pergerakanOptions = ['Belok Kiri', 'Belok Kanan', 'Lurus', 'Semua'];
 
-    if (simpang_id) {
-      fetchAvailableDirections();
-    }
-  }, [simpang_id]);
-
-  // Opsi untuk surveyor
-  const surveyorOptions = ['VIANA', 'Manual', 'Semua'];
-
-  // Opsi Pendekatan simpang
-  const pendekatanOptions = ['Utara', 'Selatan', 'Timur', 'Barat', 'Semua'];
-
-  // Opsi Pendekatan simpang
-  const pergerakanOptions = ['Belok Kiri', 'Belok Kanan', 'Lurus', 'Semua'];
-
-  const directionOptions = ['timur', 'selatan', 'utara', 'barat', 'Semua'];
-
-  // Opsi Pendekatan simpang
-  const intervalOptions = [
-    {
-      item: '',
-      display: '15 Menit'
-    },
-    {
-      item: '1h',
-      display: 'jam'
-    }
-  ];
-
-  const intervalOptionsP = [
-    {
-      item: '5min',
-      display: '5 Menit'
-    },
-    {
-      item: '15min',
-      display: '15 Menit'
-    },
-    {
-      item: '30min',
-      display: '30 Menit'
-    },
-    {
-      item: '1h',
-      display: 'jam'
-    }
-  ];
+export default function SelectionButtons({ 
+  activeSID, setActiveSID,
+  activeInterval, setActiveInterval,
+  activeClassification, setActiveClassification,
+  activePendekatan, setActivePendekatan,
+  activePergerakan, setActivePergerakan,
+  showInterval, showPendekatan, showArah, showExport,
+  vehicleData
+}) {
 
 
-  // Opsi untuk jenis klasifikasi
-  const classificationOptions = ['PKJI 2023 Luar Kota', 'PKJI 2023 Dalam Kota', 'Tipikal'];
+  const handleFilterChange = (setter, value) => {
+    setter(value);
+  };
+
+  const FilterGroup = ({ title, options, activeValue, setter, isObject = false }) => (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">{title}</h3>
+      <div className="flex flex-wrap gap-2 p-1.5 bg-gray-50 rounded-xl border border-gray-100">
+        {options.map((opt, i) => {
+          const val = isObject ? opt.item : opt;
+          const label = isObject ? opt.display : opt;
+          const isActive = activeValue && activeValue.toString().toLowerCase() === val.toString().toLowerCase();
+
+          return (
+            <button
+              key={i}
+              onClick={() => handleFilterChange(setter, val)}
+              className={`flex-1 text-nowrap px-4 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 
+                ${isActive 
+                  ? 'bg-[#232f61] text-white shadow-md' 
+                  : 'text-gray-500 hover:bg-white hover:shadow-sm hover:text-[#232f61]'}`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="mx-auto space-y-1 w-full h-fit lg:w-[100%]">
-      {/* <div className="space-y-1">
-        <h3 className="text-[14px] font-medium">Pilih Surveyor</h3>
-        <div className="join w-full gap-5 flex overflow-x-auto p-2">
-          {surveyorOptions.map((option) => (
-            <button
-              key={option}
-              className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeSurveyor.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
-              onClick={() => setActiveSurveyor(option)}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      </div> */}
-
-      {interval && (
-        <div className="space-y-1">
-          <h3 className="text-[14px] font-medium">Pilih Interval</h3>
-          <div className="join w-full gap-5 flex overflow-x-auto p-2">
-            {pathname !== "/survei-pergerakan" ? intervalOptionsP.map((option, id) => (
-              <button
-                key={id}
-                className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeInterval.toLowerCase() === option.item.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
-                onClick={() => setActiveInterval(option.item)}
-              >
-                {option.display}
-              </button>
-            )) : intervalOptionsP.map((option, id) => (
-              <button
-                key={id}
-                className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeInterval.toLowerCase() === option.item.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
-                onClick={() => setActiveInterval(option.item)}
-              >
-                {option.display}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {pendekatan && (
-        <div className="space-y-1">
-          <h3 className="text-[14px] font-medium">Pilih Pendekatan Simpang (Dari Arah)</h3>
-          <div className="join w-full gap-5 flex overflow-x-auto p-2">
-            {pendekatanOptions.map((option) => {
-              const isAvailable = availableDirections.length === 0 || availableDirections.some(dir => dir.toLowerCase() === option.toLowerCase());
-              const isDisabled = availableDirections.length > 0 && !isAvailable && option !== 'Semua';
-              
-              return (
+    <div className="w-full bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        {/* Kolom Kiri: Waktu & Klasifikasi */}
+        <div className="space-y-5">
+          {/* Opsi Lokasi Simpang (Jika setActiveSID tersedia) */}
+          {setActiveSID && (
+            <div className="flex flex-col gap-2">
+              <h3 className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Lokasi Simpang</h3>
+              <div className="flex flex-wrap gap-2 p-1.5 bg-gray-50 rounded-xl border border-gray-100">
                 <button
-                  key={option}
-                  disabled={isDisabled}
-                  className={`btn join-item ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} rounded-md flex-1 text-nowrap btn-sm w-fit px-2 ${
-                    isDisabled 
-                      ? 'opacity-50 cursor-not-allowed' 
-                      : activePendekatan.toLowerCase() === option.toLowerCase() 
-                        ? 'bg-[#232f61] text-white' 
-                        : 'outline-none'
-                  }`}
-                  onClick={() => !isDisabled && setActivePendekatan(option)}
-                  title={isDisabled ? `Tidak tersedia untuk simpang ini` : ''}
+                   onClick={() => setActiveSID('semua')}
+                   className={`flex-1 text-nowrap px-4 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 
+                     ${activeSID === 'semua' 
+                       ? 'bg-[#232f61] text-white shadow-md' 
+                       : 'text-gray-500 hover:bg-white hover:shadow-sm hover:text-[#232f61]'}`}
                 >
-                  {option}
+                  Semua Simpang
                 </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                <div className="flex items-center px-4 py-1.5 text-xs text-gray-400">
+                  {/* Info: Use Map for Specific Simpang */}
+                  (Pilih di Peta untuk Satuan)
+                </div>
+              </div>
+            </div>
+          )}
 
-      {arahPergerakan && (
-        <div className="space-y-1">
-          <h3 className="text-[14px] font-medium">Pilih Arah Pergerakan</h3>
-          <div className="join w-full gap-5 flex overflow-x-auto p-2">
-            {pergerakanOptions.map((option) => (
-              <button
-                key={option}
-                className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activePergerakan.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
-                onClick={() => setActivePergerakan(option)}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
+          {showInterval && (
+            <FilterGroup 
+              title="Interval Waktu" 
+              options={intervalOptions} 
+              activeValue={activeInterval} 
+              setter={setActiveInterval} 
+              isObject={true} 
+            />
+          )}
+          
+          <FilterGroup 
+            title="Jenis Klasifikasi" 
+            options={classificationOptions} 
+            activeValue={activeClassification} 
+            setter={setActiveClassification} 
+          />
         </div>
-      )}
 
-      {direction && (
-        <div className="space-y-1">
-          <h3 className="text-[14px] font-medium">Pilih Arah Pergerakan</h3>
-          <div className="join w-full gap-5 flex overflow-x-auto p-2">
-            {directionOptions.map((option) => (
-              <button
-                key={option}
-                className={`btn join-item rounded-md flex-1 text-nowrap btn-sm w-fit px-2  ${activeDirection.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
-                onClick={() => setActiveDirection(option)}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-1">
-        <h3 className="text-[14px] font-medium">Pilih Jenis Klasifikasi</h3>
-        <div className="join w-full gap-5 flex overflow-x-auto p-2">
-          {classificationOptions.map((option) => (
-            <button
-              key={option}
-              className={`btn join-item rounded-md flex-1 btn-sm text-nowrap w-fit px-2 ${activeClassification.toLowerCase() === option.toLowerCase() ? 'bg-[#232f61] text-white' : 'outline-none'}`}
-              onClick={() => setActiveClassification(option)}
-            >
-              {option}
-            </button>
-          ))}
+        {/* Kolom Kanan: Arah & Gerakan */}
+        <div className="space-y-5">
+          {showPendekatan && (
+            <FilterGroup 
+              title="Pendekatan (Dari Arah)" 
+              options={pendekatanOptions} 
+              activeValue={activePendekatan} 
+              setter={setActivePendekatan} 
+            />
+          )}
+          
+          {showArah && (
+            <FilterGroup 
+              title="Pergerakan" 
+              options={pergerakanOptions} 
+              activeValue={activePergerakan} 
+              setter={setActivePergerakan} 
+            />
+          )}
         </div>
       </div>
-      <Suspense fallback={<div className='w-full'>Loading...</div>}>
-        {exportPdf && isAdmin && (
 
-          <div className='space-y-1'>
-            <div className="w-full flex overflow-x-auto join pt-2 px-2">
-              {/* <ExportButton vehicleData={dataTable} fileName='Data_Kendaraan_perjam'/> */}
-              <SurveyLalulintasExport vehicleData={vehicleData} activeClassification={activeClassification} />
-            </div>
-          </div>
-        )}
-      </Suspense>
+      {/* Bagian Export */}
+      {showExport && (
+        <div className="pt-4 border-t border-dashed border-gray-200 flex justify-end">
+          <Suspense fallback={<div className="text-xs">Loading Export Tool...</div>}>
+            <SurveyLalulintasExport vehicleData={vehicleData} activeClassification={activeClassification} />
+          </Suspense>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,295 +1,235 @@
 "use client";
-
 import React, { useState, useEffect } from 'react';
-import { useAuth } from "@/app/context/authContext";
-import HourVehicleTable from '@/app/components/HourVehicleTable';
-import MonthlyVehicleTable from '@/app/components/monthlyTable';
-import DaysVehicleTable from '@/app/components/DaysVehicleTable';
-import YearVehicleTable from '@/app/components/YearVehicletable';
-import { ExportButton, ExportMonthButton, ExportDayButton, ExportYearButton } from '@/app/components/exportExcel';
+import { toast } from 'sonner';
+import { ExportButton, ExportMonthButton, ExportDayButton, ExportYearButton } from './exportExcel';
 import { survey } from '@/lib/apiService';
+import HourVehicleTable from './HourVehicleTable';
+import MonthlyVehicleTable from './monthlyTable';
+import DaysVehicleTable from './DaysVehicleTable';
+import YearlyVehicleTable from './YearVehicletable';
 
-const classificationMap = {
-  "PKJI 2023 Luar Kota": "luar_kota",
-  "PKJI 2023 Dalam Kota": "dalam_kota",
-  "PKJI 2023 Tipikal": "tipikal",
+const formatDateToInput = (date) => {
+  if (!date) return '';
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
-const VehicleTable = ({ activeCamera, activeInterval, activePendekatan, activePergerakan, activeClassification }) => {
-  const { isAdmin } = useAuth();
-  // const initialMonth = new Date().toISOString().slice(0, 7); // format: 'YYYY-MM'
-  const today = new Date().toISOString().split('T')[0];
-  const year = today.split('-')[0];
-  const month = today.split('-')[1];
+const now = new Date();
+const today = formatDateToInput(now);
+const yesterdayDate = new Date(now);
+yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+const yesterday = formatDateToInput(yesterdayDate);
+const month = String(now.getMonth() + 1).padStart(2, '0');
+const year = now.getFullYear();
 
+const tabLabels = {
+  hourly: 'Per Jam',
+  monthly: 'Bulanan',
+  dailyMonth: 'Harian (Bulan)',
+  dailyRange: 'Harian (Range)',
+  yearly: 'Tahunan'
+};
+
+const FilterDataHandler = ({ activeTab, filters, setFilters, onFetch }) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  return (
+    <div className="flex gap-2 flex-wrap items-end">
+      {activeTab === 'hourly' && (
+        <label className="form-control w-full max-w-xs">
+          <div className="label"><span className="label-text">Tanggal</span></div>
+          <input type="date" name="dateInput" value={filters.dateInput} onChange={handleChange} className="input input-bordered input-sm" />
+        </label>
+      )}
+
+      {activeTab === 'monthly' && (
+        <label className="form-control w-full max-w-xs">
+          <div className="label"><span className="label-text">Tahun</span></div>
+          <input type="number" name="selectedYear" value={filters.selectedYear} onChange={handleChange} className="input input-bordered input-sm" />
+        </label>
+      )}
+
+      {(activeTab === 'dailyMonth') && (
+        <>
+          <label className="form-control w-full max-w-xs">
+            <div className="label"><span className="label-text">Bulan</span></div>
+            <input type="number" name="selectedMonth" min="1" max="12" value={filters.selectedMonth} onChange={handleChange} className="input input-bordered input-sm" />
+          </label>
+          <label className="form-control w-full max-w-xs">
+            <div className="label"><span className="label-text">Tahun</span></div>
+            <input type="number" name="selectedYear" value={filters.selectedYear} onChange={handleChange} className="input input-bordered input-sm" />
+          </label>
+        </>
+      )}
+
+      {activeTab === 'dailyRange' && (
+        <>
+          <label className="form-control w-full max-w-xs">
+            <div className="label"><span className="label-text">Mulai</span></div>
+            <input type="date" name="startDate" value={filters.startDate} onChange={handleChange} className="input input-bordered input-sm" />
+          </label>
+          <label className="form-control w-full max-w-xs">
+            <div className="label"><span className="label-text">Selesai</span></div>
+            <input type="date" name="endDate" value={filters.endDate} onChange={handleChange} className="input input-bordered input-sm" />
+          </label>
+        </>
+      )}
+
+      {activeTab === 'yearly' && (
+        <label className="form-control w-full max-w-xs">
+          <div className="label"><span className="label-text">Tahun Awal</span></div>
+          <input type="number" name="selectedYear" value={filters.selectedYear} onChange={handleChange} className="input input-bordered input-sm" />
+        </label>
+      )}
+
+      <button onClick={onFetch} className="px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200  bg-[#232f61] text-white mt-8">Ambil Data</button>
+    </div>
+  );
+};
+
+export const ExportDataHandler = ({ activeTab, data, filters, classification }) => {
+  if (!data || data.length === 0) return null;
+
+  switch (activeTab) {
+    case 'hourly':
+      return <ExportButton vehicleData={data} fileName='Data_Kendaraan_perjam' classification={classification} />;
+    case 'monthly':
+      return <ExportMonthButton monthlyData={data} fileName="Data-Bulanan" selectedYear={filters.selectedYear} />;
+    case 'dailyMonth':
+    case 'dailyRange':
+      return <ExportDayButton dailyData={data} fileName={`Data-Harian-${activeTab}`} type={activeTab} />;
+    case 'yearly':
+      return <ExportYearButton yearlyData={data} fileName="Data-Tahunan" />;
+    default:
+      return null;
+  }
+};
+
+export function VehicleTable ({ activeCamera, activeInterval, activePendekatan, activePergerakan, activeClassification }) {
   const [activeTab, setActiveTab] = useState('hourly');
   const [vehicleData, setVehicleData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(month);
-  const [selectedYear, setSelectedYear] = useState(year);
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
-  const [tabSubmitCounter, setTabSubmitCounter] = useState(0);
 
-  const formatDateToInput = (date) => {
-    if (!date) return "";
-    const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
-
-  const formatDateToAPI = (dateStr) => dateStr.replace(/-/g, '/');
-
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
+  const now = new Date();
+  const [filters, setFilters] = useState({
+    dateInput: formatDateToInput(now),
+    selectedMonth: String(now.getMonth() + 1).padStart(2, '0'),
+    selectedYear: String(now.getFullYear()),
+    startDate: formatDateToInput(now),
+    endDate: formatDateToInput(now),
+  });
 
   const fetchSurvey = async () => {
-    if (!activeCamera) return;
-    console.log(activeCamera)
-
-    const classificationParam = classificationMap[activeClassification] || activeClassification?.toLowerCase().replace(/\s+/g, '_');
-    const params = {
-      camera_id: activeCamera,
-      date: formatDateToAPI(dateInput),
-      interval: activeInterval || '',
-      approach: activePendekatan?.toLowerCase() || '',
-      direction: activePergerakan || '',
-      classification: classificationParam,
-      reportType: activeTab,
-      month: selectedMonth,
-      year: selectedYear,
-      startDate: startDate,
-      endDate: endDate,
-    };
-
+    if ((!activeCamera && activeCamera !== 0) || activeCamera === 'undefined') return toast.error("Pilih simpang terlebih dahulu untuk memuat data.");
+    setLoading(true);
     try {
-      setLoading(true);
       const res = await survey.getAll(
-        params.camera_id,
-        params.date,
-        params.interval,
-        params.approach,
-        params.classification,
-        params.reportType,
-        params.direction,
-        params.month,
-        params.year,
-        params.startDate,
-        params.endDate,
+        activeCamera,
+        filters.dateInput.replace(/-/g, '/'),
+        activeInterval,
+        activePendekatan,
+        activeClassification,
+        activeTab,
+        activePergerakan,
+        filters.selectedMonth,
+        filters.selectedYear,
+        filters.startDate,
+        filters.endDate
       );
       setVehicleData(res?.data?.vehicleData || res?.data || []);
     } catch (err) {
-      console.error('Error fetching data:', err);
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (tabSubmitCounter > 0) {
-      fetchSurvey();
-    }
-  }, [tabSubmitCounter]);
-
   return (
-    <div className="mx-auto">
-      <h2 className="text-xl font-bold mb-4">Data Pemantauan Kendaraan</h2>
-      <div className='flex-col flex w-full'>
-        <div className="tabs tabs-boxed mb-4 space-x-2 flex space-y-2">
-          {activeTab === 'hourly' && (
-            <div className="flex gap-2 items-center w-fit">
-              <input
-                type="date"
-                className="border rounded px-2 py-1"
-                value={dateInput}
-                onChange={(e) => setDateInput(e.target.value)}
-              />
-              <button
-                onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
-                className="btn btn-sm bg-[#314385]/80 text-white font-semibold hover:bg-green-700 transition"
-              >
-                Submit
-              </button>
-              {isAdmin && <ExportButton vehicleData={vehicleData} fileName='Data_Kendaraan_perjam' classification={activeClassification} />}
-            </div>
-          )}
-          {activeTab === 'monthly' && (
-            <div className="flex gap-2 items-center w-fit">
-              <label className="mr-2 font-medium">Pilih Tahun:</label>
-              <select
-                className="border rounded px-2 py-1"
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-              >
-                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-              <button
-                onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
-                className="btn btn-sm bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
-              >
-                Submit
-              </button>
-              <ExportMonthButton monthlyData={vehicleData} fileName="Data-Bulanan" selectedYear={selectedYear} />
-            </div>
-          )}
-          {activeTab === 'dailyMonth' && (
-            <div className="flex gap-2 items-center w-fit flex-wrap">
-              <label className="mr-2 font-medium">Pilih Tahun:</label>
-              <select
-                className="select select-bordered select-sm w-32"
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-              >
-                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((yr) => (
-                  <option key={yr} value={yr}>{yr}</option>
-                ))}
-              </select>
+    <div className="w-full space-y-4">
+      {/* Box Filter & Navigation */}
+      <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
 
-              <label className="mr-2 font-medium">Pilih Bulan:</label>
-              <select
-                className="select select-bordered select-sm w-32"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-              >
-                <option value="01">Januari</option>
-                <option value="02">Februari</option>
-                <option value="03">Maret</option>
-                <option value="04">April</option>
-                <option value="05">Mei</option>
-                <option value="06">Juni</option>
-                <option value="07">Juli</option>
-                <option value="08">Agustus</option>
-                <option value="09">September</option>
-                <option value="10">Oktober</option>
-                <option value="11">November</option>
-                <option value="12">Desember</option>
-              </select>
+          <div className="flex flex-col gap-2">
+            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Laporan Berdasarkan</h3>
+            <div className="flex flex-wrap gap-2 p-1.5 bg-gray-50 rounded-xl border border-gray-100 w-fit">
+              {Object.keys(tabLabels).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    setVehicleData([]); // Reset data saat ganti tab agar user harus klik 'Tampilkan' lagi
+                  }}
+                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all duration-200 
+                      ${activeTab === tab
+                      ? 'bg-[#232f61] text-white shadow-md'
+                      : 'text-gray-500 hover:bg-white hover:text-[#232f61]'}`}
+                >
+                  {tabLabels[tab]}
+                </button>
+              ))}
+            </div>
+          </div>
 
-              <button
-                onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
-                className="btn btn-sm bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
-              >
-                Submit
-              </button>
-              {isAdmin && (
-                <ExportDayButton dailyData={vehicleData} fileName="Data-Harian-Bulan" type="dailyMonth" />
-              )}
-            </div>
-          )}
-          {(activeTab === 'dailyRange') && (
-            <div className="flex gap-2 items-center w-fit">
-              <label className="mr-2 font-medium">Pilih Tanggal Mulai:</label>
-              <input
-                type="date"
-                className="border rounded px-2 py-1"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <label className="mr-2 font-medium">Tanggal Akhir:</label>
-              <input
-                type="date"
-                className="border rounded px-2 py-1"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-              <button
-                onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
-                className="btn btn-sm bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
-              >
-                Submit
-              </button>
-              {isAdmin && <ExportDayButton dailyData={vehicleData} fileName={activeTab === 'dailyRange' ? "Data-Harian-Rentang" : "Data-Harian-Bulan"} type={activeTab} />}
-            </div>
-          )}
-          {activeTab === 'yearly' && (
-            <div className="flex gap-2 items-center w-fit">
-              <button
-                onClick={() => setTabSubmitCounter(tabSubmitCounter + 1)}
-                className="btn btn-sm bg-[#314385]/80 text-white rounded-lg font-semibold hover:bg-green-700 transition"
-              >
-                Submit
-              </button>
-              {isAdmin && <ExportYearButton yearlyData={vehicleData} fileName="Data-Tahunan" />}
-            </div>
-          )}
+          <ExportDataHandler
+            activeTab={activeTab}
+            data={vehicleData}
+            filters={filters}
+            classification={activeClassification}
+          />
         </div>
-        <div className='w-full flex flex-wrap space-x-2 pb-3'>
-          {['hourly', 'monthly', 'dailyMonth', 'dailyRange', 'yearly'].map((tab) => (
-            <button
-              key={tab}
-              className={`btn btn-sm tab ${activeTab === tab ? 'tab-active bg-[#314385]/80 border-none text-white' : ''}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {{
-                hourly: 'Data Harian Per Hari',
-                monthly: 'Data Bulanan',
-                dailyMonth: 'Data Harian per Bulan',
-                dailyRange: 'Data Harian',
-                yearly: 'Data Tahunan'
-              }[tab]}
-            </button>
-          ))}
-        </div>
+
+        <FilterDataHandler
+          activeTab={activeTab}
+          filters={filters}
+          setFilters={setFilters}
+          onFetch={fetchSurvey}
+          loading={loading}
+        />
       </div>
 
-      <div className="rounded-lg">
-        {!loading ? (
-          <>
-            {activeTab === 'hourly' && (
-              <HourVehicleTable
-                statusHour={true}
-                vehicleData={vehicleData}
-                classification={activeClassification}
-                pdf={false}
-                isEditor={true}
+      {/* Area Tabel */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm min-h-[400px]">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center p-24 gap-4">
+            <span className="loading loading-spinner loading-lg text-[#232f61]"></span>
+            <p className="text-gray-400 text-xs font-medium uppercase tracking-widest animate-pulse">Menyiapkan Data...</p>
+          </div>
+        ) : (Array.isArray(vehicleData) ? vehicleData.length > 0 : (vehicleData && Object.keys(vehicleData).length > 0)) ? (
+          <div className="p-4 overflow-x-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {activeTab === 'hourly' && <HourVehicleTable vehicleData={vehicleData} classification={activeClassification} />}
+            {activeTab === 'monthly' && <MonthlyVehicleTable monthlyData={vehicleData} selectedYear={filters.selectedYear} />}
+            {(activeTab === 'dailyMonth' || activeTab === 'dailyRange') && (
+              <DaysVehicleTable
+                monthlyData={vehicleData}
+                type={activeTab}
+                startDate={filters.startDate}
+                endDate={filters.endDate}
+                setStartDate={(date) => setFilters(prev => ({ ...prev, startDate: date }))}
+                setEndDate={(date) => setFilters(prev => ({ ...prev, endDate: date }))}
+                selectedYear={filters.selectedYear}
+                selectedMonth={filters.selectedMonth}
+                setSelectedMonth={(month) => setFilters(prev => ({ ...prev, selectedMonth: month }))}
+                setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
               />
             )}
-          </>
+            {activeTab === 'yearly' && <YearlyVehicleTable yearlyData={vehicleData} />}
+          </div>
         ) : (
-          <div className="m-5">Loading data...</div>
+          <div className="flex flex-col items-center justify-center p-24 text-center">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+            <p className="text-gray-400 text-sm font-medium">Klik tombol <span className="text-[#232f61] font-bold">"Tampilkan Data"</span><br />untuk memuat informasi survei.</p>
+          </div>
         )}
-
-        {activeTab === 'monthly' && <MonthlyVehicleTable monthlyData={vehicleData} selectedYear={selectedYear} setSelectedYear={setSelectedYear} loading={loading} />}
-        {activeTab === 'dailyMonth' &&
-          <DaysVehicleTable
-            setStartDate={setStartDate}
-            setEndDate={setEndDate}
-            startDate={startDate}
-            endDate={endDate}
-            monthlyData={vehicleData}
-            setSelectedMonth={setSelectedMonth}
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            setSelectedYear={setSelectedYear}
-            type={activeTab}
-          />
-        }
-
-        {activeTab === 'dailyRange' &&
-          <DaysVehicleTable
-            setStartDate={setStartDate}
-            setEndDate={setEndDate}
-            startDate={startDate}
-            endDate={endDate}
-            monthlyData={vehicleData}
-            setSelectedMonth={setSelectedMonth}
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            setSelectedYear={setSelectedYear}
-            type={activeTab}
-          />
-        }
-        {activeTab === 'yearly' && <YearVehicleTable yearlyData={vehicleData}
-          setStartDate={setStartDate} startDate={startDate}
-        />}
-        {/* </> */}
-        {/* )} */}
       </div>
     </div>
   );
-};
-
-export default VehicleTable;
+}

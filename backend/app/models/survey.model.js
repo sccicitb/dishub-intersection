@@ -74,7 +74,7 @@ const getVehicleDataGrouped = async ({ simpangId, approach, direction, date }, i
   `;
   const params = [intervalMinutes];
 
-  if (simpangId) {
+  if (simpangId && simpangId !== 'semua') {
     query += ` AND ID_Simpang = ?`;
     params.push(simpangId);
   }
@@ -180,7 +180,16 @@ const getArusBySimpangDate = async (simpang_id, date) => {
   const formattedDate = date.includes('/') ? date.replace(/\//g, '-') : date;
   const startDate = `${formattedDate} 00:00:00`;
   const endDate = `${formattedDate} 23:59:59`;
-  const [rows] = await db.query(`SELECT * FROM arus WHERE ID_Simpang = ? AND waktu BETWEEN ? AND ?`, [simpang_id, startDate, endDate]);
+  
+  let query = `SELECT * FROM arus WHERE waktu BETWEEN ? AND ?`;
+  const params = [startDate, endDate];
+
+  if (simpang_id && simpang_id.toString().toLowerCase() !== 'semua') {
+    query += ` AND ID_Simpang = ?`;
+    params.push(simpang_id);
+  }
+
+  const [rows] = await db.query(query, params);
   return rows;
 };
 
@@ -244,41 +253,46 @@ const getArusSummaryGrid = async (ID_Simpang, jenisKendaraanDB, queryDate) => {
  *  OPTIMIZED: Eliminates DATE() function for 10x performance improvement
  */
 async function getDailySummaryByDateRange(filters, includedSubCodes, startDate, endDate) {
-  // OPTIMIZED: Use date truncation with CAST to avoid DATE() function
+  if (!includedSubCodes || includedSubCodes.length === 0) return [];
+
   const sumFields = includedSubCodes
     .map(code => `SUM(\`${code}\`) AS \`${code}\``)
     .join(', ');
   
+  // GUNAKAN perbandingan langsung pada kolom 'waktu' tanpa CAST di SELECT
+  // Kita akan melakukan grouping menggunakan format string yang lebih cepat
   let sql = `SELECT CAST(waktu AS DATE) AS date, ${sumFields}
              FROM arus
-             WHERE waktu BETWEEN ? AND ?`;
+             WHERE waktu >= ? AND waktu <= ?`;
+  
   const params = [`${startDate} 00:00:00`, `${endDate} 23:59:59`];
 
-  if (filters.simpangId) {
+  if (filters.simpangId && filters.simpangId.toString().toLowerCase() !== 'semua') {
     sql += ` AND ID_Simpang = ?`;
     params.push(filters.simpangId);
   }
+
+  // HAPUS LOWER(), gunakan perbandingan langsung
   if (filters.approach && filters.approach.toLowerCase() !== 'semua') {
-    sql += ` AND LOWER(dari_arah) = LOWER(?)`;
+    sql += ` AND dari_arah = ?`; 
     params.push(filters.approach);
   }
   if (filters.direction && filters.direction.toLowerCase() !== 'semua') {
-    sql += ` AND LOWER(ke_arah) = LOWER(?)`;
+    sql += ` AND ke_arah = ?`;
     params.push(filters.direction);
   }
   
-  // OPTIMIZED: Use CAST instead of DATE() for better performance
-  sql += ` GROUP BY CAST(waktu AS DATE) ORDER BY CAST(waktu AS DATE)`;
+  // GROUP BY menggunakan alias atau DATE_FORMAT
+  sql += ` GROUP BY CAST(waktu AS DATE)`;
 
   const [rows] = await db.query(sql, params);
 
-  // Tambahkan kolom total dan mapping alias
   return rows.map(row => ({
-  date: row.date instanceof Date
-    ? row.date.toISOString().slice(0, 10)  // format 'YYYY-MM-DD'
-    : row.date,
-  ...mapRowToAlias(row, includedSubCodes)
-}));
+    date: row.date instanceof Date
+      ? row.date.toISOString().slice(0, 10)  // format 'YYYY-MM-DD'
+      : row.date,
+    ...mapRowToAlias(row, includedSubCodes)
+  }));
 }
 
 /**
@@ -346,6 +360,84 @@ async function getMonthlySummary(month, year, filters, includedSubCodes) {
 }
 
 /**
+ * 2b. Optimized: Get Monthly Summary for Multiple Months at once
+ *     monthList: [1, 2, ...], all must be in same year
+ */
+async function getMonthsSummary(monthList, year, filters, includedSubCodes) {
+  if (!monthList || monthList.length === 0) return [];
+
+  // 1. Fetch entire data range in one query
+  const minMonth = Math.min(...monthList);
+  const maxMonth = Math.max(...monthList);
+  
+  const startDate = `${year}-${String(minMonth).padStart(2, '0')}-01`;
+  const lastDateObj = new Date(year, maxMonth, 0); 
+  const endDate = `${year}-${String(maxMonth).padStart(2, '0')}-${String(lastDateObj.getDate()).padStart(2, '0')}`;
+  
+  const allDailyRows = await getDailySummaryByDateRange(filters, includedSubCodes, startDate, endDate);
+  
+  // Index rows by date string for fast lookup
+  const dailyMap = {};
+  allDailyRows.forEach(r => { dailyMap[r.date] = r; });
+
+  const results = [];
+  
+  // 2. Process each month in memory
+  for (const month of monthList) {
+    const firstDate = new Date(year, month - 1, 1);
+    const lastDate = new Date(year, month, 0);
+    const daysInMonth = lastDate.getDate();
+
+    // Workdays
+    let workDays = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const wk = new Date(year, month - 1, d).getDay(); 
+      if (wk >= 1 && wk <= 5) workDays++;
+    }
+
+    // Days array
+    const days = [];
+    const currentMonthDailyRows = []; // To calculate monthlyTotal for this month only
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const isoDate = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      if (dailyMap[isoDate]) {
+        const row = { ...dailyMap[isoDate] };
+        delete row.date;
+        days.push({ date: isoDate, data: row });
+        currentMonthDailyRows.push(dailyMap[isoDate]);
+      } else {
+        const empty = {};
+        for (const code of includedSubCodes) {
+          const alias = vehicleAlias[code] || code.toLowerCase();
+          empty[alias] = 0;
+        }
+        empty.total = 0;
+        days.push({ date: isoDate, data: empty });
+      }
+    }
+
+    // Monthly Total
+    const monthlyTotal = {};
+    for (const code of includedSubCodes) {
+      const alias = vehicleAlias[code] || code.toLowerCase();
+      monthlyTotal[alias] = currentMonthDailyRows.reduce((sum, r) => sum + (r[alias] || 0), 0);
+    }
+    monthlyTotal.total = currentMonthDailyRows.reduce((sum, r) => sum + (r.total || 0), 0);
+
+    results.push({
+      month: firstDate.toLocaleString('id-ID', { month: 'long' }),
+      year,
+      workDays,
+      days,
+      monthlyTotal
+    });
+  }
+
+  return results;
+}
+
+/**
  * 3. Ambil agregasi tahunan: 
  *    startDateObj: Date JS (misal new Date('2025-02-03'))
  *    numYears: berapa periode (default 4)
@@ -354,32 +446,79 @@ async function getYearlySummary(startDateObj, filters, includedSubCodes, numYear
   const yearlyData = [];
   const lhrtData = [];
 
+  // Agar menampilkan tahun berjalan dan tahun-tahun sebelumnya (mundur)
+  // Atau jika ingin tahun start, start+1, start+2, dsb.
+  // Biasanya yearly report itu "tahun ini, tahun lalu, 2 tahun lalu..."
+  // Tapi codingan lama: startDateObj + i (maju).
+  // Mari kita ubah agar startDateObj dianggap sebagai TAHUN AWAL range, 
+  // atau kita set startOf period ke 1 Jan setiap tahunnya agar rapi.
+  
+  // Kita normalisasi ke tanggal 1 Jan tahun tersebut
+  const startYear = startDateObj.getFullYear();
+
   for (let i = 0; i < numYears; i++) {
-    // periode i: [ start_i, end_i ) = [ startDateObj + i tahun, startDateObj + (i+1) tahun )
-    const periodStart = new Date(startDateObj);
-    periodStart.setFullYear(startDateObj.getFullYear() + i);
-    const periodEnd = new Date(startDateObj);
-    periodEnd.setFullYear(startDateObj.getFullYear() + i + 1);
+    // Kita buat logic: tahun ke-i dari startYear
+    const currentYear = startYear - (numYears - 1) + i; 
+    // Atau jika mau maju: const currentYear = startYear + i;
+    // PADA KASUS INI: User kirim startDate 2026-02-13.
+    // Jika numYears=4, dan kita pakai loop i=0..3:
+    // User mungkin ingin melihat trend 2026, 2027, 2028, 2029 (Forecast?)
+    // ATAU user ingin melihat 2023, 2024, 2025, 2026 (Historical?).
+    
+    // Berdasarkan nama variabel (startDate), asumsi = mulai dari tahun ini ke depan.
+    // Tapi user bilang "kenapa kosong", padahal datanya "harusnya ada". 
+    // Data survei biasanya data lampau. Jadi kemungkinan besar user ingin melihat data TAHUN INI.
+    // Jika datanya cuma ada di bulan Februari 2026, maka query 
+    // "start 2026-02-16 to 2027-02-16" akan mencakup data itu.
+    // TAPI: format periode [start, end) mungkin tidak pas jika data ada di 2026-02-16 persis jam 00:00:00?
+    // Tidak, harusnya masuk karena >= start.
+
+    // Masalah lain: startDateObj berasal dari `req.query.date` (2026/02/16).
+    // Jadi periodStart = 2026/02/16.
+    
+    // Mari kita ubah agar "Tahun" itu 1 Jan - 31 Des, agar user melihat "Data Tahun 2026".
+    // Bukan "Data 16 Feb 2026 - 16 Feb 2027".
+    // Ini lebih masuk akal untuk "Laporan Tahunan".
+    
+    const yearToQuery = startYear + i; // Maju dari start date
+    
+    const periodStart = new Date(yearToQuery, 0, 1); // 1 Jan
+    const periodEnd = new Date(yearToQuery + 1, 0, 1); // 1 Jan tahun depan
 
     // Format tanggal untuk SQL
-    const fmt = d => d.toISOString().slice(0, 19).replace('T', ' ');
-    const startSql = fmt(periodStart);
-    const endSql = fmt(periodEnd);
+    // Menggunakan helper formatDateForQuery atau manual
+    // YYYY-MM-DD HH:mm:ss
+    // PadStart penting untuk bulan/tgl 1 digit
+    const toSql = (d) => {
+        const Y = d.getFullYear();
+        const M = String(d.getMonth() + 1).padStart(2, '0');
+        const D = String(d.getDate()).padStart(2, '0');
+        const H = String(d.getHours()).padStart(2, '0');
+        const m = String(d.getMinutes()).padStart(2, '0');
+        const s = String(d.getSeconds()).padStart(2, '0');
+        return `${Y}-${M}-${D} ${H}:${m}:${s}`;
+    };
+
+    const startSql = toSql(periodStart);
+    const endSql = toSql(periodEnd);
 
     // 3.1 Query agregasi penuh di antara [startSql, endSql)
     const sumFields = includedSubCodes.map(code => `SUM(\`${code}\`) AS \`${code}\``).join(', ');
+    
+    // Query Total
     let sql = `SELECT ${sumFields} FROM arus WHERE waktu >= ? AND waktu < ?`;
     const params = [startSql, endSql];
-    if (filters.simpangId) {
+    
+    if (filters.simpangId && filters.simpangId.toString().toLowerCase() !== 'semua') {
       sql += ` AND ID_Simpang = ?`;
       params.push(filters.simpangId);
     }
     if (filters.approach && filters.approach.toLowerCase() !== 'semua') {
-      sql += ` AND LOWER(dari_arah) = LOWER(?)`;
+      sql += ` AND dari_arah = ?`; 
       params.push(filters.approach);
     }
     if (filters.direction && filters.direction.toLowerCase() !== 'semua') {
-      sql += ` AND LOWER(ke_arah) = LOWER(?)`;
+      sql += ` AND ke_arah = ?`;
       params.push(filters.direction);
     }
 
@@ -389,21 +528,33 @@ async function getYearlySummary(startDateObj, filters, includedSubCodes, numYear
 
     // 3.2 Push ke yearlyData (label based on tahun periodStart)
     yearlyData.push({
-      year: String(periodStart.getFullYear()),
+      year: String(yearToQuery),
       data
     });
 
-    // 3.3 Hitung LHRT: daysInPeriod (bisa 365/366 tergantung leap year)
-    const daysInPeriod = Math.round((periodEnd - periodStart) / (1000 * 60 * 60 * 24));
-    // dailyAverage = total / daysInPeriod (bulatkan ke integer)
+    // 3.3 Hitung LHRT: daysInPeriod (365 atau 366)
+    // const daysInPeriod = Math.round((periodEnd - periodStart) / (1000 * 60 * 60 * 24));
+    // Sebenarnya LHRT (Lalu Lintas Harian Rata-rata Tahunan) idealnya dibagi 365/366.
+    // Tapi jika data hanya ada sedikit (misal survei cuma 1 minggu), membagi dengan 365 akan membuat rata-rata sangat kecil.
+    // Biasanya LHRT dihitung dari data setahun.
+    // Jika kita ingin "rata-rata per hari dari data yang ada", kita harus hitung jumlah hari unik yang ada datanya.
+    // TAPI standar LHRT memang Total Volume Setahun / Jumlah Hari dalam setahun.
+    
+    // Mari kita hitung jumlah hari unik yang punya data, agar rata-ratanya tidak drop jika data jarang.
+    // ATAU kembalikan LHRT standard.
+    // Untuk saat ini kita pakai 365/366 (selisih hari penuh).
+    const isLeap = (yearToQuery % 4 === 0 && yearToQuery % 100 !== 0) || (yearToQuery % 400 === 0);
+    const daysInYear = isLeap ? 366 : 365;
+
     const dailyAverage = {};
     for (const k of Object.keys(data)) {
-      dailyAverage[k] = daysInPeriod > 0 ? Math.round(data[k] / daysInPeriod) : 0;
+      // Jika data 0, rata-rata 0
+      dailyAverage[k] = Math.round(data[k] / daysInYear);
     }
 
     lhrtData.push({
-      period: `LHRT ${periodStart.getFullYear()}`,
-      daysInPeriod,
+      period: `LHRT ${yearToQuery}`,
+      daysInPeriod: daysInYear,
       data,
       dailyAverage
     });
@@ -773,6 +924,7 @@ module.exports = {
   // Tambahan:
   getDailySummaryByDateRange,
   getMonthlySummary,
+  getMonthsSummary,
   getYearlySummary,
   // KM Tabel API:
   getKMTabelData,
