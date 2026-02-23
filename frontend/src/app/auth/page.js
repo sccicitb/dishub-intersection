@@ -81,7 +81,7 @@ export default function Auth () {
                 onLoadingComplete={() => setLoaded(true)}
               />
               <div className='w-full'>
-                <h3 className="text-[16px] tracking-wide text-wrap font-bold">Viana Smart Mobility<br /><span className='font-normal'>Dinas Perhubungan Provinsi Daerah Istimewa Yogyakarta</span></h3>
+                <h3 className="text-[16px] tracking-wide text-wrap font-bold">Viana Smart Mobility<br /><span className='font-normal'>Dinas Perhubungan<br/> Daerah Istimewa Yogyakarta</span></h3>
               </div>
             </div>
           </div>
