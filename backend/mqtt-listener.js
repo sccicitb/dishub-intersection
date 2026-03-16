@@ -175,6 +175,7 @@ class UniversalListener {
   async _processDatabaseBulk (data, source, topicName) {
     try {
       const payload = data.message ? data.message : data;
+
       const { ID_Simpang, tipe_pendekat, arah_per_kelas, waktu } = payload;
 
       if (!arah_per_kelas || typeof arah_per_kelas !== 'object') {
@@ -232,7 +233,38 @@ class UniversalListener {
       }
 
       if (this.ioServer) {
-        this.ioServer.emit('flow_update', { ...payload, source, topic: topicName });
+        let fixedArahPerKelas = {};
+        const detectionsForUI = []; // Array tambahan untuk Frontend
+
+        Object.entries(arah_per_kelas || {}).forEach(([vType, value]) => {
+          if (typeof value === 'object' && Object.keys(value).length > 0) {
+            const arahKeys = Object.keys(value).filter(k => k !== 'TANPA_ARAH');
+
+            if (arahKeys.length > 0) {
+              fixedArahPerKelas[vType] = {};
+              arahKeys.forEach(k => {
+                fixedArahPerKelas[vType][k] = value[k];
+
+                // Masukkan ke array detections agar dibaca Frontend
+                detectionsForUI.push({
+                  class: vType,
+                  dari_arah: k.replace('_to_', ' → ')
+                });
+              });
+            }
+          }
+        });
+
+        // Emit dengan tambahan properti 'detections'
+        if (detectionsForUI.length > 0) {
+          this.ioServer.emit('flow_update', {
+            ...payload,
+            arah_per_kelas: fixedArahPerKelas,
+            detections: detectionsForUI,
+            source,
+            topic: topicName
+          });
+        }
       }
 
     } catch (error) {

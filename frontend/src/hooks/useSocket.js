@@ -22,7 +22,7 @@ export const useSocket = () => {
     });
 
     socketInstance.on('flow_update', (payload) => {
-      console.log('Flow update received:', payload);
+      // console.log('Flow update received:', payload);
       setLatestFlow(payload);
       
       // Append to history (keep last 100)

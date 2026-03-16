@@ -2,9 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import { maps } from "@/lib/apiService";
 
-export default function RecentVehicle({ customCSS }) {
+
+export default function RecentVehicle ({ customCSS }) {
   const [vehicles, setVehicles] = useState([]);
+  const [simpangMap, setSimpangMap] = useState({});
+
+  useEffect(() => {
+    maps.getAllSimpang().then(res => {
+      const map = {};
+      const rawData = Array.isArray(res.data.simpang) ? res.data.simpang : (Array.isArray(res.data) ? res.data : []);
+      rawData.forEach(s => {
+        const id = s.id; 
+        map[id] = s.Nama_Simpang;
+      });
+
+      setSimpangMap(map);
+    }).catch(err => {
+      console.error("Gagal mengambil data simpang:", err);
+    });
+  }, []);
 
   useEffect(() => {
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:9090", {
@@ -29,7 +47,7 @@ export default function RecentVehicle({ customCSS }) {
             id_simpang: data.ID_Simpang
           }
         ];
-        
+
         // Simpan 100 riwayat terakhir saja
         return newList.length > 100 ? newList.slice(newList.length - 100) : newList;
       });
@@ -50,7 +68,7 @@ export default function RecentVehicle({ customCSS }) {
         <span>Riwayat Deteksi Terkini</span>
         <span className="badge badge-success badge-xs">Realtime</span>
       </div>
-      
+
       <div className="overflow-auto flex-1 p-0">
         <table className="table table-xs w-full table-pin-rows border-separate border-spacing-0">
           <thead>
@@ -81,8 +99,9 @@ export default function RecentVehicle({ customCSS }) {
                       </span>
                     </div>
                   </td>
-                  <td className="align-top border-b border-r text-center font-medium p-2">
-                    {event.id_simpang}
+                  <td className="align-top border-b border-r text-center font-medium p-2 text-nowrap">
+                    {/* {event.id_simpang} */}
+                    {simpangMap[event.id_simpang] ? `${simpangMap[event.id_simpang]}` : ""}
                   </td>
                   <td className="align-top border-b p-2">
                     <div className="flex flex-wrap gap-1">
