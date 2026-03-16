@@ -16,10 +16,9 @@ const SelectionButtons = lazy(() => import("@/app/components/selectionButton"));
 const SurveyInfoTable = lazy(() => import("@/app/components/surveyorTable"));
 const RecentVehicle = lazy(() => import("@/app/components/recentVehicle"));
 const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
+const CameraStreamActive = lazy(() => import('@/app/components/cameraStreamActive'));
 const MapComponent = lazy(() => import("@/app/components/map"));
-const AdaptiveVideoPlayer = lazy(() => import('@/app/components/adaptiveCameraStream'));
 const HeaderSurvei = lazy(() => import("@/app/components/headerLhrt"));
-
 function SurveiSimpangPage () {
   const { isEditor, isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -40,7 +39,8 @@ function SurveiSimpangPage () {
   const [dataSimpangById, setDataSimpangById] = useState({});
   const [Cuaca, setCuaca] = useState("")
   const [fetchError, setFetchError] = useState(null);
-  
+  const [backendSocketData, setBackendSocketData] = useState([]); // Array to store recent detections
+
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
@@ -57,7 +57,81 @@ function SurveiSimpangPage () {
     return dateStr.replace(/-/g, '/');
   };
   
+const backendSocketRef = useRef(null);
+
+  // Initialize Backend Socket
+  useEffect(() => {
+    // Only connect if we have an active simpang (or 'semua')
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+    // Remove /api if present for socket connection (usually socket is on root)
+    const socketUrl = backendUrl.replace(/\/api\/?$/, '');
+    
+    // console.log(`Connecting to Backend Socket for RecentVehicle: ${socketUrl}`);
+    const backendSocket = io(socketUrl, {
+      transports: ['websocket'],
+      autoConnect: true,
+      reconnection: true,
+    });
+    backendSocketRef.current = backendSocket;
+
+    backendSocket.on('connect', () => {
+      console.log('✓ Connected to Backend Socket');
+    });
+
+    // Listen to flow_update events from mqtt-listener
+    backendSocket.on('flow_update', (data) => {
+      // Structure depends on mqtt-listener.js emit payload
+      // Ideally { ID_Simpang, detections: [...], ... }
+      // If data comes wrapped in `message` property like { message: { ... } }
+      const payload = data.message || data;
+      
+      const incomingSimpangId = String(payload.ID_Simpang || payload.id_simpang || '');
+      
+      // If activeSimpangId is set, filter by it. If "semua", show all (or limit?)
+      // Since RecentVehicle accumulates, we should be careful about mixing streams if "semua".
+      // But user likely wants to see stream for the selected simpang.
+      
+      // We need current value of activeSimpangId inside this callback.
+      // Since we use useEffect with dependency, this listener will be recreated when ID changes, which is fine.
+      
+      const currentActiveId = String(activeSimpangId || 'semua');
+      
+      if (currentActiveId !== 'semua' && incomingSimpangId !== currentActiveId) {
+        // console.log(`Skipping update for ${incomingSimpangId} not matching ${currentActiveId}`);
+        return; 
+      }
+
+      // Check if data has detections directly or nested
+      const detections = payload.detections || payload.items || [];
+      
+      // If no explicit detections array, can we construct it from flow counts?
+      // No, RecentVehicle needs individual vehicle classes and timestamps.
+      // If detections is missing, check if `arah_per_kelas` exists and try to fake it? 
+      // Probably not ideal. We assume backend sends detections.
+      
+      if (detections.length > 0 || payload.detections) {
+        const formattedData = {
+          message: {
+            detections: detections,
+            image_url: payload.image_url || payload.image || "",
+            timestamp: payload.waktu || payload.timestamp || new Date().toISOString(),
+            id_simpang: incomingSimpangId
+          }
+        };
+        setBackendSocketData(formattedData);
+      }
+    });
+
+    return () => {
+      if (backendSocketRef.current) {
+        backendSocketRef.current.disconnect();
+      }
+    };
+  }, [activeSimpangId]); // Re-subscribe when activeSimpangId changes
+
+
   const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
+
   // Fetch initial camera & vehicle data
 
   useEffect(() => {
@@ -128,17 +202,7 @@ function SurveiSimpangPage () {
     fetchData();
   }, [fetchStatus]); // Only once on mount
 
-  // Helper function untuk mendapatkan camera data berdasarkan activeCamera
-  const getActiveCameraData = () => {
-    if (!Array.isArray(dataCamera) || dataCamera.length === 0) return null;
 
-    return dataCamera.find(building => {
-      // Cek berbagai kemungkinan struktur data
-      if (building?.camera?.id === activeCamera) return true;
-      if (building?.id === activeCamera) return true;
-      return false;
-    });
-  };
 
   // Debounced fetchSurvey when dependencies change
   useEffect(() => {
@@ -341,6 +405,7 @@ function SurveiSimpangPage () {
       setActiveTitle("Survei Semua Simpang");
       setActiveSimpangId("semua");
       setCuaca("Cerah");
+      setActiveCamera(0); // Reset camera when all simpang selected
       await fetchVehicleData("semua");
       return;
     }
@@ -364,6 +429,19 @@ function SurveiSimpangPage () {
     setActiveSimpangId(loc.id);
     setCuaca(cuaca);
     
+    // Auto Select Camera if available in loc object
+    if (loc.cameras && loc.cameras.length > 0) {
+      setActiveCamera(loc.cameras[0].id);
+    } else {
+      // Fallback: Try to find camera in global state if not in loc
+      const relatedCamera = dataCamera.find(cam => String(cam.building_id || cam.simpang_id) === String(loc.id));
+      if (relatedCamera) {
+          setActiveCamera(relatedCamera.id);
+      } else {
+          setActiveCamera(0); // No camera found
+      }
+    }
+
     // Fetch immediately with the new simpang ID
     await fetchVehicleData(loc.id);
     // Fetch matrix data
@@ -381,41 +459,7 @@ function SurveiSimpangPage () {
     return () => clearTimeout(timer);
   }, [dateInput, activePendekatan, activeInterval, activeSimpangId]);
 
-  // Render CCTV Stream Component berdasarkan socket_event
-  const renderCCTVStream = () => {
-    const activeCameraData = getActiveCameraData();
-    // console.log(activeCameraData)
-    if (!activeCameraData) {
-      return (
-        <CCTVStream
-          data={null}
-          large
-          title={`CCTV Camera (Loading...)`}
-        />
-      );
-    }
 
-    if (activeCameraData.socket_event === "not_yet_assign") {
-      return (
-        <div className="bg-base-200 rounded-lg shadow-md overflow-hidden">
-          <AdaptiveVideoPlayer
-            videoUrl={activeCameraData.url}
-            title={`Video`}
-            large
-            onClick={() => console.log(`Clicked on`)}
-          />
-        </div>
-      );
-    }
-
-    return (
-      <CCTVStream
-        data={streamData[activeCamera] || null}
-        large
-        title={`CCTV Camera ${activeCamera} (${activeSimpang})`}
-      />
-    );
-  };
 
   return (
     <div>
@@ -423,10 +467,10 @@ function SurveiSimpangPage () {
           <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
         <div className="w-[95%] m-auto">
           <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
-            <RecentVehicle customCSS={'h-[450px]'} data={streamData[activeCamera]} />
-            <div className="py-1 w-full h-full items-center flex bg-black rounded-lg shadow-md overflow-hidden justify-center">
+            <RecentVehicle customCSS={'h-[450px]'} data={backendSocketData} />
+            <div className="py-1 w-full h-full items-center flex overflow-hidden justify-center">
               <div className="w-full">
-                {renderCCTVStream()}
+                <CameraStreamActive activeCameraId={activeCamera} />
               </div>
             </div>
           </div>

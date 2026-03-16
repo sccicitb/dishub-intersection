@@ -3,7 +3,41 @@
 import { authApi } from "@/lib/apiService";
 import { useState, useEffect } from 'react';
 import ModalFormUser from '@/app/components/ui/modalForm';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
+
+const USERS_PER_PAGE = 10;
+
+const getCookieValue = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+};
+
+const getCurrentUserId = () => {
+  const userCookie = getCookieValue('user');
+  if (userCookie) {
+    try {
+      const parsedUser = JSON.parse(decodeURIComponent(userCookie));
+      if (parsedUser?.id) return parseInt(parsedUser.id);
+    } catch (error) {
+      console.warn('Gagal parse user dari cookies:', error);
+    }
+  }
+
+  const userData = localStorage.getItem('user');
+  if (userData) {
+    try {
+      const parsedUser = JSON.parse(userData);
+      if (parsedUser?.id) return parseInt(parsedUser.id);
+    } catch (error) {
+      console.warn('Gagal parse user dari localStorage:', error);
+    }
+  }
+
+  const userId = localStorage.getItem('id_user') || localStorage.getItem('userId');
+  return userId ? parseInt(userId) : null;
+};
 
 const AdminPage = () => {
   const [users, setUsers] = useState([]);
@@ -13,10 +47,8 @@ const AdminPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage] = useState(10);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [formUser, setFormUser] = useState(null);
-  const [selectedRole, setSelectedRole] = useState(null);
   const [updatingRole, setUpdatingRole] = useState(false);
   const [modalTab, setModalTab] = useState('details'); // 'details' or 'password' (modal)
   const [mainTab, setMainTab] = useState('user-management'); // 'user-management' or 'password' (main page)
@@ -26,58 +58,16 @@ const AdminPage = () => {
   const [changeUserPasswordForm, setChangeUserPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
   const [changeUserPasswordLoading, setChangeUserPasswordLoading] = useState(false);
 
-  // Helper function untuk ambil cookie value
-  const getCookieValue = (name) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
-  };
-
   // Fetch users dari API
   useEffect(() => {
     fetchUsers();
-    // Get current logged-in user dari cookies
     try {
-      // Cek dari cookies dengan nama 'user' yang berisi JSON
-      const userCookie = getCookieValue('user');
-      if (userCookie) {
-        try {
-          // Cookie value mungkin di-encode, jadi decode dulu
-          const decodedUser = decodeURIComponent(userCookie);
-          const parsedUser = JSON.parse(decodedUser);
-          if (parsedUser?.id) {
-            setCurrentUser({ id: parseInt(parsedUser.id) });
-
-            return;
-          }
-        } catch (e) {
-          console.warn('Gagal parse user dari cookies:', e);
-        }
+      const currentUserId = getCurrentUserId();
+      if (currentUserId) {
+        setCurrentUser({ id: currentUserId });
+      } else {
+        console.warn('User ID tidak ditemukan di cookies atau localStorage');
       }
-      
-      // Fallback: cek dari localStorage (format JSON)
-      let userData = localStorage.getItem('user');
-      if (userData) {
-        try {
-          const parsedUser = JSON.parse(userData);
-          if (parsedUser?.id) {
-            setCurrentUser({ id: parseInt(parsedUser.id) });
-            return;
-          }
-        } catch (e) {
-          console.warn('Gagal parse user dari localStorage:', e);
-        }
-      }
-      
-      // Fallback: cek dari berbagai kemungkinan key di localStorage
-      const userId = localStorage.getItem('id_user') || localStorage.getItem('userId');
-      if (userId) {
-        setCurrentUser({ id: parseInt(userId) });
-        return;
-      }
-      
-      console.warn('User ID tidak ditemukan di cookies atau localStorage');
     } catch (err) {
       console.warn('Error getting current user:', err);
     }
@@ -106,77 +96,21 @@ const AdminPage = () => {
     { id: 3, name: 'Viewer' }
   ];
 
-  useEffect(() => {
-    if (selectedUser) {
-      setSelectedRole(selectedUser.role_id); // atau role_id dari API
-    }
-  }, [selectedUser]);
-
-  const handleChangeRole = async (newRoleId) => {
-    setSelectedRole(newRoleId);
-    setUpdatingRole(true);
-    try {
-      const response = await authApi.addUserRole(selectedUser.id, { role_id: newRoleId });
-      toast.success(response.message || 'Berhasil mengubah role');
-    } catch (err) {
-      toast.error('Gagal mengubah role: ' + err.message);
-    } finally {
-      setUpdatingRole(false);
-    }
-  };
-
-  // const setAPI = async (data) => {
-  //   try {
-  //     setIsFormModalOpen(false)
-  //     setLoading(true);
-  //     console.log(data)
-  //     const response = await authApi.createNewUser(data);
-  //     if (response.status !== 201) return;
-  //     toast.success("Sukses membuat data baru " + response.message, { position: 'top-right' });
-  //   }
-  //   catch (err) {
-  //     toast.error("Gagal membuat data baru " + err.message, { position: 'top-right' });
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }
-
-  const handleCreateOrUpdateUser = async (data) => {
-    try {
-      setLoading(true);
-      const response = formUser
-        ? await authApi.updateUser(formUser.id, data)
-        : await authApi.createNewUser(data);
-
-      if (!response.success) return;
-      toast.success("Sukses membuat data baru " + response.message, { position: 'top-right' });
-      console.log(response.status)
-
-      toast.success(`Sukses ${formUser ? 'mengubah' : 'menambah'} user`, {
-        position: 'top-right',
-      });
-      setIsFormModalOpen(false);
-      fetchUsers();
-    } catch (err) {
-      toast.error(`Gagal menyimpan data user: ${err.message}`, {
-        position: 'top-right',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Filter users berdasarkan search term
   const filteredUsers = users.filter(user =>
     user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   // Pagination
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const indexOfLastUser = currentPage * USERS_PER_PAGE;
+  const indexOfFirstUser = indexOfLastUser - USERS_PER_PAGE;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
 
   const handleViewUser = (user) => {
     setSelectedUser(user);
@@ -350,12 +284,6 @@ const AdminPage = () => {
   const stats = {
     totalUsers: users.length,
     activeUsers: users.filter(user => user.status === 'active').length,
-    newUsers: users.filter(user => {
-      const userDate = new Date(user.created_at);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return userDate > weekAgo;
-    }).length
   };
 
   if (loading) {
@@ -408,7 +336,7 @@ const AdminPage = () => {
                 : 'text-slate-600 border-transparent hover:text-slate-900'
             }`}
           >
-            ðŸ‘¥ Manajemen Pengguna
+            Manajemen Pengguna
           </button>
           <button
             onClick={() => setMainTab('password')}
@@ -418,7 +346,7 @@ const AdminPage = () => {
                 : 'text-slate-600 border-transparent hover:text-slate-900'
             }`}
           >
-            ðŸ” Password
+            Password
           </button>
         </div>
 
@@ -468,7 +396,7 @@ const AdminPage = () => {
                     className="px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
                     title="Refresh"
                   >
-                    âŸ³
+                    Refresh
                   </button>
                 </div>
               </div>
@@ -551,7 +479,7 @@ const AdminPage = () => {
                     onClick={() => setCurrentPage(currentPage - 1)}
                     className="px-3 py-2 border border-slate-300 rounded-lg text-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    â† Prev
+                    ← Prev
                   </button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
@@ -571,7 +499,7 @@ const AdminPage = () => {
                     onClick={() => setCurrentPage(currentPage + 1)}
                     className="px-3 py-2 border border-slate-300 rounded-lg text-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Next â†’
+                    Next →
                   </button>
                 </div>
               )}
@@ -666,7 +594,7 @@ const AdminPage = () => {
                     : 'text-slate-600 border-transparent hover:text-slate-900'
                 }`}
               >
-                ðŸ” Change Password
+                Change Password
               </button>
             </div>
             

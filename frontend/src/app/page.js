@@ -2,11 +2,13 @@
 
 import { useEffect, useState, Suspense, lazy } from "react";
 import { useAuth } from "@/app/context/authContext";
-import { vehicles } from "@/lib/apiAccess";
+import { vehicles, intersection } from "@/lib/apiAccess";
 import { maps } from "@/lib/apiService";
 import { exportSurveyDataToExcel } from '@/utils/exportExcel';
 import TableMatrix from "@/app/components/table/tableMatrix";
 import { useTrafficMatrix } from "@/hooks/useTrafficMatrix";
+import IntersectionFlowCard from "@/app/components/IntersectionFlowCard";
+import ClassificationChart from "@/app/components/ClassificationChart"; // Import new ClassificationChart
 
 const TotalChart = lazy(() => import("@/app/components/totalChart"));
 const VehicleChart = lazy(() => import("@/app/components/grafikKeluarMasuk"));
@@ -38,6 +40,19 @@ export default function Home () {
     masukPercentage: 0,
     keluarPercentage: 0
   }]);
+
+  // State for DIY Total Data
+  const [diyChartData, setDiyChartData] = useState([{
+    name: 'Today',
+    masuk: 0,
+    keluar: 0,
+    masukPercentage: 0,
+    keluarPercentage: 0
+  }]);
+
+  // State for Classification
+  const [classificationData, setClassificationData] = useState([]);
+  const [loadingClassification, setLoadingClassification] = useState(false);
 
   const [ioByArahData, setIOByArahData] = useState([{
 
@@ -195,6 +210,14 @@ export default function Home () {
           vehicles.getByTipe(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
           vehicles.getByMinute(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
         ]);
+
+        // Fetch new Classification Data
+        fetchClassificationData();
+        // Fetch Simpang Total Flow
+        fetchTotalFlowData();
+        // Fetch DIY Total Flow
+        fetchDiyTotalFlow();
+
         fetchTrafficMatrix(
           simpangFilter,
           activeFilter === 'customrange' ? customRangeStart : null,
@@ -202,6 +225,8 @@ export default function Home () {
           activeFilter
         ).catch(err => console.warn('Matrix fetch warning:', err));
 
+        // Note: We still process processVehicleData/arah/type from old endpoints for backward compatibility 
+        // until we fully switch over. But ChartData will be overwritten by fetchTotalFlowData if successful.
         processVehicleData(vehicleResponse);
         processArahData(arahResponse);
         processTypeData(typeResponse);
@@ -211,6 +236,95 @@ export default function Home () {
         setDefaultValues();
       } finally {
         setIsLoading(false);
+      }
+    };
+
+    // New function to fetch total flow
+    const fetchTotalFlowData = async () => {
+      try {
+        const response = await intersection.getTotalFlow(
+          simpangFilter,
+          activeFilter,
+          activeFilter === 'customrange' ? customRangeStart : null,
+          activeFilter === 'customrange' ? customRangeEnd : null
+        );
+
+        if (response?.status === 200 && response?.data?.status === 'success') {
+          const { total_IN, total_OUT } = response.data.data;
+          const totalTraffic = total_IN + total_OUT;
+
+          const newData = [{
+            name: getPeriodDisplayText(activeFilter),
+            masuk: total_IN,
+            keluar: total_OUT,
+            masukPercentage: totalTraffic > 0 ? parseFloat((total_IN / totalTraffic * 100).toFixed(1)) : 0,
+            keluarPercentage: totalTraffic > 0 ? parseFloat((total_OUT / totalTraffic * 100).toFixed(1)) : 0
+          }];
+          setChartData(newData);
+        }
+      } catch (err) {
+        console.error("Error fetching total flow:", err);
+      }
+    };
+
+    // New function to fetch DIY total flow
+    const fetchDiyTotalFlow = async () => {
+      try {
+        // Use vehicles.getAll for DIY aggregate as it aligns with getChartMasukKeluar
+        const response = await vehicles.getAll(
+          activeFilter,
+          'semua',
+          activeFilter === 'customrange' ? customRangeStart : null,
+          activeFilter === 'customrange' ? customRangeEnd : null
+        );
+
+        if (response?.status === 200 && response?.data?.data && response.data.data.length > 0) {
+          // vehicles.getAll returns array of objects with total_IN/OUT
+          const total_IN = parseFloat(response.data.data[0]?.total_IN) || 0;
+          const total_OUT = parseFloat(response.data.data[0]?.total_OUT) || 0;
+          const totalTraffic = total_IN + total_OUT;
+
+          const newDiyData = [{
+            name: getPeriodDisplayText(activeFilter),
+            masuk: total_IN,
+            keluar: total_OUT,
+            masukPercentage: totalTraffic > 0 ? parseFloat((total_IN / totalTraffic * 100).toFixed(1)) : 0,
+            keluarPercentage: totalTraffic > 0 ? parseFloat((total_OUT / totalTraffic * 100).toFixed(1)) : 0
+          }];
+          setDiyChartData(newDiyData);
+        } else {
+          // Fallback if fails
+          setDiyChartData([{
+            name: 'Today',
+            masuk: 0,
+            keluar: 0,
+            masukPercentage: 0,
+            keluarPercentage: 0
+          }]);
+        }
+      } catch (err) {
+        console.error("Error fetching DIY total flow:", err);
+      }
+    };
+
+    // New function to fetch classification
+    const fetchClassificationData = async () => {
+      setLoadingClassification(true);
+      try {
+        const response = await intersection.getFlowByClassification(
+          simpangFilter,
+          activeFilter,
+          activeFilter === 'customrange' ? customRangeStart : null,
+          activeFilter === 'customrange' ? customRangeEnd : null
+        );
+
+        if (response?.status === 200 && response?.data?.status === 'success') {
+          setClassificationData(response.data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching classification:", err);
+      } finally {
+        setLoadingClassification(false);
       }
     };
 
@@ -622,140 +736,166 @@ export default function Home () {
       <Suspense fallback={<div>Loading Charts...</div>}>
         <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
         {(!isAdmin === !isViewer) ? (
-          <>
-            <div className="w-[90%]">
-              {/* Filter buttons and Period display on same row */}
-              <div className="flex flex-wrap items-center gap-4 mb-8">
-                {/* Simpang Filter Dropdown */}
-                <select
-                  value={simpangFilter}
-                  onChange={handleSimpangChange}
-                  className="px-3 py-1.5 rounded-md bg-base-300 border border-base-300 hover:border-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-900/90 cursor-pointer"
-                >
-                  <option value="semua">Semua Simpang</option>
-                  {simpangList.map((simpang) => (
-                    <option key={simpang.id} value={simpang.id}>
-                      Camera {simpang.Nama_Simpang || `Lokasi`} ({simpang.id})
-                    </option>
-                  ))}
-                </select>
+          <div className="w-[90%]">
+            {/* Filter buttons and Period display on same row */}
+            <div className="flex flex-wrap items-center gap-4 mb-8">
+              {/* Simpang Filter Dropdown */}
+              <select
+                value={simpangFilter}
+                onChange={handleSimpangChange}
+                className="px-3 py-1.5 rounded-md bg-base-300 border border-base-300 hover:border-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-900/90 cursor-pointer"
+              >
+                <option value="semua">Semua Simpang</option>
+                {simpangList.map((simpang) => (
+                  <option key={simpang.id} value={simpang.id}>
+                    Camera {simpang.Nama_Simpang || `Lokasi`} ({simpang.id})
+                  </option>
+                ))}
+              </select>
 
-                {/* Filter buttons */}
-                <button
-                  onClick={() => handleFilterChange('day')}
-                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'day'
-                    ? 'bg-blue-950 text-white'
-                    : 'bg-base-300 hover:bg-blue-200'
-                    }`}
-                >
-                  Hari Ini
-                </button>
-                <button
-                  onClick={() => handleFilterChange('week')}
-                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'week'
-                    ? 'bg-blue-950 text-white'
-                    : 'bg-base-300 hover:bg-blue-200'
-                    }`}
-                >
-                  Minggu Ini
-                </button>
-                <button
-                  onClick={() => handleFilterChange('month')}
-                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'month'
-                    ? 'bg-blue-950 text-white'
-                    : 'bg-base-300 hover:bg-blue-200'
-                    }`}
-                >
-                  Bulan Ini
-                </button>
-                <button
-                  onClick={() => handleFilterChange('quarter')}
-                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'quarter'
-                    ? 'bg-blue-950 text-white'
-                    : 'bg-base-300 hover:bg-blue-200'
-                    }`}
-                >
-                  Quarter Ini
-                </button>
-                <button
-                  onClick={() => handleFilterChange('year')}
-                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'year'
-                    ? 'bg-blue-950 text-white'
-                    : 'bg-base-300 hover:bg-blue-200'
-                    }`}
-                >
-                  Tahun Ini
-                </button>
+              {/* Filter buttons */}
+              <button
+                onClick={() => handleFilterChange('day')}
+                className={`px-3 py-1.5 rounded-md ${activeFilter === 'day'
+                  ? 'bg-blue-950 text-white'
+                  : 'bg-base-300 hover:bg-blue-200'
+                  }`}
+              >
+                Hari Ini
+              </button>
+              <button
+                onClick={() => handleFilterChange('week')}
+                className={`px-3 py-1.5 rounded-md ${activeFilter === 'week'
+                  ? 'bg-blue-950 text-white'
+                  : 'bg-base-300 hover:bg-blue-200'
+                  }`}
+              >
+                Minggu Ini
+              </button>
+              <button
+                onClick={() => handleFilterChange('month')}
+                className={`px-3 py-1.5 rounded-md ${activeFilter === 'month'
+                  ? 'bg-blue-950 text-white'
+                  : 'bg-base-300 hover:bg-blue-200'
+                  }`}
+              >
+                Bulan Ini
+              </button>
+              <button
+                onClick={() => handleFilterChange('quarter')}
+                className={`px-3 py-1.5 rounded-md ${activeFilter === 'quarter'
+                  ? 'bg-blue-950 text-white'
+                  : 'bg-base-300 hover:bg-blue-200'
+                  }`}
+              >
+                Quarter Ini
+              </button>
+              <button
+                onClick={() => handleFilterChange('year')}
+                className={`px-3 py-1.5 rounded-md ${activeFilter === 'year'
+                  ? 'bg-blue-950 text-white'
+                  : 'bg-base-300 hover:bg-blue-200'
+                  }`}
+              >
+                Tahun Ini
+              </button>
 
-                {/* Custom Date Range Button */}
-                <button
-                  onClick={() => {
-                    setActiveFilter('customrange');
-                    setPeriodDisplayText('');
-                  }}
-                  className={`px-3 py-1.5 rounded-md ${activeFilter === 'customrange'
-                    ? 'bg-blue-950 text-white'
-                    : 'bg-base-300 hover:bg-blue-200'
-                    }`}
-                >
-                  Custom Range
-                </button>
+              {/* Custom Date Range Button */}
+              <button
+                onClick={() => {
+                  setActiveFilter('customrange');
+                  setPeriodDisplayText('');
+                }}
+                className={`px-3 py-1.5 rounded-md ${activeFilter === 'customrange'
+                  ? 'bg-blue-950 text-white'
+                  : 'bg-base-300 hover:bg-blue-200'
+                  }`}
+              >
+                Custom Range
+              </button>
 
-                {/* Custom Date Range Inputs - Show only when custom range is selected */}
-                {activeFilter === 'customrange' && (
-                  <div className="flex gap-2 items-center">
-                    <input
-                      type="date"
-                      value={customRangeStart}
-                      onChange={(e) => setCustomRangeStart(e.target.value)}
-                      className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    />
-                    <span className="text-gray-500">hingga</span>
-                    <input
-                      type="date"
-                      value={customRangeEnd}
-                      onChange={(e) => setCustomRangeEnd(e.target.value)}
-                      className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    />
-                  </div>
-                )}
-
-                {/* Period Display - appears after filter buttons */}
-                {periodDisplayText && (
-                  <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap">
-                    Periode: {periodDisplayText}
-                  </div>
-                )}
-
-                {/* Export Excel Button */}
-                {isAdmin && (
-                  <button
-                    onClick={handleExportExcel}
-                    disabled={exportLoading}
-                    className="px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
-                  >
-                    {exportLoading ? (
-                      <>
-                        Exporting...
-                      </>
-                    ) : (
-                      <>
-                        Export Excel
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-              {isLoading ? (
-                <div className="flex justify-center items-center h-64">
-                  <div className="font-medium">Loading chart data...</div>
+              {/* Custom Date Range Inputs - Show only when custom range is selected */}
+              {activeFilter === 'customrange' && (
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="date"
+                    value={customRangeStart}
+                    onChange={(e) => setCustomRangeStart(e.target.value)}
+                    className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  <span className="text-gray-500">hingga</span>
+                  <input
+                    type="date"
+                    value={customRangeEnd}
+                    onChange={(e) => setCustomRangeEnd(e.target.value)}
+                    className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
                 </div>
-              ) : (
-                <TotalChart data={chartData} />
+              )}
+
+              {/* Period Display - appears after filter buttons */}
+              {periodDisplayText && (
+                <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap">
+                  Periode: {periodDisplayText}
+                </div>
+              )}
+
+              {/* Export Excel Button */}
+              {isAdmin && (
+                <button
+                  onClick={handleExportExcel}
+                  disabled={exportLoading}
+                  className="px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
+                >
+                  {exportLoading ? (
+                    <>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      Export Excel
+                    </>
+                  )}
+                </button>
               )}
             </div>
-          </>
-        ) : (<></>)}
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="font-medium">Loading chart data...</div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6 w-full">
+                {/* Total Charts Grid */}
+                <div className="grid grid-cols-1 gap-6 w-full">
+                  {/* DIY Total Chart */}
+                  <div className="flex flex-col gap-2">
+                    <h3 className="text-lg font-semibold text-gray-700 ml-1">Total Kendaraan Seluruh DIY</h3>
+                    <TotalChart data={diyChartData} />
+                  </div>
+
+                  {/* Simpang Total Chart */}
+                  <div className="flex flex-col gap-2">
+                    <h3 className="text-lg font-semibold text-gray-700 ml-1">Total Kendaraan {namaLokasi}</h3>
+                    <TotalChart data={chartData} />
+                  </div>
+                </div>
+
+                {/* Classification Chart - Full Width */}
+                <div className="grid grid-cols-1 gap-6 w-full">
+                  <ClassificationChart data={classificationData} />
+                </div>
+
+                {/* Intersection Flow Card - Visible for both "All" and specific simpang */}
+                <IntersectionFlowCard
+                  simpangId={simpangFilter}
+                  activeFilter={activeFilter}
+                  startDate={activeFilter === 'customrange' ? customRangeStart : null}
+                  endDate={activeFilter === 'customrange' ? customRangeEnd : null}
+                />
+              </div>
+            )}
+          </div>
+        ) : (<div className="w-[90%]"></div>)}
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="font-medium">Loading chart data...</div>
@@ -763,13 +903,19 @@ export default function Home () {
         ) : (
           <div className="justify-between w-[90%] flex flex-col gap-5">
             <div className="bg-base-200/90 p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
-              <div className="items-center flex flex-col md:flex-row w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+              <div className="items-center flex flex-col w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+              <div>
+                <h3 className="text-xl font-extrabold text-slate-800 tracking-tight text-center">Komposisi Kendaraan</h3>
+                <p className="text-sm text-slate-400 font-medium text-center">Keluar Masuk Yogyakarta per Klasifikasi</p>
+              </div>
+              <div className="items-center flex flex-col md:flex-row w-full gap-6 mt-4">
                 <div className="w-full md:w-1/2">
                   <VehicleChart rawData={vehicleData?.incomingVehicles} category="in" />
                 </div>
                 <div className="w-full md:w-1/2">
                   <VehicleChart rawData={vehicleData?.outgoingVehicles} category="out" />
                 </div>
+              </div>
               </div>
             </div>
             <div className="bg-base-200/90 p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
@@ -788,42 +934,42 @@ export default function Home () {
           </div>
         )
         }
-      </Suspense >
 
-      {!matrixError && dataChord?.arahPergerakan && Object.keys(dataChord.arahPergerakan).length > 0 && !isLoading ?
-        ( 
-          <div className="justify-between w-[90%] flex flex-col gap-5">
-            <div className="bg-base-200/90  w-full p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
-              <div className="items-center flex flex-col w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-                {hasValidMatrixData() && (
-                  <div className="w-fit m-auto hidden lg:block">
-                    <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
+        {!matrixError && dataChord?.arahPergerakan && Object.keys(dataChord.arahPergerakan).length > 0 && !isLoading ?
+          (
+            <div className="justify-between w-[90%] flex flex-col gap-5">
+              <div className="bg-base-200/90  w-full p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
+                <div className="items-center flex flex-col w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                  {hasValidMatrixData() && (
+                    <div className="w-fit m-auto hidden lg:block">
+                      <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
+                    </div>
+                  )}
+                  <div className=" w-full">
+                    <TableMatrix
+                      categories={categories}
+                      asalTujuan={dataChord?.asalTujuan || {}}
+                      arahPergerakan={dataChord?.arahPergerakan || {}}
+                      loading={matrixLoading}
+                      error={matrixError}
+                    />
                   </div>
-                )}
-                <div className=" w-full">
-                  <TableMatrix
-                    categories={categories}
-                    asalTujuan={dataChord?.asalTujuan || {}}
-                    arahPergerakan={dataChord?.arahPergerakan || {}}
-                    loading={matrixLoading}
-                    error={matrixError}
-                  />
                 </div>
               </div>
             </div>
-          </div>
-        ) : (<div className="flex justify-center items-center h-64">
-          <div className="font-medium">Loading chart data...</div>
-        </div>)}
+          ) : (<div className="flex justify-center items-center h-64">
+            <div className="font-medium">Loading chart data...</div>
+          </div>)}
 
-      <div className="w-[90%]">
-        <div className="bg-base-200/90 w-full flex flex-col p-4 gap-8 rounded-3xl backdrop-blur-sm shadow-gray-200">
-          <div className="w-full px-8 pt-4 rounded-2xl bg-white shadow-sm border border-gray-100">
-            {isAdmin && <CameraStream />}
+        <div className="w-[90%]">
+          <div className="bg-base-200/90 w-full flex flex-col p-4 gap-8 rounded-3xl backdrop-blur-sm shadow-gray-200">
+            <div className="w-full px-8 pt-4 rounded-2xl bg-white shadow-sm border border-gray-100">
+              {isAdmin && <CameraStream />}
+            </div>
+            <MapComponent />
           </div>
-          <MapComponent />
         </div>
-      </div>
+      </Suspense>
     </div >
   );
 }

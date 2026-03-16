@@ -1,4 +1,4 @@
-import { Ubuntu, Ubuntu_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { headers } from "next/headers"; // Ganti dari cookies() ke headers()
 import "./globals.css";
 import LoadingBar from "@/app/components/loadingBar";
@@ -6,8 +6,12 @@ import LayoutMain from "@/app/components/layoutMain";
 import { AuthProvider } from "@/app/context/authContext";
 import { Suspense } from "react";
 import { Toaster } from 'sonner';
-const ubuntu = Ubuntu({ weight: ["400", "500", "700"], variable: "--font-ubuntu", subsets: ["latin"] });
-const ubuntuMono = Ubuntu_Mono({ weight: ["400", "700"], variable: "--font-ubuntu-mono", subsets: ["latin"] });
+
+const jakarta = Plus_Jakarta_Sans({ 
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-jakarta',
+});
 
 export const metadata = {
   title: "Dishub Viana",
@@ -29,7 +33,7 @@ export default function RootLayout ({ children }) {
 
   return (
     <html lang="en" data-theme="light" attribute="class">
-      <body className={`${ubuntu.variable} ${ubuntuMono.variable} antialiased font-ubuntu`}>
+      <body className={`${jakarta.className} ${jakarta.variable} antialiased`}>
         <Toaster
           position="top-center"
           richColors

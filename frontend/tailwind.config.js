@@ -10,8 +10,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        ubuntu: ["var(--font-ubuntu)", "system-ui", "sans-serif"],
-        mono: ["var(--font-ubuntu-mono)", "monospace"],
+        // ubuntu: ["var(--font-ubuntu)", "system-ui", "sans-serif"],
+        // mono: ["var(--font-ubuntu-mono)", "monospace"],
+        sans: ['var(--font-jakarta)', 'sans-serif'],
       },
         colors: {
         // 'primary': 'oklch(0.7 0.2 230)' becomes:

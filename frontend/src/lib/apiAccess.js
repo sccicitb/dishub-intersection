@@ -89,6 +89,30 @@ export const vehicles = {
   }
 }
 
+export const intersection = {
+  getFlowByDirection: (simpangId, filter = 'day', startDate = null, endDate = null) => {
+    let url = `/intersection/flow/${simpangId}?filter=${filter}`;
+    if (filter === 'customrange' && startDate && endDate) {
+      url += `&start-date=${startDate}&end-date=${endDate}`;
+    }
+    return getRequest(url);
+  },
+  getTotalFlow: (simpangId, filter = 'day', startDate = null, endDate = null) => {
+    let url = `/intersection/total-flow/${simpangId}?filter=${filter}`;
+    if (filter === 'customrange' && startDate && endDate) {
+      url += `&start-date=${startDate}&end-date=${endDate}`;
+    }
+    return getRequest(url);
+  },
+  getFlowByClassification: (simpangId, filter = 'day', startDate = null, endDate = null) => {
+    let url = `/intersection/classification/${simpangId}?filter=${filter}`;
+    if (filter === 'customrange' && startDate && endDate) {
+      url += `&start-date=${startDate}&end-date=${endDate}`;
+    }
+    return getRequest(url);
+  }
+}
+
 export const maps = {
   getAll: () => getRequest("/maps/buildings")
 }
