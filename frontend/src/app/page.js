@@ -881,9 +881,6 @@ export default function Home () {
                 </div>
 
                 {/* Classification Chart - Full Width */}
-                <div className="grid grid-cols-1 gap-6 w-full">
-                  <ClassificationChart data={classificationData} />
-                </div>
 
                 {/* Intersection Flow Card - Visible for both "All" and specific simpang */}
                 <IntersectionFlowCard
@@ -892,6 +889,10 @@ export default function Home () {
                   startDate={activeFilter === 'customrange' ? customRangeStart : null}
                   endDate={activeFilter === 'customrange' ? customRangeEnd : null}
                 />
+                
+                <div className="grid grid-cols-1 gap-6 w-full">
+                  <ClassificationChart data={classificationData} />
+                </div>
               </div>
             )}
           </div>
@@ -904,27 +905,33 @@ export default function Home () {
           <div className="justify-between w-[90%] flex flex-col gap-5">
             <div className="bg-base-200/90 p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
               <div className="items-center flex flex-col w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-              <div>
-                <h3 className="text-xl font-extrabold text-slate-800 tracking-tight text-center">Komposisi Kendaraan</h3>
-                <p className="text-sm text-slate-400 font-medium text-center">Keluar Masuk Yogyakarta per Klasifikasi</p>
-              </div>
-              <div className="items-center flex flex-col md:flex-row w-full gap-6 mt-4">
-                <div className="w-full md:w-1/2">
-                  <VehicleChart rawData={vehicleData?.incomingVehicles} category="in" />
+                <div>
+                  <h3 className="text-xl font-extrabold text-slate-800 tracking-tight text-center">Komposisi Kendaraan</h3>
+                  <p className="text-sm text-slate-400 font-medium text-center">Keluar Masuk Yogyakarta per Klasifikasi</p>
                 </div>
-                <div className="w-full md:w-1/2">
-                  <VehicleChart rawData={vehicleData?.outgoingVehicles} category="out" />
+                <div className="items-center flex flex-col md:flex-row w-full gap-6 mt-4">
+                  <div className="w-full md:w-1/2">
+                    <VehicleChart rawData={vehicleData?.incomingVehicles} category="in" />
+                  </div>
+                  <div className="w-full md:w-1/2">
+                    <VehicleChart rawData={vehicleData?.outgoingVehicles} category="out" />
+                  </div>
                 </div>
-              </div>
               </div>
             </div>
             <div className="bg-base-200/90 p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
-              <div className="items-center flex flex-col md:flex-row w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-                <div className="w-full md:w-1/2">
-                  <VehicleChart rawData={incomingVehiclesBar2} category="in" />
+              <div className="items-center flex flex-col w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                <div>
+                  <h3 className="text-xl font-extrabold text-slate-800 tracking-tight text-center">Komposisi Kendaraan</h3>
+                  <p className="text-sm text-slate-400 font-medium text-center">Keluar Masuk Yogyakarta per Klasifikasi</p>
                 </div>
-                <div className="w-full md:w-1/2">
-                  <VehicleChart rawData={outgoingVehiclesBar2} category="out" />
+                <div className="items-center flex flex-col md:flex-row w-full gap-6 mt-4">
+                  <div className="w-full md:w-1/2">
+                    <VehicleChart rawData={incomingVehiclesBar2} category="in" />
+                  </div>
+                  <div className="w-full md:w-1/2">
+                    <VehicleChart rawData={outgoingVehiclesBar2} category="out" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -935,31 +942,33 @@ export default function Home () {
         )
         }
 
-        {!matrixError && dataChord?.arahPergerakan && Object.keys(dataChord.arahPergerakan).length > 0 && !isLoading ?
-          (
-            <div className="justify-between w-[90%] flex flex-col gap-5">
-              <div className="bg-base-200/90  w-full p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
-                <div className="items-center flex flex-col w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-                  {hasValidMatrixData() && (
-                    <div className="w-fit m-auto hidden lg:block">
-                      <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
+        {
+          !matrixError && dataChord?.arahPergerakan && Object.keys(dataChord.arahPergerakan).length > 0 && !isLoading ?
+            (
+              <div className="justify-between w-[90%] flex flex-col gap-5">
+                <div className="bg-base-200/90  w-full p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
+                  <div className="items-center flex flex-col w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                    {hasValidMatrixData() && (
+                      <div className="w-fit m-auto hidden lg:block">
+                        <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
+                      </div>
+                    )}
+                    <div className=" w-full">
+                      <TableMatrix
+                        categories={categories}
+                        asalTujuan={dataChord?.asalTujuan || {}}
+                        arahPergerakan={dataChord?.arahPergerakan || {}}
+                        loading={matrixLoading}
+                        error={matrixError}
+                      />
                     </div>
-                  )}
-                  <div className=" w-full">
-                    <TableMatrix
-                      categories={categories}
-                      asalTujuan={dataChord?.asalTujuan || {}}
-                      arahPergerakan={dataChord?.arahPergerakan || {}}
-                      loading={matrixLoading}
-                      error={matrixError}
-                    />
                   </div>
                 </div>
               </div>
-            </div>
-          ) : (<div className="flex justify-center items-center h-64">
-            <div className="font-medium">Loading chart data...</div>
-          </div>)}
+            ) : (<div className="flex justify-center items-center h-64">
+              <div className="font-medium">Loading chart data...</div>
+            </div>)
+        }
 
         <div className="w-[90%]">
           <div className="bg-base-200/90 w-full flex flex-col p-4 gap-8 rounded-3xl backdrop-blur-sm shadow-gray-200">
@@ -969,7 +978,7 @@ export default function Home () {
             <MapComponent />
           </div>
         </div>
-      </Suspense>
+      </Suspense >
     </div >
   );
 }
