@@ -377,7 +377,7 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
       <div className="">
         <video
           ref={videoRef}
-          className={`w-full h-auto ${large ? 'min-h-96' : 'min-h-52'} bg-black`}
+          className={`w-full h-auto ${large ? 'min-h-[415px]' : 'min-h-52'} bg-black`}
           controls
           muted
           playsInline

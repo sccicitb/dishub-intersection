@@ -1,14 +1,10 @@
 "use client";
 
-import { useState, useEffect, Suspense, lazy, useRef } from 'react';
-import { io } from "socket.io-client";
+import { useState, useEffect, Suspense, lazy } from 'react';
+
 import { cameras, survey, maps } from '@/lib/apiService';
 import { getCuacaJogja } from '@/lib/weatherAccess';
 import { useAuth } from "@/app/context/authContext";
-
-const socket = io('https://sxe-data.layanancerdas.id', {
-  autoConnect: false,
-});
 
 const ClasificationTable = lazy(() => import("@/app/components/clasificationTable"));
 const HourVehicleTable = lazy(() => import('@/app/components/HourVehicleTable'));
@@ -19,6 +15,7 @@ const CCTVStream = lazy(() => import('@/app/components/cctvStream'));
 const CameraStreamActive = lazy(() => import('@/app/components/cameraStreamActive'));
 const MapComponent = lazy(() => import("@/app/components/map"));
 const HeaderSurvei = lazy(() => import("@/app/components/headerLhrt"));
+
 function SurveiSimpangPage () {
   const { isEditor, isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -39,7 +36,6 @@ function SurveiSimpangPage () {
   const [dataSimpangById, setDataSimpangById] = useState({});
   const [Cuaca, setCuaca] = useState("")
   const [fetchError, setFetchError] = useState(null);
-  const [backendSocketData, setBackendSocketData] = useState([]); // Array to store recent detections
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -56,86 +52,10 @@ function SurveiSimpangPage () {
   const formatDateToYMDForAPI = (dateStr) => {
     return dateStr.replace(/-/g, '/');
   };
-  
-const backendSocketRef = useRef(null);
-
-  // Initialize Backend Socket
-  useEffect(() => {
-    // Only connect if we have an active simpang (or 'semua')
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
-    // Remove /api if present for socket connection (usually socket is on root)
-    const socketUrl = backendUrl.replace(/\/api\/?$/, '');
-    
-    // console.log(`Connecting to Backend Socket for RecentVehicle: ${socketUrl}`);
-    const backendSocket = io(socketUrl, {
-      transports: ['websocket'],
-      autoConnect: true,
-      reconnection: true,
-    });
-    backendSocketRef.current = backendSocket;
-
-    backendSocket.on('connect', () => {
-      console.log('✓ Connected to Backend Socket');
-    });
-
-    // Listen to flow_update events from mqtt-listener
-    backendSocket.on('flow_update', (data) => {
-      // Structure depends on mqtt-listener.js emit payload
-      // Ideally { ID_Simpang, detections: [...], ... }
-      // If data comes wrapped in `message` property like { message: { ... } }
-      const payload = data.message || data;
-      
-      const incomingSimpangId = String(payload.ID_Simpang || payload.id_simpang || '');
-      
-      // If activeSimpangId is set, filter by it. If "semua", show all (or limit?)
-      // Since RecentVehicle accumulates, we should be careful about mixing streams if "semua".
-      // But user likely wants to see stream for the selected simpang.
-      
-      // We need current value of activeSimpangId inside this callback.
-      // Since we use useEffect with dependency, this listener will be recreated when ID changes, which is fine.
-      
-      const currentActiveId = String(activeSimpangId || 'semua');
-      
-      if (currentActiveId !== 'semua' && incomingSimpangId !== currentActiveId) {
-        // console.log(`Skipping update for ${incomingSimpangId} not matching ${currentActiveId}`);
-        return; 
-      }
-
-      // Check if data has detections directly or nested
-      const detections = payload.detections || payload.items || [];
-      
-      // If no explicit detections array, can we construct it from flow counts?
-      // No, RecentVehicle needs individual vehicle classes and timestamps.
-      // If detections is missing, check if `arah_per_kelas` exists and try to fake it? 
-      // Probably not ideal. We assume backend sends detections.
-      
-      if (detections.length > 0 || payload.detections) {
-        const formattedData = {
-          message: {
-            detections: detections,
-            image_url: payload.image_url || payload.image || "",
-            timestamp: payload.waktu || payload.timestamp || new Date().toISOString(),
-            id_simpang: incomingSimpangId
-          }
-        };
-        setBackendSocketData(formattedData);
-      }
-    });
-
-    return () => {
-      if (backendSocketRef.current) {
-        backendSocketRef.current.disconnect();
-      }
-    };
-  }, [activeSimpangId]); // Re-subscribe when activeSimpangId changes
-
 
   const [dateInput, setDateInput] = useState(formatDateToInput(yesterday));
 
-  // Fetch initial camera & vehicle data
-
   useEffect(() => {
-    // Set default to 'semua' instead of fetching first simpang
     setActiveSimpangId('semua');
     setActiveSimpang('Semua Simpang');
     setFetchStatus(true);
@@ -165,13 +85,11 @@ const backendSocketRef = useRef(null);
           setActiveCamera(cameraData[0].id);
           setActiveSimpang(cameraData[0].name || '');
         } else if (activeSimpangId === 'semua') {
-            setActiveCamera(0)
-            setActiveSimpang('Semua Simpang')
+          setActiveCamera(0)
+          setActiveSimpang('Semua Simpang')
         }
 
-        // Don't override user's selected simpang ID - only use for weather if available
         if (simpangData.length > 0 && simpangData[0]?.location) {
-          // Just get weather for the current simpang, don't reset ID
           try {
             cuaca = await getCuacaJogja(simpangData[0].location.latitude, simpangData[0].location.longitude)
           } catch (e) {
@@ -200,13 +118,9 @@ const backendSocketRef = useRef(null);
     }
 
     fetchData();
-  }, [fetchStatus]); // Only once on mount
+  }, [fetchStatus]);
 
-
-
-  // Debounced fetchSurvey when dependencies change
   useEffect(() => {
-    // When filter changes (interval, pendekatan, date), re-fetch with current activeSimpangId
     if (!activeSimpangId) return;
 
     const timer = setTimeout(async () => {
@@ -219,7 +133,6 @@ const backendSocketRef = useRef(null);
   useEffect(() => {
     if (!activeSimpangId) return;
 
-    // Skip API call if "semua" is selected
     if (activeSimpangId === 'semua') {
       setDataSimpangById({});
       return;
@@ -241,7 +154,6 @@ const backendSocketRef = useRef(null);
     return () => clearTimeout(timer2)
   }, [activeSimpangId]);
 
-  // Update streamData and activeSimpang when dataCamera or activeCamera changes
   useEffect(() => {
     const dynamicStreamData = {};
     if (Array.isArray(dataCamera) && dataCamera.length > 0) {
@@ -264,76 +176,10 @@ const backendSocketRef = useRef(null);
     }
   }, [dataCamera, activeCamera]);
 
-  const socketRef = useRef(socket);
-
-  // Connect socket once
-  useEffect(() => {
-    if (!socketRef.current.connected) {
-      socketRef.current.connect();
-    }
-
-    const handleConnect = () => console.log("Socket connected");
-    const handleDisconnect = () => console.log("Socket disconnected");
-    const handleError = (err) => console.error("Connection error", err);
-
-    socketRef.current.on("connect", handleConnect);
-    socketRef.current.on("disconnect", handleDisconnect);
-    socketRef.current.on("connect_error", handleError);
-
-    return () => {
-      socketRef.current.off("connect", handleConnect);
-      socketRef.current.off("disconnect", handleDisconnect);
-      socketRef.current.off("connect_error", handleError);
-    };
-  }, []);
-
-  // Register / cleanup socket listeners dengan filter untuk socket_event
-  useEffect(() => {
-    const cleanupFns = [];
-
-    if (Array.isArray(dataCamera)) {
-      dataCamera.forEach(building => {
-        if (building?.socket_event && building.socket_event !== "not_yet_assign") {
-
-          // Tentukan ID yang akan digunakan untuk socket
-          let socketId;
-          if (building.camera && building.camera.camera_id) {
-            socketId = building.camera.camera_id;
-          } else if (building.camera && building.camera.id) {
-            socketId = building.camera.id;
-          } else if (building.id) {
-            socketId = building.id;
-          }
-
-          if (socketId) {
-            const handler = (data) => {
-              setStreamData(prev => ({
-                ...prev,
-                [socketId]: data,
-              }));
-            };
-
-            socketRef.current.on(building.socket_event, handler);
-
-            cleanupFns.push(() => {
-              socketRef.current.off(building.socket_event, handler);
-            });
-          }
-        }
-      });
-    }
-
-    return () => {
-      cleanupFns.forEach(fn => fn());
-    };
-  }, [dataCamera]);
-
-  // Fetch vehicle data for given simpang ID
   const fetchVehicleData = async (simpangId) => {
     setLoading(true);
     setFetchError(null);
     try {
-      // Use current filter states from component scope, not from parameter
       const res = await survey.getAll(
         simpangId,
         formatDateToYMDForAPI(dateInput),
@@ -367,9 +213,6 @@ const backendSocketRef = useRef(null);
         cameraTitle = building.camera.name || building.camera.title;
         socketEvent = building.camera.socket_event;
       } else if (building.id) {
-        // Fallback: assume building itself is the camera object if it has id but no camera property
-        // OR it's a building object without cameras being treated as a camera selection?
-        // Let's assume it might be a direct camera object passed
         cameraId = building.id;
         cameraTitle = building.name || building.title || "Tanpa Nama";
         socketEvent = building.socket_event || "not_yet_assign";
@@ -378,24 +221,18 @@ const backendSocketRef = useRef(null);
         return;
       }
 
-
-
-
-      // Cek apakah camera yang dipilih adalah "not_yet_assign"
       if (socketEvent === "not_yet_assign") {
         setCamStandard(cameraId);
         setVehicleData([]);
       } else {
         setActiveCamera(cameraId)
         setActiveSimpang(cameraTitle);
-        // fetchVehicleData(cameraId);
       }
     } catch (error) {
       console.error("Error in handleClick:", error);
     }
   };
 
-  // Helper function untuk mengecek apakah camera menggunakan socket atau tidak
   const shouldUseSocket = (building) => {
     return building?.socket_event && building.socket_event !== "not_yet_assign";
   };
@@ -405,13 +242,12 @@ const backendSocketRef = useRef(null);
       setActiveTitle("Survei Semua Simpang");
       setActiveSimpangId("semua");
       setCuaca("Cerah");
-      setActiveCamera(0); // Reset camera when all simpang selected
+      setActiveCamera(0); 
       await fetchVehicleData("semua");
       return;
     }
 
     let name = loc.Nama_Simpang
-    // Only fetch weather if not "semua"
     let cuaca = "Cerah";
     try {
       if (loc.latitude && loc.longitude) {
@@ -428,34 +264,27 @@ const backendSocketRef = useRef(null);
     setActiveTitle("Survei " + name);
     setActiveSimpangId(loc.id);
     setCuaca(cuaca);
-    
-    // Auto Select Camera if available in loc object
+
     if (loc.cameras && loc.cameras.length > 0) {
       setActiveCamera(loc.cameras[0].id);
     } else {
-      // Fallback: Try to find camera in global state if not in loc
       const relatedCamera = dataCamera.find(cam => String(cam.building_id || cam.simpang_id) === String(loc.id));
       if (relatedCamera) {
-          setActiveCamera(relatedCamera.id);
+        setActiveCamera(relatedCamera.id);
       } else {
-          setActiveCamera(0); // No camera found
+        setActiveCamera(0); // No camera found
       }
     }
 
-    // Fetch immediately with the new simpang ID
     await fetchVehicleData(loc.id);
-    // Fetch matrix data
   }
 
-  // Fetch vehicle data when filters change (date, approach, interval, simpang)
   useEffect(() => {
     if (!activeSimpangId) return;
 
     const timer = setTimeout(async () => {
-      // Fetch vehicle data with current filters
       await fetchVehicleData(activeSimpangId);
-    }, 900); // 900ms debounce to avoid excessive API calls
-
+    }, 900); 
     return () => clearTimeout(timer);
   }, [dateInput, activePendekatan, activeInterval, activeSimpangId]);
 
@@ -464,21 +293,21 @@ const backendSocketRef = useRef(null);
   return (
     <div>
       <Suspense fallback={<div className="text-center font-medium m-auto w-full">Loading Data...</div>}>
-          <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
+        <MapComponent title={activeTitle} onClick={handleClick} onClickSimpang={handleClickSimpang} />
         <div className="w-[95%] m-auto">
           <div className="lg:flex lg:place-items-center gap-5 py-10 max-lg:space-y-5 max-lg:flex-col">
-            <RecentVehicle customCSS={'h-[450px]'} data={backendSocketData} />
+            <RecentVehicle customCSS={'h-[565px]'} />
             <div className="py-1 w-full h-full items-center flex overflow-hidden justify-center">
               <div className="w-full">
                 <CameraStreamActive activeCameraId={activeCamera} />
               </div>
             </div>
           </div>
-            {/* <SurveyInfoTable fetchStatus={fetchStatus} id={activeSimpangId} cuaca={Cuaca} /> */}
+          {/* <SurveyInfoTable fetchStatus={fetchStatus} id={activeSimpangId} cuaca={Cuaca} /> */}
           <div className="flex flex-col max-lg:flex-col items-center place-items-center max-lg:space-y-5 py-5 gap-5">
-              <HeaderSurvei simpangId={activeSimpangId} selectedDate={dateInput} arahPergerakan={activePendekatan} />
+            <HeaderSurvei simpangId={activeSimpangId} selectedDate={dateInput} arahPergerakan={activePendekatan} />
             <div className="w-full justify-end flex flex-col">
-            <SelectionButtons
+              <SelectionButtons
                 vehicleData={vehicleData}
                 activeSurveyor={activeSurveyor}
                 setActiveSurveyor={setActiveSurveyor}
@@ -521,7 +350,7 @@ const backendSocketRef = useRef(null);
               <span>{fetchError}</span>
             </div>
           ) : Array.isArray(vehicleData) && vehicleData.length > 0 ? (
-            <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} isEditor={isEditor} exportExcel/>
+            <HourVehicleTable statusHour={true} vehicleData={vehicleData} classification={activeClassification} pdf={false} isEditor={isEditor} exportExcel />
           ) : (
             <div className="w-full flex justify-center items-center py-20">
               <div className="text-center">

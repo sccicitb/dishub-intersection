@@ -1,6 +1,6 @@
 "use client";
 
-import { io } from 'socket.io-client'
+import { useSocket } from '@/hooks/useSocket';
 import { useState, useEffect, lazy, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -708,53 +708,37 @@ const ManajemenKamera = () => {
     }
   }, [isMobile]);
 
-  // Socket connection for real-time data
+  // Fixed: Single useSocket hook instance (no duplicate)
+  const { socket } = useSocket();
+
   useEffect(() => {
-    const socket = io('https://sxe-data.layanancerdas.id');
+    if (!socket || !mergedCameraData.length) return;
 
-    socket.on('connect', () => console.log("socket connected"));
-    socket.on('disconnect', () => console.log("socket disconnected"));
-
-    return () => {
-      socket.disconnect();
+    const handleData = (data, camId) => {
+      setStreamData(prev => ({ ...prev, [camId]: data }));
     };
-  }, []);
 
-  useEffect(() => {
-    const socket = io('https://sxe-data.layanancerdas.id');
+    const eventListeners = [];
 
     mergedCameraData.forEach((building) => {
       if (!Array.isArray(building?.camera)) return;
       building.camera.forEach((cam) => {
-        console.log(cam)
-        if (!cam?.socket_event || !cam?.id) return;
+        if (!cam?.socket_event || !cam?.id || cam.socket_event === "not_yet_assign") return;
 
-        socket.on(cam.socket_event, (data) => {
-          setStreamData((prev) => ({
-            ...prev,
-            [cam.id]: data,
-          }));
-        });
+        socket.on(cam.socket_event, (data) => handleData(data, cam.id));
+        eventListeners.push(cam.socket_event);
       });
     });
 
+    // Update videoStream filter
+    const videoStream = mergedCameraData.flatMap(b => b.camera || [])
+      .filter(cam => cam.socket_event === "not_yet_assign" && cam.status === 1);
+    setVideoStream(videoStream);
+
     return () => {
-      mergedCameraData.forEach((building) => {
-        if (!Array.isArray(building?.camera)) return;
-
-        building.camera.forEach((cam) => {
-          if (cam?.socket_event) {
-            socket.off(cam.socket_event);
-          }
-        });
-      });
-      let videoStream;
-
-      videoStream = mergedCameraData.flatMap(b => b.camera || []).filter(cam => cam.socket_event === "not_yet_assign").filter(cam => cam.status === 1);
-      setVideoStream(videoStream)
-      // console.log(videoStream)
+      eventListeners.forEach(event => socket.off(event));
     };
-  }, [mergedCameraData]);
+  }, [socket, mergedCameraData]);
 
 
   const changeInputSearch = (e) => {

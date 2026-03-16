@@ -49,7 +49,13 @@ export const authApi = {
 export const maps = {
   getAll: () => getRequest(`/maps/buildings`),
   getAllFull: () => getRequest(`/maps/buildings-full`),
-  getById: (id) => getRequest(`/simpang/${id}`),
+  getById: (id) => {
+    if (id === 'semua') {
+      // Return a resolved promise with empty data to avoid 404
+      return Promise.resolve({ data: {} });
+    }
+    return getRequest(`/simpang/${id}`);
+  },
   getAllSimpang: () => getRequest(`/simpang`),
   updateById: (id, data) => updateRequest(`/simpang/${id}`, data),
   createData: (data) => createRequest(`/simpang`, data),

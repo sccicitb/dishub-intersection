@@ -32,7 +32,7 @@ const WeeklyFactorTable = ({
       try {
         setLoading(true);
         setError(null);
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:9090';
         const response = await axios.get(`${baseUrl}/api/audit/volume-weekday`, {
           params: { year: selectedYear, simpang_id: simpangId, weekday: selectedWeekday }
         });

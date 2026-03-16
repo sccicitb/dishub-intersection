@@ -221,29 +221,15 @@ class UniversalListener {
       // Eksekusi Bulk Insert
       if (allRows.length > 0) {
         const query = `
-          INSERT INTO arus_copy (
+          INSERT INTO arus (
             ID_Simpang, tipe_pendekat, dari_arah, ke_arah, 
             SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB, 
             waktu, created_at, updated_at
           ) VALUES ?`;
 
-        // Pada library mysql/mysql2, bulk insert menggunakan [ [ [row1], [row2] ] ]
         await dbMain.query(query, [allRows]);
-        console.log(`[${source}] [${topicName}] 🚀 Bulk Insert Success Arus Copy: ${allRows.length} rows saved to MariaDB.`);
+        console.log(`[${source}] [${topicName}] 🚀 Bulk Insert Success Arus: ${allRows.length} rows saved to MariaDB.`);
       }
-
-      // if (allRows.length > 0) {
-      //   const query = `
-      //     INSERT INTO arus (
-      //       ID_Simpang, tipe_pendekat, dari_arah, ke_arah, 
-      //       SM, MP, AUP, TR, BS, TS, TB, BB, GANDENG, KTB, 
-      //       waktu, created_at, updated_at
-      //     ) VALUES ?`;
-
-      //   // Pada library mysql/mysql2, bulk insert menggunakan [ [ [row1], [row2] ] ]
-      //   await dbMain.query(query, [allRows]);
-      //   console.log(`[${source}] [${topicName}] 🚀 Bulk Insert Success Arus: ${allRows.length} rows saved to MariaDB.`);
-      // }
 
       if (this.ioServer) {
         this.ioServer.emit('flow_update', { ...payload, source, topic: topicName });

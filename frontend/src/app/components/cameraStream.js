@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
+import { useSocket } from '@/hooks/useSocket';
+
 // import VideoStream from '../components/videoStream';
 import CCTVStream from '../components/cctvStream';
 import CameraStatusTimeline from "@/app/components/cameraStatusTime";
@@ -74,29 +75,30 @@ const CameraStream = () => {
     fetchCameras();
   }, []);
 
+  // Fixed: Use useSocket hook instead of hardcoded URL
+  const { socket } = useSocket();
+
   useEffect(() => {
-    const socket = io('https://sxe-data.layanancerdas.id');
+    if (!socket || !dataCameras.length) return;
 
-    socket.on('connect', () => {
-      console.log('Socket connected:', socket.id);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('Socket disconnected:', socket.id);
-    });
+    const handleData = (data, camId) => {
+      setStreamData(prev => ({ ...prev, [camId]: data }));
+    };
 
     dataCameras.forEach(cam => {
       if (cam?.socket_event && cam?.id && cam?.socket_event !== "not_yet_assign") {
-        socket.on(cam.socket_event, (data) => {
-          setStreamData(prev => ({ ...prev, [cam.id]: data }));
-        });
+        socket.on(cam.socket_event, (data) => handleData(data, cam.id));
       }
     });
 
     return () => {
-      socket.disconnect();
+      dataCameras.forEach(cam => {
+        if (cam?.socket_event && cam?.socket_event !== "not_yet_assign") {
+          socket.off(cam.socket_event);
+        }
+      });
     };
-  }, [dataCameras]);
+  }, [socket, dataCameras]);
 
   useEffect(() => {
     if (dataCameras.length > 0) {

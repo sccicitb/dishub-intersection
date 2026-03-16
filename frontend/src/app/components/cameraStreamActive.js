@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
+import { useSocket } from '@/hooks/useSocket';
 import CCTVStream from '../components/cctvStream';
+
 import CameraStatusTimeline from "@/app/components/cameraStatusTime";
 import { cameras, logCamera } from '@/lib/apiService';
 import AdaptiveVideoPlayer from './adaptiveCameraStream';
@@ -55,44 +56,36 @@ const CameraStreamActive = ({ activeCameraId }) => {
     fetchCameras();
   }, [activeCameraId]);
 
+  // Fixed: Use useSocket hook instead of hardcoded URL
+  const { socket } = useSocket();
+
   useEffect(() => {
-    // Only connect if we have a camera to watch
-    if (dataCameras.length === 0) return;
+    if (!socket || dataCameras.length === 0) return;
 
-    const socket = io('https://sxe-data.layanancerdas.id');
-
-    socket.on('connect', () => {
-      console.log('Socket connected:', socket.id);
-      setSocketError(false);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('Socket disconnected:', socket.id);
-    });
-
-    socket.on('connect_error', (err) => {
-      console.error('Socket connection error:', err);
-      setSocketError(true);
-    });
+    const handleData = (data, camId) => {
+      setStreamData(prev => ({ ...prev, [camId]: data }));
+    };
 
     dataCameras.forEach(cam => {
       if (cam?.socket_event && cam?.id && cam?.socket_event !== "not_yet_assign") {
-        socket.on(cam.socket_event, (data) => {
-          setStreamData(prev => ({ ...prev, [cam.id]: data }));
-        });
+        socket.on(cam.socket_event, (data) => handleData(data, cam.id));
       }
     });
 
     return () => {
-      socket.disconnect();
+      dataCameras.forEach(cam => {
+        if (cam?.socket_event && cam?.socket_event !== "not_yet_assign") {
+          socket.off(cam.socket_event);
+        }
+      });
     };
-  }, [dataCameras]);
+  }, [socket, dataCameras]);
 
   const videoStreamCameras = dataCameras.filter(cam => cam.socket_event === "not_yet_assign");
   const cctvStreamCameras = dataCameras.filter(cam => cam.socket_event !== "not_yet_assign");
 
   if (!activeCameraId) {
-    return <div className="text-center p-4">Silahkan pilih kamera terlebih dahulu</div>;
+    return <div className="text-center p-4 bg-black h-[560px] justify-center flex flex-col text-white items-center rounded-lg">Silahkan pilih kamera terlebih dahulu</div>;
   }
 
   if (dataCameras.length === 0) {
