@@ -105,13 +105,15 @@ const userRoutes = require('./app/routes/user.routes');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 
+require('./app/routes/flowHistory.routes.js')(app);
+
 // Create HTTP server and Socket.IO instance
 const server = http.createServer(app);
 const io = socketio(server, {
   cors: corsOptions
 });
 
-mqttListener.setSocketServer(io);; // Set Socket.IO instance
+mqttListener.setSocketServer(io); // Set Socket.IO instance
 
 // Simpan instance listen di variabel
 const PORT = process.env.PORT || 8080;

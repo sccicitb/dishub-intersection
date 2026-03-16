@@ -1,67 +1,61 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useSocket } from "@/hooks/useSocket";
 
-const ImageHistory = ({ location }) => {
-  const [images, setImages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const FlowHistory = ({ location }) => {
+  const [flowHistory, setFlowHistory] = useState([]);
   const [filter, setFilter] = useState({
-    name: "",
+    simpang: "",
     date: "",
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const router = useRouter();
   function capitalizeText(string) {
     if (!string || typeof string !== "string") return "";
     return string
-      .split("_") // Pisahkan berdasarkan underscore
+      .split("_")
       .map(part =>
         part
-          .split(" ") // Pisahkan setiap kata dalam bagian ini
+          .split(" ")
           .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-          .join(" ") // Gabungkan kembali kata dalam bagian ini
+          .join(" ")
       )
-      .join("_"); // Gabungkan kembali bagian dengan underscore
+      .join("_");
   }
-  
 
-  const loadImages = async () => {
+  const { flowData, latestFlow: socketLatest } = useSocket();
+
+  useEffect(() => {
+    if (socketLatest) {
+      setLatestFlow(socketLatest);
+      // Optionally append to history
+      setFlowHistory(prev => [socketLatest, ...prev].slice(0, 100));
+    }
+  }, [socketLatest]);
+
+  const loadFlowHistory = async () => {
     try {
       setLoading(true);
       
-      // Build query parameters
       const params = new URLSearchParams();
-      if (location) params.append("location", location);
-      if (filter.name) params.append("name", filter.name);
+      if (location) params.append("simpang", location);
+      if (filter.simpang) params.append("simpang", filter.simpang);
       if (filter.date) params.append("date", filter.date);
       
-      const response = await fetch(`/api/image-history?${params.toString()}`);
+      const response = await fetch(`/api/flow-history?${params.toString()}`);
       
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
       
       const data = await response.json();
+      setFlowHistory(data.results || []);
       
-      // Format the data to match the component's expectations
-      // The backend returns results in a different structure
-     // Fungsi bantuan untuk capitalize string
-  
-    // Menggunakan fungsi capitalize pada data
-    const formattedImages = data.results ? data.results.map(item => ({
-      name: capitalizeText(item.name),
-      location: capitalizeText(item.location),
-      filename: item.filename,
-      url: item.path, // Use the path from the API response
-      timestamp: item.timestamp,
-      date: item.date,
-      createdAt: item.timestamp // For compatibility with the existing formatDate function
-    })) : [];
-      
-      setImages(formattedImages);
     } catch (err) {
-      console.error("Failed to fetch image history:", err);
+      console.error("Failed to fetch flow history:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -69,8 +63,8 @@ const ImageHistory = ({ location }) => {
   };
 
   useEffect(() => {
-    loadImages();
-  }, [location]);
+    loadFlowHistory();
+  }, [location, filter.simpang, filter.date]);
 
   const handleFilterChange = (e) => {
     setFilter({
@@ -81,7 +75,7 @@ const ImageHistory = ({ location }) => {
 
   const handleFilterSubmit = (e) => {
     e.preventDefault();
-    loadImages();
+    loadFlowHistory();
   };
 
   const formatDate = (dateString) => {
@@ -100,20 +94,20 @@ const ImageHistory = ({ location }) => {
 
   return (
     <div className="bg-base-300 p-5 m-2 rounded-xl">
-      <h2 className="text-xl font-bold mb-4">Riwayat Gambar {location ? `- ${location.split('_').slice(2).join(' ')}` : ''}</h2>
+      <h2 className="text-xl font-bold mb-4">Riwayat Flow Data {location ? `- ${capitalizeText(location)}` : 'Semua Simpang'}</h2>
       
       {/* Filter Form */}
       <form onSubmit={handleFilterSubmit} className="mb-4">
         <div className="flex flex-wrap gap-2">
           <div>
-            <label className="block text-sm font-medium mb-1">Nama:</label>
+            <label className="block text-sm font-medium mb-1">Simpang:</label>
             <input
               type="text"
-              name="name"
-              value={filter.name}
+              name="simpang"
+              value={filter.simpang}
               onChange={handleFilterChange}
               className="p-2 border rounded"
-              placeholder="e.g. nadif"
+              placeholder="e.g. SIMPANG_X"
             />
           </div>
           
@@ -141,34 +135,46 @@ const ImageHistory = ({ location }) => {
       
       {error && <p className="text-red-500 mb-4">{error}</p>}
       
+      {latestFlow && (
+        <div className="mb-4 p-4 bg-green-100 border border-green-400 rounded-lg">
+          <h3 className="font-bold text-green-800 mb-2">📡 Live Update Terbaru:</h3>
+          <p><strong>Simpang:</strong> {latestFlow.ID_Simpang}</p>
+          <p><strong>Arah:</strong> {latestFlow.tipe_pendekat} {latestFlow.arah_per_kelas ? Object.keys(latestFlow.arah_per_kelas)[0] : ''}</p>
+          <p><strong>Total Kendaraan:</strong> {latestFlow.total_vehicles || 'N/A'}</p>
+          <p className="text-sm text-green-700"><em>{new Date(latestFlow.waktu).toLocaleString('id-ID')}</em></p>
+        </div>
+      )}
+
       {loading ? (
-        <p>Loading images...</p>
-      ) : images.length === 0 ? (
-        <p>Tidak ada gambar ditemukan</p>
+        <p>Loading flow history...</p>
+      ) : flowHistory.length === 0 ? (
+        <p>Tidak ada data flow ditemukan</p>
       ) : (
         <div>
-          <p className="mb-2">Ditemukan {images.length} gambar</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {images.map((image, index) => (
-              <div key={`${image.filename}-${index}`} className="rounded-lg overflow-hidden bg-base-300 shadow-md">
-                <img
-                  src={image.url}
-                  alt={`${image.name} detection`}
-                  className="w-full h-48 object-cover"
-                  onError={(e) => {
-                    e.target.src = "/placeholder-image.png"; // Fallback image
-                    e.target.alt = "Image not available";
-                  }}
-                />
-                <div className="p-3 capitalize">
-                  <p className="font-semibold capitalize">Nama: {capitalizeText(image.name)}</p>
-                  <p className="text-sm ">Lokasi: {capitalizeText(image.location)}</p>
-                  <p className="text-sm capitalize">Tanggal: {image.date || 'N/A'}</p>
-                  <p className="text-sm capitalize">Waktu: {formatDate(image.timestamp)}</p>
-                </div>
-              </div>
-            ))}
+          <p className="mb-2">Ditemukan {flowHistory.length} records</p>
+          <div className="overflow-x-auto">
+            <table className="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Simpang</th>
+                  <th>Arah</th>
+                  <th>Total Kendaraan</th>
+                  <th>waktu</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                {flowHistory.slice(0, 50).map((flow, index) => (
+                  <tr key={index}>
+                    <td>{capitalizeText(flow.ID_Simpang)}</td>
+                    <td>{flow.direction}</td>
+                    <td className="font-bold">{flow.total_vehicles}</td>
+                    <td>{formatDate(flow.waktu)}</td>
+                    <td className="text-xs">{flow.source || 'N/A'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -176,4 +182,4 @@ const ImageHistory = ({ location }) => {
   );
 };
 
-export default ImageHistory;
+export default FlowHistory;
