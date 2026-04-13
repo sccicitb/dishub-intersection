@@ -159,6 +159,18 @@ export const survey = {
   getProporsi: (simpang_id, type, date) => getRequest(`/survey-proporsi?ID_Simpang=${simpang_id}${type ? '&type=' + type + '' : ''}&date=${date}`)
 }
 
+export const vehicleSummary = {
+  getMasukKeluarBySimpang: (simpangId, startDate, endDate) => {
+    const params = [
+      `simpang_id=${encodeURIComponent(simpangId)}`,
+      `start_date=${encodeURIComponent(startDate)}`,
+      `end_date=${encodeURIComponent(endDate)}`,
+    ];
+
+    return getRequest(`/vehicles/masuk-keluar?${params.join('&')}`);
+  },
+};
+
 export const apiCoreSurvey = {
   getAllSurvey: () => getRequest(`/sa-surveys/header`),
   getByIdSurvey: (id) => getRequest(`/sa-surveys/header/${id}`),
