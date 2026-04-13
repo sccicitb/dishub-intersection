@@ -8,11 +8,12 @@ import { exportSurveyDataToExcel } from '@/utils/exportExcel';
 import TableMatrix from "@/app/components/table/tableMatrix";
 import { useTrafficMatrix } from "@/hooks/useTrafficMatrix";
 import IntersectionFlowCard from "@/app/components/IntersectionFlowCard";
-import ClassificationChart from "@/app/components/ClassificationChart"; // Import new ClassificationChart
+import ClassificationFlowBarChart from "@/app/components/ClassificationFlowBarChart";
 
-const TotalChart = lazy(() => import("@/app/components/totalChart"));
 const VehicleChart = lazy(() => import("@/app/components/grafikKeluarMasuk"));
 const TrafficIntervalChart = lazy(() => import("@/app/components/grafik15menit"));
+const MasukKeluarDirectionBarChart = lazy(() => import("@/app/components/MasukKeluarDirectionBarChart"));
+const TotalFlowComparisonChart = lazy(() => import("@/app/components/TotalFlowComparisonChart"));
 const ChordDiagram = lazy(() => import("@/app/components/diagram/chord"))
 // const OptionSelectMaps = lazy(() => import("@/app/components/simpang/optionSelectMaps"))
 const CameraStream = lazy(() => import("@/app/components/cameraStream"));
@@ -708,6 +709,10 @@ export default function Home () {
 
   if (!isClient) return null;
 
+  const masukKeluarStartDate = activeFilter === 'customrange' ? customRangeStart : dateRange.startDate;
+  const masukKeluarEndDate = activeFilter === 'customrange' ? customRangeEnd : dateRange.endDate;
+  const canShowMasukKeluarChart = simpangFilter !== 'semua' && masukKeluarStartDate && masukKeluarEndDate;
+
   const handleSimpangChange = (e) => {
     const selectedId = e.target.value;
 
@@ -867,31 +872,49 @@ export default function Home () {
               <div className="flex flex-col gap-6 w-full">
                 {/* Total Charts Grid */}
                 <div className="grid grid-cols-1 gap-6 w-full">
-                  {/* DIY Total Chart */}
-                  <div className="flex flex-col gap-2">
-                    <h3 className="text-lg font-semibold text-gray-700 ml-1">Total Kendaraan Seluruh DIY</h3>
-                    <TotalChart data={diyChartData} />
-                  </div>
-
-                  {/* Simpang Total Chart */}
-                  <div className="flex flex-col gap-2">
-                    <h3 className="text-lg font-semibold text-gray-700 ml-1">Total Kendaraan {namaLokasi}</h3>
-                    <TotalChart data={chartData} />
-                  </div>
+                  <TotalFlowComparisonChart
+                    diyData={diyChartData}
+                    simpangData={chartData}
+                    simpangName={namaLokasi}
+                  />
                 </div>
 
                 {/* Classification Chart - Full Width */}
 
                 {/* Intersection Flow Card - Visible for both "All" and specific simpang */}
-                <IntersectionFlowCard
+                {/* <IntersectionFlowCard
                   simpangId={simpangFilter}
                   activeFilter={activeFilter}
                   startDate={activeFilter === 'customrange' ? customRangeStart : null}
                   endDate={activeFilter === 'customrange' ? customRangeEnd : null}
-                />
+                /> */}
+
+                <div className="bg-base-200/90 p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
+                  <div className="items-center flex flex-col w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+                    <div>
+                      <h3 className="text-xl font-extrabold text-slate-800 tracking-tight text-center">Kendaraan Masuk dan Keluar Jogja per Arah</h3>
+                      <p className="text-sm text-slate-400 font-medium text-center">Data per simpang berdasarkan filter periode aktif</p>
+                    </div>
+
+                    <div className="w-full mt-4">
+                      {canShowMasukKeluarChart ? (
+                        <MasukKeluarDirectionBarChart
+                          simpangId={simpangFilter}
+                          startDate={masukKeluarStartDate}
+                          endDate={masukKeluarEndDate}
+                          title={`Masuk vs Keluar ${namaLokasi}`}
+                        />
+                      ) : (
+                        <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-5 text-sm text-amber-800">
+                          Pilih simpang tertentu untuk menampilkan grafik masuk/keluar per arah.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="grid grid-cols-1 gap-6 w-full">
-                  <ClassificationChart data={classificationData} />
+                  <ClassificationFlowBarChart data={classificationData} />
                 </div>
               </div>
             )}
@@ -920,20 +943,6 @@ export default function Home () {
               </div>
             </div>
             <div className="bg-base-200/90 p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
-              <div className="items-center flex flex-col w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-                <div>
-                  <h3 className="text-xl font-extrabold text-slate-800 tracking-tight text-center">Komposisi Kendaraan</h3>
-                  <p className="text-sm text-slate-400 font-medium text-center">Keluar Masuk Yogyakarta per Klasifikasi</p>
-                </div>
-                <div className="items-center flex flex-col md:flex-row w-full gap-6 mt-4">
-                  <div className="w-full md:w-1/2">
-                    <VehicleChart rawData={incomingVehiclesBar2} category="in" />
-                  </div>
-                  <div className="w-full md:w-1/2">
-                    <VehicleChart rawData={outgoingVehiclesBar2} category="out" />
-                  </div>
-                </div>
-              </div>
             </div>
             <div className="h-fit bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-base-100">
               <TrafficIntervalChart rawResponse={trafficMinuteData} />
