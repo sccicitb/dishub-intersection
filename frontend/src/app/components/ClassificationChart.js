@@ -114,12 +114,12 @@ const ClassificationChart = ({ data }) => {
   const totalKendaraan = data?.reduce((acc, curr) => acc + (curr.total_IN || 0) + (curr.total_OUT || 0), 0) || 0;
 
   return (
-    <div className="bg-slate-50/50 p-4 lg:p-6 rounded-[2rem] border border-slate-100">
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/60 flex flex-col h-full min-h-[750px]">
+    <div className="bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[480px]">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
-              <h3 className="text-xl font-bold text-slate-800 tracking-tight">Komposisi Kendaraan</h3>
-              <p className="text-sm text-slate-400">Arus Masuk & Keluar Berdasarkan Klasifikasi</p>
+              <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">Komposisi Kendaraan</h3>
+              <p className="text-sm text-slate-400 font-medium">Arus masuk dan keluar berdasarkan klasifikasi</p>
             </div>
             <div className="bg-blue-50 text-[#232f61] px-3 py-1 rounded-2xl border border-blue-100 shadow-sm">
                 <span className="text-sm font-black opacity-60 block">Total Volume</span>
