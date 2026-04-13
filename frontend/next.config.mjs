@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const backendUrl = process.env.BACKEND_URL || 'http://localhost:9090';
+
 const nextConfig = {
   reactStrictMode: false,
   devIndicators: false,
@@ -6,7 +8,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://103.30.195.159:8080/api/:path*'
+        destination: `${backendUrl}/api/:path*`
       }
     ]
   },

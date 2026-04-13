@@ -27,8 +27,8 @@ const SeasonalFactorTable = ({
     const fetchData = async () => {
       try {
         setLoading(true); setError(null);
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:9090';
-        const response = await axios.get(`${baseUrl}/api/audit/volume-audit`, {
+
+        const response = await axios.get(`/api/audit/volume-audit`, {
           params: { year: selectedYear, simpang_id: simpangId }
         });
 

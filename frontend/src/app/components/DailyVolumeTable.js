@@ -37,8 +37,7 @@ const DailyVolumeTable = ({
       try {
         setLoading(true);
         setError(null);
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:9090';
-        const response = await axios.get(`${baseUrl}/api/audit/volume-daily`, {
+        const response = await axios.get(`/api/audit/volume-daily`, {
           params: { year: selectedYear, month: selectedMonth, simpang_id: simpangId }
         });
 
