@@ -24,6 +24,13 @@ const formatNumber = (value) => {
   return new Intl.NumberFormat("id-ID").format(safeValue);
 };
 
+const getNiceAxisBound = (maxAbsValue) => {
+  const safeMax = Math.max(1, Number(maxAbsValue) || 0);
+  const padded = safeMax * 1.1;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(padded)));
+  return Math.ceil(padded / magnitude) * magnitude;
+};
+
 export default function MasukKeluarDirectionBarChart({
   rows = [],
   simpangId,
@@ -31,7 +38,7 @@ export default function MasukKeluarDirectionBarChart({
   endDate,
   autoFetch = true,
   title = "Kendaraan Masuk vs Keluar per Arah",
-  height = 360,
+  height = 400,
   directionKey = "Direction_To",
   masukKey = "Kendaraan_Masuk",
   keluarKey = "Kendaraan_Keluar",
@@ -122,26 +129,46 @@ export default function MasukKeluarDirectionBarChart({
       {
         label: "Masuk",
         data: processed.masukValues,
-        backgroundColor: "rgba(16, 185, 129, 0.85)",
+        grouped: false,
+        backgroundColor: "rgba(16, 185, 129, 0.62)",
         borderColor: "rgba(5, 150, 105, 1)",
         borderWidth: 1,
         borderRadius: 6,
+        maxBarThickness: 40,
+        barPercentage: 0.9,
+        categoryPercentage: 0.85,
       },
       {
         label: "Keluar",
         data: processed.keluarValues,
-        backgroundColor: "rgba(239, 68, 68, 0.85)",
+        grouped: false,
+        backgroundColor: "rgba(239, 68, 68, 0.62)",
         borderColor: "rgba(185, 28, 28, 1)",
         borderWidth: 1,
         borderRadius: 6,
+        maxBarThickness: 40,
+        barPercentage: 0.9,
+        categoryPercentage: 0.85,
       },
     ],
   };
+
+  const xAxisBound = useMemo(() => {
+    const masukMax = Math.max(...processed.masukValues.map((v) => Math.abs(v)), 0);
+    const keluarMax = Math.max(...processed.keluarValues.map((v) => Math.abs(v)), 0);
+    return getNiceAxisBound(Math.max(masukMax, keluarMax));
+  }, [processed.masukValues, processed.keluarValues]);
 
   const options = {
     indexAxis: "y",
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        top: 5,
+        bottom: 5,
+      },
+    },
     plugins: {
       legend: { display: showLegend, position: "top" },
       title: {
@@ -160,8 +187,18 @@ export default function MasukKeluarDirectionBarChart({
     scales: {
       x: {
         stacked: false,
+        min: -xAxisBound,
+        max: xAxisBound,
+        grace: 0,
         ticks: {
           callback: (value) => formatNumber(Math.abs(value)),
+          font: {
+            weight: '400',
+          },
+        },
+        grid: {
+          color: (ctx) => (ctx.tick.value === 0 ? "rgba(15, 23, 42, 0.35)" : "rgba(148, 163, 184, 0.2)"),
+          lineWidth: (ctx) => (ctx.tick.value === 0 ? 1.5 : 1),
         },
         title: {
           display: true,
@@ -170,6 +207,12 @@ export default function MasukKeluarDirectionBarChart({
       },
       y: {
         stacked: false,
+        offset: true,
+        ticks: {
+          font: {
+            weight: '400',
+          },
+        },
         title: {
           display: true,
           text: "Arah",
@@ -179,7 +222,7 @@ export default function MasukKeluarDirectionBarChart({
   };
 
   return (
-    <div className="w-full rounded-lg border border-gray-200 bg-white p-4">
+    <div className="w-full rounded-lg border border-slate-200/70 bg-white/60 p-4 backdrop-blur-[1px]">
       {loading ? (
         <div className="flex h-full min-h-[160px] items-center justify-center text-sm text-gray-500">
           Memuat data grafik...
@@ -190,7 +233,7 @@ export default function MasukKeluarDirectionBarChart({
           {error}
         </div>
       ) : null}
-      {!loading && !error ? <div style={{ height }}>
+      {!loading && !error ? <div style={{ height }} >
         <Bar data={data} options={options} />
       </div> : null}
     </div>

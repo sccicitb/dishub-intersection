@@ -52,9 +52,13 @@ const VehicleChart = ({ rawData, category = "in" }) => {
       {
         label: 'Jumlah Unit',
         data: processedData.values,
-        backgroundColor: category === "out" ? '#BF3D3D' : '#4ADE80',
-        borderRadius: 4,
-        barThickness: 25, // Sesuai permintaan awal (thickness 25)
+        backgroundColor: category === "out" ? 'rgba(239, 68, 68, 0.62)' : 'rgba(16, 185, 129, 0.62)',
+        borderColor: category === "out" ? 'rgba(185, 28, 28, 1)' : 'rgba(5, 150, 105, 1)',
+        borderWidth: 1,
+        borderRadius: 8,
+        maxBarThickness: 48,
+        barPercentage: 1,
+        categoryPercentage: 0.95,
       },
     ],
   };
@@ -66,34 +70,40 @@ const VehicleChart = ({ rawData, category = "in" }) => {
     plugins: {
       legend: { display: false },
       title: {
-        display: true,
-        text: 'Visualisasi Data Kendaraan ' + (category === "in" ? 'Masuk' : 'Keluar'),
-        font: { size: 16 }
+        display: false,
       },
     },
     scales: {
       x: {
-        // border: {
-        //   display: false,
-        // },
         reverse: category === "in" ? true : false,
         beginAtZero: true,
-
+        ticks: {
+          callback: (value) => Number(value || 0).toLocaleString('id-ID'),
+        },
+        grid: {
+          color: 'rgba(148, 163, 184, 0.2)',
+        },
       },
       y: {
-        //   border: {
-        //     display: false,
-        //   },
         position: category === "out" ? 'right' : 'left',
-        ticks: { autoSkip: false },
-
+        ticks: {
+          autoSkip: false,
+          color: '#334155',
+          font: {
+            size: 12,
+            weight: '400',
+          },
+        },
+        grid: {
+          color: 'rgba(148, 163, 184, 0.2)',
+        },
       },
     },
   };
 
   return (
-    <div className="w-full p-4 ">
-      <div style={{ height: `${processedData.labels.length * 40 + 100}px`, minHeight: '400px' }}>
+    <div className="w-full p-2">
+      <div style={{ height: `${processedData.labels.length * 44 + 120}px`, minHeight: '420px' }}>
         <Bar options={options} data={data} />
       </div>
     </div>
