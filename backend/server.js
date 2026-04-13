@@ -73,6 +73,7 @@ require('./app/routes/camera.routes.js')(app);
 require("./app/routes/survey.routes.js")(app);
 require('./app/routes/simpang.routes')(app);
 require('./app/routes/intersection.routes')(app);
+require('./app/routes/masukKeluarBySimpang.routes')(app);
 
 // Register the survey header routes
 const saSurveyHeaderRoutes = require('./app/routes/sa_survey_headers.routes.js');
