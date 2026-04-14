@@ -71,7 +71,7 @@ export default function MasukKeluarDirectionBarChart({
         );
 
         if (!mounted) return;
-        setFetchedRows(Array.isArray(response?.data?.data) ? response.data.data : []);
+        setFetchedRows(Array.isArray((simpangId === "semua" ? response?.data?.summary_per_arah : response?.data?.data ) || []) ? (simpangId === "semua" ? response?.data?.summary_per_arah : response?.data?.data ) : []);
       } catch (err) {
         if (!mounted) return;
         setFetchedRows([]);

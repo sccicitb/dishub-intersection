@@ -9,6 +9,7 @@ import TableMatrix from "@/app/components/table/tableMatrix";
 import { useTrafficMatrix } from "@/hooks/useTrafficMatrix";
 import IntersectionFlowCard from "@/app/components/IntersectionFlowCard";
 import ClassificationFlowBarChart from "@/app/components/ClassificationFlowBarChart";
+import FilterBar from "@/components/FilterBar";
 
 const VehicleChart = lazy(() => import("@/app/components/grafikKeluarMasuk"));
 const TrafficIntervalChart = lazy(() => import("@/app/components/grafik15menit"));
@@ -64,20 +65,13 @@ export default function Home () {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isTabActive, setIsTabActive] = useState(true);
-  const [activeFilter, setActiveFilter] = useState('day');
-  const [periodDisplayText, setPeriodDisplayText] = useState('');
+  const [filterState, setFilterState] = useState({
+    activeFilter: 'day',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
+  });
   const [simpangFilter, setSimpangFilter] = useState('semua');
   const [namaLokasi, setNamaLokasi] = useState('Semua Simpang');
-  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
-  const [customRangeStart, setCustomRangeStart] = useState(() => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return yesterday.toISOString().split('T')[0];
-  });
-  const [customRangeEnd, setCustomRangeEnd] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
 
   const [incomingVehiclesBar2, setIncomingVehiclesBar2] = useState({
     labels: [],
@@ -103,102 +97,10 @@ export default function Home () {
     format: 'unit'
   });
 
-  const [selectedLocation, setSelectedLocation] = useState(0);
   const [simpangList, setSimpangList] = useState([]);
   const [exportLoading, setExportLoading] = useState(false);
 
-  const getPeriodDisplayText = (filter) => {
-    const now = new Date();
-    const options = { timeZone: 'Asia/Jakarta' };
-
-    switch (filter) {
-      case 'day':
-        return now.toLocaleDateString('id-ID', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          ...options
-        });
-
-      case 'week':
-        // Get Monday of current week
-        const currentDay = now.getDay();
-        const monday = new Date(now);
-        monday.setDate(now.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
-
-        // Get Sunday of current week
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
-
-        const mondayStr = monday.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', ...options });
-        const sundayStr = sunday.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', ...options });
-
-        return `${mondayStr} - ${sundayStr}`;
-
-      case 'month':
-        return now.toLocaleDateString('id-ID', {
-          month: 'long',
-          year: 'numeric',
-          ...options
-        });
-
-      case 'quarter':
-        const quarter = Math.floor(now.getMonth() / 3) + 1;
-        const quarterMonths = {
-          1: 'Januari - Maret',
-          2: 'April - Juni',
-          3: 'Juli - September',
-          4: 'Oktober - Desember'
-        };
-        return `Q${quarter} ${quarterMonths[quarter]} ${now.getFullYear()}`;
-
-      case 'year':
-        return now.getFullYear().toString();
-
-      default:
-        return '';
-    }
-  };
-
-  const calculateDateRange = (filterType) => {
-    const now = new Date();
-    // Gunakan jam 12 siang untuk menghindari masalah pergeseran tanggal akibat timezone
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
-    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
-
-    if (filterType === 'day') {
-    }
-    else if (filterType === 'month') {
-      // Set start ke tanggal 1 di bulan berjalan
-      start.setDate(1);
-    }
-    else if (filterType === 'year') {
-      // Set start ke 1 Januari di tahun berjalan
-      start.setMonth(0);
-      start.setDate(1);
-    }
-
-    // Fungsi helper untuk merubah objek Date ke string YYYY-MM-DD
-    const toDateString = (dateObj) => {
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-
-    return {
-      startDate: toDateString(start),
-      endDate: toDateString(end)
-    };
-  };
-
-  const handleFilterChange = (filter) => {
-    const range = calculateDateRange(filter);
-    setDateRange(range);
-    setActiveFilter(filter);
-    setPeriodDisplayText(getPeriodDisplayText(filter));
-  };
+  const { activeFilter, startDate: filterStartDate, endDate: filterEndDate } = filterState;
 
   useEffect(() => {
 
@@ -206,10 +108,10 @@ export default function Home () {
       setIsLoading(true);
       try {
         const [vehicleResponse, arahResponse, typeResponse, trafficMinute] = await Promise.all([
-          vehicles.getAll(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
-          vehicles.getByArah(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
-          vehicles.getByTipe(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
-          vehicles.getByMinute(activeFilter, simpangFilter, activeFilter === 'customrange' ? customRangeStart : null, activeFilter === 'customrange' ? customRangeEnd : null),
+          vehicles.getAll(activeFilter, simpangFilter, filterStartDate, filterEndDate),
+          vehicles.getByArah(activeFilter, simpangFilter, filterStartDate, filterEndDate),
+          vehicles.getByTipe(activeFilter, simpangFilter, filterStartDate, filterEndDate),
+          vehicles.getByMinute(activeFilter, simpangFilter, filterStartDate, filterEndDate),
         ]);
 
         // Fetch new Classification Data
@@ -221,13 +123,10 @@ export default function Home () {
 
         fetchTrafficMatrix(
           simpangFilter,
-          activeFilter === 'customrange' ? customRangeStart : null,
-          activeFilter === 'customrange' ? customRangeEnd : null,
+          filterStartDate,
+          filterEndDate,
           activeFilter
         ).catch(err => console.warn('Matrix fetch warning:', err));
-
-        // Note: We still process processVehicleData/arah/type from old endpoints for backward compatibility 
-        // until we fully switch over. But ChartData will be overwritten by fetchTotalFlowData if successful.
         processVehicleData(vehicleResponse);
         processArahData(arahResponse);
         processTypeData(typeResponse);
@@ -245,9 +144,8 @@ export default function Home () {
       try {
         const response = await intersection.getTotalFlow(
           simpangFilter,
-          activeFilter,
-          activeFilter === 'customrange' ? customRangeStart : null,
-          activeFilter === 'customrange' ? customRangeEnd : null
+          filterStartDate,
+          filterEndDate
         );
 
         if (response?.status === 200 && response?.data?.status === 'success') {
@@ -255,7 +153,7 @@ export default function Home () {
           const totalTraffic = total_IN + total_OUT;
 
           const newData = [{
-            name: getPeriodDisplayText(activeFilter),
+            name: simpangFilter === 'semua' ? 'Semua Simpang' : namaLokasi,
             masuk: total_IN,
             keluar: total_OUT,
             masukPercentage: totalTraffic > 0 ? parseFloat((total_IN / totalTraffic * 100).toFixed(1)) : 0,
@@ -268,25 +166,22 @@ export default function Home () {
       }
     };
 
-    // New function to fetch DIY total flow
     const fetchDiyTotalFlow = async () => {
       try {
-        // Use vehicles.getAll for DIY aggregate as it aligns with getChartMasukKeluar
         const response = await vehicles.getAll(
           activeFilter,
           'semua',
-          activeFilter === 'customrange' ? customRangeStart : null,
-          activeFilter === 'customrange' ? customRangeEnd : null
+          filterStartDate,
+          filterEndDate
         );
 
         if (response?.status === 200 && response?.data?.data && response.data.data.length > 0) {
-          // vehicles.getAll returns array of objects with total_IN/OUT
           const total_IN = parseFloat(response.data.data[0]?.total_IN) || 0;
           const total_OUT = parseFloat(response.data.data[0]?.total_OUT) || 0;
           const totalTraffic = total_IN + total_OUT;
 
           const newDiyData = [{
-            name: getPeriodDisplayText(activeFilter),
+            name: activeFilter,
             masuk: total_IN,
             keluar: total_OUT,
             masukPercentage: totalTraffic > 0 ? parseFloat((total_IN / totalTraffic * 100).toFixed(1)) : 0,
@@ -314,9 +209,8 @@ export default function Home () {
       try {
         const response = await intersection.getFlowByClassification(
           simpangFilter,
-          activeFilter,
-          activeFilter === 'customrange' ? customRangeStart : null,
-          activeFilter === 'customrange' ? customRangeEnd : null
+          filterStartDate,
+          filterEndDate
         );
 
         if (response?.status === 200 && response?.data?.status === 'success') {
@@ -557,14 +451,11 @@ export default function Home () {
       }
     }, 1800000); // 30 menit
 
-    const range = calculateDateRange(activeFilter);
-    setDateRange(range);
-
     return () => {
       clearInterval(intervalId);
     };
 
-  }, [activeFilter, simpangFilter, customRangeStart, customRangeEnd]);
+  }, [activeFilter, filterStartDate, filterEndDate, simpangFilter]);
 
   useEffect(() => {
     setIsClient(true);
@@ -623,40 +514,7 @@ export default function Home () {
 
   // Helper function untuk generate date range berdasarkan filter
   const getDateRangeForExport = () => {
-    const now = new Date();
-    let startDate, endDate;
-
-    endDate = now.toISOString().split('T')[0];
-
-    switch (activeFilter) {
-      case 'day':
-        startDate = endDate;
-        break;
-      case 'week':
-        const monday = new Date(now);
-        const currentDay = now.getDay();
-        monday.setDate(now.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
-        startDate = monday.toISOString().split('T')[0];
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-        break;
-      case 'quarter':
-        const quarterStart = Math.floor(now.getMonth() / 3) * 3;
-        startDate = new Date(now.getFullYear(), quarterStart, 1).toISOString().split('T')[0];
-        break;
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
-        break;
-      case 'customrange':
-        startDate = customRangeStart;
-        endDate = customRangeEnd;
-        break;
-      default:
-        startDate = endDate;
-    }
-
-    return { startDate, endDate };
+    return { startDate: filterStartDate, endDate: filterEndDate };
   };
 
   // Handle export to Excel
@@ -698,20 +556,11 @@ export default function Home () {
     }
   };
 
-  // Fetch traffic matrix when location or dates change - REMOVED (Handled in fetchAllData)
-  // useEffect(() => {
-  //   if (matrixSubmitCounter > 0 && selectedLocation !== 0) {
-  //     fetchTrafficMatrix(selectedLocation, startDate, endDate, filterChangeMatrix).catch(() => {
-
-  //     });
-  //   }
-  // }, [matrixSubmitCounter]);
-
   if (!isClient) return null;
 
-  const masukKeluarStartDate = activeFilter === 'customrange' ? customRangeStart : dateRange.startDate;
-  const masukKeluarEndDate = activeFilter === 'customrange' ? customRangeEnd : dateRange.endDate;
-  const canShowMasukKeluarChart = simpangFilter !== 'semua' && masukKeluarStartDate && masukKeluarEndDate;
+  const masukKeluarStartDate = filterStartDate;
+  const masukKeluarEndDate = filterEndDate;
+  // const canShowMasukKeluarChart = simpangFilter !== 'semua' && masukKeluarStartDate && masukKeluarEndDate;
 
   const handleSimpangChange = (e) => {
     const selectedId = e.target.value;
@@ -759,91 +608,7 @@ export default function Home () {
               </select>
 
               {/* Filter buttons */}
-              <button
-                onClick={() => handleFilterChange('day')}
-                className={`px-3 py-1.5 rounded-md ${activeFilter === 'day'
-                  ? 'bg-blue-950 text-white'
-                  : 'bg-base-300 hover:bg-blue-200'
-                  }`}
-              >
-                Hari Ini
-              </button>
-              <button
-                onClick={() => handleFilterChange('week')}
-                className={`px-3 py-1.5 rounded-md ${activeFilter === 'week'
-                  ? 'bg-blue-950 text-white'
-                  : 'bg-base-300 hover:bg-blue-200'
-                  }`}
-              >
-                Minggu Ini
-              </button>
-              <button
-                onClick={() => handleFilterChange('month')}
-                className={`px-3 py-1.5 rounded-md ${activeFilter === 'month'
-                  ? 'bg-blue-950 text-white'
-                  : 'bg-base-300 hover:bg-blue-200'
-                  }`}
-              >
-                Bulan Ini
-              </button>
-              <button
-                onClick={() => handleFilterChange('quarter')}
-                className={`px-3 py-1.5 rounded-md ${activeFilter === 'quarter'
-                  ? 'bg-blue-950 text-white'
-                  : 'bg-base-300 hover:bg-blue-200'
-                  }`}
-              >
-                Quarter Ini
-              </button>
-              <button
-                onClick={() => handleFilterChange('year')}
-                className={`px-3 py-1.5 rounded-md ${activeFilter === 'year'
-                  ? 'bg-blue-950 text-white'
-                  : 'bg-base-300 hover:bg-blue-200'
-                  }`}
-              >
-                Tahun Ini
-              </button>
-
-              {/* Custom Date Range Button */}
-              <button
-                onClick={() => {
-                  setActiveFilter('customrange');
-                  setPeriodDisplayText('');
-                }}
-                className={`px-3 py-1.5 rounded-md ${activeFilter === 'customrange'
-                  ? 'bg-blue-950 text-white'
-                  : 'bg-base-300 hover:bg-blue-200'
-                  }`}
-              >
-                Custom Range
-              </button>
-
-              {/* Custom Date Range Inputs - Show only when custom range is selected */}
-              {activeFilter === 'customrange' && (
-                <div className="flex gap-2 items-center">
-                  <input
-                    type="date"
-                    value={customRangeStart}
-                    onChange={(e) => setCustomRangeStart(e.target.value)}
-                    className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  />
-                  <span className="text-gray-500">hingga</span>
-                  <input
-                    type="date"
-                    value={customRangeEnd}
-                    onChange={(e) => setCustomRangeEnd(e.target.value)}
-                    className="px-3 py-1.5 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  />
-                </div>
-              )}
-
-              {/* Period Display - appears after filter buttons */}
-              {periodDisplayText && (
-                <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap">
-                  Periode: {periodDisplayText}
-                </div>
-              )}
+              <FilterBar onChange={setFilterState} />
 
               {/* Export Excel Button */}
               {isAdmin && (
@@ -897,7 +662,7 @@ export default function Home () {
                     </div>
 
                     <div className="w-full mt-4">
-                      {canShowMasukKeluarChart ? (
+                      {true ? (
                         <MasukKeluarDirectionBarChart
                           simpangId={simpangFilter}
                           startDate={masukKeluarStartDate}
@@ -912,7 +677,7 @@ export default function Home () {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 gap-6 w-full">
                   <ClassificationFlowBarChart data={classificationData} />
                 </div>
@@ -954,22 +719,42 @@ export default function Home () {
         {
           !matrixError && dataChord?.arahPergerakan && Object.keys(dataChord.arahPergerakan).length > 0 && !isLoading ?
             (
-              <div className="justify-between w-[90%] flex flex-col gap-5">
-                <div className="bg-base-200/90  w-full p-4 lg:gap-2 rounded-3xl backdrop-blur-sm shadow-gray-200">
-                  <div className="items-center flex flex-col w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-                    {hasValidMatrixData() && (
-                      <div className="w-fit m-auto hidden lg:block">
-                        <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
+              <div className="w-[90%]">
+                <div className="bg-base-200/90 w-full p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
+                  <div className="w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4">
+
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <h3 className="text-xl font-bold text-slate-800">Matriks Pergerakan</h3>
+                        <p className="text-sm text-slate-400 font-medium">Pola asal-tujuan dan arah pergerakan kendaraan</p>
                       </div>
-                    )}
-                    <div className=" w-full">
-                      <TableMatrix
-                        categories={categories}
-                        asalTujuan={dataChord?.asalTujuan || {}}
-                        arahPergerakan={dataChord?.arahPergerakan || {}}
-                        loading={matrixLoading}
-                        error={matrixError}
-                      />
+                    </div>
+
+                    {/* Body: chord left + tables right */}
+                    <div className="flex flex-col lg:flex-row gap-6 items-start">
+
+                      {/* Chord Diagram */}
+                      {hasValidMatrixData() && (
+                        <div className="flex-shrink-0 flex flex-col items-center gap-2">
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Diagram Aliran</span>
+                          <div className="bg-slate-50 rounded-2xl border border-slate-100 p-3">
+                            <ChordDiagram matrix={dataMatrix || {}} categories={categories || {}} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Tables */}
+                      <div className="flex-1 min-w-0">
+                        <TableMatrix
+                          categories={categories}
+                          asalTujuan={dataChord?.asalTujuan || {}}
+                          arahPergerakan={dataChord?.arahPergerakan || {}}
+                          loading={matrixLoading}
+                          error={matrixError}
+                        />
+                      </div>
+
                     </div>
                   </div>
                 </div>

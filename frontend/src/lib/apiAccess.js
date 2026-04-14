@@ -9,35 +9,35 @@ export const authAPI = {
 export const vehicles = {
   getAll: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
     let url = `/vehicles/getChartMasukKeluar?filter=${filter}&simpang=${simpang_id}`;
-    if (filter === 'customrange' && startDate && endDate) {
+    if (startDate && endDate) {
       url += `&start-date=${startDate}&end-date=${endDate}`;
     }
     return getRequest(url);
   },
   getByArah: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
     let url = `/vehicles/getMasukKeluarByArah?filter=${filter}&simpang=${simpang_id}`;
-    if (filter === 'customrange' && startDate && endDate) {
+    if (startDate && endDate) {
       url += `&start-date=${startDate}&end-date=${endDate}`;
     }
     return getRequest(url);
   },
   getByJam: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
     let url = `/vehicles/getRataPerJam?filter=${filter}&simpang=${simpang_id}`;
-    if (filter === 'customrange' && startDate && endDate) {
+    if (startDate && endDate) {
       url += `&start-date=${startDate}&end-date=${endDate}`;
     }
     return getRequest(url);
   },
   getByMinute: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
     let url = `/vehicles/getRataPer15Menit?filter=${filter}&simpang=${simpang_id}`;
-    if (filter === 'customrange' && startDate && endDate) {
+    if (startDate && endDate) {
       url += `&start-date=${startDate}&end-date=${endDate}`;
     }
     return getRequest(url);
   },
   getByTipe: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
     let url = `/vehicles/getGroupTipeKendaraan?filter=${filter}&simpang=${simpang_id}`;
-    if (filter === 'customrange' && startDate && endDate) {
+    if (startDate && endDate) {
       url += `&start-date=${startDate}&end-date=${endDate}`;
     }
     return getRequest(url);
@@ -91,23 +91,23 @@ export const vehicles = {
 
 export const intersection = {
   getFlowByDirection: (simpangId, filter = 'day', startDate = null, endDate = null) => {
-    let url = `/intersection/flow/${simpangId}?filter=${filter}`;
+    let url = `/intersection/flow?simpang_id=${simpangId}&filter=${filter}`;
     if (filter === 'customrange' && startDate && endDate) {
       url += `&start-date=${startDate}&end-date=${endDate}`;
     }
     return getRequest(url);
   },
-  getTotalFlow: (simpangId, filter = 'day', startDate = null, endDate = null) => {
-    let url = `/intersection/total-flow/${simpangId}?filter=${filter}`;
-    if (filter === 'customrange' && startDate && endDate) {
-      url += `&start-date=${startDate}&end-date=${endDate}`;
+  getTotalFlow: (simpangId, startDate = null, endDate = null) => {
+    let url = `/intersection/total-flow?simpang_id=${simpangId}`;
+    if (startDate && endDate) {
+      url += `&start_date=${startDate}&end_date=${endDate}`;
     }
     return getRequest(url);
   },
-  getFlowByClassification: (simpangId, filter = 'day', startDate = null, endDate = null) => {
-    let url = `/intersection/classification/${simpangId}?filter=${filter}`;
-    if (filter === 'customrange' && startDate && endDate) {
-      url += `&start-date=${startDate}&end-date=${endDate}`;
+  getFlowByClassification: (simpangId, startDate = null, endDate = null) => {
+    let url = `/intersection/classification?simpang_id=${simpangId}`;
+    if (startDate && endDate) {
+      url += `&start_date=${startDate}&end_date=${endDate}`;
     }
     return getRequest(url);
   }

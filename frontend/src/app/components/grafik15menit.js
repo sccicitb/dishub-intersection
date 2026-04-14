@@ -9,7 +9,7 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
@@ -21,14 +21,13 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 const TrafficIntervalChart = ({ rawResponse }) => {
   const chartData = useMemo(() => {
     if (!rawResponse) return { labels: [], datasets: [] };
 
-    // Mengambil label langsung dari field "jam" (ex: 00:00-00:15)
     const labels = rawResponse.data.map(item => item.jam);
     const dataIn = rawResponse.data.map(item => item.total_IN);
     const dataOut = rawResponse.data.map(item => item.total_OUT);
@@ -37,24 +36,24 @@ const TrafficIntervalChart = ({ rawResponse }) => {
       labels,
       datasets: [
         {
-          label: 'Total Masuk (IN)',
+          label: 'Masuk',
           data: dataIn,
-          borderColor: '#4ADE80',
-          backgroundColor: 'rgba(74, 222, 128, 0.1)',
+          borderColor: 'rgba(5, 150, 105, 1)',
+          backgroundColor: 'rgba(16, 185, 129, 0.40)',
           fill: true,
-          tension: 0.4,
-          pointRadius: 3,
-          pointHoverRadius: 6,
+          tension: 0.1,
+          pointHoverRadius: 5,
+          borderWidth: 2,
         },
         {
-          label: 'Total Keluar (OUT)',
+          label: 'Keluar',
           data: dataOut,
-          borderColor: '#BF3D3D',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          borderColor: 'rgba(185, 28, 28, 1)',
+          backgroundColor: 'rgba(239, 68, 68, 0.10)',
           fill: true,
-          tension: 0.4,
-          pointRadius: 3,
-          pointHoverRadius: 6,
+          tension: 0.1,
+          pointHoverRadius: 5,
+          borderWidth: 2,
         },
       ],
     };
@@ -67,52 +66,52 @@ const TrafficIntervalChart = ({ rawResponse }) => {
       legend: {
         position: 'top',
         align: 'end',
-        labels: { usePointStyle: true, boxWidth: 10, padding: 20}
-      },
-      title: {
-        display: true,
-        text: 'Analisis Arus Lalu Lintas per Interval 15 Menit',
-        align: 'start',
-        font: { size: 18, weight: 'bold' },
-        padding: { bottom: 30 }
+        labels: { usePointStyle: true, boxWidth: 10, padding: 20 },
       },
       tooltip: {
         mode: 'index',
         intersect: false,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         titleColor: '#1f2937',
         bodyColor: '#1f2937',
         borderColor: '#e5e7eb',
         borderWidth: 1,
         padding: 12,
         displayColors: true,
+        callbacks: {
+          label: (ctx) => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString('id-ID')}`,
+        },
       },
     },
     scales: {
       x: {
-        grid: { display: true },
+        grid: { display: false },
         ticks: {
           autoSkip: true,
-          maxTicksLimit: 10,
-          font: { size: 11 }
-        }
+          maxTicksLimit: 12,
+          font: { size: 11 },
+        },
       },
       y: {
         beginAtZero: true,
-        border: { display: true },
-        grid: {
-          color: '#f3f4f6',
-        },
+        grid: { color: '#f3f4f6' },
         ticks: {
-          font: { size: 11 }
-        }
-      }
+          font: { size: 11 },
+          callback: (value) => Number(value).toLocaleString('id-ID'),
+        },
+      },
     },
   };
 
   return (
     <div className="w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-      <div className="h-[450px]">
+      <h3 className="text-xl font-bold text-gray-700 mb-1">
+        Analisis Arus Lalu Lintas per Interval 15 Menit
+      </h3>
+      <p className="text-sm text-slate-500 mb-4">
+        Total kendaraan masuk dan keluar per interval 15 menit dalam periode aktif.
+      </p>
+      <div className="h-96">
         <Line options={options} data={chartData} />
       </div>
     </div>

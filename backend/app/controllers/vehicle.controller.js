@@ -177,15 +177,15 @@ exports.getTrafficMatrix = async (req, res) => {
       if (!startDate || !endDate) {
         return res.status(400).json({
           success: false,
-          message: "customrange filter requires both start-date and end-date (format: YYYY-MM-DD)"
+          message: "customrange filter requires both start-date and end-date (format: YYYY-MM-DD hh:mm:ss)"
         });
       }
 
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
       if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
         return res.status(400).json({
           success: false,
-          message: "Invalid date format. Use YYYY-MM-DD"
+          message: "Invalid date format. Use YYYY-MM-DD hh:mm:ss format (e.g., 2026-01-05 00:00:00)"
         });
       }
 
@@ -248,16 +248,16 @@ exports.getTrafficMatrixByCategory = async (req, res) => {
       if (!start_date || !end_date) {
         return res.status(400).json({
           success: false,
-          message: "start_date and end_date are required for customrange filter (format: YYYY-MM-DD)"
+          message: "start_date and end_date are required for customrange filter (format: YYYY-MM-DD hh:mm:ss)"
         });
       }
 
       // Validate date format
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
       if (!dateRegex.test(start_date) || !dateRegex.test(end_date)) {
         return res.status(400).json({
           success: false,
-          message: "Invalid date format. Use YYYY-MM-DD"
+          message: "Invalid date format. Use YYYY-MM-DD hh:mm:ss format (e.g., 2026-01-05 00:00:00)"
         });
       }
 
@@ -322,15 +322,15 @@ exports.getRawArusData = async (req, res) => {
       if (!startDate || !endDate) {
         return res.status(400).json({
           success: false,
-          message: "customrange filter requires both start-date and end-date (format: YYYY-MM-DD)"
+          message: "customrange filter requires both start-date and end-date (format: YYYY-MM-DD hh:mm:ss)"
         });
       }
 
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
       if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
         return res.status(400).json({
           success: false,
-          message: "Invalid date format. Use YYYY-MM-DD"
+          message: "Invalid date format. Use YYYY-MM-DD hh:mm:ss format (e.g., 2026-01-05 00:00:00)"
         });
       }
 
