@@ -23,24 +23,12 @@ const isValidDateTime = (value) => !Number.isNaN(new Date(value).getTime());
 
 exports.getMasukKeluarBySimpang = async (req, res) => {
   try {
-    const simpangId = Number.parseInt(req.query.simpang_id, 10);
+    const rawSimpangId = req.query.simpang_id;
     const rawStartDate = req.query.start_date || req.query.startDate;
     const rawEndDate = req.query.end_date || req.query.endDate;
 
-    if (!req.query.simpang_id || Number.isNaN(simpangId)) {
-      return res.status(400).json({
-        status: "error",
-        message: "Parameter simpang_id wajib berupa angka."
-      });
-    }
-
-    if (!rawStartDate || !rawEndDate) {
-      return res.status(400).json({
-        status: "error",
-        message: "Parameter start_date dan end_date wajib diisi."
-      });
-    }
-
+    const isAll = rawSimpangId === "semua" || rawSimpangId === "all";
+    const simpangId = isAll ? null : Number.parseInt(rawSimpangId, 10);
     const startDate = normalizeDateTime(rawStartDate, false);
     const endDate = normalizeDateTime(rawEndDate, true);
 
@@ -58,17 +46,52 @@ exports.getMasukKeluarBySimpang = async (req, res) => {
       });
     }
 
-    const data = await MasukKeluarBySimpang.findByFilter(simpangId, startDate, endDate);
+    const data = await MasukKeluarBySimpang.findByFilter(simpangId, startDate, endDate, isAll);
+
+    const totalMasuk = data.reduce((sum, item) => sum + Number(item.Kendaraan_Masuk || 0), 0);
+    const totalKeluar = data.reduce((sum, item) => sum + Number(item.Kendaraan_Keluar || 0), 0);
+
+    const totalPerArahMap = data.reduce((acc, curr) => {
+      const arah = curr.Direction_To;
+
+      if (!acc[arah]) {
+        acc[arah] = {
+          ID_Simpang: "TOTAL",
+          Nama_Simpang: "SEMUA SIMPANG",
+          Direction_To: arah,
+          Kendaraan_Masuk: 0,
+          Kendaraan_Keluar: 0,
+          Update_Terakhir: curr.Update_Terakhir
+        };
+      }
+
+      acc[arah].Kendaraan_Masuk += Number(curr.Kendaraan_Masuk || 0);
+      acc[arah].Kendaraan_Keluar += Number(curr.Kendaraan_Keluar || 0);
+
+      if (new Date(curr.Update_Terakhir) > new Date(acc[arah].Update_Terakhir)) {
+        acc[arah].Update_Terakhir = curr.Update_Terakhir;
+      }
+
+      return acc;
+    }, {});
+
+    const summaryPerArah = Object.values(totalPerArahMap);
 
     return res.json({
       status: "ok",
       filters: {
-        simpang_id: simpangId,
+        simpang_id: isAll ? "semua" : simpangId,
         start_date: startDate,
         end_date: endDate
       },
       total_rows: data.length,
-      data
+      overall_summary: {
+        total_kendaraan_masuk: totalMasuk,
+        total_kendaraan_keluar: totalKeluar,
+        grand_total: totalMasuk + totalKeluar
+      },
+      summary_per_arah: summaryPerArah,
+      data: data
     });
   } catch (error) {
     return res.status(500).json({

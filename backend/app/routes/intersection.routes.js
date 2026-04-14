@@ -1,16 +1,12 @@
-module.exports = app => {
+module.exports = (app) => {
     const IntersectionController = require("../controllers/intersection.controller.js");
-    var router = require("express").Router();
 
     // Route: Get Intersection Flow by Direction (IN/OUT)
-    router.get('/flow/:simpangId', IntersectionController.getFlowByDirection);
+    app.get('/api/intersection/flow/:simpang_id', IntersectionController.getFlowByDirection);
     
     // Route: Get Total Intersection Flow (IN/OUT Aggregated)
-    router.get('/total-flow/:simpangId', IntersectionController.getTotalFlow);
+    app.get('/api/intersection/total-flow', IntersectionController.getTotalFlow);
 
     // Route: Get Intersection Flow by Classification
-    router.get('/classification/:simpangId', IntersectionController.getFlowByClassification);
-    
-    // Mount to /api/intersection
-    app.use('/api/intersection', router);
+    app.get('/api/intersection/classification', IntersectionController.getFlowByClassification);
 };

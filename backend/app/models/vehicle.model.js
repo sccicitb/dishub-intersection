@@ -29,13 +29,13 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
     case 'customrange': {
       // Custom date range - must have both startDate and endDate
       if (!startDate || !endDate) {
-        throw new Error('customrange filter requires both start-date and end-date parameters in YYYY-MM-DD format');
+        throw new Error('customrange filter requires both start-date and end-date parameters in YYYY-MM-DD hh:mm:ss format');
       }
       
       // Validate date format
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
       if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
-        throw new Error('Invalid date format. Use YYYY-MM-DD format (e.g., 2026-01-05)');
+        throw new Error('Invalid date format. Use YYYY-MM-DD hh:mm:ss format (e.g., 2026-01-05 00:00:00)');
       }
       
       // Parse dates
@@ -48,7 +48,7 @@ const getDateFilterClause = (filter, startDate = null, endDate = null) => {
       }
       
       // Assuming 'waktu' is stored in Local Time, return range in Local Time string
-      return `waktu >= '${start} 00:00:00' AND waktu <= '${end} 23:59:59'`;
+      return `waktu >= '${start}' AND waktu <= '${end}'`;
     }
       
     case 'day':

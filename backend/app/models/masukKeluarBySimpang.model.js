@@ -2,13 +2,12 @@ const db = require("../config/db");
 
 const MasukKeluarBySimpang = {};
 
-MasukKeluarBySimpang.findByFilter = async (simpangId, startDate, endDate) => {
-  const query = `
+MasukKeluarBySimpang.findByFilter = async (simpangId, startDate, endDate, isAll = false) => {
+  let query = `
     SELECT 
       s.id AS ID_Simpang,
       s.Nama_Simpang,
       a.ke_arah AS Direction_To,
-
       SUM(
         CASE 
           WHEN NOT (
@@ -20,7 +19,6 @@ MasukKeluarBySimpang.findByFilter = async (simpangId, startDate, endDate) => {
           ELSE 0
         END
       ) AS Kendaraan_Masuk,
-
       SUM(
         CASE 
           WHEN (
@@ -32,17 +30,22 @@ MasukKeluarBySimpang.findByFilter = async (simpangId, startDate, endDate) => {
           ELSE 0
         END
       ) AS Kendaraan_Keluar,
-
       MAX(a.waktu) AS Update_Terakhir
     FROM simpang s
     JOIN arus a ON s.id = a.ID_Simpang
     WHERE a.waktu BETWEEN ? AND ?
-      AND s.id = ?
-    GROUP BY s.id, s.Nama_Simpang, a.ke_arah
-    ORDER BY s.id ASC, a.ke_arah ASC;
   `;
 
-  const [rows] = await db.query(query, [startDate, endDate, simpangId]);
+  const params = [startDate, endDate];
+
+  if (!isAll) {
+    query += " AND s.id = ?";
+    params.push(simpangId);
+  }
+
+  query += " GROUP BY s.id, s.Nama_Simpang, a.ke_arah ORDER BY s.id ASC, a.ke_arah ASC;";
+
+  const [rows] = await db.query(query, params);
   return rows;
 };
 

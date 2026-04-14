@@ -7,79 +7,67 @@ const TableMatrix = ({
   loading = false, 
   error = null
 }) => {
-  const renderLoadingState = () => (
-    <div className="bg-white px-8 py-5 rounded-lg w-full flex items-center justify-center min-h-[200px]">
-      <div className="flex flex-col items-center gap-2">
-        <div className="animate-spin rounded-full h-8 w-8 border-gray-800 border-blue-500"></div>
-        <p className="text-sm text-gray-500">Memuat data matriks...</p>
-      </div>
+  if (loading) return (
+    <div className="w-full flex items-center justify-center min-h-[160px]">
+      <p className="text-sm text-slate-400 italic">Memuat data matriks...</p>
     </div>
   );
 
-  const renderErrorState = () => (
-    <div className="bg-red-50 px-8 py-5 rounded-lg w-full border border-gray-800">
-      <div className="flex items-center gap-2">
-        <span className="text-red-500 font-semibold">Error:</span>
-        <p className="text-sm text-red-700">{error}</p>
-      </div>
-    </div>
+  if (error) return (
+    <div className="w-full rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">{error}</div>
   );
-
-  const renderEmptyState = () => (
-    <div className="bg-yellow-50 px-8 py-5 rounded-lg w-full border border-gray-800">
-      <p className="text-sm text-yellow-700">Tidak ada data matriks yang tersedia.</p>
-    </div>
-  );
-
-  if (loading) {
-    return renderLoadingState();
-  }
-
-  if (error) {
-    return renderErrorState();
-  }
 
   const hasData = asalTujuan && Object.keys(asalTujuan).length > 0 && arahPergerakan && Object.keys(arahPergerakan).length > 0;
 
-  if (!hasData) {
-    return renderEmptyState();
-  }
+  if (!hasData) return (
+    <div className="w-full rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-600 italic">
+      Tidak ada data matriks yang tersedia.
+    </div>
+  );
+
+  const thBase = "px-2 py-1.5 text-[11px] font-bold uppercase tracking-wide border border-slate-200 whitespace-nowrap";
+  const tdBase = "px-2 py-1 text-sm border border-slate-100 text-center";
 
   return (
-    <div className="space-y-6 flex flex-col gap-5 w-full p-5">
-      
-      {/* Tabel Asal-Tujuan */}
+    <div className="flex flex-col gap-5 w-full">
+
+      {/* Asal-Tujuan */}
       <div className="w-full">
-        <h3 className="font-semibold text-base mb-3 text-gray-700 flex items-center gap-2">
-          <span className="text-lg"></span> Matriks Asal - Tujuan (kendaraan)
-        </h3>
-        <div className="overflow-x-auto ">
-          <table className="table table-auto w-full text-center text-sm my-2">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#232f61]" />
+          <p className="text-sm font-bold text-slate-700 uppercase tracking-wide">Matriks Asal – Tujuan</p>
+          <span className="text-[10px] text-slate-400 font-medium">(kendaraan)</span>
+        </div>
+        <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+          <table className="w-full text-center border-collapse">
             <thead>
-              <tr className="bg-gradient-to-r from-blue-50
-              to-blue-100 ">
-                <th className="p-3 border border-gray-800 font-semibold text-gray-700 text-left">dari  ke</th>
+              <tr className="bg-[#232f61] text-white">
+                <th className={`${thBase} text-left text-white border-[#1a2347]`}>dari ↘ ke</th>
                 {categories.map((c) => (
-                  <th key={c} className="p-3 font-semibold text-gray-700 capitalize border border-gray-800">{c}</th>
+                  <th key={c} className={`${thBase} text-white border-[#1a2347] capitalize`}>{c}</th>
                 ))}
-                <th className="p-3 font-semibold text-gray-700 border border-gray-800">Total</th>
+                <th className={`${thBase} text-white border-[#1a2347]`}>Total</th>
               </tr>
             </thead>
             <tbody>
               {Object.keys(asalTujuan).map((from, idx) => (
-                <tr key={from} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="border border-gray-800 p-3 font-semibold text-gray-700 text-left capitalize">{from}</td>
+                <tr key={from} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                  <td className={`${tdBase} text-left font-semibold text-slate-700 capitalize bg-slate-50`}>{from}</td>
                   {categories.map((to) => (
-                    <td key={to} className="border border-gray-800 p-3 text-gray-600">
-                      <span className="inline-block bg-blue-100 px-2 py-1 rounded text-blue-800 font-medium">
-                        {asalTujuan[from][to] ? Number(asalTujuan[from][to]).toLocaleString('id-ID') : '-'}
-                      </span>
+                    <td key={to} className={tdBase}>
+                      {asalTujuan[from][to]
+                        ? <span className="inline-block bg-blue-50 text-[#232f61] font-semibold px-1.5 py-0.5 rounded text-[11px]">
+                            {Number(asalTujuan[from][to]).toLocaleString('id-ID')}
+                          </span>
+                        : <span className="text-slate-300">–</span>}
                     </td>
                   ))}
-                  <td className="border border-gray-800 p-3 text-gray-600">
-                    <span className="inline-block bg-blue-100 px-2 py-1 rounded text-blue-800 font-medium">
-                      {asalTujuan[from]['Total'] ? Number(asalTujuan[from]['Total']).toLocaleString('id-ID') : '-'}
-                    </span>
+                  <td className={tdBase}>
+                    {asalTujuan[from]['Total']
+                      ? <span className="inline-block bg-[#232f61] text-white font-bold px-1.5 py-0.5 rounded text-[11px]">
+                          {Number(asalTujuan[from]['Total']).toLocaleString('id-ID')}
+                        </span>
+                      : <span className="text-slate-300">–</span>}
                   </td>
                 </tr>
               ))}
@@ -88,30 +76,34 @@ const TableMatrix = ({
         </div>
       </div>
 
-      {/* Tabel Arah Pergerakan */}
+      {/* Arah Pergerakan */}
       <div className="w-full">
-        <h3 className="font-semibold text-base mb-3 text-gray-700 flex items-center gap-2">
-          <span className="text-lg"></span> Matriks Arah Pergerakan (kendaraan)
-        </h3>
-        <div className="overflow-x-auto">
-          <table className="table table-auto w-full text-center text-sm">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#4ADE80]" />
+          <p className="text-sm font-bold text-slate-700 uppercase tracking-wide">Matriks Arah Pergerakan</p>
+          <span className="text-[10px] text-slate-400 font-medium">(kendaraan)</span>
+        </div>
+        <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+          <table className="w-full text-center border-collapse">
             <thead>
-              <tr className="bg-gradient-to-r border from-green-50 to-green-100 border-gray-800">
-                <th className="p-3 border border-gray-800 font-semibold text-gray-700 text-left">arah pergerakan</th>
+              <tr className="bg-emerald-700 text-white">
+                <th className={`${thBase} text-left text-white border-emerald-800`}>arah pergerakan</th>
                 {categories.map((c) => (
-                  <th key={c} className="p-3 border border-gray-800 font-semibold text-gray-700 capitalize">{c}</th>
+                  <th key={c} className={`${thBase} text-white border-emerald-800 capitalize`}>{c}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {Object.keys(arahPergerakan).map((arah, idx) => (
-                <tr key={arah} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'+ ' border border-gray-800'}>
-                  <td className="border border-gray-800 p-3 font-semibold text-gray-700 text-left capitalize">{arah}</td>
+                <tr key={arah} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                  <td className={`${tdBase} text-left font-semibold text-slate-700 capitalize bg-slate-50`}>{arah}</td>
                   {categories.map((to) => (
-                    <td key={to} className="border border-gray-800 p-3 text-gray-600">
-                      <span className="inline-block bg-green-100 px-2 py-1 rounded text-green-800 font-medium">
-                        {arahPergerakan[arah][to] ? Number(arahPergerakan[arah][to]).toLocaleString('id-ID') : '-'}
-                      </span>
+                    <td key={to} className={tdBase}>
+                      {arahPergerakan[arah][to]
+                        ? <span className="inline-block bg-green-50 text-emerald-800 font-semibold px-1.5 py-0.5 rounded text-[11px]">
+                            {Number(arahPergerakan[arah][to]).toLocaleString('id-ID')}
+                          </span>
+                        : <span className="text-slate-300">–</span>}
                     </td>
                   ))}
                 </tr>
@@ -120,8 +112,10 @@ const TableMatrix = ({
           </table>
         </div>
       </div>
+
     </div>
   );
 };
 
 export default TableMatrix;
+
