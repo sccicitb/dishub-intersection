@@ -11,6 +11,38 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
   const mjpegIntervalRef = useRef(null);
+  const hlsRecoveryAttemptsRef = useRef(0);
+  const hlsReconnectAttemptsRef = useRef(0);
+  const hlsReconnectTimeoutRef = useRef(null);
+  const playbackTimeoutRef = useRef(null);
+  const timeoutIncidentOpenRef = useRef(false);
+
+  const MAX_HLS_RECOVERY_ATTEMPTS = 6;
+  const PLAYBACK_TIMEOUT_MS = 15000;
+
+  const clearPlaybackTimeout = () => {
+    if (playbackTimeoutRef.current) {
+      clearTimeout(playbackTimeoutRef.current);
+      playbackTimeoutRef.current = null;
+    }
+  };
+
+  const armPlaybackTimeout = (reason) => {
+    if (timeoutIncidentOpenRef.current) return;
+
+    clearPlaybackTimeout();
+    setStatus("loading");
+
+    playbackTimeoutRef.current = setTimeout(() => {
+      if (timeoutIncidentOpenRef.current) return;
+      timeoutIncidentOpenRef.current = true;
+
+      const message = `Playback timeout ${PLAYBACK_TIMEOUT_MS}ms (${reason})`;
+      addLog(message);
+      console.warn(message);
+      setStatus("play-error");
+    }, PLAYBACK_TIMEOUT_MS);
+  };
 
   const addLog = (message) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -145,12 +177,40 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
   const initHLSPlayer = () => {
     const video = videoRef.current;
 
+    const scheduleHLSReconnect = (reason) => {
+      setStatus("loading");
+      hlsRecoveryAttemptsRef.current = 0;
+      hlsReconnectAttemptsRef.current += 1;
+
+      const reconnectDelay = Math.min(1000 * hlsReconnectAttemptsRef.current, 5000);
+      addLog(`Auto reconnect #${hlsReconnectAttemptsRef.current} (${reason}) in ${reconnectDelay}ms`);
+
+      if (hlsReconnectTimeoutRef.current) {
+        clearTimeout(hlsReconnectTimeoutRef.current);
+      }
+
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+
+      hlsReconnectTimeoutRef.current = setTimeout(() => {
+        if (!videoRef.current) return;
+        addLog("Reinitializing HLS after reconnect delay");
+        initHLSPlayer();
+      }, reconnectDelay);
+    };
+
     if (Hls.isSupported()) {
       addLog("Initializing HLS.js player");
 
       const hls = new Hls({
         debug: false,
         enableWorker: false,
+        lowLatencyMode: true,
+        backBufferLength: 0,
+        liveSyncDurationCount: 1,
+        liveMaxLatencyDurationCount: 3,
         manifestLoadingTimeOut: 20000,
         manifestLoadingMaxRetry: 3,
         fragLoadingTimeOut: 30000,
@@ -167,22 +227,88 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         addLog("HLS manifest parsed - starting playback");
         video.muted = true;
+        timeoutIncidentOpenRef.current = false;
+        armPlaybackTimeout("HLS play start");
         video.play()
           .then(() => {
             addLog("HLS playback started");
+            clearPlaybackTimeout();
+            timeoutIncidentOpenRef.current = false;
+            hlsRecoveryAttemptsRef.current = 0;
+            hlsReconnectAttemptsRef.current = 0;
             setStatus("playing");
           })
           .catch(err => {
+            clearPlaybackTimeout();
             addLog(`HLS play error: ${err.message}`);
             setStatus("play-error");
           });
       });
 
       hls.on(Hls.Events.ERROR, (event, data) => {
-        if (data.fatal) {
-          addLog(`HLS Fatal Error: ${data.details}`);
-          setStatus("error");
+        const detail = data?.details || "unknown";
+        const isFragmentError = detail.includes("frag") || detail.includes("bufferStalled");
+
+        if (isFragmentError) {
+          // Missing fragment: keep loading and jump to live edge instead of replaying old buffered segment.
+          hlsRecoveryAttemptsRef.current += 1;
+          armPlaybackTimeout("HLS missing segment");
+          addLog(`HLS segment issue detected (${detail}) - recovery ${hlsRecoveryAttemptsRef.current}`);
+
+          if (hlsRecoveryAttemptsRef.current > MAX_HLS_RECOVERY_ATTEMPTS) {
+            scheduleHLSReconnect(`segment issue: ${detail}`);
+            return;
+          }
+
+          hls.startLoad(-1);
+          return;
         }
+
+        if (!data.fatal) {
+          addLog(`HLS non-fatal error: ${detail}`);
+          return;
+        }
+
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+          hlsRecoveryAttemptsRef.current += 1;
+          armPlaybackTimeout("HLS network recovery");
+          addLog(`HLS network error (${detail}) - retry ${hlsRecoveryAttemptsRef.current}`);
+
+          if (hlsRecoveryAttemptsRef.current > MAX_HLS_RECOVERY_ATTEMPTS) {
+            scheduleHLSReconnect(`network issue: ${detail}`);
+            return;
+          }
+
+          hls.startLoad(-1);
+          return;
+        }
+
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+          hlsRecoveryAttemptsRef.current += 1;
+          armPlaybackTimeout("HLS media recovery");
+          addLog(`HLS media error (${detail}) - attempting recoverMediaError`);
+
+          if (hlsRecoveryAttemptsRef.current > MAX_HLS_RECOVERY_ATTEMPTS) {
+            scheduleHLSReconnect(`media issue: ${detail}`);
+            return;
+          }
+
+          hls.recoverMediaError();
+          return;
+        }
+
+        addLog(`HLS fatal error (${detail}) - scheduling auto reconnect`);
+        scheduleHLSReconnect(`fatal: ${detail}`);
+      });
+
+      video.addEventListener('waiting', () => armPlaybackTimeout("video waiting"));
+      video.addEventListener('stalled', () => armPlaybackTimeout("video stalled"));
+      video.addEventListener('playing', () => {
+        clearPlaybackTimeout();
+        timeoutIncidentOpenRef.current = false;
+        hlsRecoveryAttemptsRef.current = 0;
+        hlsReconnectAttemptsRef.current = 0;
+        setStatus("playing");
       });
 
       hls.loadSource(videoUrl);
@@ -196,12 +322,17 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
       video.addEventListener('canplay', () => {
         addLog("Native HLS ready to play");
         setStatus("ready");
+        timeoutIncidentOpenRef.current = false;
+        armPlaybackTimeout("native HLS play start");
         video.play()
           .then(() => {
             addLog("Native HLS playback started");
+            clearPlaybackTimeout();
+            timeoutIncidentOpenRef.current = false;
             setStatus("playing");
           })
           .catch(err => {
+            clearPlaybackTimeout();
             addLog(`Native HLS play error: ${err.message}`);
             setStatus("play-error");
           });
@@ -224,15 +355,28 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
 
     video.addEventListener('canplay', () => {
       addLog("Video ready to play");
+      timeoutIncidentOpenRef.current = false;
+      armPlaybackTimeout("standard video play start");
       video.play()
         .then(() => {
           addLog("Video playback started");
+          clearPlaybackTimeout();
+          timeoutIncidentOpenRef.current = false;
           setStatus("playing");
         })
         .catch(err => {
+          clearPlaybackTimeout();
           addLog(`Video play error: ${err.message}`);
           setStatus("play-error");
         });
+    });
+
+    video.addEventListener('waiting', () => armPlaybackTimeout("standard video waiting"));
+    video.addEventListener('stalled', () => armPlaybackTimeout("standard video stalled"));
+    video.addEventListener('playing', () => {
+      clearPlaybackTimeout();
+      timeoutIncidentOpenRef.current = false;
+      setStatus("playing");
     });
 
     video.addEventListener('error', (e) => {
@@ -315,10 +459,16 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
 
     return () => {
       // Cleanup
+      timeoutIncidentOpenRef.current = false;
       if (hlsRef.current) {
         addLog("Cleaning up HLS instance");
         hlsRef.current.destroy();
         hlsRef.current = null;
+      }
+      clearPlaybackTimeout();
+      if (hlsReconnectTimeoutRef.current) {
+        clearTimeout(hlsReconnectTimeoutRef.current);
+        hlsReconnectTimeoutRef.current = null;
       }
       if (mjpegIntervalRef.current) {
         addLog("Cleaning up MJPEG interval");
