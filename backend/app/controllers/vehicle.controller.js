@@ -62,8 +62,20 @@ exports.getGroupTipeKendaraan = (req, res) => {
   const startDate = req.query['start-date']; // Get start-date for customrange
   const endDate = req.query['end-date']; // Get end-date for customrange
 
+  const isTimeoutError = (err) => {
+    const code = err?.code || '';
+    const message = err?.message || '';
+    return code === 'PROTOCOL_SEQUENCE_TIMEOUT' || code === 'ER_QUERY_TIMEOUT' || message.toLowerCase().includes('timeout');
+  };
+
   Vehicle.getGroupTipeKendaraan((err, data) => {
     if (err) {
+      if (isTimeoutError(err)) {
+        return res.status(408).send({
+          status: "error",
+          message: "Request timeout - query took too long"
+        });
+      }
       res.status(500).send({
         status: "error",
         message: err.message || "Some error occurred while retrieving data.",

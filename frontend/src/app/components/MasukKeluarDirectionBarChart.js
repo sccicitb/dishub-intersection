@@ -74,6 +74,14 @@ export default function MasukKeluarDirectionBarChart({
         setFetchedRows(Array.isArray((simpangId === "semua" ? response?.data?.summary_per_arah : response?.data?.data ) || []) ? (simpangId === "semua" ? response?.data?.summary_per_arah : response?.data?.data ) : []);
       } catch (err) {
         if (!mounted) return;
+
+        // Do not show fatal error if request was canceled/aborted (e.g. filter changed).
+        const isCanceled = err?.code === "ERR_CANCELED" || err?.name === "CanceledError";
+        if (isCanceled) {
+          setLoading(false);
+          return;
+        }
+
         setFetchedRows([]);
         setError(err?.response?.data?.message || "Gagal mengambil data masuk/keluar.");
       } finally {

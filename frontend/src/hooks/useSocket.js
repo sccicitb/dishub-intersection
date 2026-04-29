@@ -1,7 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import io from 'socket.io-client';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:9090';
+const resolveSocketUrl = () => {
+  const envSocketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+  if (envSocketUrl) return envSocketUrl;
+
+  const envBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (envBackendUrl) return envBackendUrl;
+
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+
+  return 'http://localhost:9090';
+};
 
 export const useSocket = () => {
   const [socket, setSocket] = useState(null);
@@ -9,8 +21,8 @@ export const useSocket = () => {
   const [latestFlow, setLatestFlow] = useState(null);
 
   useEffect(() => {
-    const socketInstance = io(BACKEND_URL, {
-      transports: ['websocket'],
+    const socketInstance = io(resolveSocketUrl(), {
+      transports: ['websocket', 'polling'],
       autoConnect: true,
       reconnection: true,
       timeout: 20000,

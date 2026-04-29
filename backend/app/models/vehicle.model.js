@@ -20,35 +20,80 @@ const Vehicle = function (data) {
   this.updated_at = data.updated_at;
 };
 
+const pad2 = (num) => String(num).padStart(2, '0');
+
+const toSqlDateTime = (value, isEnd = false) => {
+  if (!value) return null;
+
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return `${raw} ${isEnd ? '23:59:59' : '00:00:00'}`;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(raw)) {
+    return `${raw.replace('T', ' ')}:00`;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}$/.test(raw)) {
+    return raw.replace('T', ' ');
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}\.\d+/.test(raw)) {
+    return raw.slice(0, 19).replace('T', ' ');
+  }
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  const year = parsed.getFullYear();
+  const month = pad2(parsed.getMonth() + 1);
+  const day = pad2(parsed.getDate());
+  const hour = pad2(parsed.getHours());
+  const minute = pad2(parsed.getMinutes());
+  const second = pad2(parsed.getSeconds());
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+};
+
 // FIXED: Helper function to get index-friendly WHERE clause based on filter type
 const getDateFilterClause = (filter, startDate = null, endDate = null) => {
-  // Get current date in Jakarta timezone (UTC+7) - Check if data is stored in local time
-  const now = new Date();
+  const hasExplicitRange = Boolean(startDate && endDate);
+  if (hasExplicitRange) {
+    const normalizedStart = toSqlDateTime(startDate, false);
+    const normalizedEnd = toSqlDateTime(endDate, true);
+
+    if (!normalizedStart || !normalizedEnd) {
+      throw new Error('Invalid date format. Use YYYY-MM-DD hh:mm:ss format (e.g., 2026-01-05 00:00:00)');
+    }
+
+    if (normalizedStart > normalizedEnd) {
+      throw new Error('start-date must be before end-date');
+    }
+
+    return `waktu >= '${normalizedStart}' AND waktu <= '${normalizedEnd}'`;
+  }
   
   switch (filter) {
     case 'customrange': {
-      // Custom date range - must have both startDate and endDate
       if (!startDate || !endDate) {
         throw new Error('customrange filter requires both start-date and end-date parameters in YYYY-MM-DD hh:mm:ss format');
       }
-      
-      // Validate date format
-      const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
-      if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+
+      const normalizedStart = toSqlDateTime(startDate, false);
+      const normalizedEnd = toSqlDateTime(endDate, true);
+
+      if (!normalizedStart || !normalizedEnd) {
         throw new Error('Invalid date format. Use YYYY-MM-DD hh:mm:ss format (e.g., 2026-01-05 00:00:00)');
       }
-      
-      // Parse dates
-      const start = startDate;
-      const end = endDate;
-      
-      // Validate date range
-      if (start > end) {
+
+      if (normalizedStart > normalizedEnd) {
         throw new Error('start-date must be before end-date');
       }
-      
-      // Assuming 'waktu' is stored in Local Time, return range in Local Time string
-      return `waktu >= '${start}' AND waktu <= '${end}'`;
+
+      return `waktu >= '${normalizedStart}' AND waktu <= '${normalizedEnd}'`;
     }
       
     case 'day':
@@ -250,11 +295,8 @@ Vehicle.getChartMasukKeluar = async (result, filter = 'day', simpang = 'semua', 
 Vehicle.getGroupTipeKendaraan = async (result, filter = 'day', simpang = 'semua', startDate = null, endDate = null) => {
   try {
     const dateFilter = getDateFilterClause(filter, startDate, endDate);
-    // OPTIMIZATION: skip fetching all IDs
-    // const validSimpangIds = await getValidSimpangIds();
     const flowRules = getLocationSpecificFlowCases();
-    
-    // Build simpang filter
+
     let simpangFilter = '';
     if (simpang !== 'semua') {
       const validSimpangIds = await getValidSimpangIds();
@@ -265,42 +307,11 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day', simpang = 'semua'
         throw new Error(`Invalid simpang ID: ${simpang}`);
       }
     } else {
-       // OPTIMIZATION: No IN clause for 'semua'
       simpangFilter = '';
     }
-    
-    const [rows] = await db.query(`
-      SELECT
-        SUM(SM) AS SM, SUM(MP) AS MP, SUM(AUP) AS AUP, SUM(TR) AS TR, SUM(BS) AS BS, SUM(TS) AS TS, SUM(TB) AS TB, SUM(BB) AS BB, SUM(GANDENG) AS GANDENG, SUM(KTB) AS KTB,
-        COUNT(${flowRules.getInCases()}) AS total_IN,
-        COUNT(${flowRules.getOutCases()}) AS total_OUT
-      FROM arus
-      WHERE ${dateFilter}
-        ${simpangFilter};
-    `);
-
-    if (rows.length === 0) {
-      result(null, []);
-      return;
-    }
-    
-    const totals = rows[0]; // The object with summed totals
-    const resultData = [];
-    
-    const types = ['SM', 'MP', 'AUP', 'TR', 'BS', 'TS', 'TB', 'BB', 'GANDENG', 'KTB'];
-    
-    types.forEach(type => {
-      const count = totals[type] || 0;
-      if (count > 0) {
-
-        const obj = {};
-        obj[type] = 1;
-      }
-    });
 
     const [rowsDetailed] = await db.query(`
       SELECT
-        -- Sums for IN direction
         SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN SM ELSE 0 END) AS SM_IN,
         SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN MP ELSE 0 END) AS MP_IN,
         SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN AUP ELSE 0 END) AS AUP_IN,
@@ -311,8 +322,6 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day', simpang = 'semua'
         SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN BB ELSE 0 END) AS BB_IN,
         SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN GANDENG ELSE 0 END) AS GANDENG_IN,
         SUM(CASE WHEN ${flowRules.getInCases()} IS NOT NULL THEN KTB ELSE 0 END) AS KTB_IN,
-
-        -- Sums for OUT direction
         SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN SM ELSE 0 END) AS SM_OUT,
         SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN MP ELSE 0 END) AS MP_OUT,
         SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN AUP ELSE 0 END) AS AUP_OUT,
@@ -323,37 +332,46 @@ Vehicle.getGroupTipeKendaraan = async (result, filter = 'day', simpang = 'semua'
         SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN BB ELSE 0 END) AS BB_OUT,
         SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN GANDENG ELSE 0 END) AS GANDENG_OUT,
         SUM(CASE WHEN ${flowRules.getOutCases()} IS NOT NULL THEN KTB ELSE 0 END) AS KTB_OUT
-      FROM arus
-      WHERE ${dateFilter}
-        ${simpangFilter};
+      FROM (
+        SELECT
+          ID_Simpang,
+          LOWER(ke_arah) AS ke_arah,
+          SUM(SM) AS SM,
+          SUM(MP) AS MP,
+          SUM(AUP) AS AUP,
+          SUM(TR) AS TR,
+          SUM(BS) AS BS,
+          SUM(TS) AS TS,
+          SUM(TB) AS TB,
+          SUM(BB) AS BB,
+          SUM(GANDENG) AS GANDENG,
+          SUM(KTB) AS KTB
+        FROM arus
+        WHERE ${dateFilter}
+          ${simpangFilter}
+        GROUP BY ID_Simpang, LOWER(ke_arah)
+      ) grouped;
     `);
 
-    const data = rowsDetailed[0];
+    const data = rowsDetailed?.[0] || {};
     const formattedResult = [];
     const vehicleTypes = ['SM', 'MP', 'AUP', 'TR', 'BS', 'TS', 'TB', 'BB', 'GANDENG', 'KTB'];
-    
+
     vehicleTypes.forEach(type => {
-        const inCount = parseInt(data[`${type}_IN`] || 0);
-        const outCount = parseInt(data[`${type}_OUT`] || 0);
-        
-        if (inCount > 0 || outCount > 0) {
-            const item = {};
-            item[type] = 1; // Flag for frontend detection
-            item.total_IN = inCount;
-            item.total_OUT = outCount;
-            formattedResult.push(item);
-        }
+      const inCount = parseInt(data[`${type}_IN`] || 0, 10);
+      const outCount = parseInt(data[`${type}_OUT`] || 0, 10);
+
+      if (inCount > 0 || outCount > 0) {
+        const item = {};
+        item[type] = 1;
+        item.total_IN = inCount;
+        item.total_OUT = outCount;
+        formattedResult.push(item);
+      }
     });
-    
+
     result(null, formattedResult);
-    return; // Stop execution here, we handled the response
-    
-    /* 
-       original code below is kept but bypassed by the return above. 
-       Actually, I should replace the query block entirely.
-    */
-    
-    
+    return;
   } catch (err) {
     console.error("error: ", err);
     result(err, null);

@@ -8,16 +8,16 @@ export const authAPI = {
 
 export const vehicles = {
   getAll: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
-    let url = `/vehicles/getChartMasukKeluar?filter=${filter}&simpang=${simpang_id}`;
+    let url = `/vehicles/getChartMasukKeluar?filter=${encodeURIComponent(filter)}&simpang=${encodeURIComponent(simpang_id)}`;
     if (startDate && endDate) {
-      url += `&start-date=${startDate}&end-date=${endDate}`;
+      url += `&start-date=${encodeURIComponent(startDate)}&end-date=${encodeURIComponent(endDate)}`;
     }
     return getRequest(url);
   },
   getByArah: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
-    let url = `/vehicles/getMasukKeluarByArah?filter=${filter}&simpang=${simpang_id}`;
+    let url = `/vehicles/getMasukKeluarByArah?filter=${encodeURIComponent(filter)}&simpang=${encodeURIComponent(simpang_id)}`;
     if (startDate && endDate) {
-      url += `&start-date=${startDate}&end-date=${endDate}`;
+      url += `&start-date=${encodeURIComponent(startDate)}&end-date=${encodeURIComponent(endDate)}`;
     }
     return getRequest(url);
   },
@@ -29,16 +29,16 @@ export const vehicles = {
     return getRequest(url);
   },
   getByMinute: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
-    let url = `/vehicles/getRataPer15Menit?filter=${filter}&simpang=${simpang_id}`;
+    let url = `/vehicles/getRataPer15Menit?filter=${encodeURIComponent(filter)}&simpang=${encodeURIComponent(simpang_id)}`;
     if (startDate && endDate) {
-      url += `&start-date=${startDate}&end-date=${endDate}`;
+      url += `&start-date=${encodeURIComponent(startDate)}&end-date=${encodeURIComponent(endDate)}`;
     }
     return getRequest(url);
   },
   getByTipe: (filter = 'day', simpang_id = 'semua', startDate = null, endDate = null) => {
-    let url = `/vehicles/getGroupTipeKendaraan?filter=${filter}&simpang=${simpang_id}`;
+    let url = `/vehicles/getGroupTipeKendaraan?filter=${encodeURIComponent(filter)}&simpang=${encodeURIComponent(simpang_id)}`;
     if (startDate && endDate) {
-      url += `&start-date=${startDate}&end-date=${endDate}`;
+      url += `&start-date=${encodeURIComponent(startDate)}&end-date=${encodeURIComponent(endDate)}`;
     }
     return getRequest(url);
   },

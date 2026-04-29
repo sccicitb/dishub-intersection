@@ -1,9 +1,9 @@
 import axiosInstance from "./apiClient";
 
 // generic func to fetch data
-export const apiRequest = async (method, url, data = null) => {
+export const apiRequest = async (method, url, data = null, requestConfig = {}) => {
   try {
-    const config = { method, url }
+    const config = { method, url, ...requestConfig }
     if (data) config.data = data
     // console.log('API Request Config:', config);
     const response = await axiosInstance(config)
@@ -17,10 +17,10 @@ export const apiRequest = async (method, url, data = null) => {
   }
 }
 
-export const getRequest = (url) => apiRequest('get', url)
-export const deleteRequest = (url) => apiRequest('delete', url)
-export const updateRequest = (url, data) => apiRequest('put', url, data)
-export const createRequest = (url, data) => apiRequest('post', url, data)
+export const getRequest = (url, requestConfig = {}) => apiRequest('get', url, null, requestConfig)
+export const deleteRequest = (url, requestConfig = {}) => apiRequest('delete', url, null, requestConfig)
+export const updateRequest = (url, data, requestConfig = {}) => apiRequest('put', url, data, requestConfig)
+export const createRequest = (url, data, requestConfig = {}) => apiRequest('post', url, data, requestConfig)
 
 export const authApi = {
   // (All Role)
@@ -167,7 +167,9 @@ export const vehicleSummary = {
       `end_date=${encodeURIComponent(endDate)}`,
     ];
 
-    return getRequest(`/vehicles/masuk-keluar?${params.join('&')}`);
+    return getRequest(`/vehicles/masuk-keluar?${params.join('&')}`, {
+      timeout: 300000,
+    });
   },
 };
 

@@ -1,7 +1,13 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const baseURL = '/api';
+const rawApiBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+const normalizedApiBaseUrl = rawApiBaseUrl
+  ? rawApiBaseUrl.replace(/\/+$/, '')
+  : '';
+const baseURL = normalizedApiBaseUrl
+  ? `${normalizedApiBaseUrl}/api`
+  : '/api';
   
   const axiosInstance = axios.create({
     baseURL,

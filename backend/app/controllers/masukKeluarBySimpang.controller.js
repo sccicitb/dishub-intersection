@@ -2,6 +2,11 @@ const MasukKeluarBySimpang = require("../models/masukKeluarBySimpang.model");
 
 const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const DATETIME_REGEX = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}(:\d{2})?$/;
+const isTimeoutError = (error) => {
+  const code = error?.code || "";
+  const message = error?.message || "";
+  return code === "PROTOCOL_SEQUENCE_TIMEOUT" || code === "ER_QUERY_TIMEOUT" || message.toLowerCase().includes("timeout");
+};
 
 const normalizeDateTime = (value, isEnd = false) => {
   if (!value) {
@@ -94,6 +99,12 @@ exports.getMasukKeluarBySimpang = async (req, res) => {
       data: data
     });
   } catch (error) {
+    if (isTimeoutError(error)) {
+      return res.status(408).json({
+        status: "error",
+        message: "Request timeout - query took too long"
+      });
+    }
     return res.status(500).json({
       status: "error",
       message: error.message || "Terjadi kesalahan saat mengambil data masuk/keluar kendaraan."

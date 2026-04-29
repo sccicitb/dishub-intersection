@@ -1,51 +1,70 @@
 const db = require("../config/db");
 
 const MasukKeluarBySimpang = {};
+const CACHE_TTL_MS = 30000;
+const masukKeluarCache = new Map();
 
 MasukKeluarBySimpang.findByFilter = async (simpangId, startDate, endDate, isAll = false) => {
+  const cacheKey = `${isAll ? 'semua' : simpangId}|${startDate}|${endDate}`;
+  const cached = masukKeluarCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data;
+  }
+
   let query = `
     SELECT 
-      s.id AS ID_Simpang,
+      dt.ID_Simpang,
       s.Nama_Simpang,
-      a.ke_arah AS Direction_To,
-      SUM(
-        CASE 
-          WHEN NOT (
-            (s.id = 2 AND UPPER(a.ke_arah) = 'EAST') OR
-            (s.id = 3 AND UPPER(a.ke_arah) IN ('WEST', 'SOUTH')) OR
-            (s.id = 4 AND UPPER(a.ke_arah) = 'EAST') OR
-            (s.id = 5 AND UPPER(a.ke_arah) = 'NORTH')
-          ) THEN (a.SM + a.MP + a.AUP + a.TR + a.BS + a.TS + a.TB + a.BB + a.GANDENG + a.KTB)
-          ELSE 0
-        END
-      ) AS Kendaraan_Masuk,
-      SUM(
-        CASE 
-          WHEN (
-            (s.id = 2 AND UPPER(a.ke_arah) = 'EAST') OR
-            (s.id = 3 AND UPPER(a.ke_arah) IN ('WEST', 'SOUTH')) OR
-            (s.id = 4 AND UPPER(a.ke_arah) = 'EAST') OR
-            (s.id = 5 AND UPPER(a.ke_arah) = 'NORTH')
-          ) THEN (a.SM + a.MP + a.AUP + a.TR + a.BS + a.TS + a.TB + a.BB + a.GANDENG + a.KTB)
-          ELSE 0
-        END
-      ) AS Kendaraan_Keluar,
-      MAX(a.waktu) AS Update_Terakhir
-    FROM simpang s
-    JOIN arus a ON s.id = a.ID_Simpang
-    WHERE a.waktu BETWEEN ? AND ?
+      dt.Direction_To,
+      CASE 
+        WHEN NOT (
+          (dt.ID_Simpang = 2 AND dt.Direction_To = 'EAST') OR
+          (dt.ID_Simpang = 3 AND dt.Direction_To IN ('WEST', 'SOUTH')) OR
+          (dt.ID_Simpang = 4 AND dt.Direction_To = 'EAST') OR
+          (dt.ID_Simpang = 5 AND dt.Direction_To = 'NORTH')
+        ) THEN dt.Total_Kendaraan
+        ELSE 0
+      END AS Kendaraan_Masuk,
+      CASE 
+        WHEN (
+          (dt.ID_Simpang = 2 AND dt.Direction_To = 'EAST') OR
+          (dt.ID_Simpang = 3 AND dt.Direction_To IN ('WEST', 'SOUTH')) OR
+          (dt.ID_Simpang = 4 AND dt.Direction_To = 'EAST') OR
+          (dt.ID_Simpang = 5 AND dt.Direction_To = 'NORTH')
+        ) THEN dt.Total_Kendaraan
+        ELSE 0
+      END AS Kendaraan_Keluar,
+      dt.Update_Terakhir
+    FROM (
+      SELECT
+        a.ID_Simpang,
+        UPPER(a.ke_arah) AS Direction_To,
+        SUM(a.SM + a.MP + a.AUP + a.TR + a.BS + a.TS + a.TB + a.BB + a.GANDENG + a.KTB) AS Total_Kendaraan,
+        MAX(a.waktu) AS Update_Terakhir
+      FROM arus a
+      WHERE a.waktu BETWEEN ? AND ?
   `;
 
   const params = [startDate, endDate];
 
   if (!isAll) {
-    query += " AND s.id = ?";
+    query += " AND a.ID_Simpang = ?";
     params.push(simpangId);
   }
 
-  query += " GROUP BY s.id, s.Nama_Simpang, a.ke_arah ORDER BY s.id ASC, a.ke_arah ASC;";
+  query += `
+      GROUP BY a.ID_Simpang, UPPER(a.ke_arah)
+    ) dt
+    JOIN simpang s ON s.id = dt.ID_Simpang
+    ORDER BY dt.ID_Simpang ASC, dt.Direction_To ASC;
+  `;
 
   const [rows] = await db.query(query, params);
+  masukKeluarCache.set(cacheKey, {
+    timestamp: Date.now(),
+    data: rows,
+  });
+
   return rows;
 };
 

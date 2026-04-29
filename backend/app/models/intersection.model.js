@@ -53,16 +53,16 @@ Intersection.getFlowByClassification = async (simpang_id, start_date, end_date) 
 
         let sql = `
             SELECT 
-                SUM(COALESCE(SM, 0)) as SM,
-                SUM(COALESCE(MP, 0)) as MP,
-                SUM(COALESCE(AUP, 0)) as AUP,
-                SUM(COALESCE(TR, 0)) as TR,
-                SUM(COALESCE(BS, 0)) as BS,
-                SUM(COALESCE(TS, 0)) as TS,
-                SUM(COALESCE(TB, 0)) as TB,
-                SUM(COALESCE(BB, 0)) as BB,
-                SUM(COALESCE(GANDENG, 0)) as GANDENG,
-                SUM(COALESCE(KTB, 0)) as KTB
+                COALESCE(SUM(COALESCE(SM, 0)), 0) as SM,
+                COALESCE(SUM(COALESCE(MP, 0)), 0) as MP,
+                COALESCE(SUM(COALESCE(AUP, 0)), 0) as AUP,
+                COALESCE(SUM(COALESCE(TR, 0)), 0) as TR,
+                COALESCE(SUM(COALESCE(BS, 0)), 0) as BS,
+                COALESCE(SUM(COALESCE(TS, 0)), 0) as TS,
+                COALESCE(SUM(COALESCE(TB, 0)), 0) as TB,
+                COALESCE(SUM(COALESCE(BB, 0)), 0) as BB,
+                COALESCE(SUM(COALESCE(GANDENG, 0)), 0) as GANDENG,
+                COALESCE(SUM(COALESCE(KTB, 0)), 0) as KTB
             FROM arus
             WHERE waktu BETWEEN ? AND ?
         `;
@@ -75,8 +75,6 @@ Intersection.getFlowByClassification = async (simpang_id, start_date, end_date) 
         }
 
         const [rows] = await db.query(sql, params);
-        console.log("Classification Query Result:", rows);
-        console.log("Params yang dikirim ke SQL:", params);
         const data = rows[0] || {};
 
         const classifications = [
@@ -107,6 +105,7 @@ Intersection.getFlowByClassification = async (simpang_id, start_date, end_date) 
 // New: Get Total In/Out Flow
 Intersection.getTotalFlow = async (simpang_id, startDate, endDate) => {
     try {
+        const params = [startDate, endDate];
         let sql = `
             SELECT COUNT(*) as total_volume 
             FROM arus 
@@ -118,7 +117,7 @@ Intersection.getTotalFlow = async (simpang_id, startDate, endDate) => {
             params.push(simpang_id);
         }
 
-        const [rows] = await db.query(sql, [startDate, endDate]);
+        const [rows] = await db.query(sql, params);
         const total = rows[0].total_volume || 0;
 
         return {

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 
-export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
+const MAX_HLS_RECOVERY_ATTEMPTS = 6;
+const PLAYBACK_TIMEOUT_MS = 15000;
+
+export default function AdaptiveVideoPlayer({ videoUrl, title, large }) {
   const [status, setStatus] = useState("initializing");
-  const [logs, setLogs] = useState([]);
-  const [detectedFormat, setDetectedFormat] = useState(null);
-  const [playerType, setPlayerType] = useState(null);
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
   const mjpegIntervalRef = useRef(null);
@@ -17,14 +17,16 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
   const playbackTimeoutRef = useRef(null);
   const timeoutIncidentOpenRef = useRef(false);
 
-  const MAX_HLS_RECOVERY_ATTEMPTS = 6;
-  const PLAYBACK_TIMEOUT_MS = 15000;
-
   const clearPlaybackTimeout = () => {
     if (playbackTimeoutRef.current) {
       clearTimeout(playbackTimeoutRef.current);
       playbackTimeoutRef.current = null;
     }
+  };
+
+  const resetPlaybackState = () => {
+    clearPlaybackTimeout();
+    timeoutIncidentOpenRef.current = false;
   };
 
   const armPlaybackTimeout = (reason) => {
@@ -36,174 +38,164 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
     playbackTimeoutRef.current = setTimeout(() => {
       if (timeoutIncidentOpenRef.current) return;
       timeoutIncidentOpenRef.current = true;
-
-      const message = `Playback timeout ${PLAYBACK_TIMEOUT_MS}ms (${reason})`;
-      addLog(message);
-      console.warn(message);
+      console.warn(`Playback timeout ${PLAYBACK_TIMEOUT_MS}ms (${reason})`);
       setStatus("play-error");
     }, PLAYBACK_TIMEOUT_MS);
   };
 
-  const addLog = (message) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
+  const clearVideoHandlers = (video) => {
+    if (!video) return;
+    video.onwaiting = null;
+    video.onstalled = null;
+    video.onplaying = null;
+    video.oncanplay = null;
+    video.onloadedmetadata = null;
+    video.onerror = null;
   };
 
-  // Format detection function
+  const bindCommonVideoHandlers = (video) => {
+    clearVideoHandlers(video);
+    video.onwaiting = () => armPlaybackTimeout("video waiting");
+    video.onstalled = () => armPlaybackTimeout("video stalled");
+    video.onplaying = () => {
+      resetPlaybackState();
+      hlsRecoveryAttemptsRef.current = 0;
+      hlsReconnectAttemptsRef.current = 0;
+      setStatus("playing");
+    };
+  };
+
+  const cleanupPlayer = () => {
+    const video = videoRef.current;
+
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    if (mjpegIntervalRef.current) {
+      clearInterval(mjpegIntervalRef.current);
+      mjpegIntervalRef.current = null;
+    }
+
+    if (hlsReconnectTimeoutRef.current) {
+      clearTimeout(hlsReconnectTimeoutRef.current);
+      hlsReconnectTimeoutRef.current = null;
+    }
+
+    if (video) {
+      clearVideoHandlers(video);
+      if (video.parentElement) {
+        const mjpegImg = video.parentElement.querySelector(".mjpeg-img");
+        if (mjpegImg) mjpegImg.remove();
+      }
+      video.style.display = "";
+    }
+
+    resetPlaybackState();
+  };
+
   const detectVideoFormat = async (url) => {
-    addLog("Starting format detection...");
     setStatus("detecting");
 
     try {
-      // Check URL extension first
       const urlLower = url.toLowerCase();
-      if (urlLower.includes('.m3u8')) {
-        addLog("Format detected by extension: HLS (.m3u8)");
-        return { format: 'hls', confidence: 'high' };
-      }
-      if (urlLower.includes('.mp4')) {
-        addLog("Format detected by extension: MP4");
-        return { format: 'mp4', confidence: 'high' };
-      }
-      if (urlLower.includes('.webm')) {
-        addLog("Format detected by extension: WebM");
-        return { format: 'webm', confidence: 'high' };
-      }
+      if (urlLower.includes(".m3u8")) return { format: "hls" };
+      if (urlLower.includes(".mp4")) return { format: "mp4" };
+      if (urlLower.includes(".webm")) return { format: "webm" };
 
-      // Try to fetch headers
-      addLog("Attempting to fetch headers...");
       let contentType = null;
       try {
-        const response = await fetch(url, {
-          method: 'HEAD',
-          mode: 'cors'
-        });
-        contentType = response.headers.get('content-type');
-        addLog(`Content-Type header: ${contentType || 'not available'}`);
-      } catch (corsError) {
-        addLog("CORS prevented header check, trying alternative methods");
+        const response = await fetch(url, { method: "HEAD", mode: "cors" });
+        contentType = response.headers.get("content-type") || "";
+      } catch {
+        contentType = null;
       }
 
-      // Analyze content type
       if (contentType) {
-        if (contentType.includes('application/vnd.apple.mpegurl') || contentType.includes('application/x-mpegURL')) {
-          return { format: 'hls', confidence: 'high' };
+        if (
+          contentType.includes("application/vnd.apple.mpegurl") ||
+          contentType.includes("application/x-mpegURL")
+        ) {
+          return { format: "hls" };
         }
-        if (contentType.includes('video/mp4')) {
-          return { format: 'mp4', confidence: 'high' };
-        }
-        if (contentType.includes('video/webm')) {
-          return { format: 'webm', confidence: 'high' };
-        }
-        if (contentType.includes('image/jpeg') || contentType.includes('multipart/x-mixed-replace')) {
-          return { format: 'mjpeg', confidence: 'high' };
+        if (contentType.includes("video/mp4")) return { format: "mp4" };
+        if (contentType.includes("video/webm")) return { format: "webm" };
+        if (
+          contentType.includes("image/jpeg") ||
+          contentType.includes("multipart/x-mixed-replace")
+        ) {
+          return { format: "mjpeg" };
         }
       }
 
-      // Try video element test
-      addLog("Testing with video element...");
-      return new Promise((resolve) => {
-        const testVideo = document.createElement('video');
+      return await new Promise((resolve) => {
+        const testVideo = document.createElement("video");
         testVideo.muted = true;
-        testVideo.preload = 'metadata';
+        testVideo.preload = "metadata";
 
         let resolved = false;
-        const timeout = setTimeout(() => {
-          if (!resolved) {
-            resolved = true;
-            addLog("Video element test timeout - trying MJPEG detection");
-            resolve({ format: 'mjpeg', confidence: 'low' });
-          }
+        const timeoutId = setTimeout(() => {
+          if (resolved) return;
+          resolved = true;
+          resolve({ format: "mjpeg" });
         }, 3000);
 
-        testVideo.addEventListener('loadedmetadata', () => {
-          if (!resolved) {
-            resolved = true;
-            clearTimeout(timeout);
-            addLog("Video metadata loaded - format is standard video");
-            resolve({ format: 'video', confidence: 'medium' });
-          }
+        testVideo.addEventListener("loadedmetadata", () => {
+          if (resolved) return;
+          resolved = true;
+          clearTimeout(timeoutId);
+          resolve({ format: "video" });
         });
 
-        testVideo.addEventListener('error', () => {
-          if (!resolved) {
-            resolved = true;
-            clearTimeout(timeout);
-            addLog("Video element failed - likely not standard video format");
-            resolve({ format: 'mjpeg', confidence: 'low' });
-          }
+        testVideo.addEventListener("error", () => {
+          if (resolved) return;
+          resolved = true;
+          clearTimeout(timeoutId);
+          resolve({ format: "mjpeg" });
         });
 
         testVideo.src = url;
       });
-
-    } catch (error) {
-      addLog(`Format detection error: ${error.message}`);
-      return { format: 'unknown', confidence: 'none' };
+    } catch {
+      return { format: "unknown" };
     }
   };
 
-  // Initialize appropriate player based on detected format
-  const initializePlayer = (format) => {
+  const scheduleHLSReconnect = (reason) => {
+    setStatus("loading");
+    hlsRecoveryAttemptsRef.current = 0;
+    hlsReconnectAttemptsRef.current += 1;
+
+    const reconnectDelay = Math.min(1000 * hlsReconnectAttemptsRef.current, 5000);
+
+    if (hlsReconnectTimeoutRef.current) {
+      clearTimeout(hlsReconnectTimeoutRef.current);
+    }
+
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    hlsReconnectTimeoutRef.current = setTimeout(() => {
+      if (!videoRef.current) return;
+      initHLSPlayer();
+    }, reconnectDelay);
+
+    if (reason) {
+      armPlaybackTimeout(`hls reconnect: ${reason}`);
+    }
+  };
+
+  const initHLSPlayer = () => {
     const video = videoRef.current;
     if (!video) return;
 
-    addLog(`Initializing ${format} player...`);
-
-    switch (format) {
-      case 'hls':
-        initHLSPlayer();
-        setPlayerType('hls');
-        break;
-      case 'mp4':
-      case 'webm':
-      case 'video':
-        initStandardVideoPlayer();
-        setPlayerType('standard');
-        break;
-      case 'mjpeg':
-        initMJPEGPlayer();
-        setPlayerType('mjpeg');
-        break;
-      default:
-        // Try standard video as fallback
-        addLog("Unknown format, trying standard video player as fallback");
-        initStandardVideoPlayer();
-        setPlayerType('fallback');
-    }
-  };
-
-  // HLS Player
-  const initHLSPlayer = () => {
-    const video = videoRef.current;
-
-    const scheduleHLSReconnect = (reason) => {
-      setStatus("loading");
-      hlsRecoveryAttemptsRef.current = 0;
-      hlsReconnectAttemptsRef.current += 1;
-
-      const reconnectDelay = Math.min(1000 * hlsReconnectAttemptsRef.current, 5000);
-      addLog(`Auto reconnect #${hlsReconnectAttemptsRef.current} (${reason}) in ${reconnectDelay}ms`);
-
-      if (hlsReconnectTimeoutRef.current) {
-        clearTimeout(hlsReconnectTimeoutRef.current);
-      }
-
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-
-      hlsReconnectTimeoutRef.current = setTimeout(() => {
-        if (!videoRef.current) return;
-        addLog("Reinitializing HLS after reconnect delay");
-        initHLSPlayer();
-      }, reconnectDelay);
-    };
+    bindCommonVideoHandlers(video);
+    video.style.display = "";
 
     if (Hls.isSupported()) {
-      addLog("Initializing HLS.js player");
-
       const hls = new Hls({
         debug: false,
         enableWorker: false,
@@ -220,65 +212,51 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
       hlsRef.current = hls;
 
       hls.on(Hls.Events.MANIFEST_LOADED, () => {
-        addLog("HLS manifest loaded successfully");
         setStatus("ready");
       });
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        addLog("HLS manifest parsed - starting playback");
-        video.muted = true;
         timeoutIncidentOpenRef.current = false;
         armPlaybackTimeout("HLS play start");
-        video.play()
+        video.muted = true;
+        video
+          .play()
           .then(() => {
-            addLog("HLS playback started");
-            clearPlaybackTimeout();
-            timeoutIncidentOpenRef.current = false;
+            resetPlaybackState();
             hlsRecoveryAttemptsRef.current = 0;
             hlsReconnectAttemptsRef.current = 0;
             setStatus("playing");
           })
-          .catch(err => {
+          .catch(() => {
             clearPlaybackTimeout();
-            addLog(`HLS play error: ${err.message}`);
             setStatus("play-error");
           });
       });
 
-      hls.on(Hls.Events.ERROR, (event, data) => {
+      hls.on(Hls.Events.ERROR, (_event, data) => {
         const detail = data?.details || "unknown";
         const isFragmentError = detail.includes("frag") || detail.includes("bufferStalled");
 
         if (isFragmentError) {
-          // Missing fragment: keep loading and jump to live edge instead of replaying old buffered segment.
           hlsRecoveryAttemptsRef.current += 1;
           armPlaybackTimeout("HLS missing segment");
-          addLog(`HLS segment issue detected (${detail}) - recovery ${hlsRecoveryAttemptsRef.current}`);
-
           if (hlsRecoveryAttemptsRef.current > MAX_HLS_RECOVERY_ATTEMPTS) {
             scheduleHLSReconnect(`segment issue: ${detail}`);
             return;
           }
-
           hls.startLoad(-1);
           return;
         }
 
-        if (!data.fatal) {
-          addLog(`HLS non-fatal error: ${detail}`);
-          return;
-        }
+        if (!data.fatal) return;
 
         if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
           hlsRecoveryAttemptsRef.current += 1;
           armPlaybackTimeout("HLS network recovery");
-          addLog(`HLS network error (${detail}) - retry ${hlsRecoveryAttemptsRef.current}`);
-
           if (hlsRecoveryAttemptsRef.current > MAX_HLS_RECOVERY_ATTEMPTS) {
             scheduleHLSReconnect(`network issue: ${detail}`);
             return;
           }
-
           hls.startLoad(-1);
           return;
         }
@@ -286,271 +264,205 @@ export default function AdaptiveVideoPlayer ({ videoUrl, title, large }) {
         if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
           hlsRecoveryAttemptsRef.current += 1;
           armPlaybackTimeout("HLS media recovery");
-          addLog(`HLS media error (${detail}) - attempting recoverMediaError`);
-
           if (hlsRecoveryAttemptsRef.current > MAX_HLS_RECOVERY_ATTEMPTS) {
             scheduleHLSReconnect(`media issue: ${detail}`);
             return;
           }
-
           hls.recoverMediaError();
           return;
         }
 
-        addLog(`HLS fatal error (${detail}) - scheduling auto reconnect`);
         scheduleHLSReconnect(`fatal: ${detail}`);
-      });
-
-      video.addEventListener('waiting', () => armPlaybackTimeout("video waiting"));
-      video.addEventListener('stalled', () => armPlaybackTimeout("video stalled"));
-      video.addEventListener('playing', () => {
-        clearPlaybackTimeout();
-        timeoutIncidentOpenRef.current = false;
-        hlsRecoveryAttemptsRef.current = 0;
-        hlsReconnectAttemptsRef.current = 0;
-        setStatus("playing");
       });
 
       hls.loadSource(videoUrl);
       hls.attachMedia(video);
+      return;
+    }
 
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      addLog("Using native HLS support");
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = videoUrl;
       video.muted = true;
-
-      video.addEventListener('canplay', () => {
-        addLog("Native HLS ready to play");
+      video.oncanplay = () => {
         setStatus("ready");
         timeoutIncidentOpenRef.current = false;
         armPlaybackTimeout("native HLS play start");
-        video.play()
+        video
+          .play()
           .then(() => {
-            addLog("Native HLS playback started");
-            clearPlaybackTimeout();
-            timeoutIncidentOpenRef.current = false;
+            resetPlaybackState();
             setStatus("playing");
           })
-          .catch(err => {
+          .catch(() => {
             clearPlaybackTimeout();
-            addLog(`Native HLS play error: ${err.message}`);
             setStatus("play-error");
           });
-      });
+      };
     }
   };
 
-  // Standard Video Player
   const initStandardVideoPlayer = () => {
     const video = videoRef.current;
-    addLog("Initializing standard video player");
+    if (!video) return;
 
+    bindCommonVideoHandlers(video);
+    video.style.display = "";
     video.src = videoUrl;
     video.muted = true;
 
-    video.addEventListener('loadedmetadata', () => {
-      addLog(`Video loaded: ${video.videoWidth}x${video.videoHeight}, ${video.duration}s`);
+    video.onloadedmetadata = () => {
       setStatus("ready");
-    });
+    };
 
-    video.addEventListener('canplay', () => {
-      addLog("Video ready to play");
+    video.oncanplay = () => {
       timeoutIncidentOpenRef.current = false;
       armPlaybackTimeout("standard video play start");
-      video.play()
+      video
+        .play()
         .then(() => {
-          addLog("Video playback started");
-          clearPlaybackTimeout();
-          timeoutIncidentOpenRef.current = false;
+          resetPlaybackState();
           setStatus("playing");
         })
-        .catch(err => {
+        .catch(() => {
           clearPlaybackTimeout();
-          addLog(`Video play error: ${err.message}`);
           setStatus("play-error");
         });
-    });
+    };
 
-    video.addEventListener('waiting', () => armPlaybackTimeout("standard video waiting"));
-    video.addEventListener('stalled', () => armPlaybackTimeout("standard video stalled"));
-    video.addEventListener('playing', () => {
-      clearPlaybackTimeout();
-      timeoutIncidentOpenRef.current = false;
-      setStatus("playing");
-    });
-
-    video.addEventListener('error', (e) => {
-      addLog(`Video error: ${video.error?.message || 'Unknown error'}`);
+    video.onerror = () => {
       setStatus("error");
-    });
+    };
   };
 
-  // MJPEG Player (using img element with refresh)
   const initMJPEGPlayer = () => {
-    addLog("Initializing MJPEG player (image refresh method)");
-    setStatus("ready");
-
-    // Hide video element and show image-based player
     const video = videoRef.current;
-    if (video) {
-      video.style.display = 'none';
-    }
+    if (!video || !video.parentElement) return;
 
-    // Create image element for MJPEG
+    clearVideoHandlers(video);
+    video.style.display = "none";
+
     const container = video.parentElement;
-    let mjpegImg = container.querySelector('.mjpeg-img');
+    let mjpegImg = container.querySelector(".mjpeg-img");
 
     if (!mjpegImg) {
-      mjpegImg = document.createElement('img');
-      mjpegImg.className = 'mjpeg-img w-full h-auto bg-stone-800';
-      mjpegImg.style.minHeight = '400px';
+      mjpegImg = document.createElement("img");
+      mjpegImg.className = "mjpeg-img w-full h-auto bg-stone-800";
+      mjpegImg.style.minHeight = large ? "415px" : "208px";
       container.appendChild(mjpegImg);
     }
 
-    // Add timestamp to prevent caching
     const refreshMJPEG = () => {
-      const timestamp = new Date().getTime();
+      const timestamp = Date.now();
       mjpegImg.src = `${videoUrl}?t=${timestamp}`;
     };
 
     mjpegImg.onload = () => {
-      if (status !== "playing") {
-        addLog("MJPEG stream started");
-        setStatus("playing");
-      }
+      resetPlaybackState();
+      setStatus("playing");
     };
 
     mjpegImg.onerror = () => {
-      addLog("MJPEG load error");
       setStatus("error");
     };
 
-    // Refresh every 100ms for smooth playback
+    setStatus("ready");
     refreshMJPEG();
     mjpegIntervalRef.current = setInterval(refreshMJPEG, 100);
   };
 
-  useEffect(() => {
-    if (!videoUrl) {
-      setStatus("no-url");
-      addLog("No video URL provided");
+  const initializePlayer = (format) => {
+    if (format === "hls") {
+      initHLSPlayer();
       return;
     }
 
-    const initializeVideo = async () => {
-      addLog(`Starting initialization with URL: ${videoUrl}`);
+    if (format === "mp4" || format === "webm" || format === "video") {
+      initStandardVideoPlayer();
+      return;
+    }
 
-      // Wait for video ref to be ready
+    if (format === "mjpeg") {
+      initMJPEGPlayer();
+      return;
+    }
+
+    initStandardVideoPlayer();
+  };
+
+  useEffect(() => {
+    if (!videoUrl) {
+      cleanupPlayer();
+      setStatus("no-url");
+      return () => {};
+    }
+
+    let isMounted = true;
+
+    const initializeVideo = async () => {
+      if (!isMounted) return;
       if (!videoRef.current) {
         setTimeout(initializeVideo, 100);
         return;
       }
 
-      // Detect format first
       const detection = await detectVideoFormat(videoUrl);
-      setDetectedFormat(detection);
-      addLog(`Format detected: ${detection.format} (confidence: ${detection.confidence})`);
-
-      // Initialize appropriate player
+      if (!isMounted) return;
       initializePlayer(detection.format);
     };
 
     initializeVideo();
 
     return () => {
-      // Cleanup
-      timeoutIncidentOpenRef.current = false;
-      if (hlsRef.current) {
-        addLog("Cleaning up HLS instance");
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-      clearPlaybackTimeout();
-      if (hlsReconnectTimeoutRef.current) {
-        clearTimeout(hlsReconnectTimeoutRef.current);
-        hlsReconnectTimeoutRef.current = null;
-      }
-      if (mjpegIntervalRef.current) {
-        addLog("Cleaning up MJPEG interval");
-        clearInterval(mjpegIntervalRef.current);
-        mjpegIntervalRef.current = null;
-      }
-      // Clean up MJPEG image element
-      const video = videoRef.current;
-      if (video && video.parentElement) {
-        const mjpegImg = video.parentElement.querySelector('.mjpeg-img');
-        if (mjpegImg) {
-          mjpegImg.remove();
-        }
-      }
+      isMounted = false;
+      cleanupPlayer();
     };
   }, [videoUrl]);
 
-  const getStatusColor = () => {
-    switch (status) {
-      case "playing": return "bg-green-500";
-      case "ready": return "bg-blue-500";
-      case "detecting":
-      case "loading": return "bg-yellow-500";
-      case "error": return "bg-red-500";
-      default: return "bg-gray-500";
-    }
-  };
+  const isSkeletonVisible =
+    status === "initializing" || status === "detecting" || status === "loading";
 
-  const getPlayerTypeDisplay = () => {
-    switch (playerType) {
-      case 'hls': return 'HLS Player';
-      case 'standard': return 'Standard Video Player';
-      case 'mjpeg': return 'MJPEG Stream Player';
-      case 'fallback': return 'Fallback Player';
-      default: return 'Detecting...';
+  const getStatusColor = () => {
+    if (status === "playing") return "bg-green-500";
+    if (status === "ready") return "bg-blue-500";
+    if (status === "detecting" || status === "loading" || status === "initializing") {
+      return "bg-yellow-500";
     }
+    if (status === "error" || status === "play-error") return "bg-red-500";
+    return "bg-gray-500";
   };
 
   return (
-    <div className=" bg-black text-white py-1.5">
+    <div className="bg-black text-white py-1.5">
       <div className="flex items-center gap-1 p-2 m-1 text-xs">
         <div className="w-full flex justify-between">
           <span className="font-semibold">{title}</span>
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${getStatusColor()}`}></div>
+            <div className={`w-2 h-2 rounded-full ${getStatusColor()}`} />
             <span className="font-semibold">Status: {status}</span>
           </div>
         </div>
-        {/* {playerType && (
-          <span className="ml-4 px-2 py-2 bg-gray-800 text-xs rounded">
-            {getPlayerTypeDisplay()}
-          </span>
-        )} */}
       </div>
 
-      <div className="">
+      <div className="relative">
         <video
           ref={videoRef}
-          className={`w-full h-auto ${large ? 'min-h-[415px]' : 'min-h-52'} bg-black`}
+          className={`w-full h-auto ${large ? "min-h-[415px]" : "min-h-52"} bg-black`}
           controls
           muted
           playsInline
-          onError={() => console.error("Video failed to load (possible CORS error).")}
-          style={{ backgroundColor: 'black', width: '100%', height: '100%' }} />
-      </div>
-      {/* 
-      <div className="bg-gray-100 p-3 rounded mb-4">
-        <h4 className="font-semibold mb-2">Debug Logs:</h4>
-        <div className="max-h-40 overflow-y-auto text-sm font-mono">
-          {logs.map((log, index) => (
-            <div key={index} className="mb-1">{log}</div>
-          ))}
-        </div>
-      </div> */}
+          onError={() => setStatus("error")}
+          style={{ backgroundColor: "black", width: "100%", height: "100%" }}
+        />
 
-      {/* <div className="text-sm text-gray-600">
-        <p><strong>URL:</strong> {videoUrl}</p>
-        <p><strong>Detected Format:</strong> {detectedFormat ? `${detectedFormat.format} (${detectedFormat.confidence} confidence)` : 'Detecting...'}</p>
-        <p><strong>Player Type:</strong> {getPlayerTypeDisplay()}</p>
-        <p><strong>HLS.js Support:</strong> {Hls.isSupported() ? "Yes" : "No"}</p>
-        <p><strong>Native HLS:</strong> {document.createElement('video').canPlayType('application/vnd.apple.mpegurl') ? "Yes" : "No"}</p>
-      </div> */}
+        {isSkeletonVisible && (
+          <div className="absolute inset-0 flex flex-col justify-center gap-3 bg-stone-900/90 px-4 animate-pulse">
+            <div className="h-3 w-40 rounded bg-stone-700" />
+            <div className="h-3 w-28 rounded bg-stone-700" />
+            <div className="h-3 w-52 rounded bg-stone-700" />
+            <div className="text-xs text-stone-300 pt-1">Memuat stream kamera...</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

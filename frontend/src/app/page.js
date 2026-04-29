@@ -29,6 +29,51 @@ const FaShuttleVan = lazy(() => import("react-icons/fa").then(mod => ({ default:
 const FaTruckMoving = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaTruckMoving })));
 const FaCaravan = lazy(() => import("react-icons/fa").then(mod => ({ default: mod.FaCaravan })));
 
+function ChartSkeletonCard ({ heightClass = "h-72" }) {
+  return (
+    <div className="bg-base-200/90 p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
+      <div className={`w-full ${heightClass} rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-5 overflow-hidden relative`}>
+        <div className="animate-pulse h-full flex flex-col">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="h-4 w-44 rounded bg-slate-300" />
+            <div className="h-3 w-20 rounded bg-slate-300" />
+          </div>
+
+          <div className="flex items-end gap-2 flex-1">
+            <div className="w-1/12 h-[35%] rounded-t bg-slate-300" />
+            <div className="w-1/12 h-[52%] rounded-t bg-slate-300" />
+            <div className="w-1/12 h-[68%] rounded-t bg-slate-300" />
+            <div className="w-1/12 h-[46%] rounded-t bg-slate-300" />
+            <div className="w-1/12 h-[74%] rounded-t bg-slate-300" />
+            <div className="w-1/12 h-[58%] rounded-t bg-slate-300" />
+            <div className="w-1/12 h-[82%] rounded-t bg-slate-300" />
+            <div className="w-1/12 h-[49%] rounded-t bg-slate-300" />
+            <div className="w-1/12 h-[64%] rounded-t bg-slate-300" />
+          </div>
+
+          <div className="mt-4 space-y-2">
+            <div className="h-2 w-full rounded bg-slate-300" />
+            <div className="h-2 w-2/3 rounded bg-slate-300" />
+          </div>
+        </div>
+
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
+function ChartSkeletonHeader () {
+  return (
+    <div className="w-[90%] bg-base-200/90 p-4 rounded-3xl border border-slate-200">
+      <div className="animate-pulse">
+        <div className="h-4 w-56 rounded bg-slate-300" />
+        <div className="mt-3 h-3 w-80 rounded bg-slate-300" />
+      </div>
+    </div>
+  );
+}
+
 
 export default function Home () {
   const { isAdmin, userRoles } = useAuth();
@@ -107,7 +152,7 @@ export default function Home () {
     const fetchAllData = async () => {
       setIsLoading(true);
       try {
-        const [vehicleResponse, arahResponse, typeResponse, trafficMinute] = await Promise.all([
+        const [vehicleResult, arahResult, typeResult, trafficMinuteResult] = await Promise.allSettled([
           vehicles.getAll(activeFilter, simpangFilter, filterStartDate, filterEndDate),
           vehicles.getByArah(activeFilter, simpangFilter, filterStartDate, filterEndDate),
           vehicles.getByTipe(activeFilter, simpangFilter, filterStartDate, filterEndDate),
@@ -127,10 +172,34 @@ export default function Home () {
           filterEndDate,
           activeFilter
         ).catch(err => console.warn('Matrix fetch warning:', err));
-        processVehicleData(vehicleResponse);
-        processArahData(arahResponse);
-        processTypeData(typeResponse);
-        setTrafficMinuteData(trafficMinute.data || []);
+
+        if (vehicleResult.status === 'fulfilled') {
+          processVehicleData(vehicleResult.value);
+        } else {
+          console.warn('vehicles.getAll failed:', vehicleResult.reason?.message || vehicleResult.reason);
+          setChartData([getDefaultChartData()]);
+        }
+
+        if (arahResult.status === 'fulfilled') {
+          processArahData(arahResult.value);
+        } else {
+          console.warn('vehicles.getByArah failed:', arahResult.reason?.message || arahResult.reason);
+          setDefaultArahData();
+        }
+
+        if (typeResult.status === 'fulfilled') {
+          processTypeData(typeResult.value);
+        } else {
+          console.warn('vehicles.getByTipe failed:', typeResult.reason?.message || typeResult.reason);
+          setVehicleData([]);
+        }
+
+        if (trafficMinuteResult.status === 'fulfilled') {
+          setTrafficMinuteData(trafficMinuteResult.value?.data || []);
+        } else {
+          console.warn('vehicles.getByMinute failed:', trafficMinuteResult.reason?.message || trafficMinuteResult.reason);
+          setTrafficMinuteData([]);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
         setDefaultValues();
@@ -587,7 +656,7 @@ export default function Home () {
         </div>
       )}
 
-      <Suspense fallback={<div>Loading Charts...</div>}>
+      <Suspense fallback={<div className="w-[90%]"><ChartSkeletonCard heightClass="h-96" /></div>}>
         <div className="w-[90%] bg-blue-950/90 text-center p-1.5 text-[13px] font-semibold text-white rounded-2xl">Jumlah Total Kendaraan</div>
         {(!isAdmin === !isViewer) ? (
           <div className="w-[90%]">
@@ -630,8 +699,10 @@ export default function Home () {
               )}
             </div>
             {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="font-medium">Loading chart data...</div>
+              <div className="flex flex-col gap-6 w-full">
+                <ChartSkeletonCard heightClass="h-64" />
+                <ChartSkeletonCard heightClass="h-[420px]" />
+                <ChartSkeletonCard heightClass="h-72" />
               </div>
             ) : (
               <div className="flex flex-col gap-6 w-full">
@@ -686,8 +757,10 @@ export default function Home () {
           </div>
         ) : (<div className="w-[90%]"></div>)}
         {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="font-medium">Loading chart data...</div>
+          <div className="justify-between w-[90%] flex flex-col gap-5">
+            <ChartSkeletonHeader />
+            <ChartSkeletonCard heightClass="h-[360px]" />
+            <ChartSkeletonCard heightClass="h-[340px]" />
           </div>
         ) : (
           <div className="justify-between w-[90%] flex flex-col gap-5">
@@ -716,14 +789,11 @@ export default function Home () {
         )
         }
 
-        {
-          !matrixError && dataChord?.arahPergerakan && Object.keys(dataChord.arahPergerakan).length > 0 && !isLoading ?
-            (
-              <div className="w-[90%]">
-                <div className="bg-base-200/90 w-full p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
-                  <div className="w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4">
+        {!isLoading && !matrixError && dataChord?.arahPergerakan && Object.keys(dataChord.arahPergerakan).length > 0 && (
+          <div className="w-[90%]">
+            <div className="bg-base-200/90 w-full p-4 rounded-3xl backdrop-blur-sm shadow-gray-200">
+              <div className="w-full p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4">
 
-                    {/* Header */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div>
                         <h3 className="text-xl font-bold text-slate-800">Matriks Pergerakan</h3>
@@ -731,10 +801,8 @@ export default function Home () {
                       </div>
                     </div>
 
-                    {/* Body: chord left + tables right */}
                     <div className="flex flex-col lg:flex-row gap-6 items-start">
 
-                      {/* Chord Diagram */}
                       {hasValidMatrixData() && (
                         <div className="flex-shrink-0 flex flex-col items-center gap-2">
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Diagram Aliran</span>
@@ -744,7 +812,6 @@ export default function Home () {
                         </div>
                       )}
 
-                      {/* Tables */}
                       <div className="flex-1 min-w-0">
                         <TableMatrix
                           categories={categories}
@@ -759,10 +826,13 @@ export default function Home () {
                   </div>
                 </div>
               </div>
-            ) : (<div className="flex justify-center items-center h-64">
-              <div className="font-medium">Loading chart data...</div>
-            </div>)
-        }
+        )}
+
+        {(isLoading || matrixLoading) && (
+          <div className="w-[90%]">
+            <ChartSkeletonCard heightClass="h-[420px]" />
+          </div>
+        )}
 
         <div className="w-[90%]">
           <div className="bg-base-200/90 w-full flex flex-col p-4 gap-8 rounded-3xl backdrop-blur-sm shadow-gray-200">

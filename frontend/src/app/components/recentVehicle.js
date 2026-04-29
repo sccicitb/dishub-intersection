@@ -4,6 +4,20 @@ import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { maps } from "@/lib/apiService";
 
+const resolveSocketUrl = () => {
+  const envSocketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+  if (envSocketUrl) return envSocketUrl;
+
+  const envBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (envBackendUrl) return envBackendUrl;
+
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+
+  return "http://localhost:9090";
+};
+
 
 export default function RecentVehicle ({ customCSS }) {
   const [vehicles, setVehicles] = useState([]);
@@ -25,8 +39,8 @@ export default function RecentVehicle ({ customCSS }) {
   }, []);
 
   useEffect(() => {
-    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:9090", {
-      transports: ["websocket"]
+    const socket = io(resolveSocketUrl(), {
+      transports: ["websocket", "polling"]
     });
 
     socket.on("connect", () => {
